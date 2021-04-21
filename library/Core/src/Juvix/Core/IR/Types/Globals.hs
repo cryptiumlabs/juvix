@@ -9,6 +9,7 @@ import Juvix.Core.IR.Types.Base
 import Juvix.Library hiding (Pos)
 import Juvix.Library.HashMap (HashMap)
 import Juvix.Library.Usage (Usage)
+import Control.Monad.Trans
 
 type RawGlobalAll (c :: * -> Constraint) ext primTy primVal =
   ( c primTy,
@@ -469,13 +470,14 @@ type InnerTCSig ext primTy primVal =
 -- TODO move this somewhere
 newtype TypeCheck ext primTy primVal m a
   = TypeCheck (InnerTCSig ext primTy primVal m a)
-  deriving newtype (Functor, Applicative, Monad, MonadIO)
+  deriving newtype (Functor, Applicative, Monad, MonadIO, MonadTrans)
   deriving
     ( HasState "typeSigs" (Signature ext primTy primVal),
       HasSink "typeSigs" (Signature ext primTy primVal),
       HasSource "typeSigs" (Signature ext primTy primVal)
     )
     via MonadState (InnerTCSig ext primTy primVal m)
+
 
 data SigDef ext primTy primVal
   = -- | function constant to its type, clauses

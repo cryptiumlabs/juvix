@@ -18,16 +18,16 @@ import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 
 typeCheckConstructor ::
-  ( HasThrow
-      "typecheckError"
-      (TypecheckError' extV0 ext primTy primVal)
-      (TypeCheck ext primTy primVal m),
-    HasState "typeSigs" s m,
+  forall ext primTy primVal m.
+  ( HasThrowTC' NoExt ext primTy primVal m,
+    -- HasState "typeSigs" _ m,
     Eq primTy,
     Eq primVal,
     CanTC' ext primTy primVal m,
     Param.CanApply primTy,
-    Param.CanApply (TypedPrim primTy primVal)
+    Param.CanApply (TypedPrim primTy primVal),
+    Eval.NoExtensions ext primTy (TypedPrim primTy primVal),
+    Eval.CanEval ext NoExt primTy (TypedPrim primTy primVal)
   ) =>
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
@@ -37,19 +37,21 @@ typeCheckConstructor ::
   [IR.Pos] ->
   RawTelescope ext primTy primVal ->
   -- | a hashmap of global names and their info (TODO do I need this?)
-  Globals' NoExt extT primTy primVal ->
+  GlobalsT' NoExt ext primTy primVal ->
   -- | The term to be checked
   IR.Term' ext primTy primVal ->
-  TypeCheck ext primTy primVal m [Global' extV extT primTy primVal]
+  TypeCheck ext primTy primVal m [GlobalT' NoExt ext primTy primVal]
 typeCheckConstructor param cname pos tel globals ty = do
-  sig <- get @"typeSigs" -- get signatures
+  -- sig <- get @"typeSigs" -- get signatures
   let (name, t) = teleToType tel ty
       numberOfParams = length tel
-  typechecked <- typeTerm param t (Annotation mempty (VStar 0))
-  evaled <- Eval.evalTerm (Eval.lookupFun' globals) typechecked
+  -- FIXME replace 'lift' with whatever capability does
+  typechecked <- lift $ typeTerm param t (Annotation mempty (VStar 0))
+  evaled <- lift $ liftEval $ Eval.evalTerm (Eval.lookupFun @ext globals) typechecked
   -- _ <- checkConType 0 [] [] numberOfParams evaled
   let (_, target) = typeToTele (name, t)
-  checkDeclared cname tel target
+  -- FIXME replace 'lift'
+  lift $ checkDeclared cname tel target
   -- vt <- eval [] tt
   -- put (addSig sig n (ConSig vt))
   return undefined --TODO return the list of globals
@@ -127,6 +129,8 @@ checkConType ::
     Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primVal,
     Eq primTy,
     Eq primVal,
+    IR.ValueAll Eq extV primTy primVal,
+    IR.NeutralAll Eq extV primTy primVal,
     CanTC' extT primTy primVal m,
     Param.CanApply (TypedPrim primTy primVal),
     HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m,
@@ -167,7 +171,7 @@ checkConType k gamma p tel datatypeName param e =
             -- the datatype name matches 
             name == datatypeName &&
             -- the parameters match
-            (==) (map IR.ty tel) paraTel
+            and (zipWith (==) (map IR.ty tel) paraTel)
               then return ()
               -- datatype name or para don't match
               else throwTC $ ConAppTypeError e
