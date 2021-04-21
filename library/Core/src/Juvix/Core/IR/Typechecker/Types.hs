@@ -246,7 +246,7 @@ data TypecheckError' extV extT primTy primVal
   | ConAppTypeError
       { ty :: IR.Value' extV primTy primVal}
   | ConTypeError
-      {invalidConTy :: IR.Value primTy primVal}
+      {invalidConTy :: IR.Value' extV primTy primVal}
   | ParamVarNError
       { tel :: IR.RawTelescope extT primTy primVal,
         expectedN :: IR.Name,
@@ -270,7 +270,9 @@ deriving instance
     Eq (P.ApplyErrorExtra primTy),
     Eq (P.ApplyErrorExtra (P.TypedPrim primTy primVal)),
     IR.ValueAll Eq extV primTy (P.TypedPrim primTy primVal),
+    IR.ValueAll Eq extV primTy primVal,
     IR.NeutralAll Eq extV primTy (P.TypedPrim primTy primVal),
+    IR.NeutralAll Eq extV primTy primVal,
     IR.TermAll Eq extT primTy primVal,
     Eq (IR.TermX extT primTy (P.TypedPrim primTy primVal)),
     IR.ElimAll Eq extT primTy primVal,
@@ -287,7 +289,9 @@ instance
     Show (P.ApplyErrorExtra primTy),
     Show (P.ApplyErrorExtra (P.TypedPrim primTy primVal)),
     IR.ValueAll Show extV primTy (P.TypedPrim primTy primVal),
+    IR.ValueAll Show extV primTy primVal,
     IR.NeutralAll Show extV primTy (P.TypedPrim primTy primVal),
+    IR.NeutralAll Show extV primTy primVal,
     IR.TermAll Show extT primTy primVal,
     Show (IR.TermX extT primTy (P.TypedPrim primTy primVal)),
     IR.ElimAll Show extT primTy primVal,
