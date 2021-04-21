@@ -136,12 +136,6 @@ checkConType ::
     HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m,
     HasThrow "typecheckError" (TypecheckError' extV NoExt primTy primVal) m
   ) =>
-  -- | the next fresh generic value.
-  Int ->
-  -- | an env that binds the type value corresponding to these generic values.
-  Telescope extV extT primTy primVal ->
-  -- | the length of the telescope, or the no. of parameters.
-  Int ->
   -- | an env that contains the parameters of the datatype
   Telescope extV extT primTy primVal ->
   -- | name of the datatype
@@ -150,30 +144,27 @@ checkConType ::
   -- | the expression that is left to be checked.
   IR.Value' extV primTy primVal ->
   m ()
-checkConType k gamma p tel datatypeName param e =
+checkConType tel datatypeName param e =
   case e of
-    VPi' usage t1 t2 _ ->
+    VPi' _ _ t2 _ ->
       -- recurse with updated envs
-      checkConType
-        (k + 1)
-        gamma --(updateTel gamma x v1)
-        p
-        tel
-        datatypeName
-        param
-        t2
-    IR.VNeutral' app _ ->
-      let (dtName, paraTel) = unapps app []
-       in case dtName of
+        checkConType
+          tel
+          datatypeName
+          param
+          t2
+    IR.VNeutral' app _ -> 
+      let (dtName, paraTel) = unapps app [] in 
+        case dtName of
             NFree' (Global name) _ ->
               if -- the datatype name matches
               name == datatypeName
                 &&
                 -- the parameters match
-                and (zipWith (==) (map IR.ty tel) paraTel)
+                map IR.ty tel == paraTel
                 then return ()
                 else -- datatype name or para don't match
-                  throwTC $ ConAppTypeError e
+                  throwTC $ ConDatatypeName dtName
             _ -> throwTC $ ConTypeError e
       where
         unapps (IR.NApp' f x _) acc = unapps f (x : acc)

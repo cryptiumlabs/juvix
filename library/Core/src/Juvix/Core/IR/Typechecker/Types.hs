@@ -243,6 +243,8 @@ data TypecheckError' extV extT primTy primVal
   | -- | datatype typechecking errors
     DatatypeError
       {invalidType :: IR.Term' extT primTy primVal}
+  | ConDatatypeName
+      {dtName :: IR.Neutral' extV primTy primVal}
   | ConAppTypeError
       {ty :: IR.Value' extV primTy primVal}
   | ConTypeError
@@ -349,6 +351,9 @@ instance
   show (EvalError err) = show err
   show (DatatypeError ty) =
     "checkDataType: invalid datatype: " <> show ty
+  show (ConDatatypeName dtName) =
+    "checkConType: datatype should be a free variable but it isn't: "
+    <> show dtName
   show (ConAppTypeError ty) =
     "checkConType: datatype name or parameters don't match: "
       <> show ty
