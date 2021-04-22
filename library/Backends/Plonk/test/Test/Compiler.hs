@@ -9,7 +9,7 @@ import Juvix.Backends.Plonk (FFAnnTerm, FFType, PrimVal (..))
 import qualified Juvix.Backends.Plonk as P
 import Juvix.Library (($), (.), Natural, undefined)
 import Juvix.Library hiding (Type, exp)
-import Test.Ref.Polynomial (circuitPolynomial1)
+import qualified Test.Example.Polynomial as Example
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
@@ -37,7 +37,7 @@ mkInputs :: [f] -> Map P.Wire f
 mkInputs inputs = Map.fromList $ zipWith (\k v -> (P.InputWire k, v)) [0 ..] inputs
 
 polynomial1 :: T.TestTree
-polynomial1 = T.testCase "\\x y -> x^3 - 2x^2 + 4 = y" (testOutput circuitPolynomial1 inputs output)
+polynomial1 = T.testCase "\\x y -> x^3 - 2x^2 + 4 = y" (testOutput Example.circuitPolynomial1 inputs output)
   where
     inputs = mkInputs [1, 3]
     output = 1 -- true!

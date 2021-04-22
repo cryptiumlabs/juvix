@@ -1,4 +1,4 @@
-module Test.Ref.Polynomial where
+module Test.Example.Polynomial where
 
 import Data.Curve.Weierstrass.BLS12381 (Fr)
 import Juvix.Backends.Plonk (FFAnnTerm)

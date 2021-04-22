@@ -144,10 +144,6 @@ expressionGen p =
 expression' :: Parser Types.Expression
 expression' = expressionGen app''
 
--- used to remove app from parsing
-expression'' :: Parser Types.Expression
-expression'' = expressionGen do'''
-
 -- used to remove both from parsing
 expression''' :: Parser Types.Expression
 expression''' = expressionGen (fail "")
@@ -723,9 +719,6 @@ prefixSepGen parser = do
 prefixSymbolDotPermissive :: Parser (NonEmpty Symbol)
 prefixSymbolDotPermissive = J.sepBy1H prefixSymbol (P.char J.dot)
 
-prefixCapitalDotPermissive :: Parser (NonEmpty Symbol)
-prefixCapitalDotPermissive = J.sepBy1H prefixCapital (P.char J.dot)
-
 prefixSymbolDot :: Parser (NonEmpty Symbol)
 prefixSymbolDot = prefixSepGen prefixSymbol
 
@@ -802,18 +795,12 @@ topLevelSN = spaceLiner topLevel
 expression'SN :: Parser Types.Expression
 expression'SN = spaceLiner expression'
 
-expression''SN :: Parser Types.Expression
-expression''SN = spaceLiner expression''
-
 expression'''SN :: Parser Types.Expression
 expression'''SN = spaceLiner expression'''
 
 -- TODO: Add Docs
 expressionSN :: Parser Types.Expression
 expressionSN = spaceLiner expression
-
-expressionS :: Parser Types.Expression
-expressionS = spacer expression
 
 signatureConstraintSN :: Parser [Types.Expression]
 signatureConstraintSN = spaceLiner signatureConstraint
@@ -848,15 +835,6 @@ condLogicSN = spaceLiner . condLogic
 typePSN :: Parser Types.Type
 typePSN = spaceLiner typeP
 
-typePS :: Parser Types.Type
-typePS = spacer typeP
-
-recordSN :: Parser Types.Record
-recordSN = spaceLiner record
-
-recordS :: Parser Types.Record
-recordS = spacer record
-
 nameTypeSN :: Parser Types.NameType
 nameTypeSN = spaceLiner nameType
 
@@ -872,14 +850,9 @@ nameParserSN = spaceLiner nameParser
 sumSN :: Parser Types.Sum
 sumSN = spaceLiner sum
 
-sumS :: Parser Types.Sum
-sumS = spaceLiner sum
 
 prefixCapitalDotSN :: Parser (NonEmpty Symbol)
 prefixCapitalDotSN = spaceLiner prefixCapitalDot
-
-prefixCapitalSN :: Parser Symbol
-prefixCapitalSN = spaceLiner prefixCapital
 
 prefixSymbolDotSN :: Parser (NonEmpty Symbol)
 prefixSymbolDotSN = spaceLiner prefixSymbolDot
@@ -887,8 +860,6 @@ prefixSymbolDotSN = spaceLiner prefixSymbolDot
 prefixSymbolSN :: Parser Symbol
 prefixSymbolSN = spaceLiner prefixSymbol
 
-prefixSymbolS :: Parser Symbol
-prefixSymbolS = spacer prefixSymbol
 
 constantSN :: Parser Types.Constant
 constantSN = spaceLiner constant
