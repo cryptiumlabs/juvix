@@ -25,7 +25,6 @@ data Parameterisation primTy primVal = Parameterisation
   }
   deriving (Generic)
 
-
 data ApplyError' e a
   = ExtraArguments a (NonEmpty (Arg a))
   | InvalidArguments a (NonEmpty (Arg a))

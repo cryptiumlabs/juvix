@@ -54,7 +54,8 @@ contextToCore ctx param = do
     pure $ FF.CoreDefs {defs, order = fmap Context.name <$> ordered}
 
 addSig ::
-  ( Show primTy, Show primVal,
+  ( Show primTy,
+    Show primVal,
     HasThrow "fromFrontendError" (FF.Error primTy primVal) m,
     HasReader "param" (P.Parameterisation primTy primVal) m,
     HasState "coreSigs" (FF.CoreSigsHR primTy primVal) m,
@@ -67,7 +68,8 @@ addSig (Context.Entry x feDef) = do
   for_ msig $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
 
 addDef ::
-  ( Show primTy, Show primVal,
+  ( Show primTy,
+    Show primVal,
     HasThrow "fromFrontendError" (FF.Error primTy primVal) m,
     HasReader "param" (P.Parameterisation primTy primVal) m,
     HasState "core" (HM.HashMap NameSymbol.T (FF.CoreDef primTy primVal)) m,

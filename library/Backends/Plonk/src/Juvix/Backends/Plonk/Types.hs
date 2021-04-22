@@ -1,20 +1,21 @@
-module Juvix.Backends.Plonk.Types 
-    ( CompilationError(..),
-      FFAnnTerm,
-      FFTerm,
-      FFType,
-      PrimValHR,
-      PrimValIR,
-      PrimVal',
-      ArgHR,
-      ArgIR,
-      Arg',
-      Take,
-      ReturnHR,
-      ReturnIR,
-      Return',
-      PrimTy(..),
-      PrimVal(..) )
+module Juvix.Backends.Plonk.Types
+  ( CompilationError (..),
+    FFAnnTerm,
+    FFTerm,
+    FFType,
+    PrimValHR,
+    PrimValIR,
+    PrimVal',
+    ArgHR,
+    ArgIR,
+    Arg',
+    Take,
+    ReturnHR,
+    ReturnIR,
+    Return',
+    PrimTy (..),
+    PrimVal (..),
+  )
 where
 
 import qualified Juvix.Core.Application as App

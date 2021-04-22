@@ -3,11 +3,11 @@
 module Test.Compiler where
 
 import Data.Curve.Weierstrass.BLS12381 (Fr)
-import Data.Field.Galois (GaloisField, toP, PrimeField(..))
+import Data.Field.Galois (GaloisField, PrimeField (..), toP)
 import qualified Data.Map as Map
 import Juvix.Backends.Plonk (FFAnnTerm, FFType, PrimVal (..))
 import qualified Juvix.Backends.Plonk as P
-import Juvix.Library (($), (.), Natural, undefined)
+import Juvix.Library (Natural, undefined, ($), (.))
 import Juvix.Library hiding (Type, exp)
 import qualified Test.Example.Polynomial as Example
 import qualified Test.Tasty as T

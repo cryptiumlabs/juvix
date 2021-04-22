@@ -132,21 +132,23 @@ declare _ _ = error "malformed declare"
 mkCtx :: Symbol -> [(Symbol, Sexp.T)] -> Context.T Sexp.T Sexp.T Sexp.T -> Context.Record Sexp.T Sexp.T Sexp.T -> Context.T Sexp.T Sexp.T Sexp.T
 mkCtx name elmns ctx emptyRec = foldr addT ctx elmns
   where
-    insertRecord (Sexp.Cons x xs) t 
-      | Just s <- eleToSymbol x = NameSpace.insertPublic s (Context.TypeDeclar xs) t 
+    insertRecord (Sexp.Cons x xs) t
+      | Just s <- eleToSymbol x = NameSpace.insertPublic s (Context.TypeDeclar xs) t
     insertRecord _ t = t
     addT (constructor, element) accCtx
       | Sexp.isAtomNamed (Sexp.car $ Sexp.car element) ":record-d",
-        Just els <- Sexp.toList (Sexp.groupBy2 (Sexp.cdr $ Sexp.car element))
-      -- For each of the record fields, insertPublic where key is the record field name and value is the record field type
-        = Context.add 
-            (NameSpace.Pub constructor) 
-            (Context.Record (emptyRec { 
-                Context.recordContents = foldr insertRecord NameSpace.empty els 
-            })) accCtx 
+        Just els <- Sexp.toList (Sexp.groupBy2 (Sexp.cdr $ Sexp.car element)) =
+        -- For each of the record fields, insertPublic where key is the record field name and value is the record field type
+        Context.add
+          (NameSpace.Pub constructor)
+          ( Context.Record
+              ( emptyRec
+                  { Context.recordContents = foldr insertRecord NameSpace.empty els
+                  }
+              )
+          )
+          accCtx
       | otherwise = Context.add (NameSpace.Pub constructor) (Context.SumCon (Context.Sum Nothing name)) accCtx
-        
-
 
 -- | @type'@ will take its type and add it into the context. Note that
 -- since we store information with the type, we will keep the name in
@@ -167,6 +169,7 @@ type' t@(assocName Sexp.:> _ Sexp.:> dat) ctx
               modsDefinedS = []
             }
 type' _ _ = error "malformed type"
+
 -- | @open@ like type will simply take the open and register that the
 -- current module is opening it. Since the context does not have such a
 -- notion, we have to store this information for the resolve module to
@@ -251,21 +254,24 @@ decideRecordOrDef xs _ _ pres ty =
 splitByConstructor :: Sexp.T -> [(Symbol, Sexp.T)]
 splitByConstructor dat
   | Just s <- Sexp.toList dat =
-    case traverse (\c -> case eleToSymbol $ Sexp.car c of
-          Nothing -> Nothing 
-          Just constructor -> Just (constructor, Sexp.cdr c)) s of
-            Just xs -> xs
-            Nothing -> []
+    case traverse
+      ( \c -> case eleToSymbol $ Sexp.car c of
+          Nothing -> Nothing
+          Just constructor -> Just (constructor, Sexp.cdr c)
+      )
+      s of
+      Just xs -> xs
+      Nothing -> []
   | otherwise = []
 
 collectConstructors :: Sexp.T -> [Symbol]
 collectConstructors dat
   | Just s <- Sexp.toList dat =
-      case traverse (eleToSymbol . Sexp.car) s of
-          Nothing -> []
-          Just xs -> xs
-            -- filter out the record constructors, which really aren't constructors
-            -- filter (\x -> x /= ":record-d" && x /= ":") xs
+    case traverse (eleToSymbol . Sexp.car) s of
+      Nothing -> []
+      Just xs -> xs
+  -- filter out the record constructors, which really aren't constructors
+  -- filter (\x -> x /= ":record-d" && x /= ":") xs
   | otherwise = []
 
 --------------------------------------------------------------------------------

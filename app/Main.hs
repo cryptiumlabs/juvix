@@ -3,21 +3,22 @@ module Main
   )
 where
 
+import qualified Data.Aeson as A
 import Data.Curve.Weierstrass.BLS12381 (Fr)
+import Data.Field.Galois (Prime, fromP, toP)
+import qualified Data.Scientific as S
 import Development.GitRev
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
-import qualified Juvix.Pipeline as Pipeline
 import Juvix.Pipeline (BMichelson, BPlonk)
+import qualified Juvix.Pipeline as Pipeline
 import Options
 import Options.Applicative
 import System.Directory
+import Text.Pretty.Simple (pPrint)
 import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import Text.RawString.QQ
-import qualified Data.Aeson as A
-import Data.Field.Galois (Prime, toP, fromP)
-import qualified Data.Scientific as S
-import Text.Pretty.Simple (pPrint)
+
 instance A.FromJSON Fr where
   parseJSON (A.Number n) = case S.floatingOrInteger n of
     Left floating -> panic $ "Can't parse floating :" <> show n
@@ -25,7 +26,6 @@ instance A.FromJSON Fr where
 
 instance A.ToJSON Fr where
   toJSON f = A.Number $ S.scientific (fromP f) 0
-
 
 context :: IO Context
 context = do

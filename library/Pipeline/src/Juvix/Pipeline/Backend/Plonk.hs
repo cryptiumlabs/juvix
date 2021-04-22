@@ -5,6 +5,7 @@ module Juvix.Pipeline.Backend.Plonk
   )
 where
 
+import qualified Data.Aeson as A
 import Data.Field.Galois (GaloisField)
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Backends.Plonk as Plonk
@@ -12,7 +13,6 @@ import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
-import qualified Data.Aeson as A
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
     TypedPrim,

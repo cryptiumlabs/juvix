@@ -110,6 +110,7 @@ compileTermWithWire term = do
       wire <- freshOutput
       emit $ MulGate (ConstGate 1) circ wire
       pure wire
+
 -- do
 -- traverse (P.deref <$> P.freshInput) args
 -- v <- lambda c a b ty

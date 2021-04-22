@@ -1,12 +1,12 @@
 module Main where
 
+import Juvix.Library (IO)
 import qualified Test.Context.Environment as Environment
 import qualified Test.Contextify as Contextify
 import qualified Test.Contextualise.Contextify as Contextualise
 import Test.Contextualise.Infix.ShuntYard (allInfixTests)
 import qualified Test.Desugar.Sexp as Sexp
 import Test.Golden (contractFiles)
-import Juvix.Library (IO)
 import qualified Test.Tasty as T
 
 frontEndTests :: T.TestTree

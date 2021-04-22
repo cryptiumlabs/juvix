@@ -144,7 +144,6 @@ instance (Pretty i, Show i, Show f) => Pretty (Gate i f) where
         text "*",
         parens (pretty r)
       ]
-
   pretty (EqualGate i _ o) =
     hsep
       [ pretty o,
@@ -152,7 +151,6 @@ instance (Pretty i, Show i, Show f) => Pretty (Gate i f) where
         pretty i,
         text "== 0 ? 0 : 1"
       ]
-
   pretty g = panic $ show g
 
 instance (Pretty i, Show f) => Pretty (AffineCircuit i f) where

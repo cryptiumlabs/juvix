@@ -36,7 +36,8 @@ paramConstant' _p Sexp.A {} = Nothing
 
 transformTermIR ::
   ( HasPatVars m,
-  Show primVal, Show primTy,
+    Show primVal,
+    Show primTy,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -71,9 +72,9 @@ paramConstant k = do
 -- 'transformTermIR' does that.
 transformTermHR ::
   (Show primTy, Show primVal, ReduceEff primTy primVal m) =>
-  NameSymbol.Mod
-  -> Sexp.T
-  -> m (HR.Term primTy primVal)
+  NameSymbol.Mod ->
+  Sexp.T ->
+  m (HR.Term primTy primVal)
 transformTermHR _ (Sexp.Atom a@Sexp.N {}) =
   HR.Prim <$> paramConstant a
 transformTermHR q (Sexp.Atom Sexp.A {atomName}) =
@@ -114,16 +115,18 @@ transformTermHR q p@(name Sexp.:> form)
 transformTermHR _ Sexp.Nil = error "malformed term HR"
 
 transformApplication ::
-  (Show primVal,
-  Show primTy,
-  ReduceEff primTy primVal m)
-  => NameSymbol.Mod
-  -> Sexp.T
-  -> m (HR.Term primTy primVal)
+  ( Show primVal,
+    Show primTy,
+    ReduceEff primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  Sexp.T ->
+  m (HR.Term primTy primVal)
 transformApplication q (f Sexp.:> args)
   | Just xs <- Sexp.toList args = do
-    tmp <- getSpecialE q f >>= \v -> do
-      flip go xs v
+    tmp <-
+      getSpecialE q f >>= \v -> do
+        flip go xs v
     pure tmp
   where
     go Nothing xs = do
@@ -163,8 +166,10 @@ transformApplication q (f Sexp.:> args)
 transformApplication _ _ = error "malformed application"
 
 namedArg ::
-  ( Show primTy, Show primVal,
-    ReduceEff primTy primVal m) =>
+  ( Show primTy,
+    Show primVal,
+    ReduceEff primTy primVal m
+  ) =>
   NameSymbol.Mod ->
   Sexp.T ->
   m (NameSymbol.T, HR.Term primTy primVal)
@@ -179,8 +184,10 @@ makeTuple [t] = t
 makeTuple (t : ts) = HR.Pair t (makeTuple ts)
 
 transformArrow ::
-  ( Show primTy, Show primVal,
-    ReduceEff primTy primVal m) =>
+  ( Show primTy,
+    Show primVal,
+    ReduceEff primTy primVal m
+  ) =>
   NameSymbol.Mod ->
   Sexp.T ->
   m (HR.Term primTy primVal)
@@ -224,7 +231,8 @@ transformSimpleLambda ::
   ( HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m,
-    Show primTy, Show primVal
+    Show primTy,
+    Show primVal
   ) =>
   NameSymbol.Mod ->
   Sexp.T ->
@@ -238,7 +246,8 @@ transformSimpleLet ::
   ( HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m,
-    Show primTy, Show primVal
+    Show primTy,
+    Show primVal
   ) =>
   NameSymbol.Mod ->
   Sexp.T ->
@@ -285,7 +294,8 @@ toElim _ (HR.Elim e) = pure e
 toElim e _ = throwFF $ NotAnElim e
 
 getValSig ::
-  ( Show primTy, Show primVal,
+  ( Show primTy,
+    Show primVal,
     HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
@@ -295,7 +305,8 @@ getValSig ::
 getValSig q = getSig' q \case ValSig π ty -> Just (π, ty); _ -> Nothing
 
 getConSig ::
-  ( Show primTy, Show primVal,
+  ( Show primTy,
+    Show primVal,
     HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
@@ -307,7 +318,8 @@ getConSig q = getSig' q \case
   _ -> Nothing
 
 getDataSig ::
-  ( Show primTy, Show primVal,
+  ( Show primTy,
+    Show primVal,
     HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
@@ -321,7 +333,8 @@ getDataSig q = getSig' q \case
 -- TODO: Module to backtrace the datatype to its constructors so that we can generate the signature (conType)
 
 getSig' ::
-  ( Show primTy, Show primVal,
+  ( Show primTy,
+    Show primVal,
     HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
@@ -346,10 +359,13 @@ conDefName :: NameSymbol.T -> NameSymbol.T
 conDefName = NameSymbol.applyBase (<> "$def")
 
 transformType ::
-  ( Show primTy, Show primVal, HasPatVars m,
+  ( Show primTy,
+    Show primVal,
+    HasPatVars m,
     HasNextPatVar m,
     ReduceEff primTy primVal m,
-    Show primTy, Show primVal
+    Show primTy,
+    Show primVal
   ) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
@@ -410,7 +426,8 @@ transformFunction ::
   ( ReduceEff primTy primVal m,
     HasNextPatVar m,
     HasPatVars m,
-    Show primVal, Show primTy
+    Show primVal,
+    Show primTy
   ) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
@@ -512,8 +529,10 @@ transformSig x def = trySpecial <||> tryNormal
 
 extractDataConstructorSigs :: Sexp.T -> [Sexp.T]
 extractDataConstructorSigs (typeCons Sexp.:> _ Sexp.:> dataCons)
-  | Just dataConsL <- Sexp.toList dataCons = fmap
-      (\n -> Sexp.cdr n Sexp.:> Sexp.car typeCons)  dataConsL
+  | Just dataConsL <- Sexp.toList dataCons =
+    fmap
+      (\n -> Sexp.cdr n Sexp.:> Sexp.car typeCons)
+      dataConsL
 extractDataConstructorSigs t = []
 
 transformNormalSig ::
@@ -526,7 +545,7 @@ transformNormalSig q x def@(Ctx.Def (Ctx.D π msig _ _)) =
   pure <$> transformValSig q x def π msig
 transformNormalSig _ _ (Ctx.Record record) =
   panic $ "Record not implemented" <> show record
-  -- pure [] -- TODO
+-- pure [] -- TODO
 transformNormalSig q x (Ctx.TypeDeclar typ) = do
   transformTypeSig q x typ
 transformNormalSig _ _ (Ctx.Unknown sig) =
@@ -545,7 +564,8 @@ transformValSig ::
   ( HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m,
-    Show primTy, Show primVal
+    Show primTy,
+    Show primVal
   ) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
@@ -561,8 +581,12 @@ transformValSig q _ _ _ (Just ty) =
 transformValSig _ x def _ _ = throwFF $ SigRequired x def
 
 transformDef ::
-  (ReduceEff primTy primVal m, HasNextPatVar m, HasPatVars m,
-   Show primTy, Show primVal) =>
+  ( ReduceEff primTy primVal m,
+    HasNextPatVar m,
+    HasPatVars m,
+    Show primTy,
+    Show primVal
+  ) =>
   NameSymbol.T ->
   Ctx.Definition Sexp.T Sexp.T Sexp.T ->
   m [CoreDef primTy primVal]
@@ -575,8 +599,12 @@ transformDef x def = do
         q = NameSymbol.mod x
 
 transformNormalDef ::
-  (ReduceEff primTy primVal m, HasNextPatVar m, HasPatVars m,
-   Show primTy, Show primVal) =>
+  ( ReduceEff primTy primVal m,
+    HasNextPatVar m,
+    HasPatVars m,
+    Show primTy,
+    Show primVal
+  ) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
   Ctx.Definition Sexp.T Sexp.T Sexp.T ->
@@ -691,11 +719,11 @@ transformConSigs pfx hd =
     -- We have a single constructor, which is a record
     toProducts (r@(record Sexp.:> _) Sexp.:> Sexp.Nil)
       | Sexp.isAtomNamed record ":record-d" = do
--- E.g.
--- ((":record-d" "x" "TopLevel.Prelude.Circuit.field" "y" "TopLevel.Prelude.Circuit.field" "z" "TopLevel.Prelude.Circuit.field"),
---   ":record-d",
---   ["Datatypes"],
---   Nothing)
+        -- E.g.
+        -- ((":record-d" "x" "TopLevel.Prelude.Circuit.field" "y" "TopLevel.Prelude.Circuit.field" "z" "TopLevel.Prelude.Circuit.field"),
+        --   ":record-d",
+        --   ["Datatypes"],
+        --   Nothing)
 
         throwFF $ RecordUnimplemented r
     -- we can't have another standalone product here, so just send to
@@ -713,7 +741,8 @@ transformCon ::
   ( ReduceEff primTy primVal m,
     HasPatVars m,
     HasNextPatVar m,
-    Show primTy, Show primVal
+    Show primTy,
+    Show primVal
   ) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
@@ -762,8 +791,12 @@ transformArg p@(name Sexp.:> _rest)
 transformArg pat = transformPat pat
 
 transformClause ::
-  ( Show primTy, Show primVal,
-    ReduceEff primTy primVal m, HasNextPatVar m, HasPatVars m) =>
+  ( Show primTy,
+    Show primVal,
+    ReduceEff primTy primVal m,
+    HasNextPatVar m,
+    HasPatVars m
+  ) =>
   NameSymbol.Mod ->
   Sexp.T ->
   m (IR.RawFunClause primTy primVal)
@@ -790,8 +823,9 @@ transformConSig q name mHd r@((t Sexp.:> ts) Sexp.:> _)
   | named ":arrow" = transformTermHR q ts
   | isNothing mHd = do
     transformTermHR q ts
-    -- throwFF $ InvalidConstructor name r
   where
+    -- throwFF $ InvalidConstructor name r
+
     named = Sexp.isAtomNamed t
 transformConSig q name mHd r@(t Sexp.:> ts)
   | isNothing mHd = do

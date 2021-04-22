@@ -1,6 +1,5 @@
 module Test.Context.Helpers where
 
-import Juvix.Library
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as Contextify
 import qualified Juvix.Contextify.ToContext.Types as Contextify
@@ -9,6 +8,7 @@ import qualified Juvix.Desugar as Desugar
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Sexp as SexpTrans
 import qualified Juvix.Frontend.Types.Base as Frontend
+import Juvix.Library
 import qualified Juvix.Library.Sexp as Sexp
 
 ----------------------------------------------------------------------

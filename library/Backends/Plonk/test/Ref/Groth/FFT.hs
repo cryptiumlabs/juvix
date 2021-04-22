@@ -77,9 +77,9 @@ fft omega_n as =
        in combine y0 y1 omegas
   where
     combine y0 y1 omegas =
-      (\xs -> map fst xs ++ map snd xs)
-        $ map (\(yk0, yk1, currentOmega) -> (yk0 + currentOmega * yk1, yk0 - currentOmega * yk1))
-        $ List.zip3 y0 y1 omegas
+      (\xs -> map fst xs ++ map snd xs) $
+        map (\(yk0, yk1, currentOmega) -> (yk0 + currentOmega * yk1, yk0 - currentOmega * yk1)) $
+          List.zip3 y0 y1 omegas
 
 -- | Inverse discrete Fourier transformation, uses FFT.
 inverseDft :: GaloisField k => (Int -> k) -> DFT k -> CoeffVec k

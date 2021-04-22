@@ -170,4 +170,5 @@ mapVarsIR f ir = case ir of
   IBinOp op e1 e2 -> IBinOp op (mapVarsIR f e1) (mapVarsIR f e2)
   IUnOp op e1 -> IUnOp op (mapVarsIR f e1)
   IIf b tr fl -> IIf (mapVarsIR f b) (mapVarsIR f tr) (mapVarsIR f fl)
+
 -- EEq lhs rhs -> EEq (mapVarsIR f lhs) (mapVarsIR f rhs)
