@@ -242,7 +242,7 @@ data TypecheckError' extV extT primTy primVal
       }
   | -- | datatype typechecking errors
     DatatypeError
-      {invalidType :: IR.Term' extT primTy primVal}
+      {invalidType :: IR.RawDataArg' extT primTy primVal}
   | ConDatatypeName
       {dtName :: IR.Neutral' extV primTy primVal}
   | ConAppTypeError
@@ -349,8 +349,8 @@ instance
   show (PartiallyAppliedConstructor pat) =
     "Partially-applied constructor in pattern " <> show pat
   show (EvalError err) = show err
-  show (DatatypeError ty) =
-    "checkDataType: invalid datatype: " <> show ty
+  show (DatatypeError arg) =
+    "checkDataType: invalid datatype arg: " <> show arg
   show (ConDatatypeName dtName) =
     "checkConType: datatype should be a free variable but it isn't: "
       <> show dtName

@@ -48,7 +48,7 @@ typeCheckConstructor param cname pos tel globals ty = do
   -- FIXME replace 'lift' with whatever capability does
   typechecked <- lift $ typeTerm param t (Annotation mempty (VStar 0))
   evaled <- lift $ liftEval $ Eval.evalTerm (Eval.lookupFun @ext globals) typechecked
-  -- _ <- checkConType 0 [] [] numberOfParams evaled
+  -- _ <- checkConType tel cname param evaled
   let (_, target) = typeToTele (name, t)
   -- FIXME replace 'lift'
   lift $ checkDeclared cname tel target
@@ -93,31 +93,37 @@ typeToTele (n, t) = ttt (n, t) []
         )
     ttt x tel = (tel, snd x)
 
--- | checkDataType takes 5 arguments.
+-- | checkDataType checks the datatype 
+-- (its constructors are checked by checkConType)
 checkDataType ::
-  (HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m) =>
-  -- | the next fresh generic value.
-  Int ->
-  -- | an env that binds fresh generic values to variables.
+  ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
+  Param.CanApply primTy,
+  Param.CanApply primVal,
+  Eval.CanEval extT NoExt primTy primVal,
+  Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primTy,
+  Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primVal,
+  Eq primTy,
+  Eq primVal,
+  IR.ValueAll Eq extV primTy primVal,
+  IR.NeutralAll Eq extV primTy primVal,
+  CanTC' extT primTy primVal m,
+  Param.CanApply (TypedPrim primTy primVal),
+  HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m,
+  HasThrow "typecheckError" (TypecheckError' extV NoExt primTy primVal) m
+  ) =>
+  -- | an env that contains the parameters of the datatype
   Telescope extV extT primTy primVal ->
-  -- | an env that binds the type value corresponding to these generic values.
-  Telescope extV extT primTy primVal ->
-  -- | the length of the telescope, or the no. of parameters.
-  Int ->
+  -- | name of the datatype
+  GlobalName ->
+  Param.Parameterisation primTy primVal ->
   -- | the expression that is left to be checked.
-  IR.Term' ext primTy primVal ->
+  IR.RawDataArg' extT primTy primVal ->
   m ()
-checkDataType k rho gamma p (Pi x t1 t2 _) = undefined
--- _ <-
---   if k < p -- if k < p then we're checking the parameters
---     then checkType k rho gamma t1 -- checks params are valid types
---     else checkSType k rho gamma t1 -- checks arguments Θ are Star types
---   v_t1 <- eval rho t1
---   checkDataType (k + 1) (updateTel rho x (VGen k)) (updateTel gamma x v_t1) p t2
--- check that the data type is of type Star
-checkDataType _k _rho _gamma _p (Star _ _) = return ()
-checkDataType _k _rho _gamma _p e =
-  throwTC $ DatatypeError e
+checkDataType tel dtName param arg =
+  case rawArgType arg of
+    Pi _ _ _ _ -> undefined
+    Star' _ _ -> return ()
+    _ -> throwTC $ DatatypeError arg
 
 -- | checkConType check constructor type
 checkConType ::
