@@ -93,23 +93,23 @@ typeToTele (n, t) = ttt (n, t) []
         )
     ttt x tel = (tel, snd x)
 
--- | checkDataType checks the datatype 
+-- | checkDataType checks the datatype
 -- (its constructors are checked by checkConType)
 checkDataType ::
   ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
-  Param.CanApply primTy,
-  Param.CanApply primVal,
-  Eval.CanEval extT NoExt primTy primVal,
-  Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primTy,
-  Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primVal,
-  Eq primTy,
-  Eq primVal,
-  IR.ValueAll Eq extV primTy primVal,
-  IR.NeutralAll Eq extV primTy primVal,
-  CanTC' extT primTy primVal m,
-  Param.CanApply (TypedPrim primTy primVal),
-  HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m,
-  HasThrow "typecheckError" (TypecheckError' extV NoExt primTy primVal) m
+    Param.CanApply primTy,
+    Param.CanApply primVal,
+    Eval.CanEval extT NoExt primTy primVal,
+    Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primTy,
+    Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primVal,
+    Eq primTy,
+    Eq primVal,
+    IR.ValueAll Eq extV primTy primVal,
+    IR.NeutralAll Eq extV primTy primVal,
+    CanTC' extT primTy primVal m,
+    Param.CanApply (TypedPrim primTy primVal),
+    HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m,
+    HasThrow "typecheckError" (TypecheckError' extV NoExt primTy primVal) m
   ) =>
   -- | an env that contains the parameters of the datatype
   Telescope extV extT primTy primVal ->

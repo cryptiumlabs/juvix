@@ -781,6 +781,7 @@ Typechecked declarations are added to the signature.
   + [[IR/Types]]
   + [[IR/Types]]
   + [[Globals]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 ******* Env <<Typechecker/Env>>
 - _Relies on_
