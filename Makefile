@@ -49,7 +49,7 @@ test:
 	stack test --fast --jobs=$(THREADS) --test-arguments "--hide-successes --ansi-tricks false"
 
 test-parser: build
-	find test/examples/demo -name "*.ju" | xargs -t -n 1 -I % stack exec juvix -- parse %
+	find test/examples/demo -name "*.ju" | xargs -t -n 1 -I % stack exec juvix -- parse % -b "michelson"
 
 test-typecheck: build
 	find test/examples/demo -name "*.ju" | xargs -t -n 1 -I % stack exec juvix -- typecheck % -b "michelson"

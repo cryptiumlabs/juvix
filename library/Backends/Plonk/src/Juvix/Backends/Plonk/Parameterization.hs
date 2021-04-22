@@ -216,32 +216,6 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext f) where
 applyProper :: Take f -> NonEmpty (Take f) -> Either (ApplyError f) (Return' ext f)
 applyProper fun args = panic "Apply proper not implemented"
 
---   case compd >>= Interpreter.dummyInterpret of
---     Right x -> do
---       retType <- toPrimType $ ErasedAnn.type' newTerm
---       pure $ Prim.Return {retType, retTerm = Constant x}
---     Left err -> Left $ CompilationError err
---   where
---     fun' = takeToTerm fun
---     args' = takeToTerm <$> toList args
---     newTerm = Run.applyPrimOnArgs fun' args'
---     -- TODO ∷ do something with the logs!?
---     (compd, _log) = Compilation.compileExpr newTerm
-
--- takeToTerm :: Take f -> RawTerm f
--- takeToTerm (Prim.Take {usage, type', term}) =
---   Ann {usage, type' = Prim.fromPrimType type', term = ErasedAnn.Prim term}
-
--- toPrimType :: ErasedAnn.Type (PrimTy f) -> Either ApplyError (P.PrimType (PrimTy f))
--- toPrimType ty = maybe err Right $ go ty
---   where
---     err = Left $ ReturnTypeNotPrimitive ty
---     go ty = goPi ty <|> (pure <$> goPrim ty)
---     goPi (ErasedAnn.Pi _ s t) = NonEmpty.cons <$> goPrim s <*> go t
---     goPi _ = Nothing
---     goPrim (ErasedAnn.PrimTy p) = Just p
---     goPrim _ = Nothing
-
 instance Eval.HasWeak (PrimTy f) where weakBy' _ _ t = t
 
 instance Eval.HasWeak (PrimVal f) where weakBy' _ _ t = t
