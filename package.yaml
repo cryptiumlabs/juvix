@@ -117,25 +117,6 @@ flags:
     manual: true
     default: false
 
-tests:
-  juvix-test:
-    main:         Main.hs
-    source-dirs:  test
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-    dependencies:
-      - elliptic-curve
-      - galois-field
-      - juvix
-      - parsec
-      - pretty-simple
-      - tasty
-      - tasty-hunit
-      - tasty-silver
-      - tasty-quickcheck
-
 benchmarks:
   juvix-bench:
     main:         Main.hs
