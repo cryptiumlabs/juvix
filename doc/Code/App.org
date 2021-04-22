@@ -1,20 +1,12 @@
 * Config
 - _Relies on_
   + [[Library]]
-* Interactive
-- _Relies on_
-  + [[HR]]
-  + [[Naturals]]
-  + [[Library]]
 * Main
 - _Relies on_
   + [[Library]]
   + [[Feedback]]
   + [[Pipeline]]
-<<<<<<< HEAD
   + [[Pipeline]]
-=======
->>>>>>> c35253f8139116fdad6f15440faafe4c79b7515e
 * Options
 - _Relies on_
   + [[Library]]
