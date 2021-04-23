@@ -130,9 +130,12 @@ instance Bitraversable (Arg' ext) where
 -- | An argument to a partially applied primitive, which must be fully-applied
 -- itself.
 data Take ty term = Take
-  { usage :: Usage.T, -- < Usage annotation for quantified types.
-    type' :: ty, -- < The type of the term.
-    term :: term -- < The term itself.
+  { -- | Usage annotation for quantified types.
+    usage :: Usage.T,
+    -- | The type of the term.
+    type' :: ty,
+    -- | The term itself.
+    term :: term
   }
   deriving (Show, Eq, Generic, Functor, Foldable, Traversable)
 
