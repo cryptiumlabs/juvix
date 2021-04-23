@@ -300,7 +300,6 @@ Module that implements the backend parameters for the Michelson backend.
 - _Relies on_
   + [[Compilation]]
   + [[Compilation/Types]]
-  + [[Compilation/Types]]
   + [[Michelson/Contract]]
   + [[Instructions]]
   + [[InstructionsEff]]

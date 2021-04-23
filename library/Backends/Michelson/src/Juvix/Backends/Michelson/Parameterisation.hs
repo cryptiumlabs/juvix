@@ -12,7 +12,6 @@ import qualified Control.Arrow as Arr
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
 import Juvix.Backends.Michelson.Compilation.Types as Types
-import qualified Juvix.Backends.Michelson.Compilation.Types as CompTypes
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
