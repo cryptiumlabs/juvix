@@ -4,6 +4,7 @@ module Juvix.Library.Parser.Lexer
     skipLiner,
     parens,
     brackets,
+    between,
     curly,
     many1H,
     sepBy1H,
@@ -15,14 +16,12 @@ module Juvix.Library.Parser.Lexer
   )
 where
 
--- space,
-
 import qualified Data.ByteString.Char8 as Char8
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Word8 (isDigit, isSpace)
+import Juvix.Library
 import Juvix.Library.Parser.Internal (Parser)
 import qualified Juvix.Library.Parser.Token as Tok
-import Protolude
 import qualified Text.Megaparsec as P
 import qualified Text.Megaparsec.Byte as P
 import Prelude (fail)
@@ -76,4 +75,4 @@ integer = do
   digits <- P.takeWhileP (Just "digits") isDigit
   case Char8.readInteger digits of
     Just (x, _) -> pure x
-    Nothing -> fail $ "didn't parse an int: " <> toS digits
+    Nothing -> fail $ "didn't parse an int"

@@ -3,39 +3,57 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages:
-- completed:
-    hackage: capability-0.3.0.0@sha256:0f198c6523b940517670c0ba62e4ee19622c3bb3d8c1b80293e5a882a150b41f,3262
-    pantry-tree:
-      size: 2449
-      sha256: cf5c08faf8fbfd281edb67381fb5a4ebc15c51a4b4785d6072327a67061b8eba
-  original:
-    hackage: capability-0.3.0.0@sha256:0f198c6523b940517670c0ba62e4ee19622c3bb3d8c1b80293e5a882a150b41f,3262
-- completed:
-    size: 15444
-    url: https://github.com/metastatedev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
-    name: extensible-data
-    version: 0.1.0
-    sha256: fae24b2dd3fd9c1fc1e3e13220d41ce415065876d10b5849e1a38effd5d66810
-    pantry-tree:
-      size: 1863
-      sha256: ea0eaebc5512c5f88fc4085874f05ca7d9445750efb0729e6dc6fefe48378ab0
-  original:
-    url: https://github.com/metastatedev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
-- completed:
-    size: 66205
-    url: https://github.com/cwgoes/haskell-z3/archive/889597234bcdf5620c5a69d3405ab4d607ba4d71.tar.gz
-    name: z3
-    version: '408.0'
-    sha256: 57207ca741e267db4b10fad1dbcf7c26336ebec49ea47a6eecd80256e0ad6654
-    pantry-tree:
-      size: 1524
-      sha256: 9e2a7d6867321b1c7b714ea2c08bd1ceecfe570d19dfe6d91e28905f2a7db29e
-  original:
-    url: https://github.com/cwgoes/haskell-z3/archive/889597234bcdf5620c5a69d3405ab4d607ba4d71.tar.gz
 snapshots:
-- completed:
-    size: 496120
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/16.yaml
-    sha256: cf30623a2c147f51eecc8f9d6440f5d1b671af21380505e633faff32b565f3d5
-  original: lts-15.16
+- original: lts-17.3
+  completed:
+    sha256: 1e9f31ec160a144f796bc49b91dfc2bab5eca88b1dcc93da569108febaf5b382
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/3.yaml
+    size: 563099
+packages:
+- original:
+    hackage: capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
+  completed:
+    pantry-tree:
+      sha256: 21bf502c888f32bd6aabeeef05bc2a362cf72bf694b432a0eda9431ac4cfea9b
+      size: 2581
+    hackage: capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
+- original:
+    url: https://github.com/metastatedev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
+  completed:
+    pantry-tree:
+      sha256: ea0eaebc5512c5f88fc4085874f05ca7d9445750efb0729e6dc6fefe48378ab0
+      size: 1863
+    version: 0.1.0
+    name: extensible-data
+    sha256: fae24b2dd3fd9c1fc1e3e13220d41ce415065876d10b5849e1a38effd5d66810
+    url: https://github.com/metastatedev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
+    size: 15444
+- original:
+    url: https://github.com/phile314/tasty-silver/archive/f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b.tar.gz
+  completed:
+    pantry-tree:
+      sha256: 540333aa07ba4f46c8bfb2e7cf75f756f908aa3f163f7c621cec10186238f27d
+      size: 784
+    version: 3.2.1
+    name: tasty-silver
+    sha256: 666b911fb302ef1e2ddb7562e3347674a91cae01b632958527f376c576e27852
+    url: https://github.com/phile314/tasty-silver/archive/f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b.tar.gz
+    size: 18968
+- original:
+    hackage: tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638
+  completed:
+    pantry-tree:
+      sha256: 0c8fb1ece12aa96b9e884a2c382bfe5f3688c0f7a69bc165bdae64674b4ffe83
+      size: 1873
+    hackage: tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638
+- original:
+    url: https://github.com/cwgoes/haskell-z3/archive/889597234bcdf5620c5a69d3405ab4d607ba4d71.tar.gz
+  completed:
+    pantry-tree:
+      sha256: 9e2a7d6867321b1c7b714ea2c08bd1ceecfe570d19dfe6d91e28905f2a7db29e
+      size: 1524
+    version: '408.0'
+    name: z3
+    sha256: 57207ca741e267db4b10fad1dbcf7c26336ebec49ea47a6eecd80256e0ad6654
+    url: https://github.com/cwgoes/haskell-z3/archive/889597234bcdf5620c5a69d3405ab4d607ba4d71.tar.gz
+    size: 66205

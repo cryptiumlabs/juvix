@@ -1,9 +1,14 @@
-module Main where
+{-# LANGUAGE TypeApplications #-}
 
-import qualified Compile as Compile
-import qualified Config as Config
+module Main
+  ( main,
+  )
+where
+
 import Development.GitRev
 import Juvix.Library
+import qualified Juvix.Library.Feedback as Feedback
+import qualified Juvix.Pipeline as Pipeline
 import Options
 import Options.Applicative
 import System.Directory
@@ -93,28 +98,32 @@ interactiveDoc =
         ]
     ]
 
+-- | Run the main program.
 run :: Context -> Options -> IO ()
-run _ctx (Options cmd configPath) = do
-  maybeConfig <- Config.loadT configPath
-  case cmd of
-    Parse fin -> do
-      Compile.parse fin >> pure ()
-    Typecheck fin backend -> do
-      Compile.typecheck fin backend >> pure ()
-    Compile fin fout backend -> do
-      Compile.compile fin fout backend
-    Version -> do
-      putDoc versionDoc
-      exitSuccess
-    {-
-    Interactive -> do
-      putDoc interactiveDoc
-      if isJust maybeConfig
-        then putStrLn ("Loaded runtime configuration from " <> configPath <> "\n")
-        else putStrLn ("Loaded default runtime configuration.\n" :: Text)
-      Interactive.interactive ctx conf
-      exitSuccess
-    -}
-    _ -> do
-      putText "Not yet implemented!"
-      exitFailure
+run ctx opt = do
+  feedback <- Feedback.runFeedbackT $ run' ctx opt
+  case feedback of
+    Feedback.Success msgs _ -> mapM putStrLn msgs >> exitSuccess
+    Feedback.Fail msgs -> mapM putStrLn msgs >> exitFailure
+  where
+    run' :: Context -> Options -> Pipeline.Pipeline ()
+    run' _ (Options cmd _) = do
+      case cmd of
+        Parse fin ->
+          do liftIO $ readFile fin
+            >>= Pipeline.parse
+            >>= liftIO . print
+        Typecheck fin (Michelson backend) -> do
+          liftIO (readFile fin)
+            >>= Pipeline.parse
+            >>= Pipeline.typecheck @Pipeline.BMichelson
+            >>= liftIO . print
+        Compile fin fout (Michelson backend) -> do
+          liftIO (readFile fin)
+            >>= Pipeline.parse
+            >>= Pipeline.typecheck @Pipeline.BMichelson
+            >>= Pipeline.compile @Pipeline.BMichelson
+            >>= Pipeline.writeout fout
+            >>= liftIO . print
+        Version -> liftIO $ putDoc versionDoc
+        _ -> Feedback.fail "Not implemented yet."

@@ -11,11 +11,11 @@ environment:
 
 steps:
   - name: script-integrity-check
-    image: alpine:3.7
+    image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "db8b594e21d4d8435e501e2deae3abf48c9cc50984699d08d090ac32431778e9  scripts/check-formatting.sh" | sha256sum -c -
-      - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
+      - echo "f71e5bbd918638e910da3b82936cd366abc0323d96fd17298eb50f40309984f4  scripts/pre-run.sh" | sha256sum -c -
+      - sh ./scripts/pre-run.sh
 
   - name: restore-cache
     image: meltwater/drone-cache
@@ -71,24 +71,10 @@ steps:
         from_secret: aws_access_key_id
       AWS_SECRET_ACCESS_KEY:
         from_secret: aws_secret_access_key
-    depends_on:
-      - test-suite
-
-  - name: check-formatting
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - sh ./scripts/check-formatting.sh
-    depends_on:
-      - test-suite
-
-  - name: check-org-gen
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - sh ./scripts/check-org-gen.sh
+    when:
+      status:
+        - success
+        - failure
     depends_on:
       - test-suite
 
@@ -118,6 +104,28 @@ steps:
       - make test-compile
     depends_on:
       - test-suite
+  
+  - name: org-generation-and-code-formatting
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    pull: if-not-exists
+    failure: fast
+    commands:
+      - sh ./scripts/format-and-org-gen.sh   
+    depends_on:
+      - test-typecheck
+      - test-compile
+      - test-parser
+
+  - name: push changes
+    image: openanalytics/alpine-git-lfs-client
+    pull: if-not-exists
+    commands:
+      - sh ./scripts/push-changes.sh
+    environment:
+      GITHUB_TOKEN:
+        from_secret: github_token
+    depends_on:
+      - org-generation-and-code-formatting
 
 volumes:
   - name: cache
@@ -140,15 +148,16 @@ environment:
 
 steps:
   - name: script-integrity-check
-    image: alpine:3.7
+    image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "db8b594e21d4d8435e501e2deae3abf48c9cc50984699d08d090ac32431778e9  scripts/check-formatting.sh" | sha256sum -c -
-      - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
+      - echo "f71e5bbd918638e910da3b82936cd366abc0323d96fd17298eb50f40309984f4  scripts/pre-run.sh" | sha256sum -c -
+      - sh ./scripts/pre-run.sh
 
   - name: restore-cache
     image: meltwater/drone-cache
     pull: if-not-exists
+>>>>>>> develop
     settings:
       backend: "s3"
       restore: true
@@ -200,6 +209,10 @@ steps:
         from_secret: aws_access_key_id
       AWS_SECRET_ACCESS_KEY:
         from_secret: aws_secret_access_key
+    when:
+      status:
+        - success
+        - failure
     depends_on:
       - test-suite
 
@@ -260,6 +273,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 2ecb2eabc15dcd814bf9028c63f9eacdbe5c4694f3b5390951b4306fa2bfeca5
+hmac: e0375b1e8477b07b9fa7ead8f95894c32ef802d4062a82e662d2d4546d59b74f
 
 ...

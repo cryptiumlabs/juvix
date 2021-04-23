@@ -57,8 +57,8 @@ optimiseSeq ops =
       rest
     (PrimEx (DUP _) : PrimEx (DIP [PrimEx DROP]) : rest) ->
       rest
-    (PrimEx SWAP : PrimEx (DUP _) : PrimEx (DIP [PrimEx SWAP]) : rest) ->
-      PrimEx (DIP [PrimEx (DUP "")]) : PrimEx SWAP : rest
+    (PrimEx SWAP : PrimEx (DUP a) : PrimEx (DIP [PrimEx SWAP]) : rest) ->
+      PrimEx (DIP [PrimEx (DUP a)]) : PrimEx SWAP : rest
     (PrimEx (DUP ann) : PrimEx SWAP : rest) ->
       PrimEx (DUP ann) : rest
     (PrimEx SWAP : PrimEx SWAP : rest) ->

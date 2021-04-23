@@ -21,6 +21,8 @@ dependencies:
   - extensible-data
   - capability >= 0.2.0.0
   - syb
+  - temporary
+  - Pipeline
   ###########################
   # Libraries
   ###########################
@@ -29,6 +31,7 @@ dependencies:
   - core
   - translate
   - michelson
+  - EasyPipeline
   # - llvm
   # - interaction-net
   # - arithmetic-circuit
@@ -93,17 +96,6 @@ default-extensions:
   - TupleSections
   - BlockArguments
 
-ghc-options:
-  - -ferror-spans
-  - -Wall
-  - -fno-warn-orphans
-  - -fno-warn-name-shadowing
-  - -fno-warn-missing-pattern-synonym-signatures
-  - -j
-  - -static
-  - -fwrite-ide-info
-  - -optP-Wno-nonportable-include-path
-
 when:
   condition: flag(incomplete-error)
   ghc-options:
@@ -119,24 +111,6 @@ flags:
     manual: true
     default: false
 
-library:
-  source-dirs: src
-  dependencies:
-    - derive-storable
-    - derive-storable-plugin
-    - jsonschema-gen
-  exposed-modules:
-    - Juvix
-    - Juvix.Pipeline
-    - Juvix.Core
-    - Juvix.Core.Pipeline
-    - Juvix.Core.FromFrontend
-    - Juvix.Encoding.Encoding
-    - Juvix.Encoding.Mendler
-    - Juvix.Encoding.Scott
-    - Juvix.Encoding.Types
-    - Juvix.Backends
-
 executables:
   juvix:
     source-dirs:      app
@@ -146,30 +120,14 @@ executables:
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
+      - aeson
+      - ansi-wl-pprint
+      - gitrev
+      - haskeline
       - juvix
       - optparse-applicative
-      - ansi-wl-pprint
       - raw-strings-qq
       - yaml
-      - aeson
-      - haskeline
-      - gitrev
-
-tests:
-  juvix-test:
-    main:         Main.hs
-    source-dirs:  test
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-    dependencies:
-      - juvix
-      - tasty
-      - tasty-hunit
-      - tasty-silver
-      - tasty-quickcheck
-      - parsec
 
 benchmarks:
   juvix-bench:
@@ -182,3 +140,8 @@ benchmarks:
     dependencies:
       - juvix
       - criterion
+
+library:
+  source-dirs: src
+  exposed-modules:
+    - Juvix

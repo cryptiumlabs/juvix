@@ -1,6 +1,0 @@
-cradle:
-  stack:
-    - path: ./src
-      component: "InteractionNetIR"
-    - path: ./test
-      component: "InteractionNetIR:test:InteractionNetIR-test"

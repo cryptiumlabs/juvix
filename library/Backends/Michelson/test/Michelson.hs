@@ -411,7 +411,7 @@ identityTerm =
       [ Ann one (primTy opl) (J.Prim (Constant M.ValueNil)),
         Ann
           one
-          (J.PrimTy (PrimTy (M.Type M.TUnit "")))
+          (J.PrimTy (PrimTy (M.Ty M.TUnit Untyped.blank)))
           $ J.AppM
             ( Ann
                 one
@@ -630,7 +630,7 @@ identityTerm2 =
           $ J.Var "x"
       ]
 
-primLam :: NonEmpty M.Type -> Type
+primLam :: NonEmpty M.Ty -> Type
 primLam (ty :| []) = J.PrimTy (PrimTy ty)
 primLam (ty :| (t : ts)) = J.Pi one (J.PrimTy (PrimTy ty)) (primLam (t :| ts))
 
@@ -787,11 +787,11 @@ ifIntConst =
 
 ifIntAns :: [Op]
 ifIntAns =
-  [ PrimEx (PUSH "" (M.Type M.TBool "") ValueTrue),
+  [ PrimEx (PUSH Untyped.blank (M.Ty M.TBool Untyped.blank) ValueTrue),
     PrimEx
       ( M.IF
-          [PUSH "" (M.Type TInt "") (ValueInt 3) |> PrimEx]
-          [PUSH "" (M.Type TInt "") (ValueInt 4) |> PrimEx]
+          [PUSH Untyped.blank (M.Ty TInt Untyped.blank) (ValueInt 3) |> PrimEx]
+          [PUSH Untyped.blank (M.Ty TInt Untyped.blank) (ValueInt 4) |> PrimEx]
       )
   ]
 
@@ -799,35 +799,39 @@ constUIntAns :: [Op]
 constUIntAns =
   [ PrimEx
       ( LAMBDA
-          ""
-          ( M.Type
+          Untyped.blank
+          ( M.Ty
               ( TLambda
-                  ( M.Type
+                  ( M.Ty
                       ( TPair
-                          ""
-                          ""
-                          (M.Type TUnit "")
-                          ( M.Type
+                          Untyped.blank
+                          Untyped.blank
+                          Untyped.blank
+                          Untyped.blank
+                          (M.Ty TUnit Untyped.blank)
+                          ( M.Ty
                               ( TPair
-                                  ""
-                                  ""
-                                  (M.Type TInt "")
-                                  (M.Type (TPair "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
+                                  Untyped.blank
+                                  Untyped.blank
+                                  Untyped.blank
+                                  Untyped.blank
+                                  (M.Ty TInt Untyped.blank)
+                                  (M.Ty (TPair Untyped.blank Untyped.blank Untyped.blank Untyped.blank (M.Ty TUnit Untyped.blank) (M.Ty TUnit Untyped.blank)) Untyped.blank)
                               )
-                              ""
+                              Untyped.blank
                           )
                       )
-                      ""
+                      Untyped.blank
                   )
-                  (M.Type TInt "")
+                  (M.Ty TInt Untyped.blank)
               )
-              ""
+              Untyped.blank
           )
-          (M.Type TInt "")
+          (M.Ty TInt Untyped.blank)
           [ SeqEx
-              [ PrimEx (DUP ""),
-                PrimEx (CAR "" ""),
-                PrimEx (DIP [PrimEx (CDR "" "")]),
+              [ PrimEx (DUP Untyped.blank),
+                PrimEx (CAR Untyped.blank Untyped.blank),
+                PrimEx (DIP [PrimEx (CDR Untyped.blank Untyped.blank)]),
                 PrimEx (DIP [SeqEx []])
               ],
             PrimEx (DIG 0),
@@ -837,13 +841,13 @@ constUIntAns =
   ]
 
 nilAns :: [Op]
-nilAns = [PrimEx (NIL "" "" int)]
+nilAns = [PrimEx (NIL Untyped.blank Untyped.blank int)]
 
 intListAns :: [Op]
 intListAns =
   nilAns
-    <> [ PrimEx (PUSH "" (M.Type TInt "") (ValueInt 3)),
-         PrimEx (CONS "")
+    <> [ PrimEx (PUSH Untyped.blank (M.Ty TInt Untyped.blank) (ValueInt 3)),
+         PrimEx (CONS Untyped.blank)
        ]
 
 -- [SeqEx [PrimEx (DUP @)
@@ -855,83 +859,83 @@ intListAns =
 
 xtwiceAns :: [Op]
 xtwiceAns =
-  [ PrimEx (PUSH "" (M.Type TInt "") (ValueInt 4)),
-    PrimEx (PUSH "" (M.Type TInt "") (ValueInt 3)),
-    PrimEx (PUSH "" (M.Type TInt "") (ValueInt 2)),
+  [ PrimEx (PUSH Untyped.blank (M.Ty TInt Untyped.blank) (ValueInt 4)),
+    PrimEx (PUSH Untyped.blank (M.Ty TInt Untyped.blank) (ValueInt 3)),
+    PrimEx (PUSH Untyped.blank (M.Ty TInt Untyped.blank) (ValueInt 2)),
     SeqEx
       [ PrimEx (DIG 1),
-        PrimEx (DUP ""),
+        PrimEx (DUP Untyped.blank),
         PrimEx (DUG 2)
       ],
     PrimEx (DIG 2),
-    PrimEx (MUL ""),
+    PrimEx (MUL Untyped.blank),
     PrimEx (DIPN 1 [PrimEx DROP]),
     PrimEx (DIPN 1 [PrimEx DROP])
   ]
 
 oddAppAns :: [Op]
 oddAppAns =
-  [ PrimEx (PUSH "" (M.Type TInt "") (ValueInt 4)),
-    PrimEx (PUSH "" (M.Type TInt "") (ValueInt 3)),
-    PrimEx (PUSH "" (M.Type TInt "") (ValueInt 2)),
+  [ PrimEx (PUSH Untyped.blank (M.Ty TInt Untyped.blank) (ValueInt 4)),
+    PrimEx (PUSH Untyped.blank (M.Ty TInt Untyped.blank) (ValueInt 3)),
+    PrimEx (PUSH Untyped.blank (M.Ty TInt Untyped.blank) (ValueInt 2)),
     SeqEx
       [ PrimEx (DIG 1),
-        PrimEx (DUP ""),
+        PrimEx (DUP Untyped.blank),
         PrimEx (DUG 2)
       ],
     PrimEx (DIG 0),
     PrimEx (DIG 2),
-    PrimEx (MUL ""),
+    PrimEx (MUL Untyped.blank),
     PrimEx (DIPN 1 [PrimEx DROP]),
     PrimEx (DIPN 1 [PrimEx DROP])
   ]
 
 addDoublePairsAns :: [Op]
 addDoublePairsAns =
-  [ PrimEx (PUSH "" (M.Type TInt "") (ValueInt 3)),
-    PrimEx (PUSH "" (M.Type TInt "") (ValueInt 4)),
-    PrimEx (PAIR "" "" "" ""),
-    PrimEx (PUSH "" (M.Type TInt "") (ValueInt 5)),
-    PrimEx (PUSH "" (M.Type TInt "") (ValueInt 6)),
-    PrimEx (PAIR "" "" "" ""),
-    PrimEx (PAIR "" "" "" ""), -- stack: [((3,4),(5,6))]
+  [ PrimEx (PUSH Untyped.blank (M.Ty TInt Untyped.blank) (ValueInt 3)),
+    PrimEx (PUSH Untyped.blank (M.Ty TInt Untyped.blank) (ValueInt 4)),
+    PrimEx (PAIR Untyped.blank Untyped.blank Untyped.blank Untyped.blank),
+    PrimEx (PUSH Untyped.blank (M.Ty TInt Untyped.blank) (ValueInt 5)),
+    PrimEx (PUSH Untyped.blank (M.Ty TInt Untyped.blank) (ValueInt 6)),
+    PrimEx (PAIR Untyped.blank Untyped.blank Untyped.blank Untyped.blank),
+    PrimEx (PAIR Untyped.blank Untyped.blank Untyped.blank Untyped.blank), -- stack: [((3,4),(5,6))]
     SeqEx
       [ PrimEx (DIG 0),
-        PrimEx (DUP ""),
+        PrimEx (DUP Untyped.blank),
         PrimEx (DUG 1) --         stack: [((3,4),(5,6)) : ((3,4),(5,6))]
       ],
-    PrimEx (CDR "" ""), --        stack: [(3,4) : ((3,4),(5,6))]
+    PrimEx (CDR Untyped.blank Untyped.blank), --        stack: [(3,4) : ((3,4),(5,6))]
     SeqEx
       [ PrimEx (DIG 0),
-        PrimEx (DUP ""),
+        PrimEx (DUP Untyped.blank),
         PrimEx (DUG 1) --         stack: [(3,4) : (3,4) : ((3,4),(5,6))]
       ],
-    PrimEx (CDR "" ""), --        stack: [4 : 3 : ((3,4),(5,6))]
+    PrimEx (CDR Untyped.blank Untyped.blank), --        stack: [4 : 3 : ((3,4),(5,6))]
     PrimEx (DIG 1), --            stack: [(3,4) : 3 : ((3,4),(5,6))]
-    PrimEx (CAR "" ""), --        stack: [3 : (3,4) : ((3,4),(5,6))]
-    PrimEx (ADD ""), --           stack: [7 : ((3,4),(5,6))]
+    PrimEx (CAR Untyped.blank Untyped.blank), --        stack: [3 : (3,4) : ((3,4),(5,6))]
+    PrimEx (ADD Untyped.blank), --           stack: [7 : ((3,4),(5,6))]
     PrimEx (DIG 1), --            stack: [((3,4),(5,6)) : 7]
-    PrimEx (CAR "" ""), --        stack: [(5,6) : 7]
+    PrimEx (CAR Untyped.blank Untyped.blank), --        stack: [(5,6) : 7]
     SeqEx
       [ PrimEx (DIG 0),
-        PrimEx (DUP ""),
+        PrimEx (DUP Untyped.blank),
         PrimEx (DUG 1) --         stack: [(5,6) : (5,6) : 7]
       ],
-    PrimEx (CDR "" ""), --        stack: [5 : 6 : 7]
+    PrimEx (CDR Untyped.blank Untyped.blank), --        stack: [5 : 6 : 7]
     PrimEx (DIG 1), --            stack: [(5,6) : 5 : 7]
-    PrimEx (CAR "" ""), --        stack: [5 : (5,6) : 7]
-    PrimEx (ADD ""), --           stack: [11 : 7]
-    PrimEx (PAIR "" "" "" "") --  stack: [(11,7)]
+    PrimEx (CAR Untyped.blank Untyped.blank), --        stack: [5 : (5,6) : 7]
+    PrimEx (ADD Untyped.blank), --           stack: [11 : 7]
+    PrimEx (PAIR Untyped.blank Untyped.blank Untyped.blank Untyped.blank) --  stack: [(11,7)]
   ]
 
 overExactConstAns :: [Op]
-overExactConstAns = [PrimEx (PUSH "" (M.Type TUnit "") ValueUnit)]
+overExactConstAns = [PrimEx (PUSH Untyped.blank (M.Ty TUnit Untyped.blank) ValueUnit)]
 
 overExactNonConstAns :: [Op]
 overExactNonConstAns =
-  [ PrimEx (PUSH "" (M.Type TUnit "") ValueUnit),
-    PrimEx (PUSH "" (M.Type TUnit "") ValueUnit),
-    PrimEx (PUSH "" (M.Type TUnit "") ValueUnit),
+  [ PrimEx (PUSH Untyped.blank (M.Ty TUnit Untyped.blank) ValueUnit),
+    PrimEx (PUSH Untyped.blank (M.Ty TUnit Untyped.blank) ValueUnit),
+    PrimEx (PUSH Untyped.blank (M.Ty TUnit Untyped.blank) ValueUnit),
     PrimEx (DIPN 0 [PrimEx DROP]),
     PrimEx (DIPN 0 [PrimEx DROP]),
     PrimEx (DIG 0)
@@ -947,44 +951,50 @@ identityTermAns :: [Op]
 identityTermAns =
   [ PrimEx
       ( LAMBDA
-          ""
-          ( M.Type
+          Untyped.blank
+          ( M.Ty
               ( TLambda
-                  ( M.Type
+                  ( M.Ty
                       ( TPair
-                          ""
-                          ""
-                          (M.Type TUnit "")
-                          ( M.Type
+                          Untyped.blank
+                          Untyped.blank
+                          Untyped.blank
+                          Untyped.blank
+                          (M.Ty TUnit Untyped.blank)
+                          ( M.Ty
                               ( TPair
-                                  ""
-                                  ""
-                                  ( M.Type
+                                  Untyped.blank
+                                  Untyped.blank
+                                  Untyped.blank
+                                  Untyped.blank
+                                  ( M.Ty
                                       ( TPair
-                                          ""
-                                          ""
-                                          (M.Type TUnit "")
-                                          (M.Type TUnit "")
+                                          Untyped.blank
+                                          Untyped.blank
+                                          Untyped.blank
+                                          Untyped.blank
+                                          (M.Ty TUnit Untyped.blank)
+                                          (M.Ty TUnit Untyped.blank)
                                       )
-                                      ""
+                                      Untyped.blank
                                   )
-                                  (M.Type TUnit "")
+                                  (M.Ty TUnit Untyped.blank)
                               )
-                              ""
+                              Untyped.blank
                           )
                       )
-                      ""
+                      Untyped.blank
                   )
-                  (M.Type (TPair "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
+                  (M.Ty (TPair Untyped.blank Untyped.blank Untyped.blank Untyped.blank (M.Ty TUnit Untyped.blank) (M.Ty TUnit Untyped.blank)) Untyped.blank)
               )
-              ""
+              Untyped.blank
           )
-          (M.Type (TPair "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
+          (M.Ty (TPair Untyped.blank Untyped.blank Untyped.blank Untyped.blank (M.Ty TUnit Untyped.blank) (M.Ty TUnit Untyped.blank)) Untyped.blank)
           [ SeqEx [],
             PrimEx (DIG 0),
-            PrimEx (CAR "" ""),
-            PrimEx (NIL "" "" (M.Type TOperation "")),
-            PrimEx (PAIR "" "" "" "")
+            PrimEx (CAR Untyped.blank Untyped.blank),
+            PrimEx (NIL Untyped.blank Untyped.blank (M.Ty TOperation Untyped.blank)),
+            PrimEx (PAIR Untyped.blank Untyped.blank Untyped.blank Untyped.blank)
           ]
       )
   ]
@@ -1004,16 +1014,16 @@ identityType :: Type
 identityType =
   J.Pi one (primTy unitPair) (primTy (Untyped.pair opl unit))
 
-unitl :: M.Type
+unitl :: M.Ty
 unitl = Untyped.list Untyped.unit
 
-unitPair :: M.Type
+unitPair :: M.Ty
 unitPair = Untyped.pair unit unit
 
-opl :: M.Type
+opl :: M.Ty
 opl = Untyped.list Untyped.operation
 
-unit :: M.Type
+unit :: M.Ty
 unit = Untyped.unit
 
 primPairTy :: Type
@@ -1023,14 +1033,14 @@ primPairTy =
     $ primTy
     $ Untyped.pair opl Untyped.unit
 
-int :: M.Type
+int :: M.Ty
 int = Untyped.int
 
-pairInt :: M.Type
+pairInt :: M.Ty
 pairInt =
   Untyped.pair int int
 
-car :: M.Type -> M.Type -> RawTerm -> RawTerm
+car :: M.Ty -> M.Ty -> RawTerm -> RawTerm
 car pairFst pairSnd pair =
   Ann one (primTy pairFst) $
     J.AppM
@@ -1041,7 +1051,7 @@ car pairFst pairSnd pair =
       )
       [pair]
 
-cdr :: M.Type -> M.Type -> RawTerm -> RawTerm
+cdr :: M.Ty -> M.Ty -> RawTerm -> RawTerm
 cdr pairFst pairSnd pair =
   Ann one (primTy pairSnd) $
     J.AppM
@@ -1056,7 +1066,7 @@ cdr pairFst pairSnd pair =
 -- general abstractions
 --------------------------------------------------------------------------------
 
-primTy :: M.Type -> J.Type PrimTy
+primTy :: M.Ty -> J.Type PrimTy
 primTy = J.PrimTy . PrimTy
 
 annIntOne :: Integer -> RawTerm
@@ -1069,7 +1079,7 @@ pushInt usage i = pushUsage usage (M.ValueInt i) Untyped.int
 push1Int :: Integer -> AnnTerm PrimTy RawPrimVal
 push1Int i = push1 (M.ValueInt i) Untyped.int
 
-pushUsage :: Usage -> M.Value' Op -> M.Type -> AnnTerm PrimTy RawPrimVal
+pushUsage :: Usage -> M.Value' Op -> M.Ty -> AnnTerm PrimTy RawPrimVal
 pushUsage usage const ty =
   Ann
     usage
@@ -1082,7 +1092,7 @@ pushUsage usage const ty =
       )
       [Ann one (primTy ty) (J.Prim (Constant const))]
 
-push1 :: M.Value' Op -> M.Type -> AnnTerm PrimTy RawPrimVal
+push1 :: M.Value' Op -> M.Ty -> AnnTerm PrimTy RawPrimVal
 push1 const ty =
   Ann
     one
@@ -1096,14 +1106,14 @@ push1 const ty =
       [Ann one (primTy ty) (J.Prim (Constant const))]
 
 true' :: AnnTerm PrimTy RawPrimVal
-true' = Ann one (primTy (M.Type M.TBool "")) (J.Prim (Constant M.ValueTrue))
+true' = Ann one (primTy (M.Ty M.TBool Untyped.blank)) (J.Prim (Constant M.ValueTrue))
 
 false' :: AnnTerm PrimTy RawPrimVal
-false' = Ann one (primTy (M.Type M.TBool "")) (J.Prim (Constant M.ValueFalse))
+false' = Ann one (primTy (M.Ty M.TBool Untyped.blank)) (J.Prim (Constant M.ValueFalse))
 
-if' :: M.Type -> AnnTerm PrimTy RawPrimVal
+if' :: M.Ty -> AnnTerm PrimTy RawPrimVal
 if' ty =
   M.IF [] []
     |> Inst
     |> J.Prim
-    |> Ann one (J.Pi one (primTy (M.Type M.TBool "")) (J.Pi one (primTy ty) (J.Pi one (primTy ty) (primTy ty))))
+    |> Ann one (J.Pi one (primTy (M.Ty M.TBool Untyped.blank)) (J.Pi one (primTy ty) (J.Pi one (primTy ty) (primTy ty))))

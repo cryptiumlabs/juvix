@@ -1,0 +1,132 @@
+name:                Pipeline
+version:             0.1.0.0
+github:              "healiaxdev/Pipeline"
+license:             BSD3
+author:              "Author name here"
+maintainer:          "example@example.com"
+copyright:           "2021 Author name here"
+
+extra-source-files:
+- README.org
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/Pipeline#readme>
+
+dependencies:
+  - base >= 4.11 && < 5
+  - directory
+  - lens
+  - Cabal
+  - extensible-data
+  - capability >= 0.2.0.0
+  - syb
+  - temporary
+  ###########################
+  # Libraries
+  ###########################
+  - standard-library
+  - frontend
+  - core
+  - translate
+  - michelson
+  # - llvm
+  # - interaction-net
+  # - arithmetic-circuit
+  # - InteractionNetIR
+  ###########################
+  # Dependency for OS
+  ###########################
+  - turtle
+  - time
+  - filepath
+  ###########################
+  # Dependency for Structs
+  ###########################
+  - text
+  - mtl
+  - containers
+  - unordered-containers
+  - hashable
+  - fgl
+  - fgl-visualize
+  - bytestring
+
+  ###########################
+  # Dependency for Morley
+  ###########################
+  - morley
+
+default-extensions:
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - NoMonomorphismRestriction
+  - RankNTypes
+  - LambdaCase
+  - UnicodeSyntax
+  - GADTs
+  - ScopedTypeVariables
+  - DeriveDataTypeable
+  - DeriveGeneric
+  - DerivingStrategies
+  - FlexibleContexts
+  - FlexibleInstances
+  - DataKinds
+  - GeneralizedNewtypeDeriving
+  - DefaultSignatures
+  - QuasiQuotes
+  - TypeOperators
+  - MultiParamTypeClasses
+  - MultiWayIf
+  - TypeInType
+  - DerivingVia
+  - TypeApplications
+  - StandaloneDeriving
+  - FunctionalDependencies
+  - PatternSynonyms
+  - TypeFamilies
+  - ConstraintKinds
+  - EmptyDataDeriving
+  - TemplateHaskell
+  - NamedFieldPuns
+  - DisambiguateRecordFields
+  - TupleSections
+  - BlockArguments
+
+when:
+  condition: flag(incomplete-error)
+  ghc-options:
+    - -Werror=incomplete-patterns
+    - -Werror=missing-fields
+    - -Werror=missing-methods
+
+flags:
+  incomplete-error:
+    description: >
+      Incomplete patterns, missing record fields, and missing class methods are
+      an error
+    manual: true
+    default: false
+
+
+library:
+  source-dirs: src
+
+tests:
+  Pipeline-test:
+    main:                Main.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - Pipeline
+    - tasty
+    - tasty-hunit

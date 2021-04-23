@@ -83,6 +83,8 @@ import Protolude hiding
     catchJust,
     get,
     gets,
+    isDigit,
+    isSpace,
     local,
     modify,
     moduleName,
@@ -90,7 +92,9 @@ import Protolude hiding
     put,
     reader,
     state,
+    typeOf,
     undefined,
+    yield,
   )
 import Prelude (Show (..), String, error)
 

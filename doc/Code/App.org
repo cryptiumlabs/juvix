@@ -1,37 +1,17 @@
-* Compile
-- _Relies on_
-  + [[Compilation]]
-  + [[Parameterisation]]
-  + [[Application]]
-  + [[ErasedAnn]]
-  + [[FromFrontend]]
-  + [[IR]]
-  + [[Base]]
-  + [[Globals]]
-  + [[Parameterisation]]
-  + [[Pipeline]]
-  + [[Environment]]
-  + [[Library]]
-  + [[Pipeline]]
 * Config
 - _Relies on_
   + [[Library]]
 * Interactive
 - _Relies on_
-  + [[Core]]
   + [[HR]]
   + [[Naturals]]
   + [[Library]]
 * Main
 - _Relies on_
   + [[Library]]
+  + [[Feedback]]
+  + [[Pipeline]]
 * Options
 - _Relies on_
   + [[Library]]
-* Types
-- _Relies on_
-  + [[Types]]
-  + [[Types]]
-  + [[Types]]
-  + [[Types]]
-  + [[Library]]
+  + [[Pipeline]]

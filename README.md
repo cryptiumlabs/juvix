@@ -22,8 +22,8 @@ syntactical familiarity, and backwards compatibility with existing blockchain vi
 For more design details, see [the language
 reference](./doc/reference/language-reference.pdf).
 
-<!--## Screenshots TODO--> 
-<!-- Include logo/demo screenshot with labels. 
+<!--## Screenshots TODO-->
+<!-- Include logo/demo screenshot with labels.
 - vscode screenshot
 - eg contracts -->
 
@@ -71,7 +71,7 @@ After cloning Juvix into a local directory, go into the local Juvix directory, a
 ```bash
 make
 ```
-Expect the installation to take some time.  
+Expect the installation to take some time.
 For Windows users: to be able to use the command *make*, please visit [this link](https://stackoverflow.com/questions/32127524/how-to-install-and-use-make-in-windows).
 
 ### Building with optimisations
@@ -141,4 +141,3 @@ We would love to hear what you think of Juvix! Join our community:
 - Subscribe to our [newsletter](https://juvix.org/)
 
 <!-- TODO add links to discord, reddit, etc. -->
-

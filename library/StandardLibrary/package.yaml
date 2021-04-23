@@ -23,12 +23,13 @@ dependencies:
 - text
 - hashable
 - unordered-containers
-- capability >= 0.2.0.0
+- capability
 - time
 - lens
 - megaparsec
 - word8
 - bytestring
+- mtl
 
 default-extensions:
   - NoImplicitPrelude
@@ -37,6 +38,7 @@ default-extensions:
   - LambdaCase
   - TypeSynonymInstances
   - FlexibleInstances
+  - KindSignatures
 
 ghc-options:
   - -ferror-spans
@@ -82,3 +84,4 @@ tests:
     - tasty-hunit
     - tasty-silver
     - tasty-quickcheck
+    - pretty-simple

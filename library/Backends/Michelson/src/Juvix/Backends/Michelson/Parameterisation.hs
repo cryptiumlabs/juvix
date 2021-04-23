@@ -3,8 +3,7 @@
 
 -- | Module that implements the backend parameters for the Michelson backend.
 module Juvix.Backends.Michelson.Parameterisation
-  ( CompErr,
-    michelson,
+  ( michelson,
     module Types,
   )
 where
@@ -18,6 +17,7 @@ import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
+import qualified Juvix.Backends.Michelson.DSL.Untyped as DSLU
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
@@ -53,9 +53,9 @@ check2Equal (_ :| _) = False
 -- | Can the given type be used as a boolean? Note that in addition to
 -- booleans, integers and natural numbers re valid is well.
 isBool :: PrimTy -> Bool
-isBool (PrimTy (M.Type M.TBool _)) = True
-isBool (PrimTy (M.Type M.TInt _)) = True
-isBool (PrimTy (M.Type M.TNat _)) = True
+isBool (PrimTy (M.Ty M.TBool _)) = True
+isBool (PrimTy (M.Ty M.TInt _)) = True
+isBool (PrimTy (M.Ty M.TNat _)) = True
 isBool _ = False
 
 -- | Check if the first two types are equal, and that the last type adhere to
@@ -121,7 +121,7 @@ arityRaw :: RawPrimVal -> Natural
 arityRaw (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
 arityRaw (Constant _) = 0
 arityRaw prim =
-  Run.instructionOf prim (Untyped.Type Untyped.TUnit "")
+  Run.instructionOf prim (Untyped.Ty Untyped.TUnit DSLU.blank)
     |> Instructions.toNewPrimErr
     |> arityRaw
 
@@ -252,7 +252,7 @@ integerToPrimVal x
 
 -- | Turn a Michelson type into a 'PrimTy'.
 primify :: Untyped.T -> PrimTy
-primify t = PrimTy (Untyped.Type t "")
+primify t = PrimTy (Untyped.Ty t DSLU.blank)
 
 -- | Michelson-specific low-level types available in Juvix.
 builtinTypes :: P.Builtins PrimTy
@@ -293,40 +293,40 @@ builtinValues =
     ("Michelson.sub", SubI),
     ("Michelson.mul", MulI),
     ("Michelson.div", EDivI),
-    ("Michelson.now", Inst (M.NOW "")),
-    ("Michelson.cons", Inst (M.CONS "")),
-    ("Michelson.car", Inst (M.CAR "" "")),
-    ("Michelson.cdr", Inst (M.CDR "" "")),
-    ("Michelson.some", Inst (M.SOME "" "")),
-    ("Michelson.sha256", Inst (M.SHA256 "")),
-    ("Michelson.sha512", Inst (M.SHA512 "")),
-    ("Michelson.source", Inst (M.SOURCE "")),
-    ("Michelson.get", Inst (M.GET "")),
-    ("Michelson.update", Inst (M.UPDATE "")),
+    ("Michelson.now", Inst (M.NOW DSLU.blank)),
+    ("Michelson.cons", Inst (M.CONS DSLU.blank)),
+    ("Michelson.car", Inst (M.CAR DSLU.blank DSLU.blank)),
+    ("Michelson.cdr", Inst (M.CDR DSLU.blank DSLU.blank)),
+    ("Michelson.some", Inst (M.SOME DSLU.blank DSLU.blank)),
+    ("Michelson.sha256", Inst (M.SHA256 DSLU.blank)),
+    ("Michelson.sha512", Inst (M.SHA512 DSLU.blank)),
+    ("Michelson.source", Inst (M.SOURCE DSLU.blank)),
+    ("Michelson.get", Inst (M.GET DSLU.blank)),
+    ("Michelson.update", Inst (M.UPDATE DSLU.blank)),
     ("Michelson.size", SizeS),
-    ("Michelson.blake2b", Inst (M.BLAKE2B "")),
-    ("Michelson.abs", Inst (M.ABS "")),
-    ("Michelson.now", Inst (M.NOW "")),
-    ("Michelson.source", Inst (M.SOURCE "")),
-    ("Michelson.sender", Inst (M.SENDER "")),
-    ("Michelson.set-delegate", Inst (M.SET_DELEGATE "")),
-    ("Michelson.transfer-tokens", Inst (M.TRANSFER_TOKENS "")),
+    ("Michelson.blake2b", Inst (M.BLAKE2B DSLU.blank)),
+    ("Michelson.abs", Inst (M.ABS DSLU.blank)),
+    ("Michelson.now", Inst (M.NOW DSLU.blank)),
+    ("Michelson.source", Inst (M.SOURCE DSLU.blank)),
+    ("Michelson.sender", Inst (M.SENDER DSLU.blank)),
+    ("Michelson.set-delegate", Inst (M.SET_DELEGATE DSLU.blank)),
+    ("Michelson.transfer-tokens", Inst (M.TRANSFER_TOKENS DSLU.blank)),
     ("Michelson.compare", CompareI),
-    ("Michelson.amount", Inst (M.AMOUNT "")),
-    ("Michelson.balance", Inst (M.BALANCE "")),
-    ("Michelson.hash-key", Inst (M.HASH_KEY "")),
-    ("Michelson.transfer-tokens", Inst (M.TRANSFER_TOKENS "")),
+    ("Michelson.amount", Inst (M.AMOUNT DSLU.blank)),
+    ("Michelson.balance", Inst (M.BALANCE DSLU.blank)),
+    ("Michelson.hash-key", Inst (M.HASH_KEY DSLU.blank)),
+    ("Michelson.transfer-tokens", Inst (M.TRANSFER_TOKENS DSLU.blank)),
     ("Michelson.and", AndI),
     ("Michelson.xor", XorI),
     ("Michelson.or", OrB),
     ("Michelson.mem", MemMap),
-    ("Michelson.concat", Inst (M.CONCAT "")),
-    ("Michelson.slice", Inst (M.SLICE "")),
-    ("Michelson.lsl", Inst (M.LSL "")),
-    ("Michelson.lsr", Inst (M.LSR "")),
+    ("Michelson.concat", Inst (M.CONCAT DSLU.blank)),
+    ("Michelson.slice", Inst (M.SLICE DSLU.blank)),
+    ("Michelson.lsl", Inst (M.LSL DSLU.blank)),
+    ("Michelson.lsr", Inst (M.LSR DSLU.blank)),
     ("Michelson.fail-with", Inst M.FAILWITH),
-    ("Michelson.self", Inst (M.SELF "" "")),
-    ("Michelson.unit", Inst (M.UNIT "" "")),
+    ("Michelson.self", Inst (M.SELF DSLU.blank DSLU.blank)),
+    ("Michelson.unit", Inst (M.UNIT DSLU.blank DSLU.blank)),
     ("Michelson.nil", Nil),
     ("Michelson.cons", Cons),
     ("Michelson.none", None),
@@ -340,7 +340,7 @@ builtinValues =
     -- added symbols to not take values
     ("Michelson.if-builtin", Inst (M.IF [] [])),
     ("Michelson.if-none", Inst (M.IF_NONE [] [])),
-    ("Michelson.pair", Inst (M.PAIR "" "" "" ""))
+    ("Michelson.pair", Inst (M.PAIR DSLU.blank DSLU.blank DSLU.blank DSLU.blank))
   ]
     |> fmap (first NameSymbol.fromSymbol)
     |> Map.fromList
@@ -356,9 +356,6 @@ michelson =
       intVal = integerToPrimVal,
       floatVal = const Nothing
     }
-
--- | A compilation error type.
-type CompErr = CompTypes.CompilationError
 
 instance Eval.HasWeak PrimTy where weakBy' _ _ t = t
 

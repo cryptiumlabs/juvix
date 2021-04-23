@@ -1,0 +1,98 @@
+resolver: lts-17.3
+
+packages:
+- .
+- ../StandardLibrary
+- ../Frontend
+- ../Core
+- ../Translate
+- ../Backends/Michelson
+- ../Pipeline
+
+extra-deps:
+- capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
+- derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422
+- derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817
+- fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995
+- witherable-0.3.5@sha256:6590a15735b50ac14dcc138d4265ff1585d5f3e9d3047d5ebc5abf4cd5f50084,1476
+- aeson-options-0.1.0@sha256:2d0c25afbb2d038bd5b57de8d042e319ea1a5ec7d7b92810d8a0cf0777882b6a,1244
+- base58-bytestring-0.1.0@sha256:a1da72ee89d5450bac1c792d9fcbe95ed7154ab7246f2172b57bd4fd9b5eab79,1913
+- hex-text-0.1.0.0@sha256:52dc2cf5ce45f7d86ea5e56e2ac57820f788c10bbb3fe83f6d57e678a426305b,1072
+- show-type-0.1.1@sha256:24f681a3481b3f9630e619d816054804ba1bd6cc05b5978ddd2cece8499ff2fa,1154
+- witherable-class-0@sha256:91f05518f9f4af5b02424f13ee7dcdab5d6618e01346aa2f388a72ff93e2e501,775
+- unexceptionalio-0.5.0@sha256:ad0b2d4d1f62a3e24cdb80360eea42ab3f0a0559af42aba19b5cf373378913ce,1682
+- base-noprelude-4.13.0.0@sha256:3cccbfda38e1422ca5cc436d58858ba51ff9114d2ed87915a6569be11e4e5a90,6842
+- named-0.3.0.1@sha256:69b9722301201f8ed8abc89c4595e22c746e944bf4cdfafa8b21b14d336b26d1,2233
+- tasty-hunit-compat-0.2@sha256:71e077ae5c514fadd4586efc19315f10fa5f3c94770820f68f63768441d665f7,1199
+- github: seereason/sr-extra
+  commit: d5435dcb2ae5da5f9e0fb8e5a3c40f99937a046f
+- github: cryptiumlabs/jsonschema-gen
+  commit: 0639cd166ec59a04d07a3a7d49bdf343e567000e
+- github: heliaxdev/extensible-data
+  commit: d11dee6006169cb537e95af28c3541a24194dea8
+
+- tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638
+
+- github: phile314/tasty-silver
+  commit: f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b
+
+################################################################################
+# arithmetic circuits deps
+################################################################################
+
+# - arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
+# - galois-fft-0.1.0@sha256:6a1e1e255c236b521379435ba528bbb5bc2a159c3ebb7fb960090cd5cf950b20,2409
+# - bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
+
+- github: adjoint-io/sonic
+  commit: 77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d
+
+################################################################################
+# morley deps
+################################################################################
+
+- git: https://gitlab.com/morley-framework/morley.git
+  commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
+  subdirs:
+  - code/morley
+  - code/morley-prelude
+
+- uncaught-exception-0.1.0@sha256:a03f8c2a1a8b2fc40ca9477599f2d8bcf46ce06465ab42c121b4d2481effc21e,2046
+- with-utf8-1.0.2.2@sha256:42eed140390b3e93d9482b084d1d0150e8774667f39c33bd47e84815751fad09,3057
+- th-env-0.1.0.2@sha256:d8f1f37f42a8f1a22404d7d0579528af18f5dac7232cca6bdbd5117c115a0ad5,1370
+- cryptonite-0.27
+
+
+- git: https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git
+  commit: 9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174
+  subdirs:
+   -  tezos-bake-monitor-lib
+
+################################################################################
+# morley and Arithmetic Circuits deps
+################################################################################
+
+- git: https://github.com/serokell/galois-field.git
+  commit: 576ba98ec947370835a1f308895037c7aa7f8b71
+- git: https://github.com/serokell/elliptic-curve.git
+  commit: b8a3d0cf8f7bacfed77dc3b697f5d08bd33396a8
+- git: https://github.com/serokell/pairing.git
+  commit: cf86cf1f6b03f478a439703b050c520a9d455353
+
+##################################################
+# sub deps of the git
+##################################################
+
+- constraints-extras-0.3.0.2@sha256:bf6884be65958e9188ae3c9e5547abfd6d201df021bff8a4704c2c4fe1e1ae5b,1784
+- dependent-sum-0.7.1.0@sha256:5599aa89637db434431b1dd3fa7c34bc3d565ee44f0519bfbc877be1927c2531,2068
+- dependent-sum-template-0.1.0.3@sha256:0bbbacdfbd3abf2a15aaf0cf2c27e5bdd159b519441fec39e1e6f2f54424adde,1682
+- hashing-0.1.0.1@sha256:98861f16791946cdf28e3c7a6ee9ac8b72d546d6e33c569c7087ef18253294e7,2816
+- monoidal-containers-0.6.0.1@sha256:7d776942659eb4d70d8b8da5d734396374a6eda8b4622df9e61e26b24e9c8e40,2501
+
+allow-newer: true
+
+# extra-lib-dirs:
+#   - .stack-work/prefix/lib
+
+# extra-include-dirs:
+#   - .stack-work/prefix/include

@@ -3,6 +3,7 @@ module VStack where
 import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
+import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Untyped as Untype
@@ -190,8 +191,8 @@ xIsNotFree =
   VStack.cons
     (VStack.VarE (Set.singleton "x") (VStack.Usage one True) Nothing, unit)
 
-unit :: Untype.Type
-unit = T.Type T.TUnit ""
+unit :: Untype.Ty
+unit = T.Ty T.TUnit Untyped.blank
 
 only3 :: Num lamType => VStack.T lamType
 only3 = VStack.cons (VStack.Val (VStack.LamPartialE 3), unit) mempty
