@@ -14,11 +14,10 @@ import Juvix.Library hiding (empty, link)
 newtype Net a = Net {ofNet :: Map.EnumMap Node (NodeInfo a)}
   deriving (Show)
 
-data NodeInfo a
-  = NInfo
-      { _typ :: a,
-        _edges :: Map.EnumMap PortType (Node, PortType)
-      }
+data NodeInfo a = NInfo
+  { _typ :: a,
+    _edges :: Map.EnumMap PortType (Node, PortType)
+  }
   deriving (Show)
 
 makeLenses ''NodeInfo

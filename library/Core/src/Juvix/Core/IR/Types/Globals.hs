@@ -35,17 +35,16 @@ type GlobalAll (c :: * -> Constraint) extV extT primTy primVal =
     PatternAll c extT primTy primVal
   )
 
-data RawDatatype' ext primTy primVal
-  = RawDatatype
-      { rawDataName :: GlobalName,
-        -- | the positivity of its parameters
-        rawDataPos :: [Pos],
-        -- | the type constructor's arguments
-        rawDataArgs :: [RawDataArg' ext primTy primVal],
-        -- | the type constructor's target universe level
-        rawDataLevel :: Natural,
-        rawDataCons :: [RawDataCon' ext primTy primVal]
-      }
+data RawDatatype' ext primTy primVal = RawDatatype
+  { rawDataName :: GlobalName,
+    -- | the positivity of its parameters
+    rawDataPos :: [Pos],
+    -- | the type constructor's arguments
+    rawDataArgs :: [RawDataArg' ext primTy primVal],
+    -- | the type constructor's target universe level
+    rawDataLevel :: Natural,
+    rawDataCons :: [RawDataCon' ext primTy primVal]
+  }
   deriving (Generic)
 
 deriving instance
@@ -64,17 +63,16 @@ deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawDatatype' ext primTy primVal)
 
-data Datatype' extV extT primTy primVal
-  = Datatype
-      { dataName :: GlobalName,
-        -- | the positivity of its parameters
-        dataPos :: [Pos],
-        -- | type checked arguments
-        dataArgs :: [DataArg' extV primTy primVal],
-        -- | the type constructor's target universe level
-        dataLevel :: Natural,
-        dataCons :: [DataCon' extV extT primTy primVal]
-      }
+data Datatype' extV extT primTy primVal = Datatype
+  { dataName :: GlobalName,
+    -- | the positivity of its parameters
+    dataPos :: [Pos],
+    -- | type checked arguments
+    dataArgs :: [DataArg' extV primTy primVal],
+    -- | the type constructor's target universe level
+    dataLevel :: Natural,
+    dataCons :: [DataCon' extV extT primTy primVal]
+  }
   deriving (Generic)
 
 deriving instance
@@ -93,12 +91,11 @@ deriving instance
   GlobalAll NFData extV extT primTy primVal =>
   NFData (Datatype' extV extT primTy primVal)
 
-data RawDataArg' ext primTy primVal
-  = RawDataArg
-      { rawArgName :: GlobalName,
-        rawArgUsage :: Usage,
-        rawArgType :: Term' ext primTy primVal
-      }
+data RawDataArg' ext primTy primVal = RawDataArg
+  { rawArgName :: GlobalName,
+    rawArgUsage :: Usage,
+    rawArgType :: Term' ext primTy primVal
+  }
   deriving (Generic)
 
 deriving instance
@@ -117,12 +114,11 @@ deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawDataArg' ext primTy primVal)
 
-data DataArg' ext primTy primVal
-  = DataArg
-      { argName :: GlobalName,
-        argUsage :: Usage,
-        argType :: Value' ext primTy primVal
-      }
+data DataArg' ext primTy primVal = DataArg
+  { argName :: GlobalName,
+    argUsage :: Usage,
+    argType :: Value' ext primTy primVal
+  }
   deriving (Generic)
 
 deriving instance
@@ -141,12 +137,11 @@ deriving instance
   GlobalAllV NFData ext primTy primVal =>
   NFData (DataArg' ext primTy primVal)
 
-data RawDataCon' ext primTy primVal
-  = RawDataCon
-      { rawConName :: GlobalName,
-        rawConType :: Term' ext primTy primVal,
-        rawConDef :: Maybe (RawFunction' ext primTy primVal)
-      }
+data RawDataCon' ext primTy primVal = RawDataCon
+  { rawConName :: GlobalName,
+    rawConType :: Term' ext primTy primVal,
+    rawConDef :: Maybe (RawFunction' ext primTy primVal)
+  }
   deriving (Generic)
 
 deriving instance
@@ -165,12 +160,11 @@ deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawDataCon' ext primTy primVal)
 
-data DataCon' extV extT primTy primVal
-  = DataCon
-      { conName :: GlobalName,
-        conType :: Value' extV primTy primVal,
-        conDef :: Maybe (Function' extV extT primTy primVal)
-      }
+data DataCon' extV extT primTy primVal = DataCon
+  { conName :: GlobalName,
+    conType :: Value' extV primTy primVal,
+    conDef :: Maybe (Function' extV extT primTy primVal)
+  }
   deriving (Generic)
 
 deriving instance
@@ -189,13 +183,12 @@ deriving instance
   GlobalAll NFData extV extT primTy primVal =>
   NFData (DataCon' extV extT primTy primVal)
 
-data RawFunction' ext primTy primVal
-  = RawFunction
-      { rawFunName :: GlobalName,
-        rawFunUsage :: GlobalUsage,
-        rawFunType :: Term' ext primTy primVal,
-        rawFunClauses :: NonEmpty (RawFunClause' ext primTy primVal)
-      }
+data RawFunction' ext primTy primVal = RawFunction
+  { rawFunName :: GlobalName,
+    rawFunUsage :: GlobalUsage,
+    rawFunType :: Term' ext primTy primVal,
+    rawFunClauses :: NonEmpty (RawFunClause' ext primTy primVal)
+  }
   deriving (Generic)
 
 deriving instance
@@ -214,13 +207,12 @@ deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawFunction' ext primTy primVal)
 
-data Function' extV extT primTy primVal
-  = Function
-      { funName :: GlobalName,
-        funUsage :: GlobalUsage,
-        funType :: Value' extV primTy primVal,
-        funClauses :: NonEmpty (FunClause' extV extT primTy primVal)
-      }
+data Function' extV extT primTy primVal = Function
+  { funName :: GlobalName,
+    funUsage :: GlobalUsage,
+    funType :: Value' extV primTy primVal,
+    funClauses :: NonEmpty (FunClause' extV extT primTy primVal)
+  }
   deriving (Generic)
 
 deriving instance
@@ -258,12 +250,11 @@ deriving instance
   GlobalAll NFData extV extT primTy primVal =>
   NFData (FunClause' extV extT primTy primVal)
 
-data RawAbstract' ext primTy primVal
-  = RawAbstract
-      { rawAbsName :: GlobalName,
-        rawAbsUsage :: GlobalUsage,
-        rawAbsType :: Term' ext primTy primVal
-      }
+data RawAbstract' ext primTy primVal = RawAbstract
+  { rawAbsName :: GlobalName,
+    rawAbsUsage :: GlobalUsage,
+    rawAbsType :: Term' ext primTy primVal
+  }
   deriving (Generic)
 
 deriving instance
@@ -282,12 +273,11 @@ deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawAbstract' ext primTy primVal)
 
-data Abstract' ext primTy primVal
-  = Abstract
-      { absName :: GlobalName,
-        absUsage :: GlobalUsage,
-        absType :: Value' ext primTy primVal
-      }
+data Abstract' ext primTy primVal = Abstract
+  { absName :: GlobalName,
+    absUsage :: GlobalUsage,
+    absType :: Value' ext primTy primVal
+  }
   deriving (Generic)
 
 deriving instance
@@ -364,46 +354,44 @@ type RawTelescope ext primTy primVal =
 type Telescope ext primTy primVal =
   [(Name, Value' ext primTy primVal)]
 
-data FunClause' extV extT primTy primVal
-  = FunClause
-      { -- | @Δ@: The types of the pattern variables in dependency order.
-        -- , namedClausePats :: NAPs (Using Name instead atm)
-        -- ^ @Δ ⊢ ps@.  The de Bruijn indices refer to @Δ@.
-        clauseTel :: Telescope extV primTy primVal,
-        clausePats :: [Pattern' extT primTy primVal], --TODO [SplitPattern]
-            -- TODO make it a Maybe
-            -- @Just v@ for a regular clause, @Nothing@ for an absurd one.
-        clauseBody :: Term' extT primTy primVal,
-        -- | @Δ ⊢ t@.  The type of the rhs under @clauseTel@.
-        clauseType :: Maybe (Value' extV primTy primVal),
-        -- \| @clauseBody@ contains recursive calls; computed by termination
-        -- checker.
-        --   @Nothing@ means that termination checker has not run yet,
-        --   or that @clauseBody@ contains meta-variables;
-        --   these could be filled with recursive calls later!
-        --   @Just False@ means definitely no recursive call.
-        --   @Just True@ means definitely a recursive call.
-        -- TODO add this when termination checking
-        -- clauseRecursive   :: Maybe Bool,
+data FunClause' extV extT primTy primVal = FunClause
+  { -- | @Δ@: The types of the pattern variables in dependency order.
+    -- , namedClausePats :: NAPs (Using Name instead atm)
+    -- ^ @Δ ⊢ ps@.  The de Bruijn indices refer to @Δ@.
+    clauseTel :: Telescope extV primTy primVal,
+    clausePats :: [Pattern' extT primTy primVal], --TODO [SplitPattern]
+    -- TODO make it a Maybe
+    -- @Just v@ for a regular clause, @Nothing@ for an absurd one.
+    clauseBody :: Term' extT primTy primVal,
+    -- | @Δ ⊢ t@.  The type of the rhs under @clauseTel@.
+    clauseType :: Maybe (Value' extV primTy primVal),
+    -- \| @clauseBody@ contains recursive calls; computed by termination
+    -- checker.
+    --   @Nothing@ means that termination checker has not run yet,
+    --   or that @clauseBody@ contains meta-variables;
+    --   these could be filled with recursive calls later!
+    --   @Just False@ means definitely no recursive call.
+    --   @Just True@ means definitely a recursive call.
+    -- TODO add this when termination checking
+    -- clauseRecursive   :: Maybe Bool,
 
-        -- | Clause has been labelled as CATCHALL.
-        clauseCatchall :: Bool,
-        -- | Clause has been labelled as unreachable by the coverage checker.
-        --   @Nothing@ means coverage checker has not run yet (clause may be unreachable).
-        --   @Just False@ means clause is not unreachable.
-        --   @Just True@ means clause is unreachable.
-        clauseUnreachable :: Maybe Bool
-      }
+    -- | Clause has been labelled as CATCHALL.
+    clauseCatchall :: Bool,
+    -- | Clause has been labelled as unreachable by the coverage checker.
+    --   @Nothing@ means coverage checker has not run yet (clause may be unreachable).
+    --   @Just False@ means clause is not unreachable.
+    --   @Just True@ means clause is unreachable.
+    clauseUnreachable :: Maybe Bool
+  }
   deriving (Generic)
 
 -- | see 'FunClause'' for description of fields.
-data RawFunClause' ext primTy primVal
-  = RawFunClause
-      { rawClauseTel :: RawTelescope ext primTy primVal,
-        rawClausePats :: [Pattern' ext primTy primVal], --TODO [SplitPattern]
-        rawClauseBody :: Term' ext primTy primVal,
-        rawClauseCatchall :: Bool
-      }
+data RawFunClause' ext primTy primVal = RawFunClause
+  { rawClauseTel :: RawTelescope ext primTy primVal,
+    rawClausePats :: [Pattern' ext primTy primVal], --TODO [SplitPattern]
+    rawClauseBody :: Term' ext primTy primVal,
+    rawClauseCatchall :: Bool
+  }
   deriving (Generic)
 
 deriving instance

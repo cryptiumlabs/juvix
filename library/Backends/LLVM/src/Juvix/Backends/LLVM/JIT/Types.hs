@@ -31,11 +31,10 @@ type Kind = IR.Kind ()
 
 type Node = IR.Node ()
 
-data Nodes
-  = Nodes
-      { nodeArray :: Ptr Node,
-        nodeCount :: Int
-      }
+data Nodes = Nodes
+  { nodeArray :: Ptr Node,
+    nodeCount :: Int
+  }
   deriving (Generic)
 
 instance GStorable Nodes
@@ -57,10 +56,9 @@ data OptimisationLevel
   | O3
   deriving (Show, Eq)
 
-data Config
-  = Config
-      { configOptimisationLevel :: OptimisationLevel
-      }
+data Config = Config
+  { configOptimisationLevel :: OptimisationLevel
+  }
   deriving (Show, Eq)
 
 class DynamicImport a b | b -> a where

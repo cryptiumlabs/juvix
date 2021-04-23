@@ -36,21 +36,20 @@ type PrimType primTy = NonEmpty primTy
 type Builtins p = HashMap NameSymbol.T p
 
 -- | Abstraction over backend specifics.
-data Parameterisation primTy primVal
-  = Parameterisation
-      { -- | Check if a value is of a given type.
-        hasType :: primVal -> PrimType primTy -> Bool,
-        -- | Set of builtin types.
-        builtinTypes :: Builtins primTy,
-        -- | Set of builtin values.
-        builtinValues :: Builtins primVal,
-        -- | Build a value from a string.
-        stringVal :: Text -> Maybe primVal,
-        -- | Build a value from an integer.
-        intVal :: Integer -> Maybe primVal,
-        -- | Build a value from a float.
-        floatVal :: Double -> Maybe primVal
-      }
+data Parameterisation primTy primVal = Parameterisation
+  { -- | Check if a value is of a given type.
+    hasType :: primVal -> PrimType primTy -> Bool,
+    -- | Set of builtin types.
+    builtinTypes :: Builtins primTy,
+    -- | Set of builtin values.
+    builtinValues :: Builtins primVal,
+    -- | Build a value from a string.
+    stringVal :: Text -> Maybe primVal,
+    -- | Build a value from an integer.
+    intVal :: Integer -> Maybe primVal,
+    -- | Build a value from a float.
+    floatVal :: Double -> Maybe primVal
+  }
   deriving (Generic)
 
 -- | Datatype representing different kinds of errors.

@@ -13,13 +13,12 @@ import Juvix.Backends.LLVM.JIT.Types
 import Juvix.Library
 import qualified LLVM.AST as AST
 
-data NetAPI
-  = NetAPI
-      { createNet :: IO OpaqueNetPtr,
-        appendToNet :: OpaqueNetPtr -> [Node] -> IO (),
-        readNet :: OpaqueNetPtr -> IO [Node],
-        reduceUntilComplete :: OpaqueNetPtr -> IO ()
-      }
+data NetAPI = NetAPI
+  { createNet :: IO OpaqueNetPtr,
+    appendToNet :: OpaqueNetPtr -> [Node] -> IO (),
+    readNet :: OpaqueNetPtr -> IO [Node],
+    reduceUntilComplete :: OpaqueNetPtr -> IO ()
+  }
 
 jitToNetAPI :: Config -> AST.Module -> IO (NetAPI, IO ())
 jitToNetAPI config mod = do

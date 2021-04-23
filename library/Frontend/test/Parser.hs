@@ -772,13 +772,13 @@ qualifiedInfixTest =
     Parser.parse
     "let fi = nat TopLevel.Prelude.-> TopLevel.int"
     $ AST.NoHeader
-      [ AST.Function
-          $ AST.Func
-          $ AST.Like "fi" []
-          $ AST.Body
-          $ AST.Infix
-          $ AST.Inf (AST.Name ("nat" :| [])) ("TopLevel" :| ["Prelude", "->"])
-          $ AST.Name ("TopLevel" :| ["int"])
+      [ AST.Function $
+          AST.Func $
+            AST.Like "fi" [] $
+              AST.Body $
+                AST.Infix $
+                  AST.Inf (AST.Name ("nat" :| [])) ("TopLevel" :| ["Prelude", "->"]) $
+                    AST.Name ("TopLevel" :| ["int"])
       ]
 
 --------------------------------------------------

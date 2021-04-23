@@ -19,7 +19,7 @@ import qualified Juvix.Core.IR.Evaluator as E
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
-import Juvix.Library hiding ((<|>), natVal)
+import Juvix.Library hiding (natVal, (<|>))
 import Text.Show
 
 -- k: primitive type: naturals

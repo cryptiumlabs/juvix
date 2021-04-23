@@ -129,13 +129,13 @@ arityRaw prim =
 toArg :: PrimVal' ext -> Maybe (Arg' ext)
 toArg App.Cont {} = Nothing
 toArg App.Return {retType, retTerm} =
-  Just
-    $ App.TermArg
-    $ App.Take
-      { usage = Usage.Omega,
-        type' = retType,
-        term = retTerm
-      }
+  Just $
+    App.TermArg $
+      App.Take
+        { usage = Usage.Omega,
+          type' = retType,
+          term = retTerm
+        }
 
 -- | Translate a value into a  'Take' and the arguments to pass.
 toTakes :: PrimVal' ext -> (Take, [Arg' ext], Natural)

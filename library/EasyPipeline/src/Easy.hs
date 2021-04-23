@@ -46,11 +46,10 @@ import Prelude (error)
 -- OPTIONS
 --------------------------------------------------------------------------------
 
-data Options
-  = Opt
-      { prelude :: [FilePath],
-        currentContextName :: NameSymb.T
-      }
+data Options = Opt
+  { prelude :: [FilePath],
+    currentContextName :: NameSymb.T
+  }
   deriving (Show)
 
 -- we can override defaults by saying def { newOptions }
