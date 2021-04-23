@@ -41,15 +41,16 @@ import Test.QuickCheck (Arbitrary (..))
 import Test.QuickCheck.Arbitrary.Generic (genericArbitrary)
 import Text.PrettyPrint.Leijen.Text hiding ((<$>))
 
+deriving instance Bits Fr
+
 -- | Random values in Z_p^* picked in the setup.
-data RandomSetup f
-  = RandomSetup -- alpha, beta, gamma, delta, x <- Z_p^*
-      { setupAlpha :: f, -- alpha
-        setupBeta :: f, -- beta
-        setupGamma :: f, -- gamma
-        setupDelta :: f, -- delta
-        setupX :: f -- x
-      }
+data RandomSetup f = RandomSetup -- alpha, beta, gamma, delta, x <- Z_p^*
+  { setupAlpha :: f, -- alpha
+    setupBeta :: f, -- beta
+    setupGamma :: f, -- gamma
+    setupDelta :: f, -- delta
+    setupX :: f -- x
+  }
   deriving (Show, Generic, NFData)
 
 instance Pretty f => Pretty (RandomSetup f) where
@@ -66,11 +67,10 @@ instance Arbitrary f => Arbitrary (RandomSetup f) where
   arbitrary = genericArbitrary
 
 -- | Random values in Z_p picked in the prover algorithm.
-data RandomProver f
-  = RandomProver -- r, s <- Z_p
-      { proveR :: f, -- r
-        proveS :: f -- s
-      }
+data RandomProver f = RandomProver -- r, s <- Z_p
+  { proveR :: f, -- r
+    proveS :: f -- s
+  }
   deriving (Show, Generic, NFData)
 
 instance Pretty f => Pretty (RandomProver f) where
@@ -84,11 +84,10 @@ instance Arbitrary f => Arbitrary (RandomProver f) where
   arbitrary = genericArbitrary
 
 -- | Random values in Z_p picked in the simulator.
-data RandomSimulator f
-  = RandomSimulator -- A, B <- Z_p
-      { simulateA :: f, -- A
-        simulateB :: f -- B
-      }
+data RandomSimulator f = RandomSimulator -- A, B <- Z_p
+  { simulateA :: f, -- A
+    simulateB :: f -- B
+  }
   deriving (Show, Generic, NFData)
 
 instance Pretty f => Pretty (RandomSimulator f) where
@@ -102,28 +101,26 @@ instance Arbitrary f => Arbitrary (RandomSimulator f) where
   arbitrary = genericArbitrary
 
 -- | Common reference string produced in the setup.
-data Reference g1 g2
-  = Reference -- sigma = sigma_r + sigma_v
-      { refP :: RefP g1 g2, -- sigma_r
-        refV :: RefV g1 g2 -- sigma_v
-      }
+data Reference g1 g2 = Reference -- sigma = sigma_r + sigma_v
+  { refP :: RefP g1 g2, -- sigma_r
+    refV :: RefV g1 g2 -- sigma_v
+  }
   deriving (Show, Generic, NFData)
 
 -- | Common reference string in the prover algorithm.
-data RefP g1 g2
-  = RefP -- sigma_r <- sigma
-      { refP1Alpha :: g1, -- [alpha]_1
-        refP1Beta :: g1, -- [beta]_1
-        refP1Delta :: g1, -- [delta]_1
-        refP1Z :: QapSet g1, -- {[(beta*u_i(x) + alpha*v_i(x) + w_i(x))/delta]_1}_(l+1)^m
-        refP1T :: [g1], -- {[x^i*t(x)/delta]_1}_0^(n-2)
-        refP1U :: QapSet g1, -- {[u_i(x)]_1}_0^m
-        refP1V :: QapSet g1, -- {[v_i(x)]_1}_0^m
-        refP2Beta :: g2, -- [beta]_2
-        refP2Gamma :: g2, -- [gamma]_2
-        refP2Delta :: g2, -- [delta]_2
-        refP2V :: QapSet g2 -- {[v_i(x)]_2}_0^m
-      }
+data RefP g1 g2 = RefP -- sigma_r <- sigma
+  { refP1Alpha :: g1, -- [alpha]_1
+    refP1Beta :: g1, -- [beta]_1
+    refP1Delta :: g1, -- [delta]_1
+    refP1Z :: QapSet g1, -- {[(beta*u_i(x) + alpha*v_i(x) + w_i(x))/delta]_1}_(l+1)^m
+    refP1T :: [g1], -- {[x^i*t(x)/delta]_1}_0^(n-2)
+    refP1U :: QapSet g1, -- {[u_i(x)]_1}_0^m
+    refP1V :: QapSet g1, -- {[v_i(x)]_1}_0^m
+    refP2Beta :: g2, -- [beta]_2
+    refP2Gamma :: g2, -- [gamma]_2
+    refP2Delta :: g2, -- [delta]_2
+    refP2V :: QapSet g2 -- {[v_i(x)]_2}_0^m
+  }
   deriving (Show, Generic, NFData)
 
 instance (Pretty g1, Pretty g2) => Pretty (RefP g1 g2) where
@@ -154,14 +151,13 @@ instance (Pretty g1, Pretty g2) => Pretty (RefP g1 g2) where
           . qapSetToMap
 
 -- | Common reference string in the verification algorithm.
-data RefV g1 g2
-  = RefV -- sigma_v <- sigma
-      { refVY :: QapSet g1, -- {[(beta*u_i(x) + alpha*v_i(x) + w_i(x))/gamma]_1}_0^l
-        refVAlpha :: g1, -- [alpha]_1
-        refVBeta :: g2, -- [beta]_2
-        refVGamma :: g2, -- [gamma]_2
-        refVDelta :: g2 -- [delta]_2
-      }
+data RefV g1 g2 = RefV -- sigma_v <- sigma
+  { refVY :: QapSet g1, -- {[(beta*u_i(x) + alpha*v_i(x) + w_i(x))/gamma]_1}_0^l
+    refVAlpha :: g1, -- [alpha]_1
+    refVBeta :: g2, -- [beta]_2
+    refVGamma :: g2, -- [gamma]_2
+    refVDelta :: g2 -- [delta]_2
+  }
   deriving (Show, Generic, NFData)
 
 instance (Pretty g1, Pretty g2) => Pretty (RefV g1 g2) where
@@ -186,14 +182,13 @@ instance (Pretty g1, Pretty g2) => Pretty (RefV g1 g2) where
           . qapSetToMap
 
 -- | Simulation trapdoor produced in the setup.
-data Trapdoor f
-  = Trapdoor -- tau = (alpha, beta, gamma, delta, x)
-      { trapdoorAlpha :: f, -- alpha
-        trapdoorBeta :: f, -- beta
-        trapdoorGamma :: f, -- gamma
-        trapdoorDelta :: f, -- delta
-        trapdoorX :: f -- x
-      }
+data Trapdoor f = Trapdoor -- tau = (alpha, beta, gamma, delta, x)
+  { trapdoorAlpha :: f, -- alpha
+    trapdoorBeta :: f, -- beta
+    trapdoorGamma :: f, -- gamma
+    trapdoorDelta :: f, -- delta
+    trapdoorX :: f -- x
+  }
   deriving (Show, Generic, NFData)
 
 instance Pretty f => Pretty (Trapdoor f) where
@@ -207,12 +202,11 @@ instance Pretty f => Pretty (Trapdoor f) where
       ]
 
 -- | Proof returned in the prover algorithm.
-data Proof g1 g2
-  = Proof -- pi = ([A]_1, [B]_2, [C]_1)
-      { proofA :: g1, -- [A]_1
-        proofB :: g2, -- [B]_2
-        proofC :: g1 -- [C]_1
-      }
+data Proof g1 g2 = Proof -- pi = ([A]_1, [B]_2, [C]_1)
+  { proofA :: g1, -- [A]_1
+    proofB :: g2, -- [B]_2
+    proofC :: g1 -- [C]_1
+  }
   deriving (Show, Generic, NFData)
 
 instance (Pretty g1, Pretty g2) => Pretty (Proof g1 g2) where
@@ -338,7 +332,7 @@ prove RandomProver {..} circuit QAP {..} RefP {..} inps = Proof a b c
             h :: VPoly Fr
             h = if r == 0 then q else panic "h(X) is undefined."
               where
-                q , r :: VPoly Fr
+                q, r :: VPoly Fr
                 (q, r) = quotRem (((add qapInputsLeft) * (add qapInputsRight)) - (add qapOutputs)) qapTarget
                   where
                     add :: QapSet (VPoly Fr) -> VPoly Fr

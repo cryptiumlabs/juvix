@@ -14,7 +14,8 @@ data AffineCircuit i f
   | ScalarMul f (AffineCircuit i f)
   | ConstGate f
   | Var i
-  deriving (Read, Eq, Show, Generic, FromJSON, ToJSON)
+  deriving stock (Read, Eq, Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
 
 fetchVars :: AffineCircuit Wire f -> [Wire]
 fetchVars (Var i) = [i]
@@ -83,7 +84,8 @@ data Wire
   = InputWire Int
   | IntermediateWire Int
   | OutputWire Int
-  deriving (Show, Eq, Ord, Generic, FromJSON, ToJSON)
+  deriving stock (Ord, Eq, Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
 
 instance Pretty Wire where
   pretty (InputWire v) = text "input_" <> pretty v
@@ -91,7 +93,8 @@ instance Pretty Wire where
   pretty (OutputWire v) = text "output_" <> pretty v
 
 newtype ArithCircuit f = ArithCircuit [Gate Wire f]
-  deriving (Eq, Show, Generic, FromJSON, ToJSON)
+  deriving stock (Eq, Show, Generic)
+  deriving newtype (FromJSON, ToJSON)
 
 instance Show f => Pretty (ArithCircuit f) where
   pretty (ArithCircuit gs) = vcat . map pretty $ gs
@@ -129,7 +132,8 @@ data Gate i f
         eqM :: i,
         eqO :: i
       }
-  deriving (Eq, Show, Generic, FromJSON, ToJSON)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
 
 instance (Pretty i, Show i, Show f) => Pretty (Gate i f) where
   pretty (MulGate l r o) =
@@ -140,7 +144,6 @@ instance (Pretty i, Show i, Show f) => Pretty (Gate i f) where
         text "*",
         parens (pretty r)
       ]
-
   pretty (EqualGate i _ o) =
     hsep
       [ pretty o,
@@ -148,13 +151,12 @@ instance (Pretty i, Show i, Show f) => Pretty (Gate i f) where
         pretty i,
         text "== 0 ? 0 : 1"
       ]
-
   pretty g = panic $ show g
 
 instance (Pretty i, Show f) => Pretty (AffineCircuit i f) where
   pretty = prettyPrec 0
     where
-      prettyPrec :: (Pretty i, Show f) => Int -> AffineCircuit i f -> Doc
+      prettyPrec :: Int -> AffineCircuit i f -> Doc
       prettyPrec p e =
         case e of
           Var v ->

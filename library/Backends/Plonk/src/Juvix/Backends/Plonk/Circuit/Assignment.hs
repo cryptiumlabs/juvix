@@ -9,13 +9,12 @@ import Juvix.Library
 
 -- | The sets of polynomials/constants as they occur in QAPs, grouped
 -- into their constant, input, output and intermediate parts.
-data Assignment f
-  = Assignment
-      { assignmentConstant :: f,
-        assignmentInput :: Map Int f,
-        assignmentIntermediate :: Map Int f,
-        assignmentOutput :: Map Int f
-      }
+data Assignment f = Assignment
+  { assignmentConstant :: f,
+    assignmentInput :: Map Int f,
+    assignmentIntermediate :: Map Int f,
+    assignmentOutput :: Map Int f
+  }
   deriving (Show, Eq, Functor, Foldable, Generic)
 
 generateAssignment ::

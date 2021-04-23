@@ -1,7 +1,6 @@
 module Test.Sexp.Helpers where
 
 import qualified Juvix.Contextify as Contextify
-import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Desugar as Desugar
 import qualified Juvix.Frontend.Parser as Parser
@@ -9,8 +8,8 @@ import qualified Juvix.Frontend.Sexp as SexpTrans
 import qualified Juvix.Frontend.Types.Base as Frontend
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Sexp as Sexp
 import Prelude (error)
-
 
 ----------------------------------------------------------------------
 -- Give me sexp terms helpers

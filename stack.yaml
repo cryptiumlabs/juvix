@@ -6,6 +6,8 @@ packages:
 - ./library/Frontend
 - ./library/Core
 - ./library/Translate
+- ./library/Pipeline
+- ./library/EasyPipeline
 - ./library/Backends/Michelson
 - ./library/Backends/Plonk
 # - ./library/Backends/ArithmeticCircuit
@@ -41,17 +43,6 @@ extra-deps:
 
 - github: phile314/tasty-silver
   commit: f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b
-
-################################################################################
-# arithmetic circuits deps
-################################################################################
-
-# - arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
-# - galois-fft-0.1.0@sha256:6a1e1e255c236b521379435ba528bbb5bc2a159c3ebb7fb960090cd5cf950b20,2409
-# - bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
-
-- github: adjoint-io/sonic
-  commit: 77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d
 
 ################################################################################
 # morley deps

@@ -27,6 +27,7 @@ dependencies:
   - syb
   - temporary
   - wl-pprint-text
+  - Pipeline
   ###########################
   # Libraries
   ###########################
@@ -36,6 +37,7 @@ dependencies:
   - translate
   - michelson
   - plonk
+  - EasyPipeline
   # - llvm
   # - interaction-net
   # - arithmetic-circuit
@@ -118,56 +120,22 @@ flags:
     manual: true
     default: false
 
+benchmarks:
+  juvix-bench:
+    main:         Main.hs
+    source-dirs:  bench
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - juvix
+      - criterion
+
 library:
   source-dirs: src
-  dependencies:
-    - derive-storable
-    - derive-storable-plugin
-    - jsonschema-gen
   exposed-modules:
     - Juvix
-    - Juvix.Pipeline
-    - Juvix.Core
-    - Juvix.Core.Pipeline
-    - Juvix.Encoding.Encoding
-    - Juvix.Encoding.Mendler
-    - Juvix.Encoding.Scott
-    - Juvix.Encoding.Types
-    - Juvix.Pipeline.Backend
-  ghc-options:
-    - -Wmissing-export-lists
-    - -j
-    - -static
-    - -ferror-spans
-    - -fno-warn-name-shadowing
-    - -fno-warn-unused-matches
-    - -fno-warn-unused-do-bind
-    - -fwarn-tabs
-    - -fwarn-incomplete-patterns
-    - -fwarn-incomplete-uni-patterns
-    - -fwarn-redundant-constraints
-    - -fwarn-implicit-prelude
-    - -fwarn-overflowed-literals
-    - -fwarn-orphans
-    - -fwarn-identities
-    - -fwarn-dodgy-exports
-    - -fwarn-dodgy-imports
-    - -fwarn-duplicate-exports
-    - -fwarn-overlapping-patterns
-    - -fwarn-missing-fields
-    - -fwarn-missing-methods
-    - -fwarn-missing-signatures
-    - -fwarn-missing-pattern-synonym-signatures
-    - -fwarn-noncanonical-monad-instances
-    - -fwarn-unused-imports
-    - -fwarn-unused-pattern-binds
-    - -fwarn-unused-type-patterns
-    - -fwarn-unrecognised-pragmas
-    - -fwarn-wrong-do-bind
-    - -fwarn-hi-shadowing
-    - -fwrite-ide-info
-    - -optP-Wno-nonportable-include-path
-
 
 executables:
   juvix:
@@ -188,34 +156,3 @@ executables:
       - pretty-simple
       - raw-strings-qq
       - yaml
-
-tests:
-  juvix-test:
-    main:         Main.hs
-    source-dirs:  test
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-    dependencies:
-      - elliptic-curve
-      - galois-field
-      - juvix
-      - parsec
-      - pretty-simple
-      - tasty
-      - tasty-hunit
-      - tasty-silver
-      - tasty-quickcheck
-
-benchmarks:
-  juvix-bench:
-    main:         Main.hs
-    source-dirs:  bench
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-    dependencies:
-      - juvix
-      - criterion

@@ -4,6 +4,10 @@ module Juvix.Pipeline.Internal
     toCore,
     contextToCore,
     defName,
+    -- we export these functions to be able to call them stepwise from
+    -- a testing place
+    addSig,
+    addDef,
   )
 where
 
@@ -90,15 +94,40 @@ contextToCore ctx param = do
             Nothing -> pure $ notImplemented
             Just x -> pure $ Just x
       
-    addSig (Context.Entry x feDef) = do
-      msig <- FF.transformSig x feDef
-      traceM "Add Sig!"
-      pTraceShowM (x, feDef, msig)
-      for_ msig $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
-    addDef (Context.Entry x feDef) = do
-      defs <- FF.transformDef x feDef
-      for_ defs \def ->
-        modify @"core" $ HM.insert (defName def) def
+
+
+addSig ::
+  ( Show primTy,
+    Show primVal,
+    HasThrow "fromFrontendError" (FF.Error primTy primVal) m,
+    HasReader "param" (P.Parameterisation primTy primVal) m,
+    HasState "coreSigs" (FF.CoreSigsHR primTy primVal) m,
+    HasState "patVars" (HM.HashMap IR.GlobalName IR.PatternVar) m
+  ) =>
+  Context.Entry Sexp.T Sexp.T Sexp.T ->
+  m ()
+addSig (Context.Entry x feDef) = do
+  msig <- FF.transformSig x feDef
+  traceM "Add Sig!"
+  pTraceShowM (x, feDef, msig)
+  for_ msig $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
+
+addDef ::
+  ( Show primTy,
+    Show primVal,
+    HasThrow "fromFrontendError" (FF.Error primTy primVal) m,
+    HasReader "param" (P.Parameterisation primTy primVal) m,
+    HasState "core" (HM.HashMap NameSymbol.T (FF.CoreDef primTy primVal)) m,
+    HasState "coreSigs" (FF.CoreSigsHR primTy primVal) m,
+    HasState "nextPatVar" IR.PatternVar m,
+    HasState "patVars" (HM.HashMap IR.GlobalName IR.PatternVar) m
+  ) =>
+  Context.Entry Sexp.T Sexp.T Sexp.T ->
+  m ()
+addDef (Context.Entry x feDef) = do
+  defs <- FF.transformDef x feDef
+  for_ defs \def ->
+    modify @"core" $ HM.insert (defName def) def
 
 defName :: FF.CoreDef primTy primVal -> NameSymbol.T
 defName = \case

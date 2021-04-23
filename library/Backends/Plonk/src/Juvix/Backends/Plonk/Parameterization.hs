@@ -7,7 +7,7 @@ module Juvix.Backends.Plonk.Parameterization
   )
 where
 
-import Data.Field.Galois (GaloisField(..))
+import Data.Field.Galois (GaloisField (..))
 import qualified Data.List.NonEmpty as NonEmpty
 import Juvix.Backends.Plonk.Types as Types
 import qualified Juvix.Core.Application as App
@@ -45,7 +45,7 @@ checkFirst2AndLast (x :| [y, last]) check
   | otherwise = False
 checkFirst2AndLast (_ :| _) _ = False
 
-hasType :: (GaloisField f, Eq (PrimTy f)) => PrimVal f -> Param.PrimType (PrimTy f) -> Bool
+hasType :: PrimVal f -> Param.PrimType (PrimTy f) -> Bool
 hasType (PConst _v) ty
   | length ty == 1 = True
   | otherwise = False
@@ -99,27 +99,19 @@ builtinValues =
             ("Circuit.eq", PEq)
           ] -- TODO: Do the rest
 
-plonk :: (GaloisField f, Eq (PrimTy f)) => Param.Parameterisation (PrimTy f) (PrimVal f)
+plonk :: (GaloisField f) => Param.Parameterisation (PrimTy f) (PrimVal f)
 plonk =
   Param.Parameterisation
     { hasType,
       builtinTypes,
       builtinValues,
-      parseTy = panic "Parse ty not implemented",
-      parseVal = panic "Parse value not implemented",
-      reservedNames = [],
-      reservedOpNames = [],
-      stringTy = \_ _ -> False,
       stringVal = const Nothing,
-      intTy = \_ _ -> True,
       intVal = integerToPrimVal,
-      floatTy = \_ _ -> False, -- Circuits does not support floats
       floatVal = const Nothing
     }
 
 integerToPrimVal :: forall f. GaloisField f => Integer -> Maybe (PrimVal f)
 integerToPrimVal x = Just . PConst $ fromInteger x
-
 
 instance Core.CanApply (PrimTy f) where
   arity (PApplication hd rest) =
@@ -144,42 +136,43 @@ instance Show (ApplyError f) where
 
 arityRaw :: PrimVal f -> Natural
 arityRaw = \case
-   PConst _ -> 0
-   PDup -> 1
-   PIsZero -> 1
-   PNot -> 1
-   PShL -> 1
-   PShR-> 1
-   PRotL-> 1
-   PRotR-> 1
-   PAssertEq-> 1
-   PAssertIt-> 1
-   -- BinOps
-   PAdd-> 2
-   PSub-> 2
-   PMul-> 2
-   PDiv-> 2
-   PExp-> 2
-   PMod-> 2
-   PAnd-> 2
-   POr-> 2
-   PXor-> 2
-   -- CompOps
-   PGt-> 2
-   PGte-> 2
-   PLt-> 2
-   PLte-> 2
-   PEq-> 2
+  PConst _ -> 0
+  PDup -> 1
+  PIsZero -> 1
+  PNot -> 1
+  PShL -> 1
+  PShR -> 1
+  PRotL -> 1
+  PRotR -> 1
+  PAssertEq -> 1
+  PAssertIt -> 1
+  -- BinOps
+  PAdd -> 2
+  PSub -> 2
+  PMul -> 2
+  PDiv -> 2
+  PExp -> 2
+  PMod -> 2
+  PAnd -> 2
+  POr -> 2
+  PXor -> 2
+  -- CompOps
+  PGt -> 2
+  PGte -> 2
+  PLt -> 2
+  PLte -> 2
+  PEq -> 2
 
+toArg :: App.Return' ext1 ty term -> Maybe (App.Arg' ext2 ty term)
 toArg App.Cont {} = Nothing
 toArg App.Return {retType, retTerm} =
-  Just
-    $ App.TermArg
-    $ App.Take
-      { usage = Usage.Omega,
-        type' = retType,
-        term = retTerm
-      }
+  Just $
+    App.TermArg $
+      App.Take
+        { usage = Usage.Omega,
+          type' = retType,
+          term = retTerm
+        }
 
 toTakes :: PrimVal' ext f -> (Take f, [Arg' ext f], Natural)
 toTakes App.Cont {fun, args, numLeft} = (fun, args, numLeft)
@@ -218,36 +211,9 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext f) where
             | otherwise ->
               Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
           GT -> Left $ Core.ExtraArguments fun' args2
-  apply fun args = Left $ Core.InvalidArguments fun args
 
 applyProper :: Take f -> NonEmpty (Take f) -> Either (ApplyError f) (Return' ext f)
 applyProper fun args = panic "Apply proper not implemented"
-
---   case compd >>= Interpreter.dummyInterpret of
---     Right x -> do
---       retType <- toPrimType $ ErasedAnn.type' newTerm
---       pure $ Prim.Return {retType, retTerm = Constant x}
---     Left err -> Left $ CompilationError err
---   where
---     fun' = takeToTerm fun
---     args' = takeToTerm <$> toList args
---     newTerm = Run.applyPrimOnArgs fun' args'
---     -- TODO ∷ do something with the logs!?
---     (compd, _log) = Compilation.compileExpr newTerm
-
--- takeToTerm :: Take f -> RawTerm f
--- takeToTerm (Prim.Take {usage, type', term}) =
---   Ann {usage, type' = Prim.fromPrimType type', term = ErasedAnn.Prim term}
-
--- toPrimType :: ErasedAnn.Type (PrimTy f) -> Either ApplyError (P.PrimType (PrimTy f))
--- toPrimType ty = maybe err Right $ go ty
---   where
---     err = Left $ ReturnTypeNotPrimitive ty
---     go ty = goPi ty <|> (pure <$> goPrim ty)
---     goPi (ErasedAnn.Pi _ s t) = NonEmpty.cons <$> goPrim s <*> go t
---     goPi _ = Nothing
---     goPrim (ErasedAnn.PrimTy p) = Just p
---     goPrim _ = Nothing
 
 instance Eval.HasWeak (PrimTy f) where weakBy' _ _ t = t
 

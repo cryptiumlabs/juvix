@@ -11,13 +11,11 @@ environment:
 
 steps:
   - name: script-integrity-check
-    image: alpine:3.7
+    image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "a1538f7e875b167602d7207d4aa5a98a09a4f8df061b7aa0da6f6ee8cc0c5f4a  scripts/run-formatter.sh" | sha256sum -c -
-      - echo "60b1f786e27beea663864f0b3995050c6fd039fc2469dbbaf5d3dafdc49f357f  scripts/run-org-generation.sh" | sha256sum -c -
-      - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
-      - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
+      - echo "f71e5bbd918638e910da3b82936cd366abc0323d96fd17298eb50f40309984f4  scripts/pre-run.sh" | sha256sum -c -
+      - sh ./scripts/pre-run.sh
 
   - name: restore-cache
     image: meltwater/drone-cache
@@ -80,24 +78,6 @@ steps:
     depends_on:
       - test-suite
 
-  - name: code-formatting
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - sh ./scripts/run-formatter.sh
-    depends_on:
-      - test-suite
-
-  - name: org-generation
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - sh ./scripts/run-org-generation.sh
-    depends_on:
-      - test-suite
-
   - name: test-parser
     image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
@@ -124,6 +104,28 @@ steps:
       - make test-compile
     depends_on:
       - test-suite
+  
+  - name: org-generation-and-code-formatting
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    pull: if-not-exists
+    failure: fast
+    commands:
+      - sh ./scripts/format-and-org-gen.sh   
+    depends_on:
+      - test-typecheck
+      - test-compile
+      - test-parser
+
+  - name: push changes
+    image: openanalytics/alpine-git-lfs-client
+    pull: if-not-exists
+    commands:
+      - sh ./scripts/push-changes.sh
+    environment:
+      GITHUB_TOKEN:
+        from_secret: github_token
+    depends_on:
+      - org-generation-and-code-formatting
 
 volumes:
   - name: cache
@@ -146,13 +148,11 @@ environment:
 
 steps:
   - name: script-integrity-check
-    image: alpine:3.7
+    image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "a1538f7e875b167602d7207d4aa5a98a09a4f8df061b7aa0da6f6ee8cc0c5f4a  scripts/run-formatter.sh" | sha256sum -c -
-      - echo "60b1f786e27beea663864f0b3995050c6fd039fc2469dbbaf5d3dafdc49f357f  scripts/run-org-generation.sh" | sha256sum -c -
-      - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
-      - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
+      - echo "f71e5bbd918638e910da3b82936cd366abc0323d96fd17298eb50f40309984f4  scripts/pre-run.sh" | sha256sum -c -
+      - sh ./scripts/pre-run.sh
 
   - name: restore-cache
     image: meltwater/drone-cache
@@ -272,6 +272,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 7118441e9b2a635a87a460d7a35a89ac827b5e7af9649740c56ad75b65ba9cf4
+hmac: e0375b1e8477b07b9fa7ead8f95894c32ef802d4062a82e662d2d4546d59b74f
 
 ...

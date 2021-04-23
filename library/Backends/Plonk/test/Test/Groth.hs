@@ -8,7 +8,7 @@ import Juvix.Library hiding (exp)
 import Ref.Groth
 import Ref.Groth.Fresh
 import Ref.Groth.QAP
-import Test.Ref.Polynomial (circuitPolynomial1)
+import qualified Test.Example.Polynomial as Example
 import qualified Test.Tasty as T
 import qualified Test.Tasty.QuickCheck as T
 
@@ -37,10 +37,10 @@ polynomial1 rndSetup rndProver =
     let inputs = Map.fromList [(P.InputWire 0, 1), (P.InputWire 1, 3)]
      in testVerification inputs
   where
-    roots = evalFresh $ P.generateRoots (fromIntegral <$> fresh) circuitPolynomial1
-    qap = arithCircuitToQAP roots circuitPolynomial1
+    roots = evalFresh $ P.generateRoots (fromIntegral <$> fresh) Example.circuitPolynomial1
+    qap = arithCircuitToQAP roots Example.circuitPolynomial1
     testReference = fst $ setup rndSetup qap
     testProof :: Map P.Wire Fr -> Proof (G1 BLS12381) (G2 BLS12381)
-    testProof = prove rndProver circuitPolynomial1 qap (refP testReference)
+    testProof = prove rndProver Example.circuitPolynomial1 qap (refP testReference)
     testVerification :: Map P.Wire Fr -> Bool
     testVerification input = verify (refV testReference) input (testProof input)

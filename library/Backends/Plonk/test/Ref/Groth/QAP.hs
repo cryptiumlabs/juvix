@@ -55,46 +55,43 @@ import Juvix.Backends.Plonk (ArithCircuit (..), Gate (..), Wire (..), affineCirc
 import Juvix.Library hiding (Field, quotRem)
 import qualified Ref.Groth.FFT as FFT
 import Text.PrettyPrint.Leijen.Text
-  ( (<+>),
-    Pretty (..),
+  ( Pretty (..),
     enclose,
     indent,
     lbracket,
     rbracket,
     text,
     vcat,
+    (<+>),
   )
 
 -- | The sets of polynomials/constants as they occur in QAPs, grouped
 -- into their constant, input, output and intermediate parts.
-data QapSet f
-  = QapSet
-      { qapSetConstant :: f,
-        qapSetInput :: Map Int f,
-        qapSetIntermediate :: Map Int f,
-        qapSetOutput :: Map Int f
-      }
+data QapSet f = QapSet
+  { qapSetConstant :: f,
+    qapSetInput :: Map Int f,
+    qapSetIntermediate :: Map Int f,
+    qapSetOutput :: Map Int f
+  }
   deriving (Show, Eq, Functor, Foldable, Generic, NFData)
 
 -- | Quadratic arithmetic program
-data QAP f
-  = QAP
-      { qapInputsLeft :: QapSet (VPoly f),
-        qapInputsRight :: QapSet (VPoly f),
-        qapOutputs :: QapSet (VPoly f),
-        qapTarget :: VPoly f
-      }
+data QAP f = QAP
+  { qapInputsLeft :: QapSet (VPoly f),
+    qapInputsRight :: QapSet (VPoly f),
+    qapOutputs :: QapSet (VPoly f),
+    qapTarget :: VPoly f
+  }
   deriving (Show, Eq, Generic, NFData)
 
 -- | Generalised quadratic arithmetic program: instead of @Poly@, allow
 -- any functor.
-data GenQAP p f
-  = GenQAP
-      { genQapInputsLeft :: QapSet (p f),
-        genQapInputsRight :: QapSet (p f),
-        genQapOutputs :: QapSet (p f),
-        genQapTarget :: p f
-      }
+data GenQAP p f = GenQAP
+  { genQapInputsLeft :: QapSet (p f),
+    genQapInputsRight :: QapSet (p f),
+    genQapOutputs :: QapSet (p f),
+    genQapTarget :: p f
+  }
   deriving (Show, Eq, Generic, NFData)
 
 -- Note that we could get "sequence" from the Traversable instance of
