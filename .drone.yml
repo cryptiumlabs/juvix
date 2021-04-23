@@ -157,7 +157,6 @@ steps:
   - name: restore-cache
     image: meltwater/drone-cache
     pull: if-not-exists
->>>>>>> develop
     settings:
       backend: "s3"
       restore: true
