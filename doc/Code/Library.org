@@ -1,91 +1,5 @@
 * Backends
-<<<<<<< HEAD
 ** Parameterization <<Backends/Parameterization>>
-<<<<<<< HEAD
-** ArithmeticCircuit
-*** Setup <<ArithmeticCircuit/Setup>>
-*** src
-**** Juvix
-***** Backends
-****** ArithmeticCircuit <<Backends/ArithmeticCircuit>>
-******* Groth <<ArithmeticCircuit/Groth>>
-- place holder module until we have our groth
-  setup done
-- _Relies on_
-  + [[Library]]
-******* ZKP
-- _Relies on_
-  + [[ArithmeticCircuit/Compilation]]
-  + [[ArithmeticCircuit/Groth]]
-  + [[Library]]
-******* Compilation <<ArithmeticCircuit/Compilation>>
-- _Relies on_
-  + [[Compilation/Environment]]
-  + [[Memory]]
-  + [[ArithmeticCircuit/Compilation/Types]]
-  + [[ArithmeticCircuit/Parameterisation]]
-  + [[ErasedAnn]]
-  + [[Library]]
-  + [[NameSymbol]]
-  + [[Usage]]
-******** Environment <<Compilation/Environment>>
-- _Relies on_
-  + [[Memory]]
-  + [[ArithmeticCircuit/Compilation/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
-******** Memory
-- _Relies on_
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
-******** Types <<ArithmeticCircuit/Compilation/Types>>
-Provides the various types needed for the arithmetic circuit
-backend
-- Expression covers the gambit of arithmetic circuit expressions
-- _Relies on_
-  + [[ArithmeticCircuit/Parameterisation]]
-  + [[ErasedAnn]]
-  + [[Library]]
-******* Parameterisation <<ArithmeticCircuit/Parameterisation>>
-- _Relies on_
-  + [[Booleans]]
-  + [[FieldElements]]
-  + [[Integers]]
-  + [[Core/Parameterisation]]
-  + [[Library]]
-******** Booleans
-- _Relies on_
-  + [[FieldElements]]
-  + [[Core/Parameterisation]]
-  + [[Library]]
-******** FieldElements
-- _Relies on_
-  + [[Core/Parameterisation]]
-  + [[Library]]
-******** Integers
-- _Relies on_
-  + [[FieldElements]]
-  + [[Core/Parameterisation]]
-  + [[Library]]
-*** test
-**** ArithmeticCircuit <<test/ArithmeticCircuit>>
-- _Relies on_
-  + [[ArithmeticCircuit/Compilation]]
-  + [[Compilation/Environment]]
-  + [[ArithmeticCircuit/Compilation/Types]]
-  + [[ArithmeticCircuit/Parameterisation]]
-  + [[ZKP]]
-  + [[ErasedAnn]]
-  + [[Library]]
-  + [[Usage]]
-**** Main <<ArithmeticCircuit/test/Main>>
-- _Relies on_
-  + [[Library]]
-=======
->>>>>>> a166fe4c89fda1c87e38057e8789524bea490dbd
-=======
->>>>>>> 96e97808f8683ec34252ae606fdcb66f43f339c6
 ** LLVM
 *** Setup <<LLVM/Setup>>
 *** src
@@ -1580,6 +1494,7 @@ Can be added to via core translation
   + [[Library/Parser]]
   + [[Library/Sexp]]
   + [[FromFrontend]]
+  + [[Usage]]
 ***** Types <<Pipeline/Types>>
 - _Relies on_
   + [[ErasedAnn/Types]]
@@ -1705,11 +1620,7 @@ Can be added to via core translation
 ****** Lexer
 - _Relies on_
   + [[Library]]
-<<<<<<< HEAD
-  + [[Internal]]
-=======
   + [[Parser/Internal]]
->>>>>>> 96e97808f8683ec34252ae606fdcb66f43f339c6
   + [[Token]]
 ****** Token
 - _Relies on_
@@ -1813,21 +1724,6 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Closure]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Desugar]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[Library]]
   + [[Library/Sexp]]
 **** Contextify <<Juvix/Contextify>>
 - _Relies on_
@@ -1945,6 +1841,21 @@ done with no extra information needed. Thus we export the following passes
 - Removing punned record arguments
 - Remvoing Do syntax
 - _Relies on_
+  + [[Library]]
+  + [[Library/Sexp]]
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Desugar]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
   + [[Library]]
   + [[Library/Sexp]]
 **** ToCore
