@@ -169,7 +169,7 @@ multipleTransDefun = search
     search [] = []
     combineMultiple name xs =
       Sexp.list $
-        [Sexp.atom ":defun-match", Sexp.atom name]
+        [Sexp.atom Structure.defmatchName, Sexp.atom name]
           <> fmap (\form -> Sexp.list [form ^. Structure.args, form ^. Structure.body]) xs
     sameName name maybeDefunForm
       | Just form <- Structure.toDefun maybeDefunForm,
@@ -209,19 +209,27 @@ multipleTransDefun = search
 --         …
 --         ((arg-n1 … arg-nn) body-n))
 combineSig :: [Sexp.T] -> [Sexp.T]
-combineSig
-  ( (Sexp.Atom (Sexp.A ":defsig" _) Sexp.:> name Sexp.:> sig Sexp.:> Sexp.Nil)
-      : (Sexp.Atom a@(Sexp.A ":defun-match" _) Sexp.:> defName Sexp.:> body)
-      : xs
-    )
-    | defName == name =
-      Sexp.addMetaToCar a (Sexp.listStar [Sexp.atom ":defsig-match", name, sig, body]) :
-      combineSig xs
-combineSig ((Sexp.Atom a@(Sexp.A ":defun-match" _) Sexp.:> defName Sexp.:> body) : xs) =
-  Sexp.addMetaToCar a (Sexp.listStar [Sexp.atom ":defsig-match", defName, Sexp.Nil, body]) :
-  combineSig xs
-combineSig (Sexp.List [Sexp.Atom (Sexp.A ":defsig" _), _, _] : xs) =
-  combineSig xs
+combineSig (a : match : xs)
+  | Just sig <- Structure.toSignature a,
+    Just m <- Structure.toDefunMatch match,
+    -- we do this to get the meta information
+    Just atom <- Sexp.atomFromT (m ^. Structure.name),
+    sig ^. Structure.name == m ^. Structure.name =
+    --
+    Structure.DefunSigMatch (m ^. Structure.name) (sig ^. Structure.sig) (m ^. Structure.args)
+      |> Structure.fromDefunSigMatch
+      |> Sexp.addMetaToCar atom
+      |> (: combineSig xs)
+combineSig (defun : xs)
+  | Just def <- Structure.toDefunMatch defun,
+    Just atom <- Sexp.atomFromT (def ^. Structure.name) =
+    Structure.DefunSigMatch (def ^. Structure.name) Sexp.Nil (def ^. Structure.args)
+      |> Structure.fromDefunSigMatch
+      |> Sexp.addMetaToCar atom
+      |> (: combineSig xs)
+combineSig (sig : xs)
+  | Just _sig <- Structure.toSignature sig =
+    combineSig xs
 combineSig (x : xs) = x : combineSig xs
 combineSig [] = []
 
