@@ -5,6 +5,7 @@ packages:
 - ../../StandardLibrary
 - ../../Frontend
 - ../../Core
+- ../../Pipeline
 
 extra-deps:
 # - llvm-hs-9.0.1

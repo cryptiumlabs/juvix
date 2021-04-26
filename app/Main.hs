@@ -10,7 +10,8 @@ import qualified Data.Scientific as S
 import Development.GitRev
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
-import Juvix.Pipeline (BMichelson, BPlonk)
+import qualified Juvix.Backends.Michelson as Michelson
+import qualified Juvix.Backends.Plonk as Plonk
 import qualified Juvix.Pipeline as Pipeline
 import Options
 import Options.Applicative

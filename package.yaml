@@ -40,7 +40,6 @@ dependencies:
   - EasyPipeline
   # - llvm
   # - interaction-net
-  # - arithmetic-circuit
   # - InteractionNetIR
   ###########################
   # Dependency for OS

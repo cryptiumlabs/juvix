@@ -35,8 +35,6 @@ dependencies:
   - frontend
   - core
   - translate
-  - michelson
-  - plonk
   - galois-field
   # - llvm
   # - interaction-net

@@ -6,7 +6,6 @@ packages:
 - ../Frontend
 - ../Core
 - ../Translate
-- ../Backends/Michelson
 
 extra-deps:
 - capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
