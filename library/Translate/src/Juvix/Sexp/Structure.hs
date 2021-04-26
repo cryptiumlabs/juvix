@@ -50,3 +50,18 @@ toDefun form
         Defun name args body |> Just
       _ -> Nothing
   | otherwise = Nothing
+
+isDefunMatch :: Sexp.T -> Bool
+isDefunMatch = undefined
+
+toDefunMatch :: Sexp.T -> Maybe DefunMatch
+toDefunMatch = undefined
+
+fromDefunMatch :: DefunMatch -> Sexp.T
+fromDefunMatch = undefined
+
+fromArgBodys :: [ArgBody] -> Sexp.T
+fromArgBodys = undefined
+
+fromArgBody :: ArgBody -> Sexp.T
+fromArgBody = undefined
