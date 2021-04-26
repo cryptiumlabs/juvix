@@ -23,7 +23,7 @@ module Juvix.Core.Parameterisation
     mapApplyErr,
     check3Equal,
     check2Equal,
-    checkFirst2AndLast
+    checkFirst2AndLast,
   )
 where
 
@@ -138,7 +138,6 @@ type TypedPrim' ext ty val = App.Return' ext (PrimType ty) val
 -- | A typed primitive.
 type TypedPrim ty val = TypedPrim' NoExt ty val
 
-
 check3Equal :: Eq a => NonEmpty a -> Bool
 check3Equal (x :| [y, z])
   | x == y && x == z = True
@@ -156,4 +155,3 @@ checkFirst2AndLast (x :| [y, last]) check
   | check2Equal (x :| [y]) && check last = True
   | otherwise = False
 checkFirst2AndLast (_ :| _) _ = False
-
