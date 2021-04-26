@@ -516,27 +516,6 @@ Surface language
 **** Main <<Plonk/test/Main>>
 - _Relies on_
   + [[Library]]
-**** Ref
-***** Groth <<Ref/Groth>>
-- _Relies on_
-  + [[Backends/Plonk]]
-  + [[Library]]
-****** FFT
-Discrete Fourier transforms for polynomial interpolation
-- _Relies on_
-  + [[Library]]
-****** Fresh
-****** Poly
-- _Relies on_
-  + [[Library]]
-****** QAP
-Definitions of quadratic arithmetic programs, along with their
-assignment verification functions and the translations from single
-multiplication- or equality-gates into QAPs and arithmetic circuits
-into QAPs.
-- _Relies on_
-  + [[Backends/Plonk]]
-  + [[Library]]
 **** Test
 ***** AnnTerm
 - _Relies on_
@@ -551,10 +530,6 @@ into QAPs.
   + [[Backends/Plonk]]
   + [[Backends/Plonk]]
   + [[Library]]
-  + [[Library]]
-***** Groth <<Test/Groth>>
-- _Relies on_
-  + [[Backends/Plonk]]
   + [[Library]]
 ***** Example
 ****** Polynomial
