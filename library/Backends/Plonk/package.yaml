@@ -93,6 +93,7 @@ tests:
     - plonk
     - protolude
     - QuickCheck
+    - scientific
     - tasty
     - tasty-golden
     - tasty-hunit

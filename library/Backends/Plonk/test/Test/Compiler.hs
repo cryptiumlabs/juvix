@@ -2,6 +2,7 @@
 
 module Test.Compiler where
 
+import qualified Data.Aeson as A
 import Data.Curve.Weierstrass.BLS12381 (Fr)
 import Data.Field.Galois (GaloisField, PrimeField (..), toP)
 import qualified Data.Map as Map
@@ -12,8 +13,20 @@ import Juvix.Library hiding (Type, exp)
 import qualified Test.Example.Polynomial as Example
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
+import qualified Data.Scientific as S
+
+import qualified Juvix.Pipeline as Pipeline
+import qualified Juvix.Core as Core
 
 deriving instance Bits Fr
+instance A.FromJSON Fr where
+  parseJSON (A.Number n) = case S.floatingOrInteger n of
+    Left floating -> panic $ "Can't parse floating :" <> show n
+    Right f -> pure . toP $ toInteger f
+
+instance A.ToJSON Fr where
+  toJSON f = A.Number $ S.scientific (fromP f) 0
+
 
 top :: T.TestTree
 top =
@@ -25,7 +38,10 @@ polynomials :: T.TestTree
 polynomials =
   T.testGroup
     "Polynomials"
-    [polynomial1]
+    [ polynomial1 ]
+    -- , testAnd
+    -- , testOr
+    -- , testXOr]
 
 testOutput :: (GaloisField f, Bits f) => P.ArithCircuit f -> Map P.Wire f -> f -> T.Assertion
 testOutput circuit inputs expectedOutput = expectedOutput T.@=? actualOutput
@@ -41,3 +57,22 @@ polynomial1 = T.testCase "\\x y -> x^3 - 2x^2 + 4 = y" (testOutput Example.circu
   where
     inputs = mkInputs [1, 3]
     output = 1 -- true!
+
+compile :: FilePath  -> Pipeline.Pipeline (FFAnnTerm Fr)
+compile fin = do
+  t <- liftIO $ readFile 
+  parsed <- Pipeline.parse (P.BPlonk :: P.BPlonk Fr) t
+  s <- Pipeline.typecheck @(P.BPlonk Fr) parsed
+  pure $ Core.toRaw s
+
+orExample :: Pipeline.Pipeline (FFAnnTerm Fr)
+orExample = compile "Example/Juvix/Or.ju"
+
+andExample :: Pipeline.Pipeline (FFAnnTerm Fr)
+andExample = compile "Example/Juvix/And.ju"
+
+xorExample :: Pipeline.Pipeline (FFAnnTerm Fr)
+xorExample = compile "Example/Juvix/XOr.ju"
+
+
+
