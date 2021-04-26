@@ -82,11 +82,6 @@ type PrimValIR f = PrimVal' IR.NoExt f
 
 type PrimValHR f = PrimVal' CoreErased.T f
 
--- FF: Finite field
--- Finite field is the only possible type in Plonk
--- data FF = FF
---   deriving (Show, Eq, Generic, Data)
-
 type FFType f = Type (PrimTy f)
 
 type FFTerm f = Term (PrimTy f) (PrimVal f)
