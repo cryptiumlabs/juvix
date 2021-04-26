@@ -20,9 +20,11 @@ module Juvix.Desugar.Passes
   )
 where
 
+import Control.Lens hiding ((|>))
 import qualified Data.Set as Set
 import Juvix.Library
 import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp.Structure as Structure
 import Prelude (error)
 
 --------------------------------------------------------------------------------
@@ -154,27 +156,31 @@ multipleTransLet xs = Sexp.foldPred xs (== "let") letToLetMatch
 multipleTransDefun :: [Sexp.T] -> [Sexp.T]
 multipleTransDefun = search
   where
-    search (defun@(Sexp.List (defun1 : name1@(Sexp.Atom a) : _)) : xs)
-      | Sexp.isAtomNamed defun1 ":defun",
-        Just name <- Sexp.nameFromT name1 =
+    search (defun : xs)
+      | Just form <- Structure.toDefun defun,
+        Just name <- Sexp.nameFromT (form ^. Structure.name),
+        -- we do this to get the meta information
+        Just atom <- Sexp.atomFromT (form ^. Structure.name) =
         let (sameDefun, toSearch) = grabSimilar name xs
-         in combineMultiple name (defun : sameDefun)
-              |> Sexp.addMetaToCar a
+         in combineMultiple name (form : sameDefun)
+              |> Sexp.addMetaToCar atom
               |> (: search toSearch)
     search (x : xs) = x : search xs
     search [] = []
     combineMultiple name xs =
-      Sexp.list ([Sexp.atom ":defun-match", Sexp.atom name] <> (Sexp.cdr . Sexp.cdr <$> xs))
-    sameName name (Sexp.List (defun1 : name1 : _))
-      | Sexp.isAtomNamed defun1 ":defun" && Sexp.isAtomNamed name1 name =
-        True
-    sameName _ _ =
-      False
+      Sexp.list $
+        [Sexp.atom ":defun-match", Sexp.atom name]
+          <> fmap (\form -> Sexp.list [form ^. Structure.args, form ^. Structure.body]) xs
+    sameName name maybeDefunForm
+      | Just form <- Structure.toDefun maybeDefunForm,
+        Sexp.isAtomNamed (form ^. Structure.name) name =
+        Just form
+      | otherwise = Nothing
     grabSimilar _nam [] = ([], [])
     grabSimilar name (defn : xs)
-      | sameName name defn =
+      | Just form <- sameName name defn =
         let (same, rest) = grabSimilar name xs
-         in (defn : same, rest)
+         in (form : same, rest)
       | otherwise =
         ([], defn : xs)
 

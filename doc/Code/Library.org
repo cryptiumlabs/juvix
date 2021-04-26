@@ -1729,6 +1729,15 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Library]]
   + [[Library/Sexp]]
+  + [[Structure]]
+**** Sexp
+***** Structure
+Hardeing S-expressions into a more readable form. Here we use a
+mixture of record structures and aliases. Each cover a form that we
+wish to talk about rather than just match away at
+- _Relies on_
+  + [[Library]]
+  + [[Library/Sexp]]
 **** ToCore
 ***** FromFrontend
 - _Relies on_
