@@ -242,7 +242,7 @@ data TypecheckError' extV extT primTy primVal
       }
   | -- | datatype typechecking errors
     DatatypeError
-      {invalidType :: IR.RawDataArg' extT primTy primVal}
+      {invalidType :: IR.Term' extT primTy primVal}
   | ConDatatypeName
       {dtName :: IR.Neutral' extV primTy primVal}
   | ConAppTypeError

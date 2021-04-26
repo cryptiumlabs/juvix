@@ -93,8 +93,9 @@ typeToTele (n, t) = ttt (n, t) []
         )
     ttt x tel = (tel, snd x)
 
--- | checkDataType checks the datatype
--- (its constructors are checked by checkConType)
+
+
+-- | checkDataType checks the datatype by checking all arguments
 checkDataType ::
   ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
     Param.CanApply primTy,
@@ -116,14 +117,45 @@ checkDataType ::
   -- | name of the datatype
   GlobalName ->
   Param.Parameterisation primTy primVal ->
-  -- | the expression that is left to be checked.
-  IR.RawDataArg' extT primTy primVal ->
+  -- | the list of args to be checked.
+  [IR.RawDataArg' extT primTy primVal] ->
   m ()
-checkDataType tel dtName param arg =
-  case rawArgType arg of
-    Pi _ _ _ _ -> undefined
-    Star' _ _ -> return ()
-    _ -> throwTC $ DatatypeError arg
+checkDataType tel dtName param (arg:args) = do
+  _ <- checkDataTypeArg tel dtName param (IR.rawArgType arg)
+  checkDataType tel dtName param args
+checkDataType _ _ _ [] = return ()
+
+-- | checkDataTypeArg checks an argument of the datatype
+-- (its constructors are checked by checkConType)
+checkDataTypeArg ::
+  ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
+    Param.CanApply primTy,
+    Param.CanApply primVal,
+    Eval.CanEval extT NoExt primTy primVal,
+    Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primTy,
+    Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primVal,
+    Eq primTy,
+    Eq primVal,
+    IR.ValueAll Eq extV primTy primVal,
+    IR.NeutralAll Eq extV primTy primVal,
+    CanTC' extT primTy primVal m,
+    Param.CanApply (TypedPrim primTy primVal),
+    HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m,
+    HasThrow "typecheckError" (TypecheckError' extV NoExt primTy primVal) m
+  ) =>
+  -- | an env that contains the parameters of the datatype
+  Telescope extV extT primTy primVal ->
+  -- | name of the datatype
+  GlobalName ->
+  Param.Parameterisation primTy primVal ->
+  -- | the arg to be checked.
+  IR.Term' extT primTy primVal ->
+  m ()
+checkDataTypeArg tel dtName param (Pi _ t1 t2 _) = do
+      _ <- typeTerm param t1 (Annotation mempty (VStar 0))
+      checkDataTypeArg tel dtName param t2
+checkDataTypeArg _ _ _ (Star' _ _) = return ()
+checkDataTypeArg _ _ _ arg = throwTC $ DatatypeError arg
 
 -- | checkConType check constructor type
 checkConType ::
@@ -153,7 +185,6 @@ checkConType ::
 checkConType tel datatypeName param e =
   case e of
     VPi' _ _ t2 _ ->
-      -- recurse with updated envs
       checkConType
         tel
         datatypeName
