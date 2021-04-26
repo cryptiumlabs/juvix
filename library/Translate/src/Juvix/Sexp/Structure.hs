@@ -18,12 +18,18 @@
 -- #+end_src
 -- _TODO_
 --  1. replace the repeat code with the =to<Form>= with an abstraction
---  2. put the meta data with the form so we don't have to do it by hand
---     in the code that uses this
+--  2. put the meta data with the form so we don't have to do it by
+--     hand in the code that uses this
+--     1. Use =Juvix.Library.LineNum=
+--     2. append the =Form= With this
+--     3. have to<Form> fill this
+--     4. Have extra smart consturctors that are =<form>=, so that we
+--        can automatically fill in this meta data
 module Juvix.Sexp.Structure where
 
 import qualified Control.Lens as Lens hiding ((|>))
 import Juvix.Library
+import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 

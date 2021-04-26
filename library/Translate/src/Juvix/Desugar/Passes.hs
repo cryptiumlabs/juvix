@@ -163,14 +163,14 @@ multipleTransDefun = search
         Just atom <- Sexp.atomFromT (form ^. Structure.name) =
         let (sameDefun, toSearch) = grabSimilar name xs
          in combineMultiple name (form : sameDefun)
+              |> Structure.fromDefunMatch
               |> Sexp.addMetaToCar atom
               |> (: search toSearch)
     search (x : xs) = x : search xs
     search [] = []
-    combineMultiple name xs =
-      Sexp.list $
-        [Sexp.atom Structure.defmatchName, Sexp.atom name]
-          <> fmap (\form -> Sexp.list [form ^. Structure.args, form ^. Structure.body]) xs
+    combineMultiple name =
+      Structure.DefunMatch (Sexp.atom name)
+        . fmap (\form -> Structure.AB (form ^. Structure.args) (form ^. Structure.body))
     sameName name maybeDefunForm
       | Just form <- Structure.toDefun maybeDefunForm,
         Sexp.isAtomNamed (form ^. Structure.name) name =
