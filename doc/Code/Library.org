@@ -1,5 +1,4 @@
 * Backends
-** Parameterization <<Backends/Parameterization>>
 ** LLVM
 *** Setup <<LLVM/Setup>>
 *** src
@@ -453,7 +452,7 @@ Module that implements the backend parameters for the Michelson backend.
   + [[Plonk/Dot]]
   + [[Plonk/IR]]
   + [[Lang]]
-  + [[Plonk/Parameterization]]
+  + [[Parameterization]]
   + [[Plonk/Types]]
 ******* Builder
 - _Relies on_
@@ -485,7 +484,7 @@ Surface language
   + [[Circuit]]
   + [[Plonk/IR]]
   + [[Library]]
-******* Parameterization <<Plonk/Parameterization>>
+******* Parameterization
 - _Relies on_
   + [[Plonk/Types]]
   + [[Application]]
