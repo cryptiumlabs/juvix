@@ -15,7 +15,6 @@ sig (*) : field -> field -> field
 let (*) = %Circuit.mul
 declare infixl (*) 7
 
-
 sig (==) : field -> field -> bool
 let (==) = %Circuit.eq
 declare infixl (==) 2
