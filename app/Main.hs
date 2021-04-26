@@ -123,22 +123,22 @@ run ctx opt = do
       case cmd of
         Parse fin backend -> runCmd fin backend Pipeline.parse
         Typecheck fin backend -> case backend of
-          Michelson b -> g b 
+          Michelson b -> g b
           Plonk b -> g b
           where
-          g :: forall b. (Show (Pipeline.Ty b), Show (Pipeline.Val b), Pipeline.HasBackend b) => b -> Pipeline.Pipeline ()
-          g b = runCmd' fin b (\b -> Pipeline.parse b >=> Pipeline.typecheck @b)
+            g :: forall b. (Show (Pipeline.Ty b), Show (Pipeline.Val b), Pipeline.HasBackend b) => b -> Pipeline.Pipeline ()
+            g b = runCmd' fin b (\b -> Pipeline.parse b >=> Pipeline.typecheck @b)
         Compile fin fout backend -> case backend of
-          Michelson b -> g b 
+          Michelson b -> g b
           Plonk b -> g b
           where
-          g :: forall b. (Show (Pipeline.Ty b), Show (Pipeline.Val b), Pipeline.HasBackend b) => b -> Pipeline.Pipeline ()
-          g b = runCmd' fin b (\b -> Pipeline.parse b >=> Pipeline.typecheck @b >=> Pipeline.compile @b fout)
+            g :: forall b. (Show (Pipeline.Ty b), Show (Pipeline.Val b), Pipeline.HasBackend b) => b -> Pipeline.Pipeline ()
+            g b = runCmd' fin b (\b -> Pipeline.parse b >=> Pipeline.typecheck @b >=> Pipeline.compile @b fout)
         Version -> liftIO $ putDoc versionDoc
         _ -> Feedback.fail "Not implemented yet."
 
 runCmd ::
-  (Show a) => 
+  (Show a) =>
   FilePath ->
   Backend ->
   (forall b. Pipeline.HasBackend b => b -> Text -> Pipeline.Pipeline a) ->
@@ -147,11 +147,11 @@ runCmd fin backend f = case backend of
   Michelson b -> runCmd' fin b f
   Plonk b -> runCmd' fin b f
 
-runCmd' 
-  :: forall a b. (Show a, Pipeline.HasBackend b) 
-  => FilePath 
-  -> b 
-  -> (forall b. Pipeline.HasBackend b => b -> Text -> Pipeline.Pipeline a)
-  -> Pipeline.Pipeline ()
-runCmd' fin b f = liftIO (readFile fin) >>= f b >>= liftIO . pPrint 
-
+runCmd' ::
+  forall a b.
+  (Show a, Pipeline.HasBackend b) =>
+  FilePath ->
+  b ->
+  (forall b. Pipeline.HasBackend b => b -> Text -> Pipeline.Pipeline a) ->
+  Pipeline.Pipeline ()
+runCmd' fin b f = liftIO (readFile fin) >>= f b >>= liftIO . pPrint
