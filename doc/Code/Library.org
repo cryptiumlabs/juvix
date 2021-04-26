@@ -275,6 +275,7 @@ Serves as a module for various debugging functions
 - _Relies on_
   + [[Compilation]]
   + [[Michelson/Parameterisation]]
+  + [[Michelson/Pipeline]]
 ******* Contract <<Michelson/Contract>>
 This module provides a default contract environment
 ******* Optimisation
@@ -316,6 +317,16 @@ Module that implements the backend parameters for the Michelson backend.
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Usage]]
+******* Pipeline <<Michelson/Pipeline>>
+- _Relies on_
+  + [[Compilation]]
+  + [[Michelson/Parameterisation]]
+  + [[Core/IR]]
+  + [[Core/Pipeline]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Juvix/Pipeline]]
+  + [[FromFrontend]]
 ******* Compilation
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
@@ -443,7 +454,7 @@ Module that implements the backend parameters for the Michelson backend.
 *** src
 **** Juvix
 ***** Backends
-****** Plonk <<Backends/Plonk>>
+****** Plonk
 - _Relies on_
   + [[Builder]]
   + [[Circuit]]
@@ -453,6 +464,7 @@ Module that implements the backend parameters for the Michelson backend.
   + [[Plonk/IR]]
   + [[Lang]]
   + [[Parameterization]]
+  + [[Plonk/Pipeline]]
   + [[Plonk/Types]]
 ******* Builder
 - _Relies on_
@@ -497,6 +509,24 @@ Surface language
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Usage]]
+******* Pipeline <<Plonk/Pipeline>>
+- _Relies on_
+  + [[Builder]]
+  + [[Circuit]]
+  + [[Plonk/Compiler]]
+  + [[Plonk/Dot]]
+  + [[Parameterization]]
+  + [[Plonk/Types]]
+  + [[Application]]
+  + [[Core/IR]]
+  + [[OnlyExts]]
+  + [[Typechecker/Types]]
+  + [[Core/Parameterisation]]
+  + [[Core/Pipeline]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Juvix/Pipeline]]
+  + [[FromFrontend]]
 ******* Types <<Plonk/Types>>
 - _Relies on_
   + [[Application]]
@@ -519,23 +549,25 @@ Surface language
 **** Test
 ***** AnnTerm
 - _Relies on_
-  + [[Backends/Plonk]]
-  + [[Backends/Plonk]]
+  + [[Plonk]]
+  + [[Plonk]]
   + [[ErasedAnn]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
 ***** Compiler <<Test/Compiler>>
 - _Relies on_
-  + [[Backends/Plonk]]
-  + [[Backends/Plonk]]
+  + [[Plonk]]
+  + [[Plonk]]
+  + [[Core]]
   + [[Library]]
   + [[Library]]
+  + [[Juvix/Pipeline]]
 ***** Example
 ****** Polynomial
 - _Relies on_
-  + [[Backends/Plonk]]
-  + [[Backends/Plonk]]
+  + [[Plonk]]
+  + [[Plonk]]
   + [[ErasedAnn]]
   + [[Library]]
   + [[Usage]]
@@ -1446,8 +1478,14 @@ Can be added to via core translation
   + [[HashMap]]
 **** Pipeline <<Juvix/Pipeline>>
 - _Relies on_
-  + [[Backend]]
+  + [[Application]]
+  + [[Core/Common/Context]]
+  + [[ErasedAnn]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Library/Sexp]]
   + [[Compile]]
+  + [[Pipeline/Internal]]
   + [[Pipeline/Internal]]
   + [[Pipeline/Types]]
 ***** Compile
@@ -1479,51 +1517,6 @@ Can be added to via core translation
   + [[Typechecker/Types]]
   + [[Core/Types]]
   + [[Library]]
-***** Backend
-- _Relies on_
-  + [[Backend/Internal]]
-  + [[Backend/Michelson]]
-  + [[Backend/Plonk]]
-****** Internal <<Backend/Internal>>
-- _Relies on_
-  + [[Application]]
-  + [[Core/Common/Context]]
-  + [[ErasedAnn]]
-  + [[Library]]
-  + [[Feedback]]
-  + [[Library/Sexp]]
-  + [[Compile]]
-  + [[Pipeline/Internal]]
-****** Michelson <<Backend/Michelson>>
-- _Relies on_
-  + [[Compilation]]
-  + [[Michelson/Parameterisation]]
-  + [[Core/IR]]
-  + [[Core/Pipeline]]
-  + [[Library]]
-  + [[Feedback]]
-  + [[Backend/Internal]]
-  + [[Compile]]
-  + [[Pipeline/Internal]]
-  + [[Pipeline/Internal]]
-  + [[Pipeline/Types]]
-  + [[FromFrontend]]
-****** Plonk <<Backend/Plonk>>
-- _Relies on_
-  + [[Backends/Plonk]]
-  + [[Application]]
-  + [[Core/IR]]
-  + [[OnlyExts]]
-  + [[Typechecker/Types]]
-  + [[Core/Parameterisation]]
-  + [[Core/Pipeline]]
-  + [[Library]]
-  + [[Feedback]]
-  + [[Backend/Internal]]
-  + [[Compile]]
-  + [[Pipeline/Internal]]
-  + [[Pipeline/Types]]
-  + [[FromFrontend]]
 ** test
 *** Main <<Pipeline/test/Main>>
 - _Relies on_

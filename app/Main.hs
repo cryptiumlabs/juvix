@@ -8,10 +8,10 @@ import Data.Curve.Weierstrass.BLS12381 (Fr)
 import Data.Field.Galois (Prime, fromP, toP)
 import qualified Data.Scientific as S
 import Development.GitRev
-import Juvix.Library
-import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Backends.Michelson as Michelson
 import qualified Juvix.Backends.Plonk as Plonk
+import Juvix.Library
+import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Pipeline as Pipeline
 import Options
 import Options.Applicative

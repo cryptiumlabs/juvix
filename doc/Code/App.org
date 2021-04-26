@@ -8,11 +8,14 @@
   + [[Library]]
 * Main
 - _Relies on_
+  + [[Michelson]]
+  + [[Plonk]]
   + [[Library]]
   + [[Feedback]]
   + [[Pipeline]]
-  + [[Pipeline]]
 * Options
 - _Relies on_
+  + [[Michelson]]
+  + [[Plonk]]
   + [[Library]]
   + [[Pipeline]]
