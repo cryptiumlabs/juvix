@@ -111,7 +111,7 @@ toDefunMatch :: Sexp.T -> Maybe DefunMatch
 toDefunMatch form
   | isDefunMatch form =
     case form of
-      Sexp.List [_defmatch, name, argsBody]
+      _defmatch Sexp.:> name Sexp.:> argsBody
         | Just ab <- toArgsBody argsBody ->
           DefunMatch name ab |> Just
       _ ->
@@ -120,7 +120,7 @@ toDefunMatch form
 
 fromDefunMatch :: DefunMatch -> Sexp.T
 fromDefunMatch (DefunMatch name ab) =
-  Sexp.list [Sexp.atom defmatchName, name, fromArgBodys ab]
+  Sexp.listStar [Sexp.atom defmatchName, name, fromArgBodys ab]
 
 ----------------------------------------
 -- Args Body
@@ -179,13 +179,13 @@ isDefunSigMatch _ = False
 
 fromDefunSigMatch :: DefunSigMatch -> Sexp.T
 fromDefunSigMatch (DefunSigMatch name sig argsBody) =
-  Sexp.list [Sexp.atom defSigMatchName, name, sig, fromArgBodys argsBody]
+  Sexp.listStar [Sexp.atom defSigMatchName, name, sig, fromArgBodys argsBody]
 
 toDefunSigMatch :: Sexp.T -> Maybe DefunSigMatch
 toDefunSigMatch form
   | isDefunSigMatch form =
     case form of
-      Sexp.List [_def, name, sig, arsMatch]
+      _def Sexp.:> name Sexp.:> sig Sexp.:> arsMatch
         | Just ab <- toArgsBody arsMatch ->
           DefunSigMatch name sig ab |> Just
       _ -> Nothing
