@@ -489,7 +489,6 @@ Surface language
 - _Relies on_
   + [[Plonk/Types]]
   + [[Application]]
-  + [[Prim]]
   + [[ErasedAnn/Types]]
   + [[IR/Evaluator]]
   + [[IR/Types/Base]]
