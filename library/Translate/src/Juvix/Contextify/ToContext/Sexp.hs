@@ -148,6 +148,7 @@ type' t@(assocName Sexp.:> _ Sexp.:> dat) ctx
               modsDefinedS = []
             }
 type' _ _ = error "malformed type"
+
 -- | @open@ like type will simply take the open and register that the
 -- current module is opening it. Since the context does not have such a
 -- notion, we have to store this information for the resolve module to
@@ -232,21 +233,24 @@ decideRecordOrDef xs _ _ pres ty =
 splitByConstructor :: Sexp.T -> [(Symbol, Sexp.T)]
 splitByConstructor dat
   | Just s <- Sexp.toList dat =
-    case traverse (\c -> case eleToSymbol $ Sexp.car c of
-          Nothing -> Nothing 
-          Just constructor -> Just (constructor, Sexp.cdr c)) s of
-            Just xs -> xs
-            Nothing -> []
+    case traverse
+      ( \c -> case eleToSymbol $ Sexp.car c of
+          Nothing -> Nothing
+          Just constructor -> Just (constructor, Sexp.cdr c)
+      )
+      s of
+      Just xs -> xs
+      Nothing -> []
   | otherwise = []
 
 collectConstructors :: Sexp.T -> [Symbol]
 collectConstructors dat
   | Just s <- Sexp.toList dat =
-      case traverse (eleToSymbol . Sexp.car) s of
-          Nothing -> []
-          Just xs -> xs
-            -- filter out the record constructors, which really aren't constructors
-            -- filter (\x -> x /= ":record-d" && x /= ":") xs
+    case traverse (eleToSymbol . Sexp.car) s of
+      Nothing -> []
+      Just xs -> xs
+  -- filter out the record constructors, which really aren't constructors
+  -- filter (\x -> x /= ":record-d" && x /= ":") xs
   | otherwise = []
 
 --------------------------------------------------------------------------------

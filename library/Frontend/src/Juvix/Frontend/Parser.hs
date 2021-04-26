@@ -850,7 +850,6 @@ nameParserSN = spaceLiner nameParser
 sumSN :: Parser Types.Sum
 sumSN = spaceLiner sum
 
-
 prefixCapitalDotSN :: Parser (NonEmpty Symbol)
 prefixCapitalDotSN = spaceLiner prefixCapitalDot
 
@@ -859,7 +858,6 @@ prefixSymbolDotSN = spaceLiner prefixSymbolDot
 
 prefixSymbolSN :: Parser Symbol
 prefixSymbolSN = spaceLiner prefixSymbol
-
 
 constantSN :: Parser Types.Constant
 constantSN = spaceLiner constant

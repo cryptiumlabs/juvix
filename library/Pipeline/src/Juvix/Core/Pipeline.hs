@@ -28,7 +28,6 @@ type RawElim ty val = IR.Elim ty val
 
 type Term ty val = HR.Term ty val
 
-
 type Comp ty val err res =
   forall m.
   CompConstraints ty val err m =>

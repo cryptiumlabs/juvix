@@ -7,9 +7,9 @@ import qualified Juvix.Core.Common.Closure as Closure
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import Test.Context.Helpers (contextualizeFoo, parseDesugarSexp)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import Test.Context.Helpers ( contextualizeFoo, parseDesugarSexp )
 
 --------------------------------------------------------------------------------
 -- Top Level Test

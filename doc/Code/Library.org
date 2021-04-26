@@ -1729,6 +1729,21 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Desugar]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
+  + [[Library/Sexp]]
 **** Contextify <<Juvix/Contextify>>
 - _Relies on_
   + [[Contextify/Environment]]
@@ -1847,21 +1862,6 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Library]]
   + [[Library/Sexp]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Desugar]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[Library]]
-  + [[Library/Sexp]]
 **** ToCore
 ***** FromFrontend
 - _Relies on_
@@ -1918,7 +1918,6 @@ done with no extra information needed. Thus we export the following passes
   + [[NameSymbol]]
 ***** Helpers <<Context/Helpers>>
 - _Relies on_
-  + [[Library]]
   + [[Juvix/Contextify]]
   + [[ResolveOpenInfo]]
   + [[ToContext/Types]]
@@ -1927,6 +1926,7 @@ done with no extra information needed. Thus we export the following passes
   + [[Frontend/Parser]]
   + [[Frontend/Sexp]]
   + [[Frontend/Types/Base]]
+  + [[Library]]
   + [[Library/Sexp]]
 **** Contextualise
 ***** Contextify <<Contextualise/Contextify>>
@@ -1958,7 +1958,6 @@ Temporary conversion from the Sexpression syntax to the ML syntax
 ***** Helpers <<Sexp/Helpers>>
 - _Relies on_
   + [[Juvix/Contextify]]
-  + [[Library/Sexp]]
   + [[Core/Common/Context]]
   + [[Desugar]]
   + [[Frontend/Parser]]
@@ -1966,3 +1965,4 @@ Temporary conversion from the Sexpression syntax to the ML syntax
   + [[Frontend/Types/Base]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Sexp]]
