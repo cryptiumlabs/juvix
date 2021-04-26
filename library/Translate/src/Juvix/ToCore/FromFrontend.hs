@@ -345,7 +345,7 @@ getSig' q f x = do
   msig <- lookupSig (Just q) x
   case msig of
     Just sig | Just ty <- f sig -> pure ty
-    _ -> throwFF $ WrongSigType x msig
+    _ -> pTraceShow msig $ throwFF $ WrongSigType x msig
 
 lookupSig ::
   HasCoreSigs primTy primVal m =>
@@ -557,12 +557,38 @@ transformNormalSig _ _ (Ctx.Unknown sig) =
 transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
   traceM "SumCon!"
   pTraceShowM (x, sumTDef)
-  let conSig = ConSig {conType = Nothing, conDef = sumTDef}
   let x' = conDefName x
   defSigs <- traverse (transformNormalSig q x' . Ctx.Def) sumTDef
   traceM "DefSigs!"
   pTraceShowM (defSigs)
+  conSig <- conSigM
   pure $ conSig : fromMaybe [] defSigs
+  where
+    conSigM = case sumTDef of
+      Nothing -> pure $ ConSig {conType = Nothing, conDef = sumTDef}
+      Just d@Ctx.D{defMTy} -> do
+        ty <- mkTy defMTy
+        pure $ ConSig (Just ty) (Just d)
+
+    --  in foldrM makeArr hd $ zip names xs
+    mkTy (Just (fn Sexp.:> t1 Sexp.:> t2)) | isFn fn = HR.Pi (Usage.SNat 1) <$> mkTy (Just t1) <*> pure (HR.Star 0) <*> mkTy (Just t2)
+    mkTy (Just e) = transformTermHR q e
+    mkTy Nothing = panic "Shouldn't happen"
+    isFn fn = Sexp.isAtomNamed fn "TopLevel.Prelude.->"
+      -- HR.Pi mempty (NameSymbol.fromSymbol name) (HR.Star 0) res
+    -- let makeArr (x, arg) res =
+          -- HR.Pi (Usage.SNat 1) x <$> transformTermHR q arg <*> pure res
+        -- names = makeFieldName <$> [0 ..]
+        -- makeFieldName i = NameSymbol.fromText $ "$field" <> show (i :: Int)
+    --  in foldrM makeArr hd $ zip names xs
+-- -- TODO: We're only handling the ADT case with no records or GADTs
+-- generateSumConsType :: Sexp.T -> Sexp.T -> Maybe Sexp.T
+-- generateSumConsType typeCons (Sexp.cdr -> declaration) = do
+--     d <- Sexp.foldr1 f declaration
+--     pure $ Sexp.list [arr, d, typeCons]
+--   where
+--     f n acc = Sexp.list [arr, n, acc]
+--     arr = Sexp.atom "TopLevel.Prelude.->"
 transformNormalSig _ _ Ctx.CurrentNameSpace =
   pure []
 transformNormalSig _ _ Ctx.Information {} =
@@ -832,8 +858,6 @@ transformConSig q name mHd r@((t Sexp.:> ts) Sexp.:> _)
   | isNothing mHd = do
     transformTermHR q ts
   where
-    -- throwFF $ InvalidConstructor name r
-
     named = Sexp.isAtomNamed t
 transformConSig q name mHd r@(t Sexp.:> ts)
   | isNothing mHd = do

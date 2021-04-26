@@ -320,7 +320,12 @@ mapWithContext t@T {topLevelMap, currentName} f = do
 
 mapWithContext' :: (Monad m, Show term, Show ty)
   => T term ty sumRep 
-  -> (Maybe (Def term ty) -> Symbol -> SumT term ty -> T term ty sumRep -> m (Maybe (Def term ty))) 
+  -> (Maybe (Def term ty) 
+      -> Symbol 
+      -> Symbol
+      -> SumT term ty 
+      -> T term ty sumRep 
+      -> m (Maybe (Def term ty))) 
   -> m (T term ty sumRep)
 mapWithContext' t@T{topLevelMap, currentName} f = do
   ctx <- foldM switchAndUpdate t tops
@@ -342,6 +347,7 @@ mapWithContext' t@T{topLevelMap, currentName} f = do
 mapCurrentContext' :: (Monad m, Show term, Show ty)
   => (Maybe (Def term ty) 
         -> Symbol 
+        -> Symbol
         -> SumT term ty
         -> T term ty sumRep 
         -> m (Maybe (Def term ty)))
@@ -371,7 +377,7 @@ mapCurrentContext' f ctx@T {currentNameSpace, currentName} =
         SumCon s@(Sum def name') -> do
           traceM "SumCon mapCurrentContext"
           pTraceShowM (def, name, name')
-          newDef <- f def (NameSpace.extractValue name) s ctx
+          newDef <- f def name' (NameSpace.extractValue name) s ctx
           pTraceShowM (newDef)
           pure $ add name (SumCon (Sum newDef name')) ctx
         TypeDeclar t -> pure ctx

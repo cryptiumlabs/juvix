@@ -19,8 +19,8 @@ type ErasureM primTy1 primTy2 primVal1 primVal2 m =
   )
 
 erase ::
-  (Erasure.MapPrim primTy1 primTy2 primTy1 primVal1) ->
-  (Erasure.MapPrim primVal1 primVal2 primTy1 primVal1) ->
+  Erasure.MapPrim primTy1 primTy2 primTy1 primVal1 ->
+  Erasure.MapPrim primVal1 primVal2 primTy1 primVal1 ->
   Typed.Term' primTy1 primVal1 ->
   Usage.T ->
   Either (Erasure.Error primTy1 primVal1) (Erasure.Term primTy2 primVal2)

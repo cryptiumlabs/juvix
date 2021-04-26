@@ -61,18 +61,10 @@ data Def term ty = D
   }
   deriving (Show, Generic, Eq, Data)
 
-<<<<<<< HEAD
-data SumT term ty
-  = Sum
-      { sumTDef :: Maybe (Def term ty), 
-        sumTName :: Symbol
-      }
-=======
 data SumT term ty = Sum
   { sumTDef :: Maybe (Def term ty),
     sumTName :: Symbol
   }
->>>>>>> 96e97808f8683ec34252ae606fdcb66f43f339c6
   deriving (Show, Generic, Eq, Data)
 
 data Record term ty sumRep = Rec

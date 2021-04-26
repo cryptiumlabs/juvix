@@ -48,25 +48,30 @@ extractTypeDeclar _ = Nothing
 
 mkDef 
   :: Sexp.T
+  -> Sexp.T
   -> Context.SumT term1 ty1
   -> Context.T term2 ty2 Sexp.T
   -> Maybe (Context.Def Sexp.T Sexp.T)
-mkDef dataConstructor s@Context.Sum{sumTDef, sumTName} c = do 
+mkDef typeCons dataConstructor s@Context.Sum{sumTDef, sumTName} c = do 
     t <- extractTypeDeclar . Context.extractValue =<< Context.lookup (NameSymbol.fromSymbol sumTName) c
     declaration <- Sexp.findKey Sexp.car dataConstructor t 
+    pTraceShowM ("Declaratione", typeCons, declaration, generateSumConsType declaration)
     Just $
         Context.D
           { defUsage = Just Usage.Omega, 
-            defMTy = generateSumConsType declaration,
+            defMTy = generateSumConsType typeCons declaration,
             defTerm = Sexp.list [Sexp.atom ":primitive", Sexp.atom "Builtin.Constructor"],
             defPrecedence = Context.default'
           }
 
 -- TODO: We're only handling the ADT case with no records or GADTs
-generateSumConsType :: Sexp.T -> Maybe Sexp.T
-generateSumConsType (Sexp.cdr -> declaration) = Sexp.foldr1 f declaration
+generateSumConsType :: Sexp.T -> Sexp.T -> Maybe Sexp.T
+generateSumConsType typeCons (Sexp.cdr -> declaration) = do
+    d <- Sexp.foldr1 f declaration
+    pure $ Sexp.list [arr, d, typeCons]
   where
-    f n acc = Sexp.list [Sexp.atom "TopLevel.Prelude.->", n, acc]
+    f n acc = Sexp.list [arr, n, acc]
+    arr = Sexp.atom "TopLevel.Prelude.->"
 
 contextToCore ::
   (Show primTy, Show primVal) =>
@@ -78,6 +83,7 @@ contextToCore ctx param = do
     newCtx <- Context.mapWithContext' ctx updateCtx
 
     let ordered = Context.recGroups newCtx
+    traceM "Ordered"
     pTraceShowM ordered
     for_ ordered \grp -> do
       traverse_ addSig grp
@@ -85,13 +91,14 @@ contextToCore ctx param = do
     defs <- get @"core"
     pure $ FF.CoreDefs {defs, order = fmap Context.name <$> ordered}
   where
-    updateCtx def dataCons s@Context.Sum{sumTDef} c =
+    updateCtx def typeCons dataCons s@Context.Sum{sumTDef} c =
       case sumTDef of
         Just v -> pure $ Just v
         Nothing -> 
           let dataConsSexp = Sexp.atom $ NameSymbol.fromSymbol dataCons
-          in case mkDef dataConsSexp s c of
-            Nothing -> pure $ notImplemented
+              typeConsSexp = Sexp.atom $ NameSymbol.fromSymbol typeCons
+          in case mkDef typeConsSexp dataConsSexp s c of
+            Nothing -> pure notImplemented
             Just x -> pure $ Just x
       
 
@@ -108,7 +115,7 @@ addSig ::
   m ()
 addSig (Context.Entry x feDef) = do
   msig <- FF.transformSig x feDef
-  traceM "Add Sig!"
+  traceShowM ("Add Sig!",x)
   pTraceShowM (x, feDef, msig)
   for_ msig $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
 
