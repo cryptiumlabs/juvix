@@ -2,15 +2,20 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.Parameterisations.Unit where
+module Juvix.Core.Parameterisations.Unit
+  ( Ty (..),
+    hasType,
+    Val (..),
+    builtinTypes,
+    builtinValues,
+    t,
+  )
+where
 
 import qualified Juvix.Core.IR.Evaluator as E
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding ((<|>))
-import Text.ParserCombinators.Parsec
-import qualified Text.ParserCombinators.Parsec.Token as Token
-import Prelude (String)
 
 -- k: primitive type: unit
 data Ty

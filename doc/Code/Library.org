@@ -297,9 +297,9 @@ This module provides a default contract environment
   + [[Compilation/Types]]
   + [[Library]]
 ******* Parameterisation <<Michelson/Parameterisation>>
+Module that implements the backend parameters for the Michelson backend.
 - _Relies on_
   + [[Compilation]]
-  + [[Compilation/Types]]
   + [[Compilation/Types]]
   + [[Michelson/Contract]]
   + [[Instructions]]
@@ -310,8 +310,6 @@ This module provides a default contract environment
   + [[Prim]]
   + [[ErasedAnn/Types]]
   + [[IR/Evaluator]]
-  + [[Typechecker/Types]]
-  + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
@@ -580,6 +578,13 @@ Types to support partial application and polymorphic primitives.
   + [[Library]]
   + [[Usage]]
 ***** Parameterisation <<Core/Parameterisation>>
+Juvix parameterises the type theory & core language over a set of
+primitive data types and primitive values, which can include native data
+types such as strings, integers, or sets, and native functions such as
+addition, subtraction, string concatenation, set membership, etc. The
+language & typechecker can then be instantiated over a particular backend
+which provides concrete sets of primitives and a primitive type-checking
+relation.
 - _Relies on_
   + [[Application]]
   + [[IR/Types]]

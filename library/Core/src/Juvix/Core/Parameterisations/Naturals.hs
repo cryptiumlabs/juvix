@@ -1,7 +1,18 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.Parameterisations.Naturals where
+module Juvix.Core.Parameterisations.Naturals
+  ( Ty (..),
+    hasType,
+    typeOf,
+    Val (..),
+    builtinTypes,
+    builtinValues,
+    isNat,
+    natVal,
+    t,
+  )
+where
 
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Evaluator as E
@@ -9,10 +20,7 @@ import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (natVal, (<|>))
-import Text.ParserCombinators.Parsec
-import qualified Text.ParserCombinators.Parsec.Token as Token
 import Text.Show
-import Prelude (String)
 
 -- k: primitive type: naturals
 data Ty

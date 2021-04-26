@@ -1,10 +1,14 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Juvix.Core.Parameterisations.All where
+module Juvix.Core.Parameterisations.All
+  ( Ty (..),
+    Val (..),
+    t,
+  )
+where
 
 import Data.Bitraversable
-import Data.Coerce
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Evaluator as E
 import qualified Juvix.Core.IR.Types.Base as IR
@@ -12,9 +16,6 @@ import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Parameterisations.Naturals as Naturals
 import qualified Juvix.Core.Parameterisations.Unit as Unit
 import Juvix.Library hiding ((<|>))
-import Text.ParserCombinators.Parsec
-import qualified Text.ParserCombinators.Parsec.Token as Token
-import Prelude (String)
 
 -- all primitive types
 data Ty

@@ -1,7 +1,23 @@
 -- |
 -- - Types used internally by the Michelson backend.
 module Juvix.Backends.Michelson.Compilation.Types
-  ( module Juvix.Backends.Michelson.Compilation.Types,
+  ( PrimTy (..),
+    RawPrimVal (..),
+    Return',
+    Take,
+    Arg',
+    PrimVal',
+    PrimValIR,
+    PrimValHR,
+    RawTerm,
+    Term,
+    Value,
+    Type,
+    Op,
+    CompilationLog (..),
+    CompilationError (..),
+    SomeInstr (..),
+    EmptyInstr (..),
     CoreErased.AnnTerm (..),
   )
 where
@@ -94,23 +110,11 @@ data RawPrimVal
   | MapOp
   deriving (Show, Eq, Generic, Data)
 
-type NewPrim = RawPrimVal
-
-{-# DEPRECATED NewPrim "use RawPrimVal" #-}
-
 type Return' ext = App.Return' ext (P.PrimType PrimTy) RawPrimVal
-
-type ReturnIR = Return' IR.NoExt
-
-type ReturnHR = Return' CoreErased.T
 
 type Take = App.Take (P.PrimType PrimTy) RawPrimVal
 
 type Arg' ext = App.Arg' ext (P.PrimType PrimTy) RawPrimVal
-
-type ArgIR = Arg' IR.NoExt
-
-type ArgHR = Arg' CoreErased.T
 
 type PrimVal' ext = Return' ext
 
@@ -143,8 +147,6 @@ data CompilationError
   | AppliedConstantToArgument
   | TooManyArguments
   deriving (Show, Eq, Generic)
-
--- compToPipeLineErr
 
 data CompilationLog
   = TermToInstr Term Op

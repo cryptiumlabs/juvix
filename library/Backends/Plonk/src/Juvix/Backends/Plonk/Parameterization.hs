@@ -11,7 +11,6 @@ import Data.Field.Galois (GaloisField(..))
 import qualified Data.List.NonEmpty as NonEmpty
 import Juvix.Backends.Plonk.Types as Types
 import qualified Juvix.Core.Application as App
-import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.Types.Base as IR
@@ -194,8 +193,8 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext f) where
   freeArg _ = fmap App.VarArg . App.freeVar (Proxy @ext)
   boundArg _ = fmap App.VarArg . App.boundVar (Proxy @ext)
 
-  arity Prim.Cont {numLeft} = numLeft
-  arity Prim.Return {retTerm} = arityRaw retTerm
+  arity App.Cont {numLeft} = numLeft
+  arity App.Return {retTerm} = arityRaw retTerm
 
   apply fun' args2
     | (fun, args1, ar) <- toTakes fun' =
@@ -205,12 +204,12 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext f) where
         case argLen `compare` ar of
           LT ->
             Right $
-              Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
+              App.Cont {fun, args = toList args, numLeft = ar - argLen}
           EQ
             | Just takes <- traverse App.argToTake args ->
               applyProper fun takes |> first Core.Extra
             | otherwise ->
-              Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
+              Right $ App.Cont {fun, args = toList args, numLeft = 0}
           GT -> Left $ Core.ExtraArguments fun' args2
 
 applyProper :: Take f -> NonEmpty (Take f) -> Either (ApplyError f) (Return' ext f)
