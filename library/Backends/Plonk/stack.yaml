@@ -7,6 +7,7 @@ packages:
 - ../../Core
 - ../../Pipeline
 - ../../Translate
+- ../Michelson
 
 extra-deps:
 # - llvm-hs-9.0.1

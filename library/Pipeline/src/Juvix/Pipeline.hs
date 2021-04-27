@@ -4,7 +4,7 @@ module Juvix.Pipeline
   ( module Juvix.Pipeline.Compile,
     module Juvix.Pipeline.Internal,
     module Juvix.Pipeline.Types,
-    module Juvix.Pipeline
+    module Juvix.Pipeline,
   )
 where
 
@@ -54,3 +54,16 @@ class HasBackend b where
 -- | Write the output code to a given file.
 writeout :: FilePath -> Text -> Pipeline ()
 writeout fout code = liftIO $ T.writeFile fout code
+
+parseExplicit :: b -> Text -> [FilePath] -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
+parseExplicit b code libs = do
+  core <- liftIO $ toCore_wrap code
+  case core of
+    Right ctx -> return ctx
+    Left (Pipeline.ParseErr err) -> Feedback.fail $ P.errorBundlePretty err
+    Left err -> Feedback.fail $ show err
+  where
+    toCore_wrap :: Text -> IO (Either Pipeline.Error (Context.T Sexp.T Sexp.T Sexp.T))
+    toCore_wrap code = do
+      fp <- Temp.writeSystemTempFile "juvix-toCore.ju" (Text.unpack code)
+      Pipeline.toCore (fp : libs)
