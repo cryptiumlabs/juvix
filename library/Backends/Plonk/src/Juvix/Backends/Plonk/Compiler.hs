@@ -87,8 +87,6 @@ compileTerm _term@(Ann.Ann _ _ t) m a =
       Just v -> pure . Left $ v
       Nothing -> panic $ "Unable to find variable " <> show symbol
     Ann.AppM fun@(Ann.Ann _ _ v) args -> compileTerm fun m args
-    -- case v of
-    -- Ann.Prim p -> compilePrim p m args
     Ann.LamM _ args b -> do
       m' <- do
         pairs <-
@@ -107,14 +105,12 @@ compileTermWithWire :: (Integral f, Show f) => FFAnnTerm f -> IRM f Wire
 compileTermWithWire term = do
   compileOut <- compileTerm term mempty mempty
   case compileOut of
-    Left wire -> pure wire
+    Left _wire -> do
+      o <- freshOutput
+      replaceLast o
+      pure o
+      -- pure wire
     Right circ -> do
       wire <- freshOutput
       emit $ MulGate (ConstGate 1) circ wire
       pure wire
-
--- do
--- traverse (P.deref <$> P.freshInput) args
--- v <- lambda c a b ty
--- consVal v ty
--- pure v

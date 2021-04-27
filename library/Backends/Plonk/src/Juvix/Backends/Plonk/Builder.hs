@@ -68,6 +68,16 @@ mulToImm l r = do
   emit $ MulGate (addVar l) (addVar r) o
   pure o
 
+-- | Replace last intermediate wire with an output wire
+replaceLast :: Wire -> IRM f ()
+replaceLast o = do
+  modify
+    @"sCircuit"
+    (\case
+      ArithCircuit ((MulGate i1 i2 _o):cs) -> ArithCircuit (MulGate i1 i2 o:cs)
+      a -> a)
+
+
 -- | Add a Mul and its output to the ArithCircuit
 emit :: Gate Wire f -> IRM f ()
 emit c =
