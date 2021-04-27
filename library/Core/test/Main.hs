@@ -6,7 +6,6 @@ import Erasure (erasureTests)
 import qualified HR.Pretty
 import qualified IR.Weak as Weak
 import Juvix.Library (IO)
-import Parser (coreParser)
 import qualified Test.Tasty as T
 import Typechecker (coreCheckerEval)
 
@@ -15,8 +14,7 @@ coreTests =
   T.testGroup
     "Core tests"
     [ coreCheckerEval,
-      coreConversions,
-      coreParser
+      coreConversions
     ]
 
 allCheckedTests :: T.TestTree

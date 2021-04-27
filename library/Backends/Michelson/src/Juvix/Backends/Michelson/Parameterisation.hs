@@ -1,17 +1,16 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
+-- | Module that implements the backend parameters for the Michelson backend.
 module Juvix.Backends.Michelson.Parameterisation
-  ( module Juvix.Backends.Michelson.Parameterisation,
+  ( michelson,
     module Types,
     module Pretty,
   )
 where
 
 import qualified Control.Arrow as Arr
-import Control.Monad.Fail (fail)
 import qualified Data.List.NonEmpty as NonEmpty
-import qualified Data.Text as Text
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
 import Juvix.Backends.Michelson.Compilation.Pretty as Pretty
 import Juvix.Backends.Michelson.Compilation.Types as Types
@@ -26,8 +25,6 @@ import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.IR.Evaluator as Eval
-import qualified Juvix.Core.IR.Typechecker.Types as TC
-import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Types as Core
@@ -36,15 +33,12 @@ import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.PrettyPrint as PP
 import qualified Juvix.Library.Usage as Usage
-import qualified Michelson.Macro as M
-import qualified Michelson.Parser as M
 import qualified Michelson.Text as M
 import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Type as Untyped
-import Text.ParserCombinators.Parsec hiding ((<|>))
-import qualified Text.ParserCombinators.Parsec.Token as Token
-import Prelude (Show (..), String, error)
+import Prelude (Show (..), error)
 
+-- | Check if the next three types are equal.
 -- TODO ∷ refactor this all to not be so bad
 -- DO EXTRA CHECKS
 check3Equal :: Eq a => NonEmpty a -> Bool
@@ -53,24 +47,30 @@ check3Equal (x :| [y, z])
   | otherwise = False
 check3Equal (_ :| _) = False
 
+-- | Check if the next two types are equal.
 check2Equal :: Eq a => NonEmpty a -> Bool
 check2Equal (x :| [y])
   | x == y = True
   | otherwise = False
 check2Equal (_ :| _) = False
 
+-- | Can the given type be used as a boolean? Note that in addition to
+-- booleans, integers and natural numbers re valid is well.
 isBool :: PrimTy -> Bool
 isBool (PrimTy (M.Ty M.TBool _)) = True
 isBool (PrimTy (M.Ty M.TInt _)) = True
 isBool (PrimTy (M.Ty M.TNat _)) = True
 isBool _ = False
 
+-- | Check if the first two types are equal, and that the last type adhere to
+-- the @check@ function.
 checkFirst2AndLast :: Eq t => NonEmpty t -> (t -> Bool) -> Bool
 checkFirst2AndLast (x :| [y, last]) check
   | check2Equal (x :| [y]) && check last = True
   | otherwise = False
 checkFirst2AndLast (_ :| _) _ = False
 
+-- | Check if the value has the given type.
 hasType :: RawPrimVal -> P.PrimType PrimTy -> Bool
 hasType tm (P.PrimType ty) = hasType' tm ty
 
@@ -99,10 +99,10 @@ hasType' CompareTimeStamp ty = checkFirst2AndLast ty isBool
 hasType' CompareMutez ty = checkFirst2AndLast ty isBool
 hasType' CompareHash ty = checkFirst2AndLast ty isBool
 -- Hacks make more exact later
-hasType' EDivI (x :| [y, z]) = check2Equal (x :| [y])
-hasType' (Inst M.TRANSFER_TOKENS {}) (x :| [a, b, c]) = True
-hasType' (Inst M.UNIT {}) (x :| []) = True
-hasType' (Inst M.BALANCE {}) (x :| []) = True
+hasType' EDivI (x :| [y, _]) = check2Equal (x :| [y])
+hasType' (Inst M.TRANSFER_TOKENS {}) (_ :| [_, _, _]) = True
+hasType' (Inst M.UNIT {}) (_ :| []) = True
+hasType' (Inst M.BALANCE {}) (_ :| []) = True
 hasType' (Inst (M.IF_CONS _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
@@ -110,19 +110,20 @@ hasType' (Inst (M.IF _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
 -- todo check this properly
-hasType' (Inst M.PAIR {}) (a :| (b : (c : []))) = True
+hasType' (Inst M.PAIR {}) (_ :| (_ : (_ : []))) = True
 -- todo check this properly
-hasType' (Inst (M.CAR _ _)) (a :| (b : [])) = True
-hasType' (Inst (M.CDR _ _)) (a :| (b : [])) = True
-hasType' (Inst M.SENDER {}) (a :| []) = True
-hasType' Contract (a :| [b]) = True
+hasType' (Inst (M.CAR _ _)) (_ :| (_ : [])) = True
+hasType' (Inst (M.CDR _ _)) (_ :| (_ : [])) = True
+hasType' (Inst M.SENDER {}) (_ :| []) = True
+hasType' Contract (_ :| [_]) = True
 hasType' (Constant _v) ty
   | length ty == 1 = True
   | otherwise = False
-hasType' x ((Application List _) :| []) = True
+hasType' _ ((Application List _) :| []) = True
 -- do something nicer here
 hasType' x ty = Prelude.error ("unsupported: " <> Juvix.Library.show x <> " :: " <> Juvix.Library.show ty)
 
+-- | Return the arity of a raw Michelson value.
 arityRaw :: RawPrimVal -> Natural
 arityRaw (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
 arityRaw (Constant _) = 0
@@ -131,6 +132,8 @@ arityRaw prim =
     |> Instructions.toNewPrimErr
     |> arityRaw
 
+-- | Try to translate the value into a function argument.
+-- Continuations can't be translated, but returns do.
 toArg :: PrimVal' ext -> Maybe (Arg' ext)
 toArg App.Cont {} = Nothing
 toArg App.Return {retType, retTerm} =
@@ -142,15 +145,14 @@ toArg App.Return {retType, retTerm} =
           term = retTerm
         }
 
+-- | Translate a value into a  'Take' and the arguments to pass.
 toTakes :: PrimVal' ext -> (Take, [Arg' ext], Natural)
 toTakes App.Cont {fun, args, numLeft} = (fun, args, numLeft)
 toTakes App.Return {retType, retTerm} = (fun, [], arityRaw retTerm)
   where
     fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
 
-fromReturn :: Return' ext -> PrimVal' ext
-fromReturn = identity
-
+-- | Datatype that is used for describing errors during the application process.
 data ApplyError
   = CompilationError CompilationError
   | ReturnTypeNotPrimitive (ErasedAnn.Type PrimTy)
@@ -171,6 +173,7 @@ instance PP.PrettyText ApplyError where
           (True, PP.pretty0 ty)
         ]
 
+-- | Instance for types.
 instance Core.CanApply PrimTy where
   arity (Application hd rest) =
     Core.arity hd - fromIntegral (length rest)
@@ -184,6 +187,7 @@ instance Core.CanApply PrimTy where
     Application fun args
       |> Right
 
+-- | Instance for values.
 instance App.IsParamVar ext => Core.CanApply (PrimVal' ext) where
   type ApplyErrorExtra (PrimVal' ext) = ApplyError
 
@@ -194,33 +198,43 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext) where
   freeArg _ = fmap App.VarArg . App.freeVar (Proxy @ext)
   boundArg _ = fmap App.VarArg . App.boundVar (Proxy @ext)
 
-  arity Prim.Cont {numLeft} = numLeft
-  arity Prim.Return {retTerm} = arityRaw retTerm
+  arity App.Cont {numLeft} = numLeft
+  arity App.Return {retTerm} = arityRaw retTerm
 
-  apply fun' args2
-    | (fun, args1, ar) <- toTakes fun' =
-      do
-        let argLen = lengthN args2
-            args = foldr NonEmpty.cons args2 args1
-        case argLen `compare` ar of
-          LT ->
-            Right $
-              Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
-          EQ
-            | Just takes <- traverse App.argToTake args ->
-              applyProper fun takes |> first Core.Extra
-            | otherwise ->
-              Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
-          GT -> Left $ Core.ExtraArguments fun' args2
-  apply fun args = Left $ Core.InvalidArguments fun args
+  -- The following implementation follows the eval/apply method for curried
+  -- function application. A description of this can be found in 'How to make a
+  -- fast curry: push/enter vs eval/apply' by Simon Marlow and Simon Peyton
+  -- Jones.
+  -- Given a function, and a non-empty list of arguments, we try to apply the
+  -- arguments to the function. The function is of type 'PrimVal''/'Return'',
+  -- so either a continuation or a fully evaluated term.
+  apply fun' args2 = do
+    let (fun, args1, ar) = toTakes fun' -- 'args1' are part of continuation fun'
+        argLen = lengthN args2 -- Nr. of free arguments.
+        args = foldr NonEmpty.cons args2 args1 -- List of all arguments.
+    case argLen `compare` ar of
+      -- If there are not enough arguments to apply, return a continuation.
+      LT ->
+        Right $
+          App.Cont {fun, args = toList args, numLeft = ar - argLen}
+      -- If there are exactly enough arguments to apply, do so.
+      -- In case there aren't any arguments, return a continuation.
+      EQ
+        | Just takes <- traverse App.argToTake args ->
+          applyProper fun takes |> first Core.Extra
+        | otherwise ->
+          Right $ App.Cont {fun, args = toList args, numLeft = 0}
+      -- If there are too many arguments to apply, raise an error.
+      GT -> Left $ Core.ExtraArguments fun' args2
 
--- | NB. requires that the right number of args are passed
+-- | Apply arguments to a function. Requires that the right number of arguments
+-- are passed.
 applyProper :: Take -> NonEmpty Take -> Either ApplyError (Return' ext)
 applyProper fun args =
   case compd >>= Interpreter.dummyInterpret of
     Right x -> do
       retType <- toPrimType $ ErasedAnn.type' newTerm
-      pure $ Prim.Return {retType, retTerm = Constant x}
+      pure $ App.Return {retType, retTerm = Constant x}
     Left err -> Left $ CompilationError err
   where
     fun' = takeToTerm fun
@@ -229,10 +243,12 @@ applyProper fun args =
     -- TODO ∷ do something with the logs!?
     (compd, _log) = Compilation.compileExpr newTerm
 
+-- | Translate a 'Take' into a 'RawTerm'.
 takeToTerm :: Take -> RawTerm
-takeToTerm (Prim.Take {usage, type', term}) =
+takeToTerm (App.Take {usage, type', term}) =
   Ann {usage, type' = Prim.fromPrimType type', term = ErasedAnn.Prim term}
 
+-- | Given a type, translate it to a type in the Michelson backend.
 toPrimType :: ErasedAnn.Type PrimTy -> Either ApplyError (P.PrimType PrimTy)
 toPrimType ty = maybe err (Right . P.PrimType) $ go ty
   where
@@ -243,37 +259,7 @@ toPrimType ty = maybe err (Right . P.PrimType) $ go ty
     goPrim (ErasedAnn.PrimTy p) = Just p
     goPrim _ = Nothing
 
-parseTy :: Token.GenTokenParser String () Identity -> Parser PrimTy
-parseTy lexer =
-  try
-    ( do
-        ty <- wrapParser lexer M.type_
-        pure (PrimTy ty)
-    )
-
--- TODO: parse all values.
-parseVal :: Token.GenTokenParser String () Identity -> Parser RawPrimVal
-parseVal lexer =
-  try
-    ( do
-        val <- wrapParser lexer M.value
-        pure (Constant (M.expandValue val))
-    )
-
-wrapParser :: Token.GenTokenParser String () Identity -> M.Parser a -> Parser a
-wrapParser lexer p = do
-  str <- many anyChar
-  Token.whiteSpace lexer
-  case M.parseNoEnv p "" (Text.pack str) of
-    Right r -> pure r
-    Left _ -> fail ""
-
-reservedNames :: [String]
-reservedNames = []
-
-reservedOpNames :: [String]
-reservedOpNames = []
-
+-- | Translate an 'Integer' to the Michelson backend.
 integerToPrimVal :: Integer -> Maybe RawPrimVal
 integerToPrimVal x
   | x >= toInteger (minBound @Int),
@@ -282,24 +268,11 @@ integerToPrimVal x
   | otherwise =
     Nothing
 
-checkStringType :: Text -> PrimTy -> Bool
-checkStringType val (PrimTy (M.Ty ty _)) = case ty of
-  M.TString -> Text.all M.isMChar val
-  -- TODO other cases?
-  _ -> False
-checkStringType _ _ = False
-
-checkIntType :: Integer -> PrimTy -> Bool
-checkIntType val (PrimTy (M.Ty ty _)) = case ty of
-  M.TNat -> val >= 0 -- TODO max bound
-  M.TInt -> True -- TODO bounds?
-  -- TODO other cases?
-  _ -> False
-checkIntType _ _ = False
-
+-- | Turn a Michelson type into a 'PrimTy'.
 primify :: Untyped.T -> PrimTy
 primify t = PrimTy (Untyped.Ty t DSLU.blank)
 
+-- | Michelson-specific low-level types available in Juvix.
 builtinTypes :: P.Builtins PrimTy
 builtinTypes =
   [ ("Michelson.unit-t", Untyped.TUnit),
@@ -331,6 +304,7 @@ builtinTypes =
        )
     |> Map.fromList
 
+-- | Michelson-specific low-level values available in Juvix.
 builtinValues :: P.Builtins RawPrimVal
 builtinValues =
   [ ("Michelson.add", AddI),
@@ -389,21 +363,15 @@ builtinValues =
     |> fmap (first NameSymbol.fromSymbol)
     |> Map.fromList
 
+-- | Parameters for the Michelson backend.
 michelson :: P.Parameterisation PrimTy RawPrimVal
 michelson =
   P.Parameterisation
     { hasType,
       builtinTypes,
       builtinValues,
-      parseTy,
-      parseVal,
-      reservedNames,
-      reservedOpNames,
-      stringTy = checkStringType,
       stringVal = Just . Constant . M.ValueString . M.mkMTextUnsafe, -- TODO ?
-      intTy = checkIntType,
       intVal = integerToPrimVal,
-      floatTy = \_ _ -> False, -- Michelson does not support floats
       floatVal = const Nothing
     }
 

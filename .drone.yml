@@ -109,14 +109,14 @@ steps:
     pull: if-not-exists
     failure: fast
     commands:
-      - sh ./scripts/format_and_org_gen.sh   
+      - sh ./scripts/format-and-org-gen.sh   
     depends_on:
       - test-typecheck
       - test-compile
       - test-parser
 
   - name: push changes
-    image: openanalytics/alpine-git-lfs-client
+    image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
       - sh ./scripts/push-changes.sh

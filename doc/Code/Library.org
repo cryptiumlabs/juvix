@@ -296,6 +296,7 @@ This module provides a default contract environment
   + [[Compilation/Types]]
   + [[Library]]
 ******* Parameterisation <<Michelson/Parameterisation>>
+Module that implements the backend parameters for the Michelson backend.
 - _Relies on_
   + [[Compilation]]
   + [[Compilation/Pretty]]
@@ -311,8 +312,6 @@ This module provides a default contract environment
   + [[Prim]]
   + [[Core/HR/Pretty]]
   + [[IR/Evaluator]]
-  + [[Typechecker/Types]]
-  + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
@@ -349,7 +348,6 @@ This module provides a default contract environment
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Usage]]
 ******** VirtualStack
 - Serves as a virtual stack over Michelson
 - This stack has a few properties
@@ -465,6 +463,13 @@ Types to support partial application and polymorphic primitives.
   + [[PrettyPrint]]
   + [[Usage]]
 ***** Parameterisation <<Core/Parameterisation>>
+Juvix parameterises the type theory & core language over a set of
+primitive data types and primitive values, which can include native data
+types such as strings, integers, or sets, and native functions such as
+addition, subtraction, string concatenation, set membership, etc. The
+language & typechecker can then be instantiated over a particular backend
+which provides concrete sets of primitives and a primitive type-checking
+relation.
 - _Relies on_
   + [[Application]]
   + [[Core/HR/Pretty]]
@@ -645,7 +650,6 @@ temporary lexical bindings as our code encounters binders.
   + [[Usage]]
 ***** HR
 - _Relies on_
-  + [[HR/Parser]]
   + [[Core/HR/Pretty]]
   + [[HR/Types]]
 ****** Extend <<HR/Extend>>
@@ -653,13 +657,6 @@ temporary lexical bindings as our code encounters binders.
   + [[IR/Types/Base]]
   + [[Library]]
   + [[NameSymbol]]
-****** Parser <<HR/Parser>>
-- _Relies on_
-  + [[HR/Types]]
-  + [[Core/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
-  + [[Usage]]
 ****** Pretty <<Core/HR/Pretty>>
 - _Relies on_
   + [[HR/Types]]
@@ -930,29 +927,6 @@ Quantitative type implementation inspired by
 *** Main <<Core/test/Main>>
 - _Relies on_
   + [[Library]]
-*** Parser <<Core/test/Parser>>
-- _Relies on_
-  + [[HR]]
-  + [[Naturals]]
-  + [[Unit]]
-  + [[Core/Types]]
-  + [[Library]]
-  + [[Usage]]
-*** Typechecker <<test/Typechecker>>
-Tests for the type checker and evaluator in Core/IR/Typechecker.hs
-- _Relies on_
-  + [[IR]]
-  + [[CheckTerm]]
-  + [[IR/Evaluator]]
-  + [[OnlyExts]]
-  + [[Core/Parameterisation]]
-  + [[All]]
-  + [[Naturals]]
-  + [[Unit]]
-  + [[Core/Types]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[Usage]]
 *** Common
 **** Context <<test/Common/Context>>
 - _Relies on_
@@ -977,6 +951,63 @@ Tests that weak works as expected
   + [[IR/Evaluator]]
   + [[IR/Types]]
   + [[Library]]
+*** Typechecker <<test/Typechecker>>
+Tests for the type checker and evaluator in Core/IR/Typechecker.hs
+- _Relies on_
+  + [[IR]]
+  + [[CheckTerm]]
+  + [[IR/Evaluator]]
+  + [[OnlyExts]]
+  + [[Core/Parameterisation]]
+  + [[All]]
+  + [[Naturals]]
+  + [[Unit]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[Usage]]
+* EasyPipeline
+** Setup <<EasyPipeline/Setup>>
+** src
+*** Easy
+The easy module serves as the stop shop for getting anywhere in the
+code-base fast.
+_The file is laid out where_
+ 1. we lay out a phase
+    - We have 2 variants of each phase
+      1) <name>File
+      2) <name>Library
+    - This lasts up until context, as we can see if the prelude we
+      give it matches our expectations
+ 2. We then give examples
+We do 1. and 2. having each step rely on the last, and continue the
+process until the compiler is at the full backends.
+We can view this approach as giving us a quick way to play around
+with any stage of the compiler while modifying the source code.
+- _Relies on_
+  + [[Michelson/Parameterisation]]
+  + [[Juvix/Contextify]]
+  + [[ResolveOpenInfo]]
+  + [[ToContext/Types]]
+  + [[Core]]
+  + [[Core/Common/Context]]
+  + [[Traverse]]
+  + [[Desugar]]
+  + [[Frontend]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Frontend/Types]]
+  + [[Frontend/Types/Base]]
+  + [[FrontendDesugar]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
+  + [[Juvix/Pipeline]]
+  + [[Compile]]
+** test
+*** Spec <<EasyPipeline/test/Spec>>
 * Frontend
 ** Setup <<Frontend/Setup>>
 ** src
@@ -1032,7 +1063,7 @@ Tests that weak works as expected
 *** Main <<Frontend/test/Main>>
 - _Relies on_
   + [[Library]]
-*** Parser <<Frontend/test/Parser>>
+*** Parser <<test/Parser>>
 - _Relies on_
   + [[Frontend/Parser]]
   + [[Frontend/Parser]]
@@ -1231,7 +1262,7 @@ Can be added to via core translation
   + [[Library]]
   + [[Dot]]
   + [[Visualize/Graph]]
-*** Spec
+*** Spec <<InteractionNet/test/Spec>>
 *** Nets
 **** Combinators <<test/Nets/Combinators>>
 - _Relies on_
@@ -1321,6 +1352,172 @@ Can be added to via core translation
 *** Main <<InteractionNetIR/test/Main>>
 - _Relies on_
   + [[Library]]
+* Pipeline
+** Setup <<Pipeline/Setup>>
+** src
+*** Juvix
+**** Backends
+- [[Backends]] are the targets for optimized code output specific to a
+  platform
+- Currently the LLVM backend will serve as the reference
+  implementation
+- The following backends are planned
+  1. LLVM
+  2. Michelson
+  3. WASM
+     - Most likely through LLVM
+  4. Various Arithmetic Circuits
+     - For use in ZKP's
+**** Core
+- _Relies on_
+  + [[Juvix/Contextify]]
+  + [[Core/Common/Context]]
+  + [[Core/Erasure]]
+  + [[Core/HR/Pretty]]
+  + [[Core/Pipeline]]
+  + [[Translate]]
+  + [[Core/Types]]
+  + [[Frontend/Types]]
+  + [[FrontendDesugar]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[PrettyPrint]]
+  + [[Library/Sexp]]
+***** Pipeline <<Core/Pipeline>>
+- _Relies on_
+  + [[Application]]
+  + [[ErasedAnn]]
+  + [[Prim]]
+  + [[Core/Erasure]]
+  + [[HR]]
+  + [[IR]]
+  + [[IR/Typechecker]]
+  + [[Translate]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[Usage]]
+**** Encoding
+***** Encoding <<Encoding/Encoding>>
+- This provides generic functions used by the various encodings in
+  this directory
+- _Relies on_
+  + [[Encoding/Types]]
+  + [[Library]]
+  + [[HashMap]]
+***** Mendler
+- Gives a =Mendler= encoding from an =ADT=.
+- This file is not done as Ι have yet to find a way to convert any
+  general recursive function into a proper =Mendler= form.
+- This however will do the boilerplate of changing an =ADT= to
+  =Mendler= and the structure of a case expression into proper
+  =Mendler= form
+- _Relies on_
+  + [[Encoding/Encoding]]
+  + [[Encoding/Types]]
+  + [[Library]]
+  + [[HashMap]]
+***** Scott
+- Gives a =Scott= encoding from an =ADT= and works properly for case
+  expressions
+- Overall this encoding just works™
+- _Relies on_
+  + [[Encoding/Encoding]]
+  + [[Encoding/Types]]
+  + [[Library]]
+  + [[HashMap]]
+***** Types <<Encoding/Types>>
+- _Relies on_
+  + [[Library]]
+  + [[HashMap]]
+**** Pipeline <<Juvix/Pipeline>>
+- _Relies on_
+  + [[Backend]]
+  + [[Compile]]
+  + [[Pipeline/Internal]]
+  + [[Pipeline/Types]]
+***** Compile
+- _Relies on_
+  + [[Application]]
+  + [[Core/Common/Context]]
+  + [[IR]]
+  + [[IR/Types/Base]]
+  + [[Globals]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Library/Sexp]]
+  + [[Pipeline/Internal]]
+  + [[ToCore/Types]]
+***** Internal <<Pipeline/Internal>>
+- _Relies on_
+  + [[Core]]
+  + [[Core/Common/Context]]
+  + [[Traverse]]
+  + [[IR/Types]]
+  + [[Core/Parameterisation]]
+  + [[Frontend]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Parser]]
+  + [[Library/Sexp]]
+  + [[FromFrontend]]
+***** Types <<Pipeline/Types>>
+- _Relies on_
+  + [[ErasedAnn/Types]]
+  + [[Erasure/Types]]
+  + [[Typechecker/Types]]
+  + [[Core/Types]]
+  + [[Library]]
+***** Backend
+- _Relies on_
+  + [[Backend/Internal]]
+  + [[Backend/Michelson]]
+****** Internal <<Backend/Internal>>
+- _Relies on_
+  + [[Application]]
+  + [[Core/Common/Context]]
+  + [[ErasedAnn]]
+  + [[Library]]
+  + [[Library/Sexp]]
+  + [[Compile]]
+****** Michelson <<Backend/Michelson>>
+- _Relies on_
+  + [[Compilation]]
+  + [[Michelson/Parameterisation]]
+  + [[IR]]
+  + [[Core/Pipeline]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Backend/Internal]]
+  + [[Compile]]
+  + [[Pipeline/Internal]]
+  + [[Pipeline/Types]]
+  + [[FromFrontend]]
+** test
+*** Encoding <<test/Encoding>>
+- _Relies on_
+  + [[Encoding/Encoding]]
+  + [[Mendler]]
+  + [[Scott]]
+  + [[Encoding/Types]]
+  + [[Library]]
+*** Main <<Pipeline/test/Main>>
+- _Relies on_
+  + [[Library]]
+*** Pipeline <<test/Pipeline>>
+- _Relies on_
+  + [[Backends/Michelson]]
+  + [[Compilation]]
+  + [[IR]]
+  + [[Core/Pipeline]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[Usage]]
+*** RecGroups
+- _Relies on_
+  + [[Traverse]]
+  + [[Library]]
+  + [[Juvix/Pipeline]]
 * StandardLibrary
 ** Setup <<StandardLibrary/Setup>>
 ** src
@@ -1363,14 +1560,14 @@ Can be added to via core translation
   + [[PrettyPrint]]
 ***** Parser <<Library/Parser>>
 - _Relies on_
-  + [[Internal]]
+  + [[Parser/Internal]]
   + [[Lexer]]
   + [[Token]]
-****** Internal
+****** Internal <<Parser/Internal>>
 ****** Lexer
 - _Relies on_
   + [[Library]]
-  + [[Internal]]
+  + [[Parser/Internal]]
   + [[Token]]
 ****** Token
 - _Relies on_
@@ -1389,7 +1586,7 @@ sexp type and all the various helper functionality one can need
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Parser]]
-  + [[Internal]]
+  + [[Parser/Internal]]
   + [[Sexp/Types]]
 ****** Types <<Sexp/Types>>
 - _Relies on_
@@ -1478,21 +1675,6 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Closure]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Desugar]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[Library]]
   + [[Library/Sexp]]
 **** Contextify <<Juvix/Contextify>>
 - _Relies on_
@@ -1612,6 +1794,21 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Library]]
   + [[Library/Sexp]]
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Desugar]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
+  + [[Library/Sexp]]
 **** ToCore
 ***** FromFrontend
 - _Relies on_
@@ -1688,7 +1885,7 @@ done with no extra information needed. Thus we export the following passes
   + [[Frontend/Sexp]]
   + [[Frontend/Types]]
   + [[Library]]
-  + [[Internal]]
+  + [[Parser/Internal]]
   + [[Library/Sexp]]
 **** Infix
 ***** ShuntYard <<Infix/ShuntYard>>
