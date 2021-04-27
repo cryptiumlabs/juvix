@@ -209,7 +209,7 @@ transformArrow q _f@(Sexp.List [π, xa, b]) =
         <*> x
         <*> transformTermHR q a
         <*> transformTermHR q b
-transformArrow _q _ = error "malfromed custom arrow"
+transformArrow _q _ = error "malformed custom arrow"
 
 transPrim ::
   ReduceEff primTy primVal m => Sexp.T -> m (HR.Term primTy primVal)
@@ -221,7 +221,7 @@ transPrim (Sexp.List [parm])
   where
     primTy param p = HR.PrimTy <$> HM.lookup p (P.builtinTypes param)
     primVal param p = HR.Prim <$> HM.lookup p (P.builtinValues param)
-transPrim _ = error "malfromed prim"
+transPrim _ = error "malformed prim"
 
 pattern NamedArgTerm ::
   Symbol -> HR.Term primTy primVal -> HR.Term primTy primVal
@@ -273,7 +273,6 @@ isVarArg p@(name Sexp.:> _rest)
     throwFF $ PatternUnimplemented p
 isVarArg p =
   isVarPat p
-isVarArg _ = error "malformed arg"
 
 isVarPat ::
   HasThrowFF primTy primVal m =>
@@ -570,25 +569,19 @@ transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
         ty <- mkTy defMTy
         pure $ ConSig (Just ty) (Just d)
 
-    --  in foldrM makeArr hd $ zip names xs
-    mkTy (Just (fn Sexp.:> t1 Sexp.:> t2)) | isFn fn = HR.Pi (Usage.SNat 1) <$> mkTy (Just t1) <*> pure (HR.Star 0) <*> mkTy (Just t2)
+    -- data Bar = Foo Bool Int
+    -- (-> Bool (-> Int Bar)
+    -- Pi (SNat 1) ("Foo":[]) (1: Bool) (Pi (SNat 1) ("":[]) (Int) (Bar))
+    --                      ^ input type   
+    mkTy (Just (fn Sexp.:> t1 Sexp.:> t2)) | isFn fn 
+      -- panic $ "mkTy not implemented" <> show (fn, t1, t2) 
+      = HR.Pi (Usage.SNat 1) "" (HR.PrimTy (panic "use t1")) <$> mkTy (Just t2)
+    mkTy (Just (t1 Sexp.:> fn Sexp.:> t2)) | isFn fn 
+      = HR.Pi (Usage.SNat 1) "" (HR.PrimTy (panic "use t1")) <$> mkTy (Just t2)
     mkTy (Just e) = transformTermHR q e
     mkTy Nothing = panic "Shouldn't happen"
     isFn fn = Sexp.isAtomNamed fn "TopLevel.Prelude.->"
-      -- HR.Pi mempty (NameSymbol.fromSymbol name) (HR.Star 0) res
-    -- let makeArr (x, arg) res =
-          -- HR.Pi (Usage.SNat 1) x <$> transformTermHR q arg <*> pure res
-        -- names = makeFieldName <$> [0 ..]
-        -- makeFieldName i = NameSymbol.fromText $ "$field" <> show (i :: Int)
-    --  in foldrM makeArr hd $ zip names xs
--- -- TODO: We're only handling the ADT case with no records or GADTs
--- generateSumConsType :: Sexp.T -> Sexp.T -> Maybe Sexp.T
--- generateSumConsType typeCons (Sexp.cdr -> declaration) = do
---     d <- Sexp.foldr1 f declaration
---     pure $ Sexp.list [arr, d, typeCons]
---   where
---     f n acc = Sexp.list [arr, n, acc]
---     arr = Sexp.atom "TopLevel.Prelude.->"
+
 transformNormalSig _ _ Ctx.CurrentNameSpace =
   pure []
 transformNormalSig _ _ Ctx.Information {} =

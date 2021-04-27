@@ -55,22 +55,28 @@ mkDef
 mkDef typeCons dataConstructor s@Context.Sum{sumTDef, sumTName} c = do 
     t <- extractTypeDeclar . Context.extractValue =<< Context.lookup (NameSymbol.fromSymbol sumTName) c
     declaration <- Sexp.findKey Sexp.car dataConstructor t 
-    pTraceShowM ("Declaratione", typeCons, declaration, generateSumConsType declaration)
+    pTraceShowM ("Declaratione", typeCons, declaration, generateSumConsSexp declaration)
     Just $
         Context.D
           { defUsage = Just Usage.Omega, 
-            defMTy = generateSumConsType typeCons declaration,
+            defMTy = generateSumConsSexp typeCons declaration,
             defTerm = Sexp.list [Sexp.atom ":primitive", Sexp.atom "Builtin.Constructor"],
             defPrecedence = Context.default'
           }
+    -- (-> (-> f1 f2) f3)
+    -- data Bar = Foo Bool Int
+    -- (-> Bool (-> Int Bar)
+    -- data Bar = Foo Bool Int F
+    -- -> Bool -> Int -> F Bar
+    -- data Bar = Foo Bool
 
 -- TODO: We're only handling the ADT case with no records or GADTs
-generateSumConsType :: Sexp.T -> Sexp.T -> Maybe Sexp.T
-generateSumConsType typeCons (Sexp.cdr -> declaration) = do
+generateSumConsSexp :: Sexp.T -> Sexp.T -> Maybe Sexp.T
+generateSumConsSexp typeCons (Sexp.cdr -> declaration) = do
     d <- Sexp.foldr1 f declaration
     pure $ Sexp.list [arr, d, typeCons]
   where
-    f n acc = Sexp.list [arr, n, acc]
+    f n acc = Sexp.list [n, arr, acc]
     arr = Sexp.atom "TopLevel.Prelude.->"
 
 contextToCore ::
