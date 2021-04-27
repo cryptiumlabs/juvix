@@ -93,8 +93,6 @@ typeToTele (n, t) = ttt (n, t) []
         )
     ttt x tel = (tel, snd x)
 
-
-
 -- | checkDataType checks the datatype by checking all arguments
 checkDataType ::
   ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
@@ -120,10 +118,8 @@ checkDataType ::
   -- | the list of args to be checked.
   [IR.RawDataArg' extT primTy primVal] ->
   m ()
-checkDataType tel dtName param (arg:args) = do
-  _ <- checkDataTypeArg tel dtName param (IR.rawArgType arg)
-  checkDataType tel dtName param args
-checkDataType _ _ _ [] = return ()
+checkDataType tel dtName param =
+  mapM_ (checkDataTypeArg tel dtName param . IR.rawArgType)
 
 -- | checkDataTypeArg checks an argument of the datatype
 -- (its constructors are checked by checkConType)
