@@ -8,10 +8,6 @@ module Juvix.Pipeline
   )
 where
 
-import Juvix.Pipeline.Compile
-import Juvix.Pipeline.Internal
-import Juvix.Pipeline.Types
-
 import qualified Data.Text as Text
 import qualified Data.Text.IO as T
 import qualified Juvix.Core.Application as CoreApp
@@ -21,7 +17,9 @@ import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Library.Sexp as Sexp
 import Juvix.Pipeline.Compile
+import Juvix.Pipeline.Internal
 import qualified Juvix.Pipeline.Internal as Pipeline
+import Juvix.Pipeline.Types
 import qualified System.IO.Temp as Temp
 import qualified Text.Megaparsec as P
 

@@ -6,10 +6,13 @@ import qualified Data.Aeson as A
 import Data.Curve.Weierstrass.BLS12381 (Fr)
 import Data.Field.Galois (GaloisField, PrimeField (..), toP)
 import qualified Data.Map as Map
+import qualified Data.Scientific as S
 import Juvix.Backends.Plonk (FFAnnTerm, FFType, PrimVal (..))
 import qualified Juvix.Backends.Plonk as P
+import qualified Juvix.Core as Core
 import Juvix.Library (Natural, undefined, ($), (.))
 import Juvix.Library hiding (Type, exp)
+import qualified Juvix.Pipeline as Pipeline
 import qualified Test.Example.Polynomial as Example
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
@@ -20,6 +23,7 @@ import qualified Juvix.Pipeline as Pipeline
 import qualified Juvix.Core as Core
 
 deriving instance Bits Fr
+
 instance A.FromJSON Fr where
   parseJSON (A.Number n) = case S.floatingOrInteger n of
     Left floating -> panic $ "Can't parse floating :" <> show n
@@ -97,7 +101,6 @@ polynomial1 = T.testCase "\\x y -> x^3 - 2x^2 + 4 = y" (testOutput Example.circu
   where
     inputs = mkInputs [1, 3]
     output = 1 -- true!
-
 
 compile :: FilePath -> Pipeline.Pipeline (FFAnnTerm Fr)
 compile fin = do

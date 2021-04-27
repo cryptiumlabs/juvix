@@ -10,10 +10,10 @@ import Data.Field.Galois (GaloisField)
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Backends.Plonk.Builder as Builder
 import qualified Juvix.Backends.Plonk.Circuit as Circuit
-import qualified Juvix.Backends.Plonk.Parameterization as Parameterization
 import qualified Juvix.Backends.Plonk.Compiler as Compiler
-import qualified Juvix.Backends.Plonk.Types as Types
 import qualified Juvix.Backends.Plonk.Dot as Dot
+import qualified Juvix.Backends.Plonk.Parameterization as Parameterization
+import qualified Juvix.Backends.Plonk.Types as Types
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts

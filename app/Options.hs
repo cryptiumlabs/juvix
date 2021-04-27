@@ -11,10 +11,10 @@ where
 
 import Data.Curve.Weierstrass.BLS12381 (Fr)
 import Data.Data
+import qualified Juvix.Backends.Michelson as Michelson
+import qualified Juvix.Backends.Plonk as Plonk
 import Juvix.Library hiding (option)
 import Juvix.Pipeline
-import qualified Juvix.Backends.Plonk as Plonk
-import qualified Juvix.Backends.Michelson as Michelson
 import Options.Applicative
 
 data Context = Context

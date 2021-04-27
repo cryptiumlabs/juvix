@@ -1,8 +1,8 @@
 module Juvix.Backends.Michelson.Pipeline (BMichelson (..)) where
 
+import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
-import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Pipeline as CorePipeline
 import Juvix.Library

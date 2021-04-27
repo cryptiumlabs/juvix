@@ -26,6 +26,6 @@ import Juvix.Backends.Plonk.IR
     opPrecedence,
   )
 import Juvix.Backends.Plonk.Lang
-import Juvix.Backends.Plonk.Pipeline
 import Juvix.Backends.Plonk.Parameterization
+import Juvix.Backends.Plonk.Pipeline
 import Juvix.Backends.Plonk.Types
