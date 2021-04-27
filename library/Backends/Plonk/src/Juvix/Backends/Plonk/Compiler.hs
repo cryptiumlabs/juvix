@@ -109,7 +109,7 @@ compileTermWithWire term = do
       o <- freshOutput
       replaceLast o
       pure o
-      -- pure wire
+    -- pure wire
     Right circ -> do
       wire <- freshOutput
       emit $ MulGate (ConstGate 1) circ wire

@@ -562,6 +562,7 @@ Surface language
   + [[Core]]
   + [[Library]]
   + [[Library]]
+  + [[Feedback]]
   + [[Juvix/Pipeline]]
 ***** Example
 ****** Polynomial

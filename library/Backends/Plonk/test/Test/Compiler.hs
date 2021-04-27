@@ -12,15 +12,11 @@ import qualified Juvix.Backends.Plonk as P
 import qualified Juvix.Core as Core
 import Juvix.Library (Natural, undefined, ($), (.))
 import Juvix.Library hiding (Type, exp)
+import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Pipeline as Pipeline
 import qualified Test.Example.Polynomial as Example
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import qualified Data.Scientific as S
-import qualified Juvix.Library.Feedback as Feedback
-
-import qualified Juvix.Pipeline as Pipeline
-import qualified Juvix.Core as Core
 
 deriving instance Bits Fr
 
@@ -32,60 +28,57 @@ instance A.FromJSON Fr where
 instance A.ToJSON Fr where
   toJSON f = A.Number $ S.scientific (fromP f) 0
 
-
 top :: IO T.TestTree
 top = do
   T.testGroup
-    "Compiler tests" <$>
-      sequenceA 
-        [ pure polynomials
-        , orTests
-        , andTests
-        , xorTests
-        ]
+    "Compiler tests"
+    <$> sequenceA
+      [ pure polynomials,
+        orTests,
+        andTests,
+        xorTests
+      ]
 
 polynomials :: T.TestTree
 polynomials = do
   T.testGroup
     "Polynomials"
-    [ polynomial1 ]
+    [polynomial1]
 
 orTests :: IO T.TestTree
 orTests = do
-  T.testGroup "OR gate tests" <$>
-    sequence [orTest [1,1] 1, orTest [1, 0] 1, orTest [0, 1] 1, orTest [0,0] 0]
+  T.testGroup "OR gate tests"
+    <$> sequence [orTest [1, 1] 1, orTest [1, 0] 1, orTest [0, 1] 1, orTest [0, 0] 0]
   where
     orTest :: [Fr] -> Fr -> IO T.TestTree
     orTest = boolTest "test/Test/Example/Juvix/Or.ju"
 
 andTests :: IO T.TestTree
 andTests = do
-  T.testGroup "AND gate tests" <$>
-    sequence [andTest [1,1] 1, andTest [1, 0] 0, andTest [0, 1] 0, andTest [0,0] 0]
+  T.testGroup "AND gate tests"
+    <$> sequence [andTest [1, 1] 1, andTest [1, 0] 0, andTest [0, 1] 0, andTest [0, 0] 0]
   where
     andTest :: [Fr] -> Fr -> IO T.TestTree
     andTest = boolTest "test/Test/Example/Juvix/And.ju"
 
 xorTests :: IO T.TestTree
 xorTests = do
-  T.testGroup "XOR gate tests" <$>
-    sequence [xorTest [1,1] 0, xorTest [1, 0] 1, xorTest [0, 1] 1, xorTest [0,0] 0]
+  T.testGroup "XOR gate tests"
+    <$> sequence [xorTest [1, 1] 0, xorTest [1, 0] 1, xorTest [0, 1] 1, xorTest [0, 0] 0]
   where
     xorTest :: [Fr] -> Fr -> IO T.TestTree
     xorTest = boolTest "test/Test/Example/Juvix/XOr.ju"
 
-
-
 boolTest :: FilePath -> [Fr] -> Fr -> IO T.TestTree
 boolTest fp inp outp = do
   Feedback.Success _ term <- Feedback.runFeedbackT $ compile fp
-  pure $ T.testCase (show (fromP <$> inp, fromP outp))
-    (testOutput (toCircuit term) inputs outp)
+  pure $
+    T.testCase
+      (show (fromP <$> inp, fromP outp))
+      (testOutput (toCircuit term) inputs outp)
   where
     inputs = mkInputs inp
     toCircuit t = P.execCircuitBuilder $ P.compileTermWithWire t
-
-
 
 testOutput :: (GaloisField f, Bits f) => P.ArithCircuit f -> Map P.Wire f -> f -> T.Assertion
 testOutput circuit inputs expectedOutput = expectedOutput T.@=? actualOutput
@@ -117,6 +110,3 @@ compileAnd = compile "test/Test/Example/Juvix/And.ju"
 
 compileXor :: Pipeline.Pipeline (FFAnnTerm Fr)
 compileXor = compile "test/TestExample/Juvix/XOr.ju"
-
-
-

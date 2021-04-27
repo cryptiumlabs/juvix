@@ -73,10 +73,10 @@ replaceLast :: Wire -> IRM f ()
 replaceLast o = do
   modify
     @"sCircuit"
-    (\case
-      ArithCircuit ((MulGate i1 i2 _o):cs) -> ArithCircuit (MulGate i1 i2 o:cs)
-      a -> a)
-
+    ( \case
+        ArithCircuit ((MulGate i1 i2 _o) : cs) -> ArithCircuit (MulGate i1 i2 o : cs)
+        a -> a
+    )
 
 -- | Add a Mul and its output to the ArithCircuit
 emit :: Gate Wire f -> IRM f ()
