@@ -1,7 +1,18 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.Parameterisations.Naturals where
+module Juvix.Core.Parameterisations.Naturals
+  ( Ty (..),
+    hasType,
+    typeOf,
+    Val (..),
+    builtinTypes,
+    builtinValues,
+    isNat,
+    natVal,
+    t,
+  )
+where
 
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Evaluator as E
@@ -9,10 +20,7 @@ import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (natVal, (<|>))
-import Text.ParserCombinators.Parsec
-import qualified Text.ParserCombinators.Parsec.Token as Token
 import Text.Show
-import Prelude (String)
 
 -- k: primitive type: naturals
 data Ty
@@ -92,33 +100,6 @@ instance Monoid (IR.XVPrim ext ty Val) => E.HasSubstValue ext ty Val Val where
 instance Monoid (IR.XPrim ext Ty Val) => E.HasPatSubstTerm ext Ty Val Val where
   patSubstTerm' _ _ val = pure $ IR.Prim' val mempty
 
-parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
-parseTy lexer = do
-  Token.reserved lexer "Nat"
-  pure Ty
-
-parseVal :: Token.GenTokenParser String () Identity -> Parser Val
-parseVal lexer =
-  parseNat lexer <|> parseAdd lexer <|> parseSub lexer <|> parseMul lexer
-
-parseNat :: Token.GenTokenParser String () Identity -> Parser Val
-parseNat lexer = Val . fromIntegral |<< Token.natural lexer
-
-parseAdd :: Token.GenTokenParser String () Identity -> Parser Val
-parseAdd lexer = Token.reserved lexer "add" >> pure Add
-
-parseSub :: Token.GenTokenParser String () Identity -> Parser Val
-parseSub lexer = Token.reserved lexer "sub" >> pure Sub
-
-parseMul :: Token.GenTokenParser String () Identity -> Parser Val
-parseMul lexer = Token.reserved lexer "mul" >> pure Mul
-
-reservedNames :: [String]
-reservedNames = ["Nat", "add", "sub", "mul"]
-
-reservedOpNames :: [String]
-reservedOpNames = []
-
 isNat :: Integer -> Bool
 isNat i = i >= 0
 
@@ -137,14 +118,7 @@ t =
     { hasType,
       builtinTypes,
       builtinValues,
-      parseTy,
-      parseVal,
-      reservedNames,
-      reservedOpNames,
-      stringTy = \_ _ -> False,
       stringVal = const Nothing,
-      intTy = \i _ -> isNat i,
       intVal = natVal,
-      floatTy = \_ _ -> False,
       floatVal = const Nothing
     }

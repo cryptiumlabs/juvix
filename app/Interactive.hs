@@ -40,8 +40,9 @@ mainLoop func = do
           H.outputStrLn =<< liftIO (func inp)
           mainLoop func
 
+-- TODO: remove
 parseString :: String -> Maybe (HR.Term Nat.Ty Nat.Val)
-parseString = HR.generateParser Nat.t
+parseString = undefined
 
 handleSpecial ::
   String -> H.InputT IO () -> H.InputT IO ()

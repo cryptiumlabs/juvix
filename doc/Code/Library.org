@@ -296,9 +296,9 @@ This module provides a default contract environment
   + [[Compilation/Types]]
   + [[Library]]
 ******* Parameterisation <<Michelson/Parameterisation>>
+Module that implements the backend parameters for the Michelson backend.
 - _Relies on_
   + [[Compilation]]
-  + [[Compilation/Types]]
   + [[Compilation/Types]]
   + [[Michelson/Contract]]
   + [[Instructions]]
@@ -309,8 +309,6 @@ This module provides a default contract environment
   + [[Prim]]
   + [[ErasedAnn/Types]]
   + [[IR/Evaluator]]
-  + [[Typechecker/Types]]
-  + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
@@ -339,7 +337,6 @@ This module provides a default contract environment
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Usage]]
 ******** VirtualStack
 - Serves as a virtual stack over Michelson
 - This stack has a few properties
@@ -453,6 +450,13 @@ Types to support partial application and polymorphic primitives.
   + [[Library]]
   + [[Usage]]
 ***** Parameterisation <<Core/Parameterisation>>
+Juvix parameterises the type theory & core language over a set of
+primitive data types and primitive values, which can include native data
+types such as strings, integers, or sets, and native functions such as
+addition, subtraction, string concatenation, set membership, etc. The
+language & typechecker can then be instantiated over a particular backend
+which provides concrete sets of primitives and a primitive type-checking
+relation.
 - _Relies on_
   + [[Application]]
   + [[IR/Types]]
@@ -616,20 +620,12 @@ temporary lexical bindings as our code encounters binders.
   + [[Usage]]
 ***** HR
 - _Relies on_
-  + [[HR/Parser]]
   + [[HR/Types]]
 ****** Extend <<HR/Extend>>
 - _Relies on_
   + [[IR/Types/Base]]
   + [[Library]]
   + [[NameSymbol]]
-****** Parser <<HR/Parser>>
-- _Relies on_
-  + [[HR/Types]]
-  + [[Core/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
-  + [[Usage]]
 ****** Subst <<HR/Subst>>
 - Runs a substitution algorithm over core
 - _Relies on_
@@ -882,14 +878,6 @@ Quantitative type implementation inspired by
 *** Main <<Core/test/Main>>
 - _Relies on_
   + [[Library]]
-*** Parser <<Core/test/Parser>>
-- _Relies on_
-  + [[HR]]
-  + [[Naturals]]
-  + [[Unit]]
-  + [[Core/Types]]
-  + [[Library]]
-  + [[Usage]]
 *** Typechecker <<test/Typechecker>>
 Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
@@ -1017,7 +1005,7 @@ with any stage of the compiler while modifying the source code.
 *** Main <<Frontend/test/Main>>
 - _Relies on_
   + [[Library]]
-*** Parser <<Frontend/test/Parser>>
+*** Parser <<test/Parser>>
 - _Relies on_
   + [[Frontend/Parser]]
   + [[Frontend/Parser]]

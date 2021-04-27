@@ -2,15 +2,20 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.Parameterisations.Unit where
+module Juvix.Core.Parameterisations.Unit
+  ( Ty (..),
+    hasType,
+    Val (..),
+    builtinTypes,
+    builtinValues,
+    t,
+  )
+where
 
 import qualified Juvix.Core.IR.Evaluator as E
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding ((<|>))
-import Text.ParserCombinators.Parsec
-import qualified Text.ParserCombinators.Parsec.Token as Token
-import Prelude (String)
 
 -- k: primitive type: unit
 data Ty
@@ -54,22 +59,6 @@ instance Monoid (IR.XVPrim ext ty Val) => E.HasSubstValue ext ty Val Val where
 instance Monoid (IR.XPrim ext Ty Val) => E.HasPatSubstTerm ext Ty Val Val where
   patSubstTerm' _ _ val = pure $ IR.Prim' val mempty
 
-parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
-parseTy lexer = do
-  Token.reserved lexer "Unit"
-  pure Ty
-
-parseVal :: Token.GenTokenParser String () Identity -> Parser Val
-parseVal lexer = do
-  Token.reserved lexer "tt"
-  pure Val
-
-reservedNames :: [String]
-reservedNames = ["Unit", "tt"]
-
-reservedOpNames :: [String]
-reservedOpNames = []
-
 builtinTypes :: P.Builtins Ty
 builtinTypes = [(["Unit"], Ty)]
 
@@ -82,14 +71,7 @@ t =
     { hasType,
       builtinTypes,
       builtinValues,
-      parseTy,
-      parseVal,
-      reservedNames,
-      reservedOpNames,
-      stringTy = \_ _ -> False,
       stringVal = const Nothing,
-      intTy = \_ _ -> False,
       intVal = const Nothing,
-      floatTy = \_ _ -> False,
       floatVal = const Nothing
     }
