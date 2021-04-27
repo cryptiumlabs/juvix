@@ -772,10 +772,14 @@ Datatype declarations are typechecked by @checkDataType@ in CheckDataType.hs.
 Function declarations are typechecked by @typeCheckFuns@ in CheckFunction.hs.
 Typechecked declarations are added to the signature.
 - _Relies on_
+  + [[CheckDatatype]]
+  + [[IR/Evaluator]]
+  + [[OnlyExts]]
   + [[Typechecker/Env]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types]]
+  + [[IR/Types/Base]]
   + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]

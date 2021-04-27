@@ -10,33 +10,38 @@ module Juvix.Core.IR.Typechecker
   )
 where
 
+import Juvix.Core.IR.CheckDatatype
+import qualified Juvix.Core.IR.Evaluator as Eval
+import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import Juvix.Core.IR.Typechecker.Env as Env
 import Juvix.Core.IR.Typechecker.Types as Typed
 import Juvix.Core.IR.Types (Global')
 import qualified Juvix.Core.IR.Types as IR
+import Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.IR.Types.Globals as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype)
-import Juvix.Core.IR.CheckDatatype
-import qualified Juvix.Core.IR.Evaluator as Eval
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
-import Juvix.Core.IR.Types.Base as IR
 
 typeCheckDeclaration ::
   ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
-  Param.CanApply primTy,
-  Param.CanApply primVal,
-  Eval.CanEval extT IR.NoExt primTy primVal,
-  Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primTy,
-  Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primVal,
-  Eq primTy,
-  Eq primVal,
-  IR.ValueAll Eq extV primTy primVal,
-  IR.NeutralAll Eq extV primTy primVal,
-  CanTC' extT primTy primVal m,
-  Param.CanApply (TypedPrim primTy primVal),
-  HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m,
-  HasThrow "typecheckError" (TypecheckError' extV IR.NoExt primTy primVal) m, HasReader "globals" (GlobalsT primTy primVal) (IR.TypeCheck ext primTy primVal m), HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) (IR.TypeCheck ext primTy primVal m), HasThrow "typecheckError" (TypecheckError' extV IR.NoExt primTy primVal) (IR.TypeCheck ext primTy primVal m), HasThrow "typecheckError" (TypecheckError' IR.NoExt extT primTy primVal) (IR.TypeCheck ext primTy primVal m)) =>
+    Param.CanApply primTy,
+    Param.CanApply primVal,
+    Eval.CanEval extT IR.NoExt primTy primVal,
+    Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primTy,
+    Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primVal,
+    Eq primTy,
+    Eq primVal,
+    IR.ValueAll Eq extV primTy primVal,
+    IR.NeutralAll Eq extV primTy primVal,
+    CanTC' extT primTy primVal m,
+    Param.CanApply (TypedPrim primTy primVal),
+    HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m,
+    HasThrow "typecheckError" (TypecheckError' extV IR.NoExt primTy primVal) m,
+    HasReader "globals" (GlobalsT primTy primVal) (IR.TypeCheck ext primTy primVal m),
+    HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) (IR.TypeCheck ext primTy primVal m),
+    HasThrow "typecheckError" (TypecheckError' extV IR.NoExt primTy primVal) (IR.TypeCheck ext primTy primVal m),
+    HasThrow "typecheckError" (TypecheckError' IR.NoExt extT primTy primVal) (IR.TypeCheck ext primTy primVal m)
+  ) =>
   IR.Telescope extV extT primTy primVal ->
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->

@@ -148,8 +148,8 @@ checkDataTypeArg ::
   IR.Term' extT primTy primVal ->
   m ()
 checkDataTypeArg tel dtName param (Pi _ t1 t2 _) = do
-      _ <- typeTerm param t1 (Annotation mempty (VStar 0))
-      checkDataTypeArg tel dtName param t2
+  _ <- typeTerm param t1 (Annotation mempty (VStar 0))
+  checkDataTypeArg tel dtName param t2
 checkDataTypeArg _ _ _ (Star' _ _) = return ()
 checkDataTypeArg _ _ _ arg = throwTC $ DatatypeError arg
 
