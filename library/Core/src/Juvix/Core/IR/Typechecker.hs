@@ -23,9 +23,9 @@ typeCheckDeclaration ::
   IR.Telescope extV extT primTy primVal ->
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
-  [IR.RawDatatype' ext primTy primVal] ->
+  [IR.RawDatatype' extT primTy primVal] ->
   [IR.RawFunction' ext primTy primVal] ->
-  IR.TypeCheck ext primTy primVal m [IR.RawGlobal' extT primTy primVal]
+  IR.TypeCheck ext primTy primVal m [IR.RawGlobal' ext primTy primVal]
 typeCheckDeclaration tel param [] [] =
   return []
 typeCheckDeclaration tel param dts fns =
