@@ -18,14 +18,31 @@ import qualified Juvix.Core.IR.Types.Globals as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype)
 import Juvix.Core.IR.CheckDatatype
+import qualified Juvix.Core.IR.Evaluator as Eval
+import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
+import Juvix.Core.IR.Types.Base as IR
 
 typeCheckDeclaration ::
+  ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
+  Param.CanApply primTy,
+  Param.CanApply primVal,
+  Eval.CanEval extT IR.NoExt primTy primVal,
+  Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primTy,
+  Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primVal,
+  Eq primTy,
+  Eq primVal,
+  IR.ValueAll Eq extV primTy primVal,
+  IR.NeutralAll Eq extV primTy primVal,
+  CanTC' extT primTy primVal m,
+  Param.CanApply (TypedPrim primTy primVal),
+  HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m,
+  HasThrow "typecheckError" (TypecheckError' extV IR.NoExt primTy primVal) m, HasReader "globals" (GlobalsT primTy primVal) (IR.TypeCheck ext primTy primVal m), HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) (IR.TypeCheck ext primTy primVal m), HasThrow "typecheckError" (TypecheckError' extV IR.NoExt primTy primVal) (IR.TypeCheck ext primTy primVal m), HasThrow "typecheckError" (TypecheckError' IR.NoExt extT primTy primVal) (IR.TypeCheck ext primTy primVal m)) =>
   IR.Telescope extV extT primTy primVal ->
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
   [IR.RawDatatype' extT primTy primVal] ->
   [IR.RawFunction' ext primTy primVal] ->
-  IR.TypeCheck ext primTy primVal m [IR.RawGlobal' ext primTy primVal]
+  IR.TypeCheck ext primTy primVal m [IR.RawGlobal' extT primTy primVal]
 typeCheckDeclaration tel param [] [] =
   return []
 typeCheckDeclaration tel param dts fns =
@@ -34,10 +51,9 @@ typeCheckDeclaration tel param dts fns =
       do
         _ <- checkDataType tel name param args
         rest <- typeCheckDeclaration tel param tld fns
-        return IR.RawGDatatype dtHd : rest
+        return $ IR.RawGDatatype dtHd : rest
     _ -> do
       return []
--- v <- eval [] dt
 -- add to sig once typechecked
 -- put $ addSig sig n (DataSig params pos sz v)
 -- mapM_ (typeCheckConstructor n sz pos tel) cs
