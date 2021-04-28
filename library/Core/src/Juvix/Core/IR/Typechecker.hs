@@ -15,7 +15,6 @@ import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import Juvix.Core.IR.Typechecker.Env as Env
 import Juvix.Core.IR.Typechecker.Types as Typed
-import Juvix.Core.IR.Types (Global')
 import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.IR.Types.Globals as IR
@@ -23,8 +22,7 @@ import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype)
 
 typeCheckDeclaration ::
-  ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
-    Param.CanApply primTy,
+  ( Param.CanApply primTy,
     Param.CanApply primVal,
     Eval.CanEval extT IR.NoExt primTy primVal,
     Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primTy,
@@ -43,26 +41,28 @@ typeCheckDeclaration ::
     HasThrow "typecheckError" (TypecheckError' IR.NoExt extT primTy primVal) (IR.TypeCheck ext primTy primVal m)
   ) =>
   IR.Telescope extV extT primTy primVal ->
+  IR.RawTelescope extT primTy primVal ->
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
   [IR.RawDatatype' extT primTy primVal] ->
   [IR.RawFunction' ext primTy primVal] ->
   IR.TypeCheck ext primTy primVal m [IR.RawGlobal' extT primTy primVal]
-typeCheckDeclaration tel param [] [] =
+typeCheckDeclaration tel rtel param [] [] =
   return []
-typeCheckDeclaration tel param dts fns =
+typeCheckDeclaration tel rtel param dts fns =
   case dts of
-    (dtHd@(IR.RawDatatype name lpos args levels cons) : tld) ->
+    (hdd@(IR.RawDatatype name lpos args levels cons) : tld) ->
       do
         _ <- checkDataType tel name param args
-        rest <- typeCheckDeclaration tel param tld fns
-        return $ IR.RawGDatatype dtHd : rest
+        rest <- typeCheckDeclaration tel rtel param tld fns
+        -- TODO checkedCons <- typeCheckAllCons param tel lpos rtel globals cons
+        return $ IR.RawGDatatype hdd : rest-- <> checkedCons
     _ -> do
       return []
 -- add to sig once typechecked
 -- put $ addSig sig n (DataSig params pos sz v)
 -- mapM_ (typeCheckConstructor n sz pos tel) cs
-typeCheckDeclaration tel param _ ((IR.RawFunction name usage ty cls) : tlf) =
+typeCheckDeclaration tel rtel param _ ((IR.RawFunction name usage ty cls) : tlf) =
   undefined
 
 -- TODO run typeCheckFuns

@@ -9,17 +9,14 @@ import qualified Juvix.Core.IR.Evaluator as Eval
 -- import SPos ( sposConstructor )
 
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
-import Juvix.Core.IR.Typechecker.Types as Typed
 import Juvix.Core.IR.Types (NoExt, pattern VStar)
 import Juvix.Core.IR.Types.Base as IR
 import Juvix.Core.IR.Types.Globals as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
-import qualified Juvix.Library.Usage as Usage
 
-typeCheckConstructor ::
-  forall ext primTy primVal m.
-  ( HasThrowTC' NoExt ext primTy primVal m,
+typeCheckAllCons ::
+  ( HasThrowTC' NoExt extT primTy primVal m,
     -- HasState "typeSigs" _ m,
     Eq primTy,
     Eq primVal,
@@ -31,35 +28,59 @@ typeCheckConstructor ::
   ) =>
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
-  -- | The constructor name
-  GlobalName ->
+  Telescope extV extT primTy primVal ->
   -- | Positivity of its parameters
   [IR.Pos] ->
-  RawTelescope ext primTy primVal ->
-  -- | a hashmap of global names and their info (TODO do I need this?)
+  RawTelescope extT primTy primVal ->
+  -- | a hashmap of global names and their info
   GlobalsT' NoExt ext primTy primVal ->
-  -- | The term to be checked
-  IR.Term' ext primTy primVal ->
-  TypeCheck ext primTy primVal m [GlobalT' NoExt ext primTy primVal]
-typeCheckConstructor param cname pos tel globals ty = do
+  -- | The constructor to be checked
+  [RawDataCon' extT primTy primVal] ->
+  TypeCheck ext primTy primVal m [IR.RawGlobal' extT primTy primVal]
+typeCheckAllCons param tel pos rtel globals = 
+  mapM (typeCheckConstructor param tel pos rtel globals)
+typeCheckConstructor ::
+  ( HasThrowTC' NoExt extT primTy primVal m,
+    -- HasState "typeSigs" _ m,
+    Eq primTy,
+    Eq primVal,
+    CanTC' ext primTy primVal m,
+    Param.CanApply primTy,
+    Param.CanApply (TypedPrim primTy primVal),
+    Eval.NoExtensions ext primTy (TypedPrim primTy primVal),
+    Eval.CanEval ext NoExt primTy (TypedPrim primTy primVal)
+  ) =>
+  -- | The targeted parameterisation
+  Param.Parameterisation primTy primVal ->
+  Telescope extV extT primTy primVal ->
+  -- | Positivity of its parameters
+  [IR.Pos] ->
+  RawTelescope extT primTy primVal ->
+  -- | a hashmap of global names and their info
+  GlobalsT' NoExt ext primTy primVal ->
+  -- | The constructor to be checked
+  RawDataCon' extT primTy primVal ->
+  TypeCheck ext primTy primVal m (IR.RawGlobal' extT primTy primVal)
+typeCheckConstructor param tel lpos rtel globals con = do
   -- sig <- get @"typeSigs" -- get signatures
-  let (name, t) = teleToType tel ty
-      numberOfParams = length tel
+  let cname = IR.rawConName con
+      conTy = IR.rawConType con
+      (name, t) = teleToType rtel conTy
   -- FIXME replace 'lift' with whatever capability does
   typechecked <- lift $ typeTerm param t (Annotation mempty (VStar 0))
-  evaled <- lift $ liftEval $ Eval.evalTerm (Eval.lookupFun @ext globals) typechecked
+  -- TODO
+  -- evaled <- lift $ liftEval $ Eval.evalTerm (Eval.lookupFun @ext globals) typechecked
   -- _ <- checkConType tel cname param evaled
   let (_, target) = typeToTele (name, t)
   -- FIXME replace 'lift'
-  lift $ checkDeclared cname tel target
-  -- vt <- eval [] tt
+  lift $ checkDeclared cname rtel target
   -- put (addSig sig n (ConSig vt))
-  return undefined --TODO return the list of globals
+  return $ IR.RawGDataCon con
 
 teleToType ::
-  RawTelescope ext primTy primVal ->
-  IR.Term' ext primTy primVal ->
-  (Maybe Name, IR.Term' ext primTy primVal)
+  RawTelescope extT primTy primVal ->
+  IR.Term' extT primTy primVal ->
+  (Maybe Name, IR.Term' extT primTy primVal)
 teleToType [] t = (Nothing, t)
 teleToType (hd : tel) t2 =
   ( Just (rawName hd),
@@ -207,10 +228,10 @@ checkConType tel datatypeName param e =
 -- check that the data type and the parameter arguments
 -- are written down like declared in telescope
 checkDeclared ::
-  (HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m) =>
+  (HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m) =>
   GlobalName ->
-  RawTelescope ext primTy primVal ->
-  IR.Term' ext primTy primVal ->
+  RawTelescope extT primTy primVal ->
+  IR.Term' extT primTy primVal ->
   m ()
 checkDeclared name tel tg@(IR.Elim' (IR.App' (Free (Global n) _) term _) _) =
   if n == name
@@ -226,9 +247,9 @@ checkDeclared name tel tg =
 
 -- check parameters
 checkParams ::
-  (HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m) =>
-  RawTelescope ext primTy primVal ->
-  IR.Term' ext primTy primVal ->
+  (HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m) =>
+  RawTelescope extT primTy primVal ->
+  IR.Term' extT primTy primVal ->
   m ()
 checkParams tel@(hd : tl) para@(Elim elim _) =
   let n = rawName hd
