@@ -91,7 +91,7 @@ instance
   type Val (BPlonk f) = Types.PrimVal f
   stdlibs _ = ["stdlib/Circuit.ju"]
   typecheck ctx = do
-    let res = Pipeline.contextToCore ctx (Parameterization.plonk @f)
+    let res = Pipeline.contextToCore ctx (Parameterization.param @f)
     case res of
       Right (FF.CoreDefs _order globals) -> do
         let globalDefs = HM.mapMaybe Pipeline.toCoreDef globals
@@ -104,7 +104,7 @@ instance
                   newGlobals = HM.map (Pipeline.unsafeEvalGlobal convGlobals) convGlobals
                   lookupGlobal = IR.rawLookupFun' globalDefs
                   inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-              (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @(Types.PrimTy f) @(Types.PrimVal f) @Types.CompilationError inlinedTerm (IR.globalToUsage usage) ty) (Parameterization.plonk @f) newGlobals
+              (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @(Types.PrimTy f) @(Types.PrimVal f) @Types.CompilationError inlinedTerm (IR.globalToUsage usage) ty) (Parameterization.param @f) newGlobals
               case res of
                 Right r -> do
                   pure r

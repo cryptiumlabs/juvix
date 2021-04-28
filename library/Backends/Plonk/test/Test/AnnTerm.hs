@@ -9,7 +9,6 @@ import Juvix.Library hiding (Type, exp)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Usage
 
--- TODO: Is this signature correct? Do we need it?
 sig :: FFType Fr
 sig =
   Pi (SNat 1) (PrimTy P.PField) $

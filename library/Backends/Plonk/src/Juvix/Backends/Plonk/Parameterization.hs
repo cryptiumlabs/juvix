@@ -2,8 +2,17 @@
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
 module Juvix.Backends.Plonk.Parameterization
-  ( module Juvix.Backends.Plonk.Parameterization,
-    module Types,
+  ( hasType
+  , builtinTypes
+  , builtinValues
+  , param
+  , integerToPrimVal
+  , ApplyError(..)
+  , arityRaw
+  , toArg
+  , toTakes
+  , fromReturn
+  , applyProper
   )
 where
 
@@ -79,8 +88,8 @@ builtinValues =
             ("Circuit.eq", PEq)
           ] -- TODO: Do the rest
 
-plonk :: (GaloisField f) => Param.Parameterisation (PrimTy f) (PrimVal f)
-plonk =
+param :: (GaloisField f) => Param.Parameterisation (PrimTy f) (PrimVal f)
+param =
   Param.Parameterisation
     { hasType,
       builtinTypes,

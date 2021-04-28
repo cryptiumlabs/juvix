@@ -98,8 +98,8 @@ backendOptions =
   option
     ( maybeReader
         ( \case
-            "plonk" -> pure $ Plonk (Plonk.BPlonk)
-            "michelson" -> pure $ Michelson (Michelson.BMichelson)
+            "plonk" -> pure $ Plonk Plonk.BPlonk
+            "michelson" -> pure $ Michelson Michelson.BMichelson
             _ -> Nothing
         )
     )
