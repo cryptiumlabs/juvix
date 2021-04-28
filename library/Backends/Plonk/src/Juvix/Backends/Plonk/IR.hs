@@ -1,13 +1,19 @@
 {-# LANGUAGE StandaloneDeriving #-}
 
-module Juvix.Backends.Plonk.IR where
+module Juvix.Backends.Plonk.IR 
+  ( UnOp(..)
+  , BinOp(..)
+  , CompOp(..)
+  , IR(..)
+  , evalIR
+  )
+where
 
 import Juvix.Backends.Plonk.Circuit
 import Juvix.Library
 import Text.PrettyPrint.Leijen.Text hiding ((<$>))
 
 data UnOp f a where
-  UDup :: UnOp f f
   UIsZero :: UnOp f Bool
   UNot :: UnOp f Bool
   UShL :: Int -> UnOp f f
@@ -84,7 +90,6 @@ instance Pretty (CompOp f) where
 instance Pretty (UnOp f a) where
   pretty op = case op of
     UNot -> text "!"
-    UDup -> text "dup"
     UIsZero -> text "0?"
     UShL _ -> text "<<"
     UShR _ -> text ">>"

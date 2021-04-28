@@ -1,6 +1,18 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Juvix.Backends.Plonk.Circuit where
+module Juvix.Backends.Plonk.Circuit
+( AffineCircuit(..)
+, fetchVars
+, affineCircuitToAffineMap
+, evalAffineCircuit
+, generateRoots
+, Wire(..)
+, ArithCircuit(..)
+, Gate(..)
+, evalArithCircuit
+, evalGate
+, parensPrec
+) where
 
 import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.Map as Map

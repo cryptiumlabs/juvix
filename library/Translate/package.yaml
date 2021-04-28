@@ -75,7 +75,6 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - elliptic-curve
-    - plonk
     - translate
     - tasty
     - tasty-hunit

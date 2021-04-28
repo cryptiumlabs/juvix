@@ -1,20 +1,7 @@
 module Juvix.Core.ErasedAnn.Prim
-  ( module Juvix.Core.ErasedAnn.Prim,
-
-    -- * Constructors & fields for 'Return'
-    pattern App.Cont,
-    App.fun,
-    App.args,
-    App.numLeft,
-    pattern App.Return,
-    App.retType,
-    App.retTerm,
-
-    -- * Constructors & fields for 'Take'
-    pattern App.Take,
-    App.usage,
-    App.type',
-    App.term,
+  ( fromAnn,
+    toAnn,
+    fromPrimType,
   )
 where
 
@@ -23,8 +10,6 @@ import qualified Juvix.Core.ErasedAnn.Types as Types
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
-
-type Return primTy primVal = App.Return (Types.Type primTy) primVal
 
 type Take primTy primVal = App.Take (Types.Type primTy) primVal
 

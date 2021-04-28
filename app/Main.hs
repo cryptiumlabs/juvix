@@ -8,9 +8,10 @@ import Data.Curve.Weierstrass.BLS12381 (Fr)
 import Data.Field.Galois (Prime, fromP, toP)
 import qualified Data.Scientific as S
 import Development.GitRev
+import qualified Juvix.Backends.Michelson as Michelson
+import qualified Juvix.Backends.Plonk as Plonk
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
-import Juvix.Pipeline (BMichelson, BPlonk)
 import qualified Juvix.Pipeline as Pipeline
 import Options
 import Options.Applicative
@@ -121,36 +122,37 @@ run ctx opt = do
     run' :: Context -> Options -> Pipeline.Pipeline ()
     run' _ (Options cmd _) = do
       case cmd of
-        Parse fin backend -> case backend of
-          (Michelson b) -> readAndPrint fin (Pipeline.parse b)
-          (Plonk b) -> readAndPrint fin (Pipeline.parse b)
+        Parse fin backend -> runCmd fin backend Pipeline.parse
         Typecheck fin backend -> case backend of
-          (Michelson b) -> readAndPrint fin (Pipeline.parse b >=> Pipeline.typecheck @BMichelson)
-          (Plonk b) -> readAndPrint fin (Pipeline.parse b >=> Pipeline.typecheck @(BPlonk Fr))
+          Michelson b -> g b
+          Plonk b -> g b
+          where
+            g :: forall b. (Show (Pipeline.Ty b), Show (Pipeline.Val b), Pipeline.HasBackend b) => b -> Pipeline.Pipeline ()
+            g b = runCmd' fin b (\b -> Pipeline.parse b >=> Pipeline.typecheck @b)
         Compile fin fout backend -> case backend of
-          (Michelson b) ->
-            readAndPrint
-              fin
-              ( Pipeline.parse b
-                  >=> Pipeline.typecheck @BMichelson
-                  >=> Pipeline.compile @BMichelson fout
-              )
-          (Plonk b) ->
-            readAndPrint
-              fin
-              ( Pipeline.parse b
-                  >=> Pipeline.typecheck @(BPlonk Fr)
-                  >=> Pipeline.compile @(BPlonk Fr) fout
-              )
+          Michelson b -> g b
+          Plonk b -> g b
+          where
+            g :: forall b. (Show (Pipeline.Ty b), Show (Pipeline.Val b), Pipeline.HasBackend b) => b -> Pipeline.Pipeline ()
+            g b = runCmd' fin b (\b -> Pipeline.parse b >=> Pipeline.typecheck @b >=> Pipeline.compile @b fout)
         Version -> liftIO $ putDoc versionDoc
         _ -> Feedback.fail "Not implemented yet."
 
-readAndPrint ::
-  (Show b) =>
+runCmd ::
+  (Show a) =>
   FilePath ->
-  (Text -> Pipeline.Pipeline b) ->
+  Backend ->
+  (forall b. Pipeline.HasBackend b => b -> Text -> Pipeline.Pipeline a) ->
   Pipeline.Pipeline ()
-readAndPrint fin f = do
-  liftIO (readFile fin)
-    >>= f
-    >>= liftIO . pPrint
+runCmd fin backend f = case backend of
+  Michelson b -> runCmd' fin b f
+  Plonk b -> runCmd' fin b f
+
+runCmd' ::
+  forall a b.
+  (Show a, Pipeline.HasBackend b) =>
+  FilePath ->
+  b ->
+  (forall b. Pipeline.HasBackend b => b -> Text -> Pipeline.Pipeline a) ->
+  Pipeline.Pipeline ()
+runCmd' fin b f = liftIO (readFile fin) >>= f b >>= liftIO . pPrint

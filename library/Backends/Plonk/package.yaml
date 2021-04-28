@@ -14,6 +14,9 @@ dependencies:
   - aeson
   - base >= 4.7 && < 5
   - core
+  - Pipeline
+  - translate
+  - unordered-containers
   - containers
   - elliptic-curve
   - filepath
@@ -90,6 +93,7 @@ tests:
     - plonk
     - protolude
     - QuickCheck
+    - scientific
     - tasty
     - tasty-golden
     - tasty-hunit

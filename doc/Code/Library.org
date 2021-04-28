@@ -1,5 +1,4 @@
 * Backends
-** Parameterization <<Backends/Parameterization>>
 ** LLVM
 *** Setup <<LLVM/Setup>>
 *** src
@@ -276,6 +275,7 @@ Serves as a module for various debugging functions
 - _Relies on_
   + [[Compilation]]
   + [[Michelson/Parameterisation]]
+  + [[Michelson/Pipeline]]
 ******* Contract <<Michelson/Contract>>
 This module provides a default contract environment
 ******* Optimisation
@@ -297,9 +297,9 @@ This module provides a default contract environment
   + [[Compilation/Types]]
   + [[Library]]
 ******* Parameterisation <<Michelson/Parameterisation>>
+Module that implements the backend parameters for the Michelson backend.
 - _Relies on_
   + [[Compilation]]
-  + [[Compilation/Types]]
   + [[Compilation/Types]]
   + [[Michelson/Contract]]
   + [[Instructions]]
@@ -310,8 +310,6 @@ This module provides a default contract environment
   + [[Prim]]
   + [[ErasedAnn/Types]]
   + [[IR/Evaluator]]
-  + [[Typechecker/Types]]
-  + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
@@ -319,6 +317,16 @@ This module provides a default contract environment
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Usage]]
+******* Pipeline <<Michelson/Pipeline>>
+- _Relies on_
+  + [[Compilation]]
+  + [[Michelson/Parameterisation]]
+  + [[Core/IR]]
+  + [[Core/Pipeline]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Juvix/Pipeline]]
+  + [[FromFrontend]]
 ******* Compilation
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
@@ -446,7 +454,7 @@ This module provides a default contract environment
 *** src
 **** Juvix
 ***** Backends
-****** Plonk <<Backends/Plonk>>
+****** Plonk
 - _Relies on_
   + [[Builder]]
   + [[Circuit]]
@@ -455,7 +463,8 @@ This module provides a default contract environment
   + [[Plonk/Dot]]
   + [[Plonk/IR]]
   + [[Lang]]
-  + [[Plonk/Parameterization]]
+  + [[Parameterization]]
+  + [[Plonk/Pipeline]]
   + [[Plonk/Types]]
 ******* Builder
 - _Relies on_
@@ -487,11 +496,10 @@ Surface language
   + [[Circuit]]
   + [[Plonk/IR]]
   + [[Library]]
-******* Parameterization <<Plonk/Parameterization>>
+******* Parameterization
 - _Relies on_
   + [[Plonk/Types]]
   + [[Application]]
-  + [[Prim]]
   + [[ErasedAnn/Types]]
   + [[IR/Evaluator]]
   + [[IR/Types/Base]]
@@ -501,6 +509,24 @@ Surface language
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Usage]]
+******* Pipeline <<Plonk/Pipeline>>
+- _Relies on_
+  + [[Builder]]
+  + [[Circuit]]
+  + [[Plonk/Compiler]]
+  + [[Plonk/Dot]]
+  + [[Parameterization]]
+  + [[Plonk/Types]]
+  + [[Application]]
+  + [[Core/IR]]
+  + [[OnlyExts]]
+  + [[Typechecker/Types]]
+  + [[Core/Parameterisation]]
+  + [[Core/Pipeline]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Juvix/Pipeline]]
+  + [[FromFrontend]]
 ******* Types <<Plonk/Types>>
 - _Relies on_
   + [[Application]]
@@ -520,51 +546,29 @@ Surface language
 **** Main <<Plonk/test/Main>>
 - _Relies on_
   + [[Library]]
-**** Ref
-***** Groth <<Ref/Groth>>
-- _Relies on_
-  + [[Backends/Plonk]]
-  + [[Library]]
-****** FFT
-Discrete Fourier transforms for polynomial interpolation
-- _Relies on_
-  + [[Library]]
-****** Fresh
-****** Poly
-- _Relies on_
-  + [[Library]]
-****** QAP
-Definitions of quadratic arithmetic programs, along with their
-assignment verification functions and the translations from single
-multiplication- or equality-gates into QAPs and arithmetic circuits
-into QAPs.
-- _Relies on_
-  + [[Backends/Plonk]]
-  + [[Library]]
 **** Test
 ***** AnnTerm
 - _Relies on_
-  + [[Backends/Plonk]]
-  + [[Backends/Plonk]]
+  + [[Plonk]]
+  + [[Plonk]]
   + [[ErasedAnn]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
 ***** Compiler <<Test/Compiler>>
 - _Relies on_
-  + [[Backends/Plonk]]
-  + [[Backends/Plonk]]
+  + [[Plonk]]
+  + [[Plonk]]
+  + [[Core]]
   + [[Library]]
   + [[Library]]
-***** Groth <<Test/Groth>>
-- _Relies on_
-  + [[Backends/Plonk]]
-  + [[Library]]
+  + [[Feedback]]
+  + [[Juvix/Pipeline]]
 ***** Example
 ****** Polynomial
 - _Relies on_
-  + [[Backends/Plonk]]
-  + [[Backends/Plonk]]
+  + [[Plonk]]
+  + [[Plonk]]
   + [[ErasedAnn]]
   + [[Library]]
   + [[Usage]]
@@ -580,6 +584,13 @@ Types to support partial application and polymorphic primitives.
   + [[Library]]
   + [[Usage]]
 ***** Parameterisation <<Core/Parameterisation>>
+Juvix parameterises the type theory & core language over a set of
+primitive data types and primitive values, which can include native data
+types such as strings, integers, or sets, and native functions such as
+addition, subtraction, string concatenation, set membership, etc. The
+language & typechecker can then be instantiated over a particular backend
+which provides concrete sets of primitives and a primitive type-checking
+relation.
 - _Relies on_
   + [[Application]]
   + [[IR/Types]]
@@ -1468,8 +1479,14 @@ Can be added to via core translation
   + [[HashMap]]
 **** Pipeline <<Juvix/Pipeline>>
 - _Relies on_
-  + [[Backend]]
+  + [[Application]]
+  + [[Core/Common/Context]]
+  + [[ErasedAnn]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Library/Sexp]]
   + [[Compile]]
+  + [[Pipeline/Internal]]
   + [[Pipeline/Internal]]
   + [[Pipeline/Types]]
 ***** Compile
@@ -1502,51 +1519,6 @@ Can be added to via core translation
   + [[Typechecker/Types]]
   + [[Core/Types]]
   + [[Library]]
-***** Backend
-- _Relies on_
-  + [[Backend/Internal]]
-  + [[Backend/Michelson]]
-  + [[Backend/Plonk]]
-****** Internal <<Backend/Internal>>
-- _Relies on_
-  + [[Application]]
-  + [[Core/Common/Context]]
-  + [[ErasedAnn]]
-  + [[Library]]
-  + [[Feedback]]
-  + [[Library/Sexp]]
-  + [[Compile]]
-  + [[Pipeline/Internal]]
-****** Michelson <<Backend/Michelson>>
-- _Relies on_
-  + [[Compilation]]
-  + [[Michelson/Parameterisation]]
-  + [[Core/IR]]
-  + [[Core/Pipeline]]
-  + [[Library]]
-  + [[Feedback]]
-  + [[Backend/Internal]]
-  + [[Compile]]
-  + [[Pipeline/Internal]]
-  + [[Pipeline/Internal]]
-  + [[Pipeline/Types]]
-  + [[FromFrontend]]
-****** Plonk <<Backend/Plonk>>
-- _Relies on_
-  + [[Backends/Plonk]]
-  + [[Application]]
-  + [[Core/IR]]
-  + [[OnlyExts]]
-  + [[Typechecker/Types]]
-  + [[Core/Parameterisation]]
-  + [[Core/Pipeline]]
-  + [[Library]]
-  + [[Feedback]]
-  + [[Backend/Internal]]
-  + [[Compile]]
-  + [[Pipeline/Internal]]
-  + [[Pipeline/Types]]
-  + [[FromFrontend]]
 ** test
 *** Main <<Pipeline/test/Main>>
 - _Relies on_

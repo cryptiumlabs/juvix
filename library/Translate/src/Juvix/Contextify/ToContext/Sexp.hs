@@ -129,27 +129,6 @@ declare (Sexp.List [inf, n, i]) ctx
               }
 declare _ _ = error "malformed declare"
 
-mkCtx :: Symbol -> [(Symbol, Sexp.T)] -> Context.T Sexp.T Sexp.T Sexp.T -> Context.Record Sexp.T Sexp.T Sexp.T -> Context.T Sexp.T Sexp.T Sexp.T
-mkCtx name elmns ctx emptyRec = foldr addT ctx elmns
-  where
-    insertRecord (Sexp.Cons x xs) t
-      | Just s <- eleToSymbol x = NameSpace.insertPublic s (Context.TypeDeclar xs) t
-    insertRecord _ t = t
-    addT (constructor, element) accCtx
-      | Sexp.isAtomNamed (Sexp.car $ Sexp.car element) ":record-d",
-        Just els <- Sexp.toList (Sexp.groupBy2 (Sexp.cdr $ Sexp.car element)) =
-        -- For each of the record fields, insertPublic where key is the record field name and value is the record field type
-        Context.add
-          (NameSpace.Pub constructor)
-          ( Context.Record
-              ( emptyRec
-                  { Context.recordContents = foldr insertRecord NameSpace.empty els
-                  }
-              )
-          )
-          accCtx
-      | otherwise = Context.add (NameSpace.Pub constructor) (Context.SumCon (Context.Sum Nothing name)) accCtx
-
 -- | @type'@ will take its type and add it into the context. Note that
 -- since we store information with the type, we will keep the name in
 -- the top level form.

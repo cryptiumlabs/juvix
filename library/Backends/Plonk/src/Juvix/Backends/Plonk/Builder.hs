@@ -1,4 +1,24 @@
-module Juvix.Backends.Plonk.Builder where
+module Juvix.Backends.Plonk.Builder
+  ( S(..)
+  , IRM(..)
+  , execCircuitBuilder
+  , evalCircuitBuilder
+  , runCircuitBuilder
+  , fresh
+  , imm
+  , freshInput
+  , freshOutput
+  , mulToImm
+  , replaceLast
+  , emit
+  , rotateList
+  , addVar
+  , addWire
+  , compile
+  , irToArithCircuit
+  , mapVarsIR
+  )
+where
 
 import Juvix.Backends.Plonk.Circuit
 import Juvix.Backends.Plonk.IR
@@ -67,6 +87,16 @@ mulToImm l r = do
   o <- imm
   emit $ MulGate (addVar l) (addVar r) o
   pure o
+
+-- | Replace last intermediate wire with an output wire
+replaceLast :: Wire -> IRM f ()
+replaceLast o = do
+  modify
+    @"sCircuit"
+    ( \case
+        ArithCircuit ((MulGate i1 i2 _o) : cs) -> ArithCircuit (MulGate i1 i2 o : cs)
+        a -> a
+    )
 
 -- | Add a Mul and its output to the ArithCircuit
 emit :: Gate Wire f -> IRM f ()
@@ -154,8 +184,7 @@ irToArithCircuit ::
   -- | Wire to assign the output of the expression to
   Wire ->
   IRM f ()
-irToArithCircuit ir output =
-  irToArithCircuit' (mapVarsIR InputWire ir) output
+irToArithCircuit ir = irToArithCircuit' (mapVarsIR InputWire ir)
 
 irToArithCircuit' :: Num f => IR Wire f ty -> Wire -> IRM f ()
 irToArithCircuit' ir output = do

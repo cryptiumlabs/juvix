@@ -1,6 +1,13 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Juvix.Backends.Plonk.Compiler where
+module Juvix.Backends.Plonk.Compiler 
+  ( compileBinOp
+  , compileCompOp
+  , compilePrim
+  , compileTerm
+  , compileTermWithWire
+  )
+where
 
 import Data.List ((!!))
 import qualified Data.Map as Map
@@ -12,11 +19,8 @@ import qualified Juvix.Core.ErasedAnn.Types as Ann
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
--- translate case statements to conditionals (nested)
--- inline lambdas
--- convert datatypes to some field element representation
--- etc
-
+-- | Translate case statements to conditionals (nested), 
+-- inline lambdas, convert datatypes to some field element representation, etc
 compileBinOp :: (Show f, Integral f) => Map NameSymbol.T Wire -> BinOp f a -> [FFAnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
 compileBinOp m op args = do
   let e1 = args !! 0
@@ -72,9 +76,11 @@ compilePrim p m args = case p of
   P.PSub -> compileBinOp m BSub args
   P.PMul -> compileBinOp m BMul args
   P.PExp -> compileBinOp m BExp args
-  -- P.PEq -> compileBinOp m CEq args
   P.PEq -> compileCompOp m CEq args
   P.PAssertEq -> compileCompOp m CEq args
+  P.POr -> compileBinOp m BOr args
+  P.PAnd -> compileBinOp m BAnd args
+  P.PXor -> compileBinOp m BXor args
   n -> panic $ show n
 
 compileTerm :: (Integral f, Show f) => FFAnnTerm f -> Map NameSymbol.T Wire -> [FFAnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
@@ -85,8 +91,6 @@ compileTerm _term@(Ann.Ann _ _ t) m a =
       Just v -> pure . Left $ v
       Nothing -> panic $ "Unable to find variable " <> show symbol
     Ann.AppM fun@(Ann.Ann _ _ v) args -> compileTerm fun m args
-    -- case v of
-    -- Ann.Prim p -> compilePrim p m args
     Ann.LamM _ args b -> do
       m' <- do
         pairs <-
@@ -105,14 +109,12 @@ compileTermWithWire :: (Integral f, Show f) => FFAnnTerm f -> IRM f Wire
 compileTermWithWire term = do
   compileOut <- compileTerm term mempty mempty
   case compileOut of
-    Left wire -> pure wire
+    Left _wire -> do
+      o <- freshOutput
+      replaceLast o
+      pure o
+    -- pure wire
     Right circ -> do
       wire <- freshOutput
       emit $ MulGate (ConstGate 1) circ wire
       pure wire
-
--- do
--- traverse (P.deref <$> P.freshInput) args
--- v <- lambda c a b ty
--- consVal v ty
--- pure v

@@ -35,8 +35,6 @@ dependencies:
   - frontend
   - core
   - translate
-  - michelson
-  - plonk
   - galois-field
   # - llvm
   # - interaction-net
@@ -137,5 +135,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - Pipeline
+    - michelson
+    - plonk
     - tasty
     - tasty-hunit

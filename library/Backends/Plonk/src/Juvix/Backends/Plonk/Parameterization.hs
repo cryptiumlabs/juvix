@@ -2,8 +2,17 @@
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
 module Juvix.Backends.Plonk.Parameterization
-  ( module Juvix.Backends.Plonk.Parameterization,
-    module Types,
+  ( hasType
+  , builtinTypes
+  , builtinValues
+  , param
+  , integerToPrimVal
+  , ApplyError(..)
+  , arityRaw
+  , toArg
+  , toTakes
+  , fromReturn
+  , applyProper
   )
 where
 
@@ -11,7 +20,6 @@ import Data.Field.Galois (GaloisField (..))
 import qualified Data.List.NonEmpty as NonEmpty
 import Juvix.Backends.Plonk.Types as Types
 import qualified Juvix.Core.Application as App
-import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.Types.Base as IR
@@ -23,58 +31,39 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import Prelude (Show (..))
 
-check3Equal :: Eq a => NonEmpty a -> Bool
-check3Equal (x :| [y, z])
-  | x == y && x == z = True
-  | otherwise = False
-check3Equal (_ :| _) = False
-
-check2Equal :: Eq a => NonEmpty a -> Bool
-check2Equal (x :| [y])
-  | x == y = True
-  | otherwise = False
-check2Equal (_ :| _) = False
-
 isBool :: PrimTy f -> Bool
 isBool PBool = True
 isBool _ = False
-
-checkFirst2AndLast :: Eq t => NonEmpty t -> (t -> Bool) -> Bool
-checkFirst2AndLast (x :| [y, last]) check
-  | check2Equal (x :| [y]) && check last = True
-  | otherwise = False
-checkFirst2AndLast (_ :| _) _ = False
 
 hasType :: PrimVal f -> Param.PrimType (PrimTy f) -> Bool
 hasType (PConst _v) ty
   | length ty == 1 = True
   | otherwise = False
 -- BinOps
-hasType PAdd ty = check3Equal ty
-hasType PSub ty = check3Equal ty
-hasType PMul ty = check3Equal ty
-hasType PDiv ty = check3Equal ty
-hasType PExp ty = check3Equal ty
-hasType PMod ty = check3Equal ty
-hasType PAnd ty = check3Equal ty
-hasType POr ty = check3Equal ty
-hasType PXor ty = check3Equal ty
+hasType PAdd ty = Param.check3Equal ty
+hasType PSub ty = Param.check3Equal ty
+hasType PMul ty = Param.check3Equal ty
+hasType PDiv ty = Param.check3Equal ty
+hasType PExp ty = Param.check3Equal ty
+hasType PMod ty = Param.check3Equal ty
+hasType PAnd ty = Param.check3Equal ty
+hasType POr ty = Param.check3Equal ty
+hasType PXor ty = Param.check3Equal ty
 -- UnOps
-hasType PDup ty = check2Equal ty
-hasType PIsZero ty = check2Equal ty
-hasType PNot ty = check2Equal ty
-hasType PShL ty = check2Equal ty
-hasType PShR ty = check2Equal ty
-hasType PRotL ty = check2Equal ty
-hasType PRotR ty = check2Equal ty
-hasType PAssertEq ty = check2Equal ty
-hasType PAssertIt ty = check2Equal ty
+hasType PIsZero ty = Param.check2Equal ty
+hasType PNot ty = Param.check2Equal ty
+hasType PShL ty = Param.check2Equal ty
+hasType PShR ty = Param.check2Equal ty
+hasType PRotL ty = Param.check2Equal ty
+hasType PRotR ty = Param.check2Equal ty
+hasType PAssertEq ty = Param.check2Equal ty
+hasType PAssertIt ty = Param.check2Equal ty
 -- CompOps
-hasType PGt ty = checkFirst2AndLast ty isBool
-hasType PGte ty = checkFirst2AndLast ty isBool
-hasType PLt ty = checkFirst2AndLast ty isBool
-hasType PLte ty = checkFirst2AndLast ty isBool
-hasType PEq ty = checkFirst2AndLast ty isBool
+hasType PGt ty = Param.checkFirst2AndLast ty isBool
+hasType PGte ty = Param.checkFirst2AndLast ty isBool
+hasType PLt ty = Param.checkFirst2AndLast ty isBool
+hasType PLte ty = Param.checkFirst2AndLast ty isBool
+hasType PEq ty = Param.checkFirst2AndLast ty isBool
 
 builtinTypes :: Param.Builtins (PrimTy f) -- TODO: Revisit this
 builtinTypes =
@@ -99,8 +88,8 @@ builtinValues =
             ("Circuit.eq", PEq)
           ] -- TODO: Do the rest
 
-plonk :: (GaloisField f) => Param.Parameterisation (PrimTy f) (PrimVal f)
-plonk =
+param :: (GaloisField f) => Param.Parameterisation (PrimTy f) (PrimVal f)
+param =
   Param.Parameterisation
     { hasType,
       builtinTypes,
@@ -137,7 +126,6 @@ instance Show (ApplyError f) where
 arityRaw :: PrimVal f -> Natural
 arityRaw = \case
   PConst _ -> 0
-  PDup -> 1
   PIsZero -> 1
   PNot -> 1
   PShL -> 1
@@ -193,8 +181,8 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext f) where
   freeArg _ = fmap App.VarArg . App.freeVar (Proxy @ext)
   boundArg _ = fmap App.VarArg . App.boundVar (Proxy @ext)
 
-  arity Prim.Cont {numLeft} = numLeft
-  arity Prim.Return {retTerm} = arityRaw retTerm
+  arity App.Cont {numLeft} = numLeft
+  arity App.Return {retTerm} = arityRaw retTerm
 
   apply fun' args2
     | (fun, args1, ar) <- toTakes fun' =
@@ -204,12 +192,12 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext f) where
         case argLen `compare` ar of
           LT ->
             Right $
-              Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
+              App.Cont {fun, args = toList args, numLeft = ar - argLen}
           EQ
             | Just takes <- traverse App.argToTake args ->
               applyProper fun takes |> first Core.Extra
             | otherwise ->
-              Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
+              Right $ App.Cont {fun, args = toList args, numLeft = 0}
           GT -> Left $ Core.ExtraArguments fun' args2
 
 applyProper :: Take f -> NonEmpty (Take f) -> Either (ApplyError f) (Return' ext f)

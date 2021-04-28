@@ -8,6 +8,7 @@ module Juvix.Backends.Plonk
     module Juvix.Backends.Plonk.Types,
     module Juvix.Backends.Plonk.Dot,
     module Juvix.Backends.Plonk.Parameterization,
+    module Juvix.Backends.Plonk.Pipeline,
   )
 where
 
@@ -17,13 +18,8 @@ import Juvix.Backends.Plonk.Circuit.Assignment
 import Juvix.Backends.Plonk.Compiler
 import Juvix.Backends.Plonk.Dot
 import Juvix.Backends.Plonk.IR
-  ( BinOp (..),
-    CompOp (..),
-    IR (..),
-    UnOp (..),
-    evalIR,
-    opPrecedence,
-  )
+
 import Juvix.Backends.Plonk.Lang
 import Juvix.Backends.Plonk.Parameterization
+import Juvix.Backends.Plonk.Pipeline
 import Juvix.Backends.Plonk.Types
