@@ -560,6 +560,7 @@ transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
   defSigs <- traverse (transformNormalSig q x' . Ctx.Def) sumTDef
   traceM "DefSigs!"
   pTraceShowM (defSigs)
+
   conSig <- conSigM
   pure $ conSig : fromMaybe [] defSigs
   where
@@ -573,14 +574,20 @@ transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
     -- (-> Bool (-> Int Bar)
     -- Pi (SNat 1) ("Foo":[]) (1: Bool) (Pi (SNat 1) ("":[]) (Int) (Bar))
     --                      ^ input type   
-    mkTy (Just (fn Sexp.:> t1 Sexp.:> t2)) | isFn fn 
+    mkTy (Just (fn Sexp.:> t1)) | isFn fn
       -- panic $ "mkTy not implemented" <> show (fn, t1, t2) 
-      = HR.Pi (Usage.SNat 1) "" (HR.PrimTy (panic "use t1")) <$> mkTy (Just t2)
-    mkTy (Just (t1 Sexp.:> fn Sexp.:> t2)) | isFn fn 
-      = HR.Pi (Usage.SNat 1) "" (HR.PrimTy (panic "use t1")) <$> mkTy (Just t2)
-    mkTy (Just e) = transformTermHR q e
+      = mkTy (Just t1)
+    mkTy (Just (Sexp.Atom Sexp.A {atomName = p}  Sexp.:> fn Sexp.:> t2)) | isFn fn
+      = do
+        param <- ask @"param"
+        traceM "mkty2"
+        pTraceShowM (p, t2)
+        HR.Pi (Usage.SNat 1) "" (primTy param p) <$> mkTy (Just t2)
+
+    mkTy (Just e) = pTraceShow ("mkty e", e) transformTermHR q e
     mkTy Nothing = panic "Shouldn't happen"
     isFn fn = Sexp.isAtomNamed fn "TopLevel.Prelude.->"
+    primTy param p = fromMaybe (panic $ "Can't lookup primTy " <> show p) (HR.PrimTy <$> HM.lookup p (P.builtinTypes param))
 
 transformNormalSig _ _ Ctx.CurrentNameSpace =
   pure []
