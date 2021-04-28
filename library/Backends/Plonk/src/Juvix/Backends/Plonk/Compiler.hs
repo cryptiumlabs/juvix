@@ -1,11 +1,11 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Juvix.Backends.Plonk.Compiler 
-  ( compileBinOp
-  , compileCompOp
-  , compilePrim
-  , compileTerm
-  , compileTermWithWire
+module Juvix.Backends.Plonk.Compiler
+  ( compileBinOp,
+    compileCompOp,
+    compilePrim,
+    compileTerm,
+    compileTermWithWire,
   )
 where
 
@@ -19,7 +19,7 @@ import qualified Juvix.Core.ErasedAnn.Types as Ann
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
--- | Translate case statements to conditionals (nested), 
+-- | Translate case statements to conditionals (nested),
 -- inline lambdas, convert datatypes to some field element representation, etc
 compileBinOp :: (Show f, Integral f) => Map NameSymbol.T Wire -> BinOp f a -> [FFAnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
 compileBinOp m op args = do

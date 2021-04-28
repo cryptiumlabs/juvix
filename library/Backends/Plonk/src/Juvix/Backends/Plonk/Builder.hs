@@ -1,22 +1,22 @@
 module Juvix.Backends.Plonk.Builder
-  ( S(..)
-  , IRM(..)
-  , execCircuitBuilder
-  , evalCircuitBuilder
-  , runCircuitBuilder
-  , fresh
-  , imm
-  , freshInput
-  , freshOutput
-  , mulToImm
-  , replaceLast
-  , emit
-  , rotateList
-  , addVar
-  , addWire
-  , compile
-  , irToArithCircuit
-  , mapVarsIR
+  ( S (..),
+    IRM (..),
+    execCircuitBuilder,
+    evalCircuitBuilder,
+    runCircuitBuilder,
+    fresh,
+    imm,
+    freshInput,
+    freshOutput,
+    mulToImm,
+    replaceLast,
+    emit,
+    rotateList,
+    addVar,
+    addWire,
+    compile,
+    irToArithCircuit,
+    mapVarsIR,
   )
 where
 

@@ -2,17 +2,17 @@
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
 module Juvix.Backends.Plonk.Parameterization
-  ( hasType
-  , builtinTypes
-  , builtinValues
-  , param
-  , integerToPrimVal
-  , ApplyError(..)
-  , arityRaw
-  , toArg
-  , toTakes
-  , fromReturn
-  , applyProper
+  ( hasType,
+    builtinTypes,
+    builtinValues,
+    param,
+    integerToPrimVal,
+    ApplyError (..),
+    arityRaw,
+    toArg,
+    toTakes,
+    fromReturn,
+    applyProper,
   )
 where
 
