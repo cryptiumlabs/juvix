@@ -33,7 +33,7 @@ import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 
--- | @Defun@ is the base defun strcuture
+-- | @Defun@ is the base defun structure
 -- currently it does not have matching
 data Defun = Defun
   { defunName :: Sexp.T,
@@ -67,11 +67,20 @@ data Signature = Signature
   }
   deriving (Show)
 
+data Let = Let
+  { letName :: Sexp.T,
+    letArgs :: Sexp.T,
+    letBody :: Sexp.T,
+    letRest :: Sexp.T
+  }
+  deriving (Show)
+
 Lens.makeLensesWith Lens.camelCaseFields ''Defun
 Lens.makeLensesWith Lens.camelCaseFields ''DefunMatch
 Lens.makeLensesWith Lens.camelCaseFields ''ArgBody
 Lens.makeLensesWith Lens.camelCaseFields ''Signature
 Lens.makeLensesWith Lens.camelCaseFields ''DefunSigMatch
+Lens.makeLensesWith Lens.camelCaseFields ''Let
 
 --------------------------------------------------------------------------------
 -- Converter functions
