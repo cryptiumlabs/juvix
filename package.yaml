@@ -14,14 +14,19 @@ extra-source-files:
 - README.md
 
 dependencies:
+  - aeson
   - base >= 4.11 && < 5
-  - directory
-  - lens
   - Cabal
-  - extensible-data
   - capability >= 0.2.0.0
+  - directory
+  - extensible-data
+  - galois-field
+  - lens
+  - megaparsec
+  - scientific
   - syb
   - temporary
+  - wl-pprint-text
   - Pipeline
   ###########################
   # Libraries
@@ -31,10 +36,10 @@ dependencies:
   - core
   - translate
   - michelson
+  - plonk
   - EasyPipeline
   # - llvm
   # - interaction-net
-  # - arithmetic-circuit
   # - InteractionNetIR
   ###########################
   # Dependency for OS
@@ -111,24 +116,6 @@ flags:
     manual: true
     default: false
 
-executables:
-  juvix:
-    source-dirs:      app
-    main:             Main.hs
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-    dependencies:
-      - aeson
-      - ansi-wl-pprint
-      - gitrev
-      - haskeline
-      - juvix
-      - optparse-applicative
-      - raw-strings-qq
-      - yaml
-
 benchmarks:
   juvix-bench:
     main:         Main.hs
@@ -145,3 +132,23 @@ library:
   source-dirs: src
   exposed-modules:
     - Juvix
+
+executables:
+  juvix:
+    source-dirs:      app
+    main:             Main.hs
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - aeson
+      - ansi-wl-pprint
+      - elliptic-curve
+      - gitrev
+      - haskeline
+      - juvix
+      - optparse-applicative
+      - pretty-simple
+      - raw-strings-qq
+      - yaml

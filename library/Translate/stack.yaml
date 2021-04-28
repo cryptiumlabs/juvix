@@ -11,11 +11,19 @@ extra-deps:
 - github: metastatedev/extensible-data
   commit: d11dee6006169cb537e95af28c3541a24194dea8
 
+####################################
+# For testing with Circuit backend
+####################################
+- github: adjoint-io/pairing
+  commit: 2ef8ba869608432f55e32afc385b7fa75d4d1742
+- github: adjoint-io/elliptic-curve
+  commit: 52b7eba38db0b3aa3619f2916c518f8f3ee63aaf
+- github: adjoint-io/galois-field
+  commit: 95fc86b61c573518ff6a1ab1b9f23301482b257
 - github: phile314/tasty-silver
   commit: f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b
 
 - tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638
-
 
 ###############################
 # For eac solver in core

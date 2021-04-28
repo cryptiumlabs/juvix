@@ -22,6 +22,7 @@ dependencies:
 - dlist
 - syb
 - megaparsec
+- pretty-simple
 
 default-extensions:
   - NoImplicitPrelude
@@ -73,6 +74,7 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - elliptic-curve
     - translate
     - tasty
     - tasty-hunit

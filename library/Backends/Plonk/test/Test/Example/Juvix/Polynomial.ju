@@ -1,0 +1,23 @@
+mod Polynomial where
+
+open Prelude
+open Circuit
+
+sig (+) : field -> field -> field
+let (+) = %Circuit.add
+declare infixl (+) 5
+
+sig (^) : field -> field -> field
+let (^) = %Circuit.exp
+declare infixl (^) 8
+
+sig (*) : field -> field -> field
+let (*) = %Circuit.mul
+declare infixl (*) 7
+
+sig (==) : field -> field -> bool
+let (==) = %Circuit.eq
+declare infixl (==) 2
+
+sig main : field -> field -> bool
+let main = \x y -> x ^ 3 == y 
