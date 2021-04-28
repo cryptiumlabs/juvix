@@ -37,8 +37,9 @@ typeCheckAllCons ::
   -- | The constructor to be checked
   [RawDataCon' extT primTy primVal] ->
   TypeCheck ext primTy primVal m [IR.RawGlobal' extT primTy primVal]
-typeCheckAllCons param tel pos rtel globals = 
+typeCheckAllCons param tel pos rtel globals =
   mapM (typeCheckConstructor param tel pos rtel globals)
+
 typeCheckConstructor ::
   ( HasThrowTC' NoExt extT primTy primVal m,
     -- HasState "typeSigs" _ m,

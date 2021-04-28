@@ -56,7 +56,7 @@ typeCheckDeclaration tel rtel param dts fns =
         _ <- checkDataType tel name param args
         rest <- typeCheckDeclaration tel rtel param tld fns
         -- TODO checkedCons <- typeCheckAllCons param tel lpos rtel globals cons
-        return $ IR.RawGDatatype hdd : rest-- <> checkedCons
+        return $ IR.RawGDatatype hdd : rest -- <> checkedCons
     _ -> do
       return []
 -- add to sig once typechecked

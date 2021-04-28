@@ -806,13 +806,11 @@ Datatype declarations are typechecked here. Usages are passed along.
   + [[CheckTerm]]
   + [[IR/Evaluator]]
   + [[OnlyExts]]
-  + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]
-  + [[Usage]]
 ****** CheckTerm
 This file contains the functions and aux functions to typecheck terms.
 @typeTerm@ and @typeElim@ are called by functions for typechecking
@@ -911,7 +909,6 @@ Typechecked declarations are added to the signature.
   + [[OnlyExts]]
   + [[Typechecker/Env]]
   + [[Typechecker/Types]]
-  + [[IR/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Globals]]
