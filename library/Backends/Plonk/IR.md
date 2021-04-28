@@ -4,16 +4,16 @@ This is mainly a translation of https://hackmd.io/@zacwilliamson/r1z1yZTs8 into 
 
 ## Binary operations
 
-| Opcode | Opcode Bytes    | Types | Description     | Notes |
-| ------ | --------------- | ----- | --------------- | ----- |
-| add    | `[a], [b], [o]` |       | o = a + b       |       |
-| sub    | `[a], [b], [o]` |       | o = a - b       |       |
-| mul    | `[a], [b], [o]` |       | o = a * b       |       |
-| div    | `[a], [b], [o]` |       | o = a / b       |       |
-| mod    | `[a], [b], [o]` |       | o = a % b       |       |
-| and    | `[a], [b], [o]` |       | `o = a &amp; b` |       |
-| or     | `[a], [b], [o]` |       | `o = a | b`     |       |
-| xor    | `[a], [b], [o]` |       | `o = a ^ b`     |       |
+| Opcode | Opcode Bytes    | Types                   | Description     | Notes |
+| ------ | --------------- | ----------------------- | --------------- | ----- |
+| add    | `[a], [b], [o]` | field -> field -> field | o = a + b       |       |
+| sub    | `[a], [b], [o]` | field -> field -> field | o = a - b       |       |
+| mul    | `[a], [b], [o]` | field -> field -> field | o = a * b       |       |
+| div    | `[a], [b], [o]` | field -> field -> field | o = a / b       |       |
+| mod    | `[a], [b], [o]` | field -> field -> field | o = a % b       |       |
+| and    | `[a], [b], [o]` | bool -> bool -> bool    | `o = a &amp; b` |       |
+| or     | `[a], [b], [o]` | bool -> bool -> bool    | `o = a | b`     |       |
+| xor    | `[a], [b], [o]` | bool -> bool -> bool    | `o = a ^ b`     |       |
 
 ```haskell
 data BinOp f a where
@@ -55,7 +55,6 @@ data CompOp f where
 | -------- | ------------- | ------------------------------ | --------------------- |
 | setpub   | `[p], [o]`    | o = p                          | from public calldata  |
 | setpriv  | `[p], [o]`    | o = p                          | from private calldata |
-| dup      | `[a], [o]`    | `o = a`                        |                       |
 | iszero   | `[a], [o]`    | `o = (a == 0)`                 |                       |
 | not      | `[a], [o]`    | `o = !a`                       |                       |
 | shl      | `[a], x, [o]` | `o = a &lt;&lt; x`             | x is const            |
@@ -64,12 +63,9 @@ data CompOp f where
 | rotr     | `[a], x, [o]` | `o = a &gt;&gt;&gt; x`         |                       |
 | asserteq | `[a], [o]`    | throw if `a != 0`              |                       |
 | assertlt | `[a], x`      | throw if `a &gt;= 2^x`         |                       |
-| mload    | `[x], [o]`    | read `o` from RAM location `x` |                       |
-| mstore   | `[x], [a]`    | write `a` to RAM location `x`  |                       |
 
 ```haskell
 data UnOp f a where
-  UDup :: UnOp f f
   UIsZero :: UnOp f Bool
   UNot :: UnOp f Bool
   UShL :: Int -> UnOp f f

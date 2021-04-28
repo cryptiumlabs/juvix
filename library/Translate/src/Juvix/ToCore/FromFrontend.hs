@@ -331,7 +331,8 @@ getDataSig q = getSig' q \case
   _ -> Nothing
 
 getSig' ::
-  ( Show primTy,
+  ( Show a,
+    Show primTy,
     Show primVal,
     HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
@@ -343,11 +344,11 @@ getSig' ::
 getSig' q f x = do
   msig <- lookupSig (Just q) x
   case msig of
-    Just sig | Just ty <- f sig -> pure ty
-    _ -> pTraceShow msig $ throwFF $ WrongSigType x msig
+    Just sig | Just ty <- f sig -> pTraceShow ("lookupSig Success", q, x, msig, ty) $ pure ty
+    _ -> pTraceShow ("lookupSig", q, x, msig) $ throwFF $ WrongSigType x msig
 
 lookupSig ::
-  HasCoreSigs primTy primVal m =>
+  (Show primTy, Show primVal, HasCoreSigs primTy primVal m) =>
   Maybe NameSymbol.Mod -> -- namespace of current declaration
   NameSymbol.T ->
   m (Maybe (CoreSig' HR.T primTy primVal))
@@ -387,12 +388,15 @@ transformType q name _ = do
   pure $ IR.RawGDatatype dat' : fmap IR.RawGDataCon cons
 
 lookupSig' ::
-  HasCoreSigs primTy primVal m =>
+  ( Show primTy, Show primVal,
+  HasCoreSigs primTy primVal m) =>
   Maybe NameSymbol.Mod -> -- namespace of current declaration
   NameSymbol.T ->
   m (Maybe (NameSymbol.T, CoreSig' HR.T primTy primVal))
 lookupSig' q x' = do
   gets @"coreSigs" \sigs -> do
+    traceM "CoreSigs"
+    pTraceShowM sigs
     let look x = (x,) <$> HM.lookup x sigs
     case q of
       Nothing -> look x
@@ -445,7 +449,8 @@ transformFunction q x (Ctx.D _ _ (_lambdaCase Sexp.:> defs) _)
 transformFunction _ _ _ = error "malformed defun"
 
 transformUsage ::
-  ( HasThrowFF primTy primVal m,
+  ( Show primTy, Show primVal, 
+    HasThrowFF primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
   NameSymbol.Mod ->
@@ -457,7 +462,8 @@ transformUsage q e = do
   if o then pure Usage.Omega else throwFF $ NotAUsage e
 
 transformSpecialRhs ::
-  ( HasThrowFF primTy primVal m,
+  ( Show primTy, Show primVal, 
+    HasThrowFF primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
   NameSymbol.Mod ->
@@ -472,7 +478,6 @@ transformSpecialRhs _ (Sexp.List [name, prim])
       "Builtin" :| ["Omega"] -> pure $ Just OmegaS
       "Builtin" :| ["Colon"] -> pure $ Just ColonS
       "Builtin" :| ["Type"] -> pure $ Just TypeS
-      "Builtin" :| ["Constructor"] -> pure $ Just ConstructorS
       "Builtin" :| (s : ss) -> throwFF $ UnknownBuiltin $ s :| ss
       _ -> pure Nothing
 transformSpecialRhs q prim
@@ -490,7 +495,8 @@ transformSpecialRhs q (Sexp.List [f, arg])
 transformSpecialRhs _ _ = pure Nothing
 
 transformSpecial ::
-  ( HasThrowFF primTy primVal m,
+  ( Show primTy, Show primVal, 
+    HasThrowFF primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
   NameSymbol.Mod ->
@@ -661,7 +667,8 @@ transformUniverse (Sexp.Atom Sexp.N {atomNum = i}) | i >= 0 = pure $ fromIntegra
 transformUniverse e = throwFF $ NotAUniverse e
 
 transformGUsage ::
-  ( HasThrowFF primTy primVal m,
+  ( Show primTy, Show primVal, 
+    HasThrowFF primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
   NameSymbol.Mod ->
@@ -674,7 +681,8 @@ transformGUsage q (Just e) = do
   if o then pure IR.GOmega else throwFF $ NotAGUsage e
 
 isOmega ::
-  ( HasCoreSigs primTy primVal m,
+  ( Show primTy, Show primVal, 
+    HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
   NameSymbol.Mod ->
@@ -683,7 +691,8 @@ isOmega ::
 isOmega q e = (== Just OmegaS) <$> getSpecialE q e
 
 getSpecialE ::
-  ( HasCoreSigs primTy primVal m,
+  ( Show primTy, Show primVal, 
+    HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
   NameSymbol.Mod ->
@@ -694,7 +703,8 @@ getSpecialE q x
 getSpecialE _ _ = pure Nothing
 
 getSpecial ::
-  ( HasCoreSigs primTy primVal m,
+  ( Show primTy, Show primVal,
+    HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
   NameSymbol.Mod ->

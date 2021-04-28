@@ -217,8 +217,6 @@ data Special
     TypeS
   | -- | omega usage
     OmegaS
-    -- | constructor
-  | ConstructorS
   deriving (Eq, Show, Data, Generic)
 
 deriving instance

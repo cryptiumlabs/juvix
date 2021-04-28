@@ -25,8 +25,6 @@ data UnOp f a where
 
 -- TODO: setpub
 -- TODO: setpriv
--- TODO: mload
--- TODO: mstore
 
 data BinOp f a where
   BAdd :: BinOp f f
@@ -72,8 +70,8 @@ instance Pretty (BinOp f a) where
     BAdd -> text "+"
     BSub -> text "-"
     BMul -> text "*"
-    BAnd -> text "&"
-    BOr -> text "|"
+    BAnd -> text "&&"
+    BOr -> text "||"
     BXor -> text "^"
     BDiv -> text "/"
     BMod -> text "%"
