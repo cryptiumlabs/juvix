@@ -1,11 +1,6 @@
 * Config
 - _Relies on_
   + [[Library]]
-* Interactive
-- _Relies on_
-  + [[HR]]
-  + [[Naturals]]
-  + [[Library]]
 * Main
 - _Relies on_
   + [[Michelson]]

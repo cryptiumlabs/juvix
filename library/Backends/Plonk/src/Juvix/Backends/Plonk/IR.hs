@@ -1,11 +1,11 @@
 {-# LANGUAGE StandaloneDeriving #-}
 
-module Juvix.Backends.Plonk.IR 
-  ( UnOp(..)
-  , BinOp(..)
-  , CompOp(..)
-  , IR(..)
-  , evalIR
+module Juvix.Backends.Plonk.IR
+  ( UnOp (..),
+    BinOp (..),
+    CompOp (..),
+    IR (..),
+    evalIR,
   )
 where
 
