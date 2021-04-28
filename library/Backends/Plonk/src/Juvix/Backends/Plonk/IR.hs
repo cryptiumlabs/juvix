@@ -25,7 +25,6 @@ data UnOp f a where
   UAssertEq :: UnOp f Bool
   UAssertIt :: UnOp f Bool
 
-
 data BinOp f a where
   BAdd :: BinOp f f
   BSub :: BinOp f f
