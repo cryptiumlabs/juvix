@@ -41,7 +41,6 @@ hasType PAnd ty = Param.check3Equal ty
 hasType POr ty = Param.check3Equal ty
 hasType PXor ty = Param.check3Equal ty
 -- UnOps
-hasType PDup ty = Param.check2Equal ty
 hasType PIsZero ty = Param.check2Equal ty
 hasType PNot ty = Param.check2Equal ty
 hasType PShL ty = Param.check2Equal ty
@@ -118,7 +117,6 @@ instance Show (ApplyError f) where
 arityRaw :: PrimVal f -> Natural
 arityRaw = \case
   PConst _ -> 0
-  PDup -> 1
   PIsZero -> 1
   PNot -> 1
   PShL -> 1

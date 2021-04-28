@@ -27,8 +27,7 @@ import Juvix.Library hiding (Type)
 
 data PrimVal f
   = PConst f
-  | -- UnOps
-    PDup
+  -- UnOps
   | PIsZero
   | PNot
   | PShL
