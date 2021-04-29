@@ -3,9 +3,9 @@ mod Polynomial where
 open Prelude
 open Circuit
 
-sig (&) : bool -> bool -> bool
-let (&) = %Circuit.and
-declare infixl (&) 2
+sig (&&) : bool -> bool -> bool
+let (&&) = %Circuit.and
+declare infixl (&&) 2
 
 sig main : bool -> bool -> bool
-let main = \x y -> x & y 
+let main = \x y -> x && y 

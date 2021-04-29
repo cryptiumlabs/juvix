@@ -1,11 +1,11 @@
 {-# LANGUAGE StandaloneDeriving #-}
 
-module Juvix.Backends.Plonk.IR 
-  ( UnOp(..)
-  , BinOp(..)
-  , CompOp(..)
-  , IR(..)
-  , evalIR
+module Juvix.Backends.Plonk.IR
+  ( UnOp (..),
+    BinOp (..),
+    CompOp (..),
+    IR (..),
+    evalIR,
   )
 where
 
@@ -14,6 +14,8 @@ import Juvix.Library
 import Text.PrettyPrint.Leijen.Text hiding ((<$>))
 
 data UnOp f a where
+  USetPub :: UnOp f f
+  USetPriv :: UnOp f f
   UIsZero :: UnOp f Bool
   UNot :: UnOp f Bool
   UShL :: Int -> UnOp f f
@@ -22,9 +24,6 @@ data UnOp f a where
   URotR :: Int -> UnOp f f
   UAssertEq :: UnOp f Bool
   UAssertIt :: UnOp f Bool
-
--- TODO: setpub
--- TODO: setpriv
 
 data BinOp f a where
   BAdd :: BinOp f f
@@ -87,6 +86,8 @@ instance Pretty (CompOp f) where
 
 instance Pretty (UnOp f a) where
   pretty op = case op of
+    USetPub -> text "setpub"
+    USetPriv -> text "setpriv"
     UNot -> text "!"
     UIsZero -> text "0?"
     UShL _ -> text "<<"

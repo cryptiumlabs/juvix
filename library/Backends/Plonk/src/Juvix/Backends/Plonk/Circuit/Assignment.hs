@@ -1,13 +1,13 @@
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveFunctor #-}
 
-module Juvix.Backends.Plonk.Circuit.Assignment 
-( Assignment(..)
-, generateAssignment
-, updateAtWire
-, lookupAtWire
-, initialAssignment
-)
+module Juvix.Backends.Plonk.Circuit.Assignment
+  ( Assignment (..),
+    generateAssignment,
+    updateAtWire,
+    lookupAtWire,
+    initialAssignment,
+  )
 where
 
 import qualified Data.Map as Map

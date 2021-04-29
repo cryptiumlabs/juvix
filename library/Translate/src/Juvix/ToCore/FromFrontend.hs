@@ -879,6 +879,8 @@ transformConSig q name mHd r@((t Sexp.:> ts) Sexp.:> _)
   | isNothing mHd = do
     transformTermHR q ts
   where
+    -- throwFF $ InvalidConstructor name r
+
     named = Sexp.isAtomNamed t
 transformConSig q name mHd r@(t Sexp.:> ts)
   | isNothing mHd = do

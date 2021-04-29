@@ -66,6 +66,8 @@ data CompOp f where
 
 ```haskell
 data UnOp f a where
+  USetPub :: UnOp f f
+  USetPriv :: UnOp f f
   UIsZero :: UnOp f Bool
   UNot :: UnOp f Bool
   UShL :: Int -> UnOp f f
