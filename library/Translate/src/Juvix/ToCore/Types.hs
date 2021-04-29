@@ -185,7 +185,7 @@ data CoreSig' ext primTy primVal
       }
   | ConSig
       { conType :: !(Maybe (IR.Term' ext primTy primVal)),
-      -- TODO: Remove conDef field
+        -- TODO: Remove conDef field
         conDef :: !(Maybe (Ctx.Def Sexp.T Sexp.T))
       }
   | ValSig

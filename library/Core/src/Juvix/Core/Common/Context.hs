@@ -12,6 +12,7 @@ module Juvix.Core.Common.Context
 where
 
 import Control.Lens hiding ((|>))
+import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import Juvix.Core.Common.Context.Precedence
 import Juvix.Core.Common.Context.Types
 import qualified Juvix.Core.Common.NameSpace as NameSpace
@@ -20,7 +21,6 @@ import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified StmContainers.Map as STM
-import Debug.Pretty.Simple (pTraceShowM, pTraceShow)
 import Prelude (error)
 
 --------------------------------------------------------------------------------
@@ -318,16 +318,18 @@ mapWithContext t@T {topLevelMap, currentName} f = do
       let Just t = inNameSpace name ctx
        in mapCurrentContext f t
 
-mapWithContext' :: (Monad m, Show term, Show ty)
-  => T term ty sumRep 
-  -> (Maybe (Def term ty) 
-      -> Symbol 
-      -> Symbol
-      -> SumT term ty 
-      -> T term ty sumRep 
-      -> m (Maybe (Def term ty))) 
-  -> m (T term ty sumRep)
-mapWithContext' t@T{topLevelMap, currentName} f = do
+mapWithContext' ::
+  (Monad m, Show term, Show ty) =>
+  T term ty sumRep ->
+  ( Maybe (Def term ty) ->
+    Symbol ->
+    Symbol ->
+    SumT term ty ->
+    T term ty sumRep ->
+    m (Maybe (Def term ty))
+  ) ->
+  m (T term ty sumRep)
+mapWithContext' t@T {topLevelMap, currentName} f = do
   ctx <- foldM switchAndUpdate t tops
   let Just finalCtx = inNameSpace (addTopName currentName) ctx
   pure finalCtx
@@ -342,17 +344,18 @@ mapWithContext' t@T{topLevelMap, currentName} f = do
 -- over the current form and the context, so any dependencies may be
 -- resolved and proper stored away.
 -- mapCurrentContext' ::
-  -- Monad m => ContextForms m term ty sumRep -> T term ty sumRep -> m (T term ty sumRep)
-
-mapCurrentContext' :: (Monad m, Show term, Show ty)
-  => (Maybe (Def term ty) 
-        -> Symbol 
-        -> Symbol
-        -> SumT term ty
-        -> T term ty sumRep 
-        -> m (Maybe (Def term ty)))
-  -> T term ty sumRep 
-  -> m (T term ty sumRep)
+-- Monad m => ContextForms m term ty sumRep -> T term ty sumRep -> m (T term ty sumRep)
+mapCurrentContext' ::
+  (Monad m, Show term, Show ty) =>
+  ( Maybe (Def term ty) ->
+    Symbol ->
+    Symbol ->
+    SumT term ty ->
+    T term ty sumRep ->
+    m (Maybe (Def term ty))
+  ) ->
+  T term ty sumRep ->
+  m (T term ty sumRep)
 mapCurrentContext' f ctx@T {currentNameSpace, currentName} =
   foldM dispatch ctx names
   where
@@ -364,7 +367,7 @@ mapCurrentContext' f ctx@T {currentNameSpace, currentName} =
         Record r -> do
           -- Do the signature call in the module above and re-insert it
           -- into the current module
-          let newTy = recordMTy r 
+          let newTy = recordMTy r
           -- now we should siwtch modules, note we are going to do a
           -- direct insertion, so no need to reconstruct
           let Just newCtx = inNameSpace (pure (NameSpace.extractValue name)) ctx
@@ -383,7 +386,6 @@ mapCurrentContext' f ctx@T {currentNameSpace, currentName} =
         TypeDeclar t -> pure ctx
         CurrentNameSpace -> pure ctx
         Information _ -> pure ctx
-
 
 -- | @mapCurrentContext@ maps f over the entire context, this function
 -- calls the function handed to it over the context. The function runs

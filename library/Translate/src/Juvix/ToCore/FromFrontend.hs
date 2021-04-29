@@ -9,6 +9,7 @@ where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NonEmpty
+import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.Common.Context as Ctx
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
@@ -20,7 +21,6 @@ import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
 import Juvix.ToCore.Types
 import Prelude (error)
-import Debug.Pretty.Simple (pTraceShowM, pTraceShow)
 
 type ReduceEff primTy primVal m =
   ( HasThrowFF primTy primVal m,
@@ -392,8 +392,10 @@ transformType q name _ = do
   pure $ IR.RawGDatatype dat' : fmap IR.RawGDataCon cons
 
 lookupSig' ::
-  ( Show primTy, Show primVal,
-  HasCoreSigs primTy primVal m) =>
+  ( Show primTy,
+    Show primVal,
+    HasCoreSigs primTy primVal m
+  ) =>
   Maybe NameSymbol.Mod -> -- namespace of current declaration
   NameSymbol.T ->
   m (Maybe (NameSymbol.T, CoreSig' HR.T primTy primVal))
@@ -455,7 +457,8 @@ transformFunction q x (Ctx.D _ _ (_lambdaCase Sexp.:> defs) _)
 transformFunction _ _ _ = error "malformed defun"
 
 transformUsage ::
-  ( Show primTy, Show primVal, 
+  ( Show primTy,
+    Show primVal,
     HasThrowFF primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
@@ -468,7 +471,8 @@ transformUsage q e = do
   if o then pure Usage.Omega else throwFF $ NotAUsage e
 
 transformSpecialRhs ::
-  ( Show primTy, Show primVal, 
+  ( Show primTy,
+    Show primVal,
     HasThrowFF primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
@@ -501,7 +505,8 @@ transformSpecialRhs q (Sexp.List [f, arg])
 transformSpecialRhs _ _ = pure Nothing
 
 transformSpecial ::
-  ( Show primTy, Show primVal, 
+  ( Show primTy,
+    Show primVal,
     HasThrowFF primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
@@ -578,29 +583,28 @@ transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
   where
     conSigM = case sumTDef of
       Nothing -> pure $ ConSig {conType = Nothing, conDef = sumTDef}
-      Just d@Ctx.D{defMTy} -> do
+      Just d@Ctx.D {defMTy} -> do
         ty <- mkTy defMTy
         pure $ ConSig (Just ty) (Just d)
 
     -- data Bar = Foo Bool Int
     -- (-> Bool (-> Int Bar)
     -- Pi (SNat 1) ("Foo":[]) (1: Bool) (Pi (SNat 1) ("":[]) (Int) (Bar))
-    --                      ^ input type   
-    mkTy (Just (fn Sexp.:> t1)) | isFn fn
-      -- panic $ "mkTy not implemented" <> show (fn, t1, t2) 
-      = mkTy (Just t1)
-    mkTy (Just (Sexp.Atom Sexp.A {atomName = p}  Sexp.:> fn Sexp.:> t2)) | isFn fn
-      = do
+    --                      ^ input type
+    mkTy (Just (fn Sexp.:> t1))
+      | isFn fn =
+        -- panic $ "mkTy not implemented" <> show (fn, t1, t2)
+        mkTy (Just t1)
+    mkTy (Just (Sexp.Atom Sexp.A {atomName = p} Sexp.:> fn Sexp.:> t2)) | isFn fn =
+      do
         param <- ask @"param"
         traceM "mkty2"
         pTraceShowM (p, t2)
         HR.Pi (Usage.SNat 1) "" (primTy param p) <$> mkTy (Just t2)
-
     mkTy (Just e) = pTraceShow ("mkty e", e) transformTermHR q e
     mkTy Nothing = panic "Shouldn't happen"
     isFn fn = Sexp.isAtomNamed fn "TopLevel.Prelude.->"
     primTy param p = fromMaybe (panic $ "Can't lookup primTy " <> show p) (HR.PrimTy <$> HM.lookup p (P.builtinTypes param))
-
 transformNormalSig _ _ Ctx.CurrentNameSpace =
   pure []
 transformNormalSig _ _ Ctx.Information {} =
@@ -657,8 +661,8 @@ transformNormalDef ::
   NameSymbol.T ->
   Ctx.Definition Sexp.T Sexp.T Sexp.T ->
   m [IR.RawGlobal primTy primVal]
-transformNormalDef q x (Ctx.TypeDeclar dec) 
-  = pTraceShow ("transformNormalDef", x, dec) transformType q x dec
+transformNormalDef q x (Ctx.TypeDeclar dec) =
+  pTraceShow ("transformNormalDef", x, dec) transformType q x dec
 transformNormalDef _ _ Ctx.CurrentNameSpace = pure []
 transformNormalDef _ _ Ctx.Information {} = pure []
 transformNormalDef _ _ (Ctx.Unknown _) = pure []
@@ -676,7 +680,8 @@ transformUniverse (Sexp.Atom Sexp.N {atomNum = i}) | i >= 0 = pure $ fromIntegra
 transformUniverse e = throwFF $ NotAUniverse e
 
 transformGUsage ::
-  ( Show primTy, Show primVal, 
+  ( Show primTy,
+    Show primVal,
     HasThrowFF primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
@@ -690,7 +695,8 @@ transformGUsage q (Just e) = do
   if o then pure IR.GOmega else throwFF $ NotAGUsage e
 
 isOmega ::
-  ( Show primTy, Show primVal, 
+  ( Show primTy,
+    Show primVal,
     HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
@@ -700,7 +706,8 @@ isOmega ::
 isOmega q e = (== Just OmegaS) <$> getSpecialE q e
 
 getSpecialE ::
-  ( Show primTy, Show primVal, 
+  ( Show primTy,
+    Show primVal,
     HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
@@ -712,7 +719,8 @@ getSpecialE q x
 getSpecialE _ _ = pure Nothing
 
 getSpecial ::
-  ( Show primTy, Show primVal,
+  ( Show primTy,
+    Show primVal,
     HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
