@@ -178,7 +178,7 @@ instance (Show primTy, Show primVal) => Show (Error primTy primVal) where
       "%Builtin.Omega cannot be used as an arbitrary term, only as\n"
         <> "the first argument of %Builtin.Arrow or %Builtin.Pair"
 
-data CoreSig' ext primTy primVal
+data CoreSig ext primTy primVal
   = DataSig
       { dataType :: !(IR.Term' ext primTy primVal),
         dataCons :: [NameSymbol.T]
@@ -199,9 +199,9 @@ data CoreSig' ext primTy primVal
 -- then do so, otherwise return the *first* unchanged
 -- (since @insertWith@ calls it as @mergeSigs new old@).
 mergeSigs ::
-  CoreSig' ext primTy primVal ->
-  CoreSig' ext primTy primVal ->
-  CoreSig' ext primTy primVal
+  CoreSig ext primTy primVal ->
+  CoreSig ext primTy primVal ->
+  CoreSig ext primTy primVal
 mergeSigs (ConSig newTy newDef) (ConSig oldTy oldDef) =
   ConSig (newTy <|> oldTy) (newDef <|> oldDef)
 mergeSigs _ second = second
@@ -226,7 +226,7 @@ deriving instance
     IR.TermAll Eq ext primTy primVal,
     IR.ElimAll Eq ext primTy primVal
   ) =>
-  Eq (CoreSig' ext primTy primVal)
+  Eq (CoreSig ext primTy primVal)
 
 deriving instance
   ( Show primTy,
@@ -234,7 +234,7 @@ deriving instance
     IR.TermAll Show ext primTy primVal,
     IR.ElimAll Show ext primTy primVal
   ) =>
-  Show (CoreSig' ext primTy primVal)
+  Show (CoreSig ext primTy primVal)
 
 deriving instance Data LineNum.T
 
@@ -249,14 +249,14 @@ deriving instance
     IR.TermAll Data ext primTy primVal,
     IR.ElimAll Data ext primTy primVal
   ) =>
-  Data (CoreSig' ext primTy primVal)
+  Data (CoreSig ext primTy primVal)
 
-type CoreSigIR = CoreSig' IR.NoExt
+type CoreSigIR = CoreSig IR.NoExt
 
-type CoreSigHR = CoreSig' HR.T
+type CoreSigHR = CoreSig HR.T
 
 type CoreSigs' ext primTy primVal =
-  HashMap IR.GlobalName (CoreSig' ext primTy primVal)
+  HashMap IR.GlobalName (CoreSig ext primTy primVal)
 
 type CoreSigsIR primTy primVal = CoreSigs' IR.NoExt primTy primVal
 

@@ -28,13 +28,6 @@ type ReduceEff primTy primVal m =
     HasCoreSigs primTy primVal m
   )
 
-paramConstant' ::
-  P.Parameterisation primTy primVal ->
-  Sexp.Atom ->
-  Maybe primVal
-paramConstant' p Sexp.N {atomNum} = P.intVal p atomNum
-paramConstant' _p Sexp.A {} = Nothing
-
 transformTermIR ::
   ( HasPatVars m,
     Show primVal,
@@ -68,6 +61,11 @@ paramConstant k = do
   case paramConstant' p k of
     Just x -> pure x
     Nothing -> throwFF $ UnsupportedConstant (Sexp.Atom k)
+  where
+    -- TODO: Maybe implement it for stringVal as well?
+    paramConstant' p Sexp.N {atomNum} = P.intVal p atomNum
+    paramConstant' _p Sexp.A {} = Nothing
+
 
 -- | N.B. doesn't deal with pattern variables since HR doesn't have them.
 -- 'transformTermIR' does that.
@@ -351,7 +349,7 @@ lookupSig ::
   (Show primTy, Show primVal, HasCoreSigs primTy primVal m) =>
   Maybe NameSymbol.Mod -> -- namespace of current declaration
   NameSymbol.T ->
-  m (Maybe (CoreSig' HR.T primTy primVal))
+  m (Maybe (CoreSig HR.T primTy primVal))
 lookupSig q x = fmap snd <$> lookupSig' q x
 
 conDefName :: NameSymbol.T -> NameSymbol.T
@@ -396,7 +394,7 @@ lookupSig' ::
   HasCoreSigs primTy primVal m) =>
   Maybe NameSymbol.Mod -> -- namespace of current declaration
   NameSymbol.T ->
-  m (Maybe (NameSymbol.T, CoreSig' HR.T primTy primVal))
+  m (Maybe (NameSymbol.T, CoreSig HR.T primTy primVal))
 lookupSig' q x' = do
   gets @"coreSigs" \sigs -> do
     -- traceM "CoreSigs"
