@@ -345,7 +345,7 @@ getSig' q f x = do
   msig <- lookupSig (Just q) x
   case msig of
     Just sig | Just ty <- f sig -> pTraceShow ("lookupSig Success", q, x, msig, ty) $ pure ty
-    _ -> pTraceShow ("lookupSig", q, x, msig) $ throwFF $ WrongSigType x msig
+    _ -> pTraceShow ("lookupSig Failure", q, x, msig) $ throwFF $ WrongSigType x msig
 
 lookupSig ::
   (Show primTy, Show primVal, HasCoreSigs primTy primVal m) =>
@@ -355,7 +355,7 @@ lookupSig ::
 lookupSig q x = fmap snd <$> lookupSig' q x
 
 conDefName :: NameSymbol.T -> NameSymbol.T
-conDefName = NameSymbol.applyBase (<> "$def")
+conDefName = identity -- NameSymbol.applyBase (<> "$def")
 
 transformType ::
   ( Show primTy,
@@ -372,8 +372,12 @@ transformType ::
   m [IR.RawGlobal primTy primVal]
 transformType q name _ = do
   (ty, conNames) <- getDataSig q name
+  traceM "ConNames"
+  pTraceShowM (ty, conNames)
   let getConSig' x = do (ty, def) <- getConSig q x; pure (x, ty, def)
   conSigs <- traverse getConSig' conNames
+  traceM "ConSigs"
+  pTraceShowM (conSigs)
   cons <- traverse (uncurry3 $ transformCon q) conSigs
   (args, ℓ) <- splitDataType name ty
   let dat' =
@@ -395,8 +399,8 @@ lookupSig' ::
   m (Maybe (NameSymbol.T, CoreSig' HR.T primTy primVal))
 lookupSig' q x' = do
   gets @"coreSigs" \sigs -> do
-    traceM "CoreSigs"
-    pTraceShowM sigs
+    -- traceM "CoreSigs"
+    -- pTraceShowM sigs
     let look x = (x,) <$> HM.lookup x sigs
     case q of
       Nothing -> look x
@@ -437,6 +441,8 @@ transformFunction ::
   m (IR.RawFunction primTy primVal)
 transformFunction q x (Ctx.D _ _ (_lambdaCase Sexp.:> defs) _)
   | Just xs <- Sexp.toList defs >>= NonEmpty.nonEmpty = do
+    traceM "Get Val Sig"
+    pTraceShowM (x, defs)
     (π, typ) <- getValSig q x
     clauses <- traverse (transformClause q) xs
     pure $
@@ -632,6 +638,8 @@ transformDef ::
   m [CoreDef primTy primVal]
 transformDef x def = do
   sig <- lookupSig Nothing x
+  traceM "Transform Def"
+  pTraceShowM (x, sig)
   case sig of
     Just (SpecialSig s) -> pure [SpecialDef x s]
     _ -> map CoreDef <$> transformNormalDef q x def
@@ -649,7 +657,8 @@ transformNormalDef ::
   NameSymbol.T ->
   Ctx.Definition Sexp.T Sexp.T Sexp.T ->
   m [IR.RawGlobal primTy primVal]
-transformNormalDef q x (Ctx.TypeDeclar dec) = transformType q x dec
+transformNormalDef q x (Ctx.TypeDeclar dec) 
+  = pTraceShow ("transformNormalDef", x, dec) transformType q x dec
 transformNormalDef _ _ Ctx.CurrentNameSpace = pure []
 transformNormalDef _ _ Ctx.Information {} = pure []
 transformNormalDef _ _ (Ctx.Unknown _) = pure []
@@ -715,7 +724,7 @@ getSpecial q x = do
   case sig of
     Just (SpecialSig s) -> pure $ Just s
     Just _ -> pure Nothing
-    Nothing -> throwFF $ WrongSigType x Nothing
+    Nothing -> pTraceShow ("getSpecial", q, x) throwFF $ WrongSigType x Nothing
 
 ------------------------------------------------------------
 -- Transform Type signatures
@@ -794,6 +803,8 @@ transformCon ::
   Maybe (Ctx.Def Sexp.T Sexp.T) ->
   m (IR.RawDataCon primTy primVal)
 transformCon q x ty def = do
+  traceM "TransformCon"
+  pTraceShowM (x, conDefName x, def)
   def <- traverse (transformFunction q (conDefName x)) def
   pure $
     IR.RawDataCon
