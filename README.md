@@ -22,7 +22,7 @@ syntactical familiarity, and backwards compatibility with existing blockchain vi
 For more design details, see [the language
 reference](./doc/reference/language-reference.pdf).
 
-<!--## Screenshots TODO-->
+<!--##  Screenshots TODO-->
 <!-- Include logo/demo screenshot with labels.
 - vscode screenshot
 - eg contracts -->
