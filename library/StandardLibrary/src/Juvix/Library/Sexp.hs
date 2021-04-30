@@ -24,7 +24,7 @@ module Juvix.Library.Sexp
     foldSearchPred,
     unGroupBy2,
     snoc,
-    findKey
+    findKey,
   )
 where
 
@@ -192,7 +192,7 @@ unGroupBy2 a = a
 
 snoc :: T -> T -> T
 snoc e (Cons x y) = Cons x (snoc e y)
-snoc e a@(Atom _) = Cons a e 
+snoc e a@(Atom _) = Cons a e
 snoc e Nil = e
 
 findKey :: (T -> T) -> T -> T -> Maybe T
