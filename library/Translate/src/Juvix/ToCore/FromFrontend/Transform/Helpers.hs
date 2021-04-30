@@ -1,23 +1,25 @@
-module Juvix.ToCore.FromFrontend.Transform.Helpers 
-( ReduceEff
-, getParamConstant
-, lookupSig
-, lookupSigWithSymbol
-, checkSymbolSig
-, getValSig
-, getConSig
-, getDataSig
-, isOmega
-, getSpecialSig
-, parseVarArg
-, parseVarPat
-, toElim
-, splitDataType
-, conDefName
-, eleToSymbol
-) where
+module Juvix.ToCore.FromFrontend.Transform.Helpers
+  ( ReduceEff,
+    getParamConstant,
+    lookupSig,
+    lookupSigWithSymbol,
+    checkSymbolSig,
+    getValSig,
+    getConSig,
+    getDataSig,
+    isOmega,
+    getSpecialSig,
+    parseVarArg,
+    parseVarPat,
+    toElim,
+    splitDataType,
+    conDefName,
+    eleToSymbol,
+  )
+where
 
 import qualified Data.HashMap.Strict as HM
+import Debug.Pretty.Simple (pTraceShow)
 import qualified Juvix.Core.Common.Context as Ctx
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
@@ -27,10 +29,6 @@ import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import Juvix.ToCore.Types
-import Debug.Pretty.Simple (pTraceShow)
-
-
-
 
 -- | Retrieve constant primVal from parameterization
 getParamConstant ::
@@ -51,8 +49,10 @@ getParamConstant atom = do
 -- Returns the qualified symbol without "TopLevel." (in case it exists)
 -- and the signature
 lookupSigWithSymbol ::
-  ( Show primTy, Show primVal,
-  HasCoreSigs primTy primVal m) =>
+  ( Show primTy,
+    Show primVal,
+    HasCoreSigs primTy primVal m
+  ) =>
   -- | Namespace of current declaration
   Maybe NameSymbol.Mod ->
   -- | Qualified symbol
@@ -79,7 +79,7 @@ lookupSig ::
   m (Maybe (CoreSig HR.T primTy primVal))
 lookupSig q x = fmap snd <$> lookupSigWithSymbol q x
 
--- | Lookup signature 
+-- | Lookup signature
 checkSymbolSig ::
   (Show primTy, Show primVal, ReduceEff primTy primVal m) =>
   NameSymbol.Mod ->
@@ -91,7 +91,8 @@ checkSymbolSig q symbol =
     toName = HR.Elim . HR.Var . maybe symbol fst
 
 isOmega ::
-  ( Show primTy, Show primVal,
+  ( Show primTy,
+    Show primVal,
     HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
@@ -102,7 +103,8 @@ isOmega q e = (== Just OmegaS) <$> getSpecialSig q e
 
 -- | Get special signature from atom
 getSpecialSig ::
-  ( Show primTy, Show primVal,
+  ( Show primTy,
+    Show primVal,
     HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
@@ -119,7 +121,6 @@ getSpecialSig q x
         Just _ -> pure Nothing
         Nothing -> pTraceShow ("getSpecial", q, x) throwFF $ WrongSigType x Nothing
 getSpecialSig _ _ = pure Nothing
-
 
 -- | Check whether the S-expression form is a non-implicit string atom
 parseVarArg ::
@@ -208,7 +209,6 @@ getSig q f x = do
     Just sig | Just ty <- f sig -> pTraceShow ("lookupSig Success", q, x, msig, ty) $ pure ty
     _ -> pTraceShow ("lookupSig Failure", q, x, msig) $ throwFF $ WrongSigType x msig
 
-
 splitDataType ::
   HasThrowFF primTy primVal m =>
   NameSymbol.T ->
@@ -235,4 +235,3 @@ eleToSymbol x
   | Just Sexp.A {atomName} <- Sexp.atomFromT x =
     Just (NameSymbol.toSymbol atomName)
   | otherwise = Nothing
-

@@ -8,20 +8,22 @@ import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
+import Juvix.ToCore.FromFrontend.Transform.Helpers
+  ( ReduceEff,
+    getParamConstant,
+    getSpecialSig,
+    lookupSigWithSymbol,
+    parseVarArg,
+    parseVarPat,
+    toElim,
+  )
 import Juvix.ToCore.FromFrontend.Transform.Usage
 import Juvix.ToCore.Types
-    ( throwFF,
-      Special(..),
-      Error(..) )
+  ( Error (..),
+    Special (..),
+    throwFF,
+  )
 import Prelude (error)
-import Juvix.ToCore.FromFrontend.Transform.Helpers
-    ( getParamConstant,
-      lookupSigWithSymbol,
-      getSpecialSig,
-      parseVarArg,
-      parseVarPat,
-      toElim,
-      ReduceEff )
 
 -- | Transform S-expression form into Human Readable form
 -- N.B. doesn't deal with pattern variables since HR doesn't have them.
@@ -73,11 +75,11 @@ transformTermHR q p@(name Sexp.:> form)
     makeTuple [] = HR.Unit
     makeTuple [t] = t
     makeTuple (t : ts) = HR.Pair t (makeTuple ts)
-    -- | Construct Pi term
     transformArrow _f@(Sexp.List [π, xa, b]) = go π "" xa b
-    -- we never generate this form, so we should be able to erase this!?
-    -- FE.NamedTypeE (FE.NamedType' x a) -> go π (getName x) a b
       where
+        -- we never generate this form, so we should be able to erase this!?
+        -- FE.NamedTypeE (FE.NamedType' x a) -> go π (getName x) a b
+
         go π x a b =
           HR.Pi <$> transformUsage q π
             <*> pure x
@@ -101,9 +103,6 @@ transformTermHR q p@(name Sexp.:> form)
         foldr HR.Lam <$> transformTermHR q body <*> traverse parseVarPat pats
     -- TODO: Avoid throwing error
     transformSimpleLambda _ = error "malformed lambda"
-
-    -- | Transform types and values to concrete, built-in backend types and values
-    -- defined in the Parameterization module
     transformPrim (Sexp.List [parm])
       | Just Sexp.A {atomName = p} <- Sexp.atomFromT parm = do
         param <- ask @"param"
@@ -114,13 +113,12 @@ transformTermHR q p@(name Sexp.:> form)
         primVal param p = HR.Prim <$> HM.lookup p (P.builtinValues param)
     -- TODO: Avoid throwing error
     transformPrim _ = error "malformed prim"
-
 transformTermHR _ Sexp.Nil = error "malformed term HR"
 
 pattern NamedArgTerm ::
-    Symbol -> HR.Term primTy primVal -> HR.Term primTy primVal
+  Symbol -> HR.Term primTy primVal -> HR.Term primTy primVal
 pattern NamedArgTerm x ty <-
-    HR.Elim (HR.Ann _ (HR.Elim (HR.Var (x :| []))) ty _)
+  HR.Elim (HR.Ann _ (HR.Elim (HR.Var (x :| []))) ty _)
 
 -- TODO
 transformApplication ::
@@ -133,7 +131,7 @@ transformApplication ::
   m (HR.Term primTy primVal)
 transformApplication q (f Sexp.:> args)
   | Just xs <- Sexp.toList args = do
-  getSpecialSig q f >>= flip go xs
+    getSpecialSig q f >>= flip go xs
   where
     go Nothing xs = do
       f' <- toElim f =<< transformTermHR q f
@@ -169,13 +167,11 @@ transformApplication q (f Sexp.:> args)
     nargs s n xs
       | length xs == n = pure xs
       | otherwise = throwFF $ WrongNumberBuiltinArgs s n args
-    
+
     namedArg q e =
       transformTermHR q e >>= \case
         NamedArgTerm x ty -> pure (NameSymbol.fromSymbol x, ty)
         ty -> pure ("" :| [], ty)
-    -- | Retrieve universe (natural number) from atom
     transformUniverse (Sexp.Atom Sexp.N {atomNum = i}) | i >= 0 = pure $ fromIntegral i
     transformUniverse e = throwFF $ NotAUniverse e
-
 transformApplication _ _ = error "malformed application"

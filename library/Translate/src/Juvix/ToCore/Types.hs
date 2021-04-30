@@ -21,6 +21,7 @@ type ReduceEff primTy primVal m =
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
   )
+
 data Error primTy primVal
   = -- features not yet implemented
 

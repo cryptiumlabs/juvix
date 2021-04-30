@@ -1,34 +1,35 @@
 module Juvix.ToCore.FromFrontend.Transform.Def where
 
-
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NonEmpty
+import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.Common.Context as Ctx
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Translate (hrToIR)
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
-import Juvix.ToCore.FromFrontend.Transform.HR ( transformTermHR )
-import Juvix.ToCore.Types
-    ( throwFF,
-      CoreDef(..),
-      HasNextPatVar,
-      HasPatVars,
-      Error(..),
-      CoreSig(..) )
-import Prelude (error)
-import Debug.Pretty.Simple (pTraceShowM, pTraceShow)
+import Juvix.ToCore.FromFrontend.Transform.HR (transformTermHR)
 import Juvix.ToCore.FromFrontend.Transform.Helpers
-    ( getParamConstant,
-      lookupSig,
-      getValSig,
-      getConSig,
-      getDataSig,
-      splitDataType,
-      ReduceEff,
-      conDefName,
-      eleToSymbol )
+  ( ReduceEff,
+    conDefName,
+    eleToSymbol,
+    getConSig,
+    getDataSig,
+    getParamConstant,
+    getValSig,
+    lookupSig,
+    splitDataType,
+  )
+import Juvix.ToCore.Types
+  ( CoreDef (..),
+    CoreSig (..),
+    Error (..),
+    HasNextPatVar,
+    HasPatVars,
+    throwFF,
+  )
+import Prelude (error)
 
 transformDef ::
   ( ReduceEff primTy primVal m,
@@ -47,7 +48,7 @@ transformDef x def = do
   case sig of
     Just (SpecialSig s) -> pure [SpecialDef x s]
     _ -> map CoreDef <$> transformNormalDef q x def
-    where
+  where
     q = NameSymbol.mod x
 
     transformNormalDef q x (Ctx.TypeDeclar dec)
@@ -61,7 +62,7 @@ transformDef x def = do
             IR.RawDataCon
               { rawConName = x,
                 rawConType = hrToIR ty,
-                rawConDef = Nothing--def
+                rawConDef = Nothing --def
               }
         transformType name _ = do
           (ty, conNames) <- getDataSig q name
@@ -114,8 +115,7 @@ transformDef x def = do
         patts <- traverse transformArg args
         clauseBody <- transformTermIR q body
         pure $ IR.RawFunClause [] patts clauseBody False
-        where
-        -- | Transform S-expression form into IR
+      where
         transformTermIR q fe = do
           hrToIR <$> transformTermHR q fe
     transformClause _ _ = error "malformed tansformClause"
@@ -144,4 +144,3 @@ transformDef x def = do
 
     getNextPatVar :: HasNextPatVar m => m IR.PatternVar
     getNextPatVar = state @"nextPatVar" \v -> (v, succ v)
-

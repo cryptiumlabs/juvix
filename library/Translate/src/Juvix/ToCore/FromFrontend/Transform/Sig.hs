@@ -1,6 +1,7 @@
 module Juvix.ToCore.FromFrontend.Transform.Sig where
 
 import qualified Data.HashMap.Strict as HM
+import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.Common.Context as Ctx
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.Parameterisation as P
@@ -8,27 +9,31 @@ import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
-import Juvix.ToCore.Types
-    ( throwFF,
-      HasPatVars,
-      CoreSigHR,
-      Special(..),
-      HasCoreSigs,
-      HasParam,
-      HasThrowFF,
-      Error(..),
-      CoreSig(..) )
-import Debug.Pretty.Simple (pTraceShowM, pTraceShow)
-import Juvix.ToCore.FromFrontend.Transform.Usage
-    ( transformUsage, transformGUsage )
-import Juvix.ToCore.FromFrontend.Transform.HR ( transformTermHR )
-import Juvix.ToCore.FromFrontend.Transform.TypeSig
-    ( transformTypeSig )
+import Juvix.ToCore.FromFrontend.Transform.HR (transformTermHR)
 import Juvix.ToCore.FromFrontend.Transform.Helpers
-    ( getSpecialSig,
-      ReduceEff,
-      conDefName,
-      eleToSymbol )
+  ( ReduceEff,
+    conDefName,
+    eleToSymbol,
+    getSpecialSig,
+  )
+import Juvix.ToCore.FromFrontend.Transform.TypeSig
+  ( transformTypeSig,
+  )
+import Juvix.ToCore.FromFrontend.Transform.Usage
+  ( transformGUsage,
+    transformUsage,
+  )
+import Juvix.ToCore.Types
+  ( CoreSig (..),
+    CoreSigHR,
+    Error (..),
+    HasCoreSigs,
+    HasParam,
+    HasPatVars,
+    HasThrowFF,
+    Special (..),
+    throwFF,
+  )
 
 transformSig ::
   ( HasPatVars m,
@@ -88,29 +93,28 @@ transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
   where
     conSigM = case sumTDef of
       Nothing -> pure $ ConSig {conType = Nothing}
-      Just d@Ctx.D{defMTy} -> do
+      Just Ctx.D{defMTy} -> do
         ty <- mkTy defMTy
         pure $ ConSig (Just ty) 
 
     -- data Bar = Foo Bool Int
     -- (-> Bool (-> Int Bar)
     -- Pi (SNat 1) ("Foo":[]) (1: Bool) (Pi (SNat 1) ("":[]) (Int) (Bar))
-    --                      ^ input type   
-    mkTy (Just (fn Sexp.:> t1)) | isFn fn
-      -- panic $ "mkTy not implemented" <> show (fn, t1, t2) 
-      = mkTy (Just t1)
-    mkTy (Just (Sexp.Atom Sexp.A {atomName = p}  Sexp.:> fn Sexp.:> t2)) | isFn fn
-      = do
+    --                      ^ input type
+    mkTy (Just (fn Sexp.:> t1))
+      | isFn fn =
+        -- panic $ "mkTy not implemented" <> show (fn, t1, t2)
+        mkTy (Just t1)
+    mkTy (Just (Sexp.Atom Sexp.A {atomName = p} Sexp.:> fn Sexp.:> t2)) | isFn fn =
+      do
         param <- ask @"param"
         traceM "mkty2"
         pTraceShowM (p, t2)
         HR.Pi (Usage.SNat 1) "" (primTy param p) <$> mkTy (Just t2)
-
     mkTy (Just e) = pTraceShow ("mkty e", e) transformTermHR q e
     mkTy Nothing = panic "Shouldn't happen"
     isFn fn = Sexp.isAtomNamed fn "TopLevel.Prelude.->"
     primTy param p = fromMaybe (panic $ "Can't lookup primTy " <> show p) (HR.PrimTy <$> HM.lookup p (P.builtinTypes param))
-
 transformNormalSig _ _ Ctx.CurrentNameSpace =
   pure []
 transformNormalSig _ _ Ctx.Information {} =
@@ -137,7 +141,8 @@ transformValSig q _ _ _ (Just ty) =
 transformValSig _ x def _ _ = throwFF $ SigRequired x def
 
 transformSpecial ::
-  ( Show primTy, Show primVal, 
+  ( Show primTy,
+    Show primVal,
     HasThrowFF primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
@@ -153,7 +158,8 @@ transformSpecial q def@(Ctx.Def (Ctx.D π ty (Sexp.List [_, Sexp.List [Sexp.Nil,
 transformSpecial _ _ = pure Nothing
 
 transformSpecialRhs ::
-  ( Show primTy, Show primVal, 
+  ( Show primTy,
+    Show primVal,
     HasThrowFF primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
@@ -184,4 +190,3 @@ transformSpecialRhs q (Sexp.List [f, arg])
           Just (PairS Nothing) -> Just . PairS . Just <$> transformUsage q arg
           _ -> pure Nothing
 transformSpecialRhs _ _ = pure Nothing
-
