@@ -55,14 +55,14 @@ typeCheckDeclaration tel rtel param dts fns =
       do
         _ <- checkDataType tel name param args
         rest <- typeCheckDeclaration tel rtel param tld fns
-        -- TODO checkedCons <- typeCheckAllCons param tel lpos rtel globals cons
-        return $ IR.RawGDatatype hdd : rest -- <> checkedCons
+        checkedCons <- typeCheckAllCons param tel lpos rtel globals cons
+        return $ IR.RawGDatatype hdd : rest <> checkedCons
     _ -> do
       return []
 -- add to sig once typechecked
 -- put $ addSig sig n (DataSig params pos sz v)
 -- mapM_ (typeCheckConstructor n sz pos tel) cs
-typeCheckDeclaration tel rtel param _ ((IR.RawFunction name usage ty cls) : tlf) =
+typeCheckDeclaration tel rtel param _ (IR.RawFunction name usage ty cls : tlf) =
   undefined
 
 -- TODO run typeCheckFuns

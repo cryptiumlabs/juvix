@@ -40,7 +40,7 @@ typeCheckAllCons ::
 typeCheckAllCons param tel pos rtel globals =
   mapM (typeCheckConstructor param tel pos rtel globals)
 
-typeCheckConstructor ::
+typeCheckConstructor :: forall ext extT extV primTy primVal m.
   ( HasThrowTC' NoExt extT primTy primVal m,
     -- HasState "typeSigs" _ m,
     Eq primTy,
@@ -69,9 +69,8 @@ typeCheckConstructor param tel lpos rtel globals con = do
       (name, t) = teleToType rtel conTy
   -- FIXME replace 'lift' with whatever capability does
   typechecked <- lift $ typeTerm param t (Annotation mempty (VStar 0))
-  -- TODO
-  -- evaled <- lift $ liftEval $ Eval.evalTerm (Eval.lookupFun @ext globals) typechecked
-  -- _ <- checkConType tel cname param evaled
+  evaled <- lift $ liftEval $ Eval.evalTerm (Eval.lookupFun @ext globals) typechecked
+  _ <- checkConType tel cname param evaled
   let (_, target) = typeToTele (name, t)
   -- FIXME replace 'lift'
   lift $ checkDeclared cname rtel target
@@ -198,7 +197,7 @@ checkConType ::
   GlobalName ->
   Param.Parameterisation primTy primVal ->
   -- | the expression that is left to be checked.
-  IR.Value' extV primTy primVal ->
+  IR.Value' extV primTy (TypedPrim primTy primVal) ->
   m ()
 checkConType tel datatypeName param e =
   case e of
