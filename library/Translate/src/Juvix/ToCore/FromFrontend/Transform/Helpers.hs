@@ -172,9 +172,9 @@ getConSig ::
   ) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
-  m (HR.Term primTy primVal, Maybe (Ctx.Def Sexp.T Sexp.T))
+  m (HR.Term primTy primVal)
 getConSig q = getSig q \case
-  ConSig (Just ty) def -> Just (ty, def)
+  ConSig (Just ty) -> Just ty
   _ -> Nothing
 
 getDataSig ::
@@ -228,7 +228,7 @@ splitDataType x ty0 = go ty0
     go _ = throwFF $ InvalidDatatypeType x ty0
 
 conDefName :: NameSymbol.T -> NameSymbol.T
-conDefName = identity -- NameSymbol.applyBase (<> "$def")
+conDefName = NameSymbol.applyBase (<> "$def")
 
 eleToSymbol :: Sexp.T -> Maybe Symbol
 eleToSymbol x

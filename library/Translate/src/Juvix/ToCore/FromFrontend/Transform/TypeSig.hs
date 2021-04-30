@@ -121,7 +121,7 @@ transformProduct q hd (x, prod) =
   (NameSymbol.qualify1 q x,) . makeSig
     <$> transformConSig q (NameSymbol.fromSymbol x) hd prod
   where
-    makeSig ty = pTraceShow ("makeSig", ty) ConSig {conType = Just ty, conDef = Nothing}
+    makeSig ty = pTraceShow ("makeSig", ty) ConSig {conType = Just ty}
 
 transformConSig ::
   (ReduceEff primTy primVal m, HasPatVars m, Show primTy, Show primVal) =>

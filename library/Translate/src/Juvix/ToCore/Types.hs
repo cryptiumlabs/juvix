@@ -189,9 +189,7 @@ data CoreSig ext primTy primVal
         dataCons :: [NameSymbol.T]
       }
   | ConSig
-      { conType :: !(Maybe (IR.Term' ext primTy primVal)),
-        -- TODO: Remove conDef field
-        conDef :: !(Maybe (Ctx.Def Sexp.T Sexp.T))
+      { conType :: !(Maybe (IR.Term' ext primTy primVal))
       }
   | ValSig
       { valUsage :: !IR.GlobalUsage,
@@ -207,8 +205,8 @@ mergeSigs ::
   CoreSig ext primTy primVal ->
   CoreSig ext primTy primVal ->
   CoreSig ext primTy primVal
-mergeSigs (ConSig newTy newDef) (ConSig oldTy oldDef) =
-  ConSig (newTy <|> oldTy) (newDef <|> oldDef)
+mergeSigs (ConSig newTy) (ConSig oldTy) =
+  ConSig (newTy <|> oldTy) 
 mergeSigs _ second = second
 
 -- | Bindings that can't be given types, but can be given new names by the user.

@@ -87,10 +87,10 @@ transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
   pure $ conSig : fromMaybe [] defSigs
   where
     conSigM = case sumTDef of
-      Nothing -> pure $ ConSig {conType = Nothing, conDef = sumTDef}
+      Nothing -> pure $ ConSig {conType = Nothing}
       Just d@Ctx.D{defMTy} -> do
         ty <- mkTy defMTy
-        pure $ ConSig (Just ty) (Just d)
+        pure $ ConSig (Just ty) 
 
     -- data Bar = Foo Bool Int
     -- (-> Bool (-> Int Bar)

@@ -30,7 +30,7 @@ import Juvix.ToCore.FromFrontend.Transform.Helpers
       conDefName,
       eleToSymbol )
 
-transformDef :: 
+transformDef ::
   ( ReduceEff primTy primVal m,
     HasNextPatVar m,
     HasPatVars m,
@@ -50,7 +50,7 @@ transformDef x def = do
     where
     q = NameSymbol.mod x
 
-    transformNormalDef q x (Ctx.TypeDeclar dec) 
+    transformNormalDef q x (Ctx.TypeDeclar dec)
       = pTraceShow ("transformNormalDef", x, dec) transformType x dec
       where
         transformCon x ty def = do
@@ -67,10 +67,10 @@ transformDef x def = do
           (ty, conNames) <- getDataSig q name
           traceM "ConNames"
           pTraceShowM (ty, conNames)
-          let getConSig' x = do (ty, def) <- getConSig q x; pure (x, ty, def)
+          let getConSig' x = do ty <- getConSig q x; pure (x, ty, def)
           conSigs <- traverse getConSig' conNames
           traceM "ConSigs"
-          pTraceShowM (conSigs)
+          pTraceShowM conSigs
           cons <- traverse (uncurry3 transformCon) conSigs
           (args, ℓ) <- splitDataType name ty
           let dat' =
@@ -106,7 +106,7 @@ transformDef x def = do
               rawFunClauses = clauses
             }
     transformFunction _ _ _ = error "malformed defun"
-    
+
     transformClause q (Sexp.List [args', body])
       | Just args <- Sexp.toList args' = do
         put @"patVars" mempty
