@@ -207,7 +207,7 @@ mergeSigs ::
   CoreSig ext primTy primVal ->
   CoreSig ext primTy primVal
 mergeSigs (ConSig newTy) (ConSig oldTy) =
-  ConSig (newTy <|> oldTy) 
+  ConSig (newTy <|> oldTy)
 mergeSigs _ second = second
 
 -- | Bindings that can't be given types, but can be given new names by the user.

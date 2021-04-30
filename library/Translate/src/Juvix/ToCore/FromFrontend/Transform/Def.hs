@@ -51,8 +51,8 @@ transformDef x def = do
   where
     q = NameSymbol.mod x
 
-    transformNormalDef q x (Ctx.TypeDeclar dec)
-      = pTraceShow ("transformNormalDef", x, dec) transformType x dec
+    transformNormalDef q x (Ctx.TypeDeclar dec) =
+      pTraceShow ("transformNormalDef", x, dec) transformType x dec
       where
         transformCon x ty def = do
           traceM "TransformCon"
