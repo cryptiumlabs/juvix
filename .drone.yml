@@ -14,7 +14,7 @@ steps:
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "f71e5bbd918638e910da3b82936cd366abc0323d96fd17298eb50f40309984f4  scripts/pre-run.sh" | sha256sum -c -
+      - echo "22286ec0494c776fcfa9ed82a52d2d3b937a2513bbd83856270c1c351171c984  scripts/pre-run.sh" | sha256sum -c -
       - sh ./scripts/pre-run.sh
 
   - name: restore-cache
@@ -151,8 +151,8 @@ steps:
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "f71e5bbd918638e910da3b82936cd366abc0323d96fd17298eb50f40309984f4  scripts/pre-run.sh" | sha256sum -c -
-      - sh ./scripts/pre-run.sh
+      - echo "22286ec0494c776fcfa9ed82a52d2d3b937a2513bbd83856270c1c351171c984  scripts/pre-run.sh" | sha256sum -c -
+      - sh ./scripts/pre-run.sh 
 
   - name: restore-cache
     image: meltwater/drone-cache
@@ -272,6 +272,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: e0375b1e8477b07b9fa7ead8f95894c32ef802d4062a82e662d2d4546d59b74f
+hmac: ac87311da24fadf3aa379b24184cb2ac7e94c6f96fb7f5acedf7c58d8f32e13e
 
 ...
