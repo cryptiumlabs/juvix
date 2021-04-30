@@ -40,12 +40,18 @@ typeCheckDeclaration ::
     HasThrow "typecheckError" (TypecheckError' extV IR.NoExt primTy primVal) (IR.TypeCheck ext primTy primVal m),
     HasThrow "typecheckError" (TypecheckError' IR.NoExt extT primTy primVal) (IR.TypeCheck ext primTy primVal m)
   ) =>
+  -- Telescope containing a list of 
+  -- (name, usage, ty (of type Value') and the extension)
   IR.Telescope extV extT primTy primVal ->
+  -- Raw telescope containing ty (of type Term')
   IR.RawTelescope extT primTy primVal ->
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
+  -- | A list of datatype declarations to be checked 
   [IR.RawDatatype' extT primTy primVal] ->
+  -- | A list of function declarations to be checked
   [IR.RawFunction' ext primTy primVal] ->
+  -- | A list of Globals to be added to the global state
   IR.TypeCheck ext primTy primVal m [IR.RawGlobal' extT primTy primVal]
 typeCheckDeclaration tel rtel param [] [] =
   return []
@@ -53,15 +59,18 @@ typeCheckDeclaration tel rtel param dts fns =
   case dts of
     (hdd@(IR.RawDatatype name lpos args levels cons) : tld) ->
       do
+        -- check the first datatype's args
         _ <- checkDataType tel name param args
+        -- recurse the rest of the datatypes
         rest <- typeCheckDeclaration tel rtel param tld fns
+        -- check all the constructors of the first datatype
         checkedCons <- typeCheckAllCons param tel lpos rtel globals cons
+        -- when successful, return the datatype and the datacons
+        -- to the list of globals
         return $ IR.RawGDatatype hdd : rest <> checkedCons
     _ -> do
       return []
--- add to sig once typechecked
--- put $ addSig sig n (DataSig params pos sz v)
--- mapM_ (typeCheckConstructor n sz pos tel) cs
+-- TODO add to sig once typechecked? Keeping track of all globals may be enough?
 typeCheckDeclaration tel rtel param _ (IR.RawFunction name usage ty cls : tlf) =
   undefined
 
