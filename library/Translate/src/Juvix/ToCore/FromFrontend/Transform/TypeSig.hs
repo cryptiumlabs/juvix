@@ -61,8 +61,8 @@ transformTypeSig q name (nameAndData Sexp.:> args Sexp.:> typeForm)
     let dataSig = DataSig {dataType, dataCons}
     pure $ dataSig : conSigs
   where
-    ff k (x Sexp.:> xs) 
-      | k == x = Just xs 
+    ff k (x Sexp.:> xs)
+      | k == x = Just xs
       | otherwise = ff k xs
     ff _ _ = Nothing
     -- transformIndices typeArgs (_ Sexp.:> grouped)

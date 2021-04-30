@@ -19,7 +19,7 @@ module Juvix.ToCore.FromFrontend.Transform.Helpers
 where
 
 import qualified Data.HashMap.Strict as HM
-import Debug.Pretty.Simple (pTraceShow)
+import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.Common.Context as Ctx
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
@@ -29,7 +29,6 @@ import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import Juvix.ToCore.Types
-import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 
 -- | Retrieve constant primVal from parameterization
 getParamConstant ::
