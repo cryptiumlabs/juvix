@@ -37,7 +37,8 @@ unsafeEvalGlobal ::
 unsafeEvalGlobal globals g =
   case g of
     RawGDatatype (RawDatatype n pos a l cons) -> undefined
-    RawGDataCon (RawDataCon n t d) -> undefined
+    RawGDataCon (RawDataCon n t d) -> 
+      GDataCon $ DataCon n (unsafeEval globals t) (funEval globals <$> d)
     RawGFunction (RawFunction n u t cs) ->
       GFunction $
         Function n u (unsafeEval globals t) (map (funClauseEval globals) cs)
@@ -64,6 +65,15 @@ funReturn ::
   IR.RawFunction ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val)
 funReturn ty (RawFunction name usage term clauses) =
   RawFunction name usage (baseToReturn ty term) (funClauseReturn ty <$> clauses)
+
+funEval ::
+  IR.CanEval IR.NoExt IR.NoExt primTy primVal =>
+  IR.RawGlobals primTy primVal ->
+  IR.RawFunction primTy primVal ->
+  IR.Function primTy primVal
+funEval globals (RawFunction name usage term clauses) =
+  Function name usage (unsafeEval globals term) (funClauseEval globals <$> clauses)  --TODO
+
 
 funClauseReturn ::
   ty ->
