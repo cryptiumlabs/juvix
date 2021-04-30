@@ -44,18 +44,27 @@ unsafeEvalGlobal globals g =
     RawGAbstract (RawAbstract n u t) ->
       GAbstract $ Abstract n u (unsafeEval globals t)
 
-convGlobal ::
+convGlobal :: (Show ty, Show val) =>
   ty ->
   IR.RawGlobal ty val ->
   IR.RawGlobal ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val)
 convGlobal ty g =
   case g of
     RawGDatatype (RawDatatype n pos a l cons) -> undefined
-    RawGDataCon (RawDataCon n t d) -> undefined
+    RawGDataCon (RawDataCon n t d) -> traceShow (ty, n, t, d) RawGDataCon (RawDataCon n (baseToReturn ty t) (funReturn ty <$> d))
     RawGFunction (RawFunction n u t cs) ->
       RawGFunction (RawFunction n u (baseToReturn ty t) (funClauseReturn ty <$> cs))
     RawGAbstract (RawAbstract n u t) ->
       RawGAbstract (RawAbstract n u (baseToReturn ty t))
+
+
+funReturn ::
+  ty ->
+  IR.RawFunction ty val ->
+  IR.RawFunction ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val)
+funReturn ty (RawFunction name usage term clauses) =
+  RawFunction name usage (baseToReturn ty term) (funClauseReturn ty <$> clauses)
+
 
 funClauseReturn ::
   ty ->
