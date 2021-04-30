@@ -6,5 +6,6 @@ module Juvix.ToCore.FromFrontend
     module Juvix.ToCore.Types,
   )
 where
+
 import Juvix.ToCore.FromFrontend.Transform
 import Juvix.ToCore.Types

@@ -2,6 +2,7 @@ module Juvix.ToCore.FromFrontend.Transform.TypeSig where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NonEmpty
+import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.Common.Context as Ctx
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
@@ -12,36 +13,37 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
 import Juvix.ToCore.FromFrontend.Transform.HR
-import Juvix.ToCore.Types
-    ( throwFF,
-      CoreDef(..),
-      HasNextPatVar,
-      HasPatVars,
-      CoreSigHR,
-      Special(..),
-      HasCoreSigs,
-      HasParam,
-      HasThrowFF,
-      Error(..),
-      CoreSig(..) )
-import Prelude (error)
-import Debug.Pretty.Simple (pTraceShowM, pTraceShow)
 import Juvix.ToCore.FromFrontend.Transform.Helpers
-    ( getParamConstant,
-      lookupSigWithSymbol,
-      lookupSig,
-      isOmega,
-      getSpecialSig,
-      parseVarArg,
-      parseVarPat,
-      toElim,
-      getValSig,
-      getConSig,
-      getDataSig,
-      splitDataType,
-      ReduceEff,
-      conDefName,
-      eleToSymbol )
+  ( ReduceEff,
+    conDefName,
+    eleToSymbol,
+    getConSig,
+    getDataSig,
+    getParamConstant,
+    getSpecialSig,
+    getValSig,
+    isOmega,
+    lookupSig,
+    lookupSigWithSymbol,
+    parseVarArg,
+    parseVarPat,
+    splitDataType,
+    toElim,
+  )
+import Juvix.ToCore.Types
+  ( CoreDef (..),
+    CoreSig (..),
+    CoreSigHR,
+    Error (..),
+    HasCoreSigs,
+    HasNextPatVar,
+    HasParam,
+    HasPatVars,
+    HasThrowFF,
+    Special (..),
+    throwFF,
+  )
+import Prelude (error)
 
 transformTypeSig ::
   (ReduceEff primTy primVal m, HasPatVars m, HasParam primTy primVal m, Show primTy, Show primVal) =>
@@ -155,4 +157,3 @@ transformConSig q name mHd r@(t Sexp.:> ts)
     named = Sexp.isAtomNamed t
 transformConSig _ _ _ r = do
   error "malformed transformConSig"
-
