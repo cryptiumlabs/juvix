@@ -176,7 +176,7 @@ nameFromT (Atom (A name _)) = Just name
 nameFromT _ = Nothing
 
 assoc :: T -> T -> Maybe T
-assoc t xs = cadr <$> findKey car t xs
+assoc t xs = findKey car t xs -- cadr <$> findKey car t xs
 
 groupBy2 :: T -> T
 groupBy2 (a1 :> a2 :> rest) =

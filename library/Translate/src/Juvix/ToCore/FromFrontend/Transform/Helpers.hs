@@ -29,6 +29,7 @@ import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import Juvix.ToCore.Types
+import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 
 -- | Retrieve constant primVal from parameterization
 getParamConstant ::
@@ -210,13 +211,13 @@ getSig q f x = do
     _ -> pTraceShow ("lookupSig Failure", q, x, msig) $ throwFF $ WrongSigType x msig
 
 splitDataType ::
-  HasThrowFF primTy primVal m =>
+  (Show primTy, Show primVal, HasThrowFF primTy primVal m) =>
   NameSymbol.T ->
   HR.Term primTy primVal ->
   m ([IR.RawDataArg primTy primVal], IR.Universe)
 splitDataType x ty0 = go ty0
   where
-    go (HR.Pi π x s t) = first (arg :) <$> splitDataType x t
+    go (HR.Pi π x s t) = pTraceShow ("splitDataType", t, s, x) $ first (arg :) <$> splitDataType x t
       where
         arg =
           IR.RawDataArg
@@ -228,7 +229,7 @@ splitDataType x ty0 = go ty0
     go _ = throwFF $ InvalidDatatypeType x ty0
 
 conDefName :: NameSymbol.T -> NameSymbol.T
-conDefName = NameSymbol.applyBase (<> "$def")
+conDefName = identity -- NameSymbol.applyBase (<> "$def")
 
 eleToSymbol :: Sexp.T -> Maybe Symbol
 eleToSymbol x

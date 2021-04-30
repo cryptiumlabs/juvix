@@ -54,19 +54,28 @@ transformTypeSig ::
 transformTypeSig q name (nameAndData Sexp.:> args Sexp.:> typeForm)
   | Just typeArgs <- Sexp.toList args >>= traverse eleToSymbol = do
     (baseTy, hd) <- transformIndices typeArgs nameAndData
+    traceM "transformTypeSig"
+    pTraceShowM (nameAndData, baseTy, typeArgs)
     let dataType = foldr makeTPi baseTy typeArgs
     (dataCons, conSigs) <- unzip <$> transformConSigs q hd typeForm
     let dataSig = DataSig {dataType, dataCons}
     pure $ dataSig : conSigs
   where
-    transformIndices typeArgs (_ Sexp.:> grouped)
-      | Just dataArrow <- Sexp.assoc (Sexp.atom ":type") grouped = do
-        typ <- transformTermHR q dataArrow
-        let hd0 = HR.Var name
-        let args = HR.Elim . HR.Var . NameSymbol.fromSymbol <$> typeArgs
-        pure (typ, Just $ HR.Elim $ foldl HR.App hd0 args)
+    ff k (x Sexp.:> xs) 
+      | k == x = Just xs 
+      | otherwise = ff k xs
+    ff _ _ = Nothing
+    -- transformIndices typeArgs (_ Sexp.:> grouped)
+    --   | Just dataArrow <- ff (Sexp.atom ":type") grouped = do
+
+    --     traceM "DataArrow"
+    --     pTraceShowM (dataArrow, grouped, Sexp.findKey Sexp.car (Sexp.atom ":type") grouped)
+    --     typ <- transformTermHR q dataArrow
+    --     let hd0 = HR.Var name
+    --     let args = HR.Elim . HR.Var . NameSymbol.fromSymbol <$> typeArgs
+    --     pure (typ, Just $ HR.Elim $ foldl HR.App hd0 args)
     transformIndices _ _ =
-      pure (HR.Star 0, Nothing) -- TODO metavar for universe
+      pure (HR.Star 0, Just $ HR.Star 0) -- TODO metavar for universe
     makeTPi name res =
       -- TODO metavars for the named args instead of defaulting to types
       -- thin metavars for the named args instead of defaulting to types
@@ -140,10 +149,9 @@ transformConSig q name mHd r@((t Sexp.:> ts) Sexp.:> _)
   | isNothing mHd = do
     transformTermHR q ts
   where
-    -- throwFF $ InvalidConstructor name r
-
     named = Sexp.isAtomNamed t
 transformConSig q name mHd r@(t Sexp.:> ts)
+  -- TODO: Should check if there any data constructor with a signature (See GADT)
   | isNothing mHd = do
     throwFF $ InvalidConstructor name r
   | Just hd <- mHd,

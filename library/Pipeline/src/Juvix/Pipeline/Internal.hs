@@ -56,7 +56,7 @@ mkDef ::
 mkDef typeCons dataConstructor s@Context.Sum {sumTDef, sumTName} c = do
   t <- extractTypeDeclar . Context.extractValue =<< Context.lookup (NameSymbol.fromSymbol sumTName) c
   declaration <- Sexp.findKey Sexp.car dataConstructor t
-  pTraceShowM ("Declaratione", typeCons, declaration, generateSumConsSexp declaration)
+  pTraceShowM ("Declaratione", typeCons, declaration, generateSumConsSexp typeCons declaration)
   Just $
     Context.D
       { defUsage = Just Usage.Omega,
