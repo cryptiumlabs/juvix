@@ -16,6 +16,11 @@ import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
 import Text.Show (Show (..))
 
+type ReduceEff primTy primVal m =
+  ( HasThrowFF primTy primVal m,
+    HasParam primTy primVal m,
+    HasCoreSigs primTy primVal m
+  )
 data Error primTy primVal
   = -- features not yet implemented
 
