@@ -17,8 +17,10 @@
 --   from<Form> :: <Form> -> Sexp.T
 -- #+end_src
 -- _TODO_
---  1. replace the repeat code with the =to<Form>= with an abstraction
---  2. put the meta data with the form so we don't have to do it by
+--  1. Figure out if we can even express a spec system in
+--     Haskell... =to<Form>= and =From<From>= have the exact same signature
+--  2. replace the repeat code with the =to<Form>= with an abstraction
+--  3. put the meta data with the form so we don't have to do it by
 --     hand in the code that uses this
 --     1. Use =Juvix.Library.LineNum=
 --     2. append the =Form= With this
@@ -49,7 +51,7 @@ data DefunMatch = DefunMatch
   }
   deriving (Show)
 
-data ArgBody = AB {argsBodyArgs :: Sexp.T, argsBodyBody :: Sexp.T} deriving (Show)
+data ArgBody = ArgBody {argsBodyArgs :: Sexp.T, argsBodyBody :: Sexp.T} deriving (Show)
 
 data DefunSigMatch = DefunSigMatch
   { defunSigMatchName :: Sexp.T,
@@ -85,123 +87,164 @@ Lens.makeLensesWith Lens.camelCaseFields ''Let
 --------------------------------------------------------------------------------
 -- Converter functions
 -- The format for these are
--- <Form>Name :: NameSymbol.T
+-- name<Form> :: NameSymbol.T
 -- is<Form>   :: Sexp.T -> Bool
 -- to<Form>   :: Sexp.T -> Maybe <Form>
 -- from<Form> :: <Form> -> Sexp.T
 --------------------------------------------------------------------------------
+----------------------------------------
+-- ArgBody
+----------------------------------------
+
+toArgBody :: Sexp.T -> Maybe ArgBody
+toArgBody form =
+    case form of
+      sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+          ArgBody sexp1 sexp2 |> Just
+      _ -> Nothing
+
+fromArgBody :: ArgBody -> Sexp.T
+fromArgBody (ArgBody sexp1 sexp2) =
+  Sexp.list [sexp1, sexp2]
 
 ----------------------------------------
 -- Defun
 ----------------------------------------
 
-defName :: NameSymbol.T
-defName = ":defun"
+nameDefun :: NameSymbol.T
+nameDefun = ":defun"
 
 isDefun :: Sexp.T -> Bool
-isDefun (defun1 Sexp.:> _) = Sexp.isAtomNamed defun1 defName
+isDefun (form Sexp.:> _) = Sexp.isAtomNamed form nameDefun
 isDefun _ = False
 
 toDefun :: Sexp.T -> Maybe Defun
 toDefun form
   | isDefun form =
     case form of
-      Sexp.List [_defun, name, args, body] ->
-        Defun name args body |> Just
+      _Defun Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> Sexp.Nil ->
+          Defun sexp1 sexp2 sexp3 |> Just
       _ -> Nothing
   | otherwise = Nothing
 
+fromDefun :: Defun -> Sexp.T
+fromDefun (Defun sexp1 sexp2 sexp3) =
+  Sexp.list [Sexp.atom nameDefun, sexp1, sexp2, sexp3]
+
 ----------------------------------------
--- def-Match
+-- DefunMatch
 ----------------------------------------
 
-defmatchName :: NameSymbol.T
-defmatchName = ":defun-match"
+nameDefunMatch :: NameSymbol.T
+nameDefunMatch = ":defun-match"
 
 isDefunMatch :: Sexp.T -> Bool
-isDefunMatch (defun Sexp.:> _) = Sexp.isAtomNamed defun defmatchName
+isDefunMatch (form Sexp.:> _) = Sexp.isAtomNamed form nameDefunMatch
 isDefunMatch _ = False
 
 toDefunMatch :: Sexp.T -> Maybe DefunMatch
 toDefunMatch form
   | isDefunMatch form =
     case form of
-      _defmatch Sexp.:> name Sexp.:> argsBody
-        | Just ab <- toArgsBody argsBody ->
-          DefunMatch name ab |> Just
-      _ ->
-        Nothing
+      _DefunMatch Sexp.:> sexp1 Sexp.:> argBody2
+        | Just argBody2 <- toArgBody `fromStarList` argBody2 ->
+          DefunMatch sexp1 argBody2 |> Just
+      _ -> Nothing
   | otherwise = Nothing
 
 fromDefunMatch :: DefunMatch -> Sexp.T
-fromDefunMatch (DefunMatch name ab) =
-  Sexp.listStar [Sexp.atom defmatchName, name, fromArgBodys ab]
+fromDefunMatch (DefunMatch sexp1 argBody2) =
+  Sexp.listStar [Sexp.atom nameDefunMatch, sexp1, fromArgBody `toStarList` argBody2]
 
 ----------------------------------------
--- Args Body
+-- DefunSigMatch
 ----------------------------------------
 
-toArgsBody :: Sexp.T -> Maybe [ArgBody]
-toArgsBody (x Sexp.:> xs) =
-  case x of
-    -- this will need updating
-    Sexp.List [args, body] -> (AB args body :) <$> toArgsBody xs
-    _ -> Nothing
-toArgsBody Sexp.Nil = Just []
-toArgsBody _ = Nothing
+nameDefunSigMatch :: NameSymbol.T
+nameDefunSigMatch = ":defsig-match"
 
-fromArgBodys :: [ArgBody] -> Sexp.T
-fromArgBodys =
-  -- this will also need updating
-  foldr (\ab acc -> fromArgBody ab Sexp.:> acc) Sexp.Nil
+isDefunSigMatch :: Sexp.T -> Bool
+isDefunSigMatch (form Sexp.:> _) = Sexp.isAtomNamed form nameDefunSigMatch
+isDefunSigMatch _ = False
 
-fromArgBody :: ArgBody -> Sexp.T
-fromArgBody (AB args body) = Sexp.list [args, body]
+toDefunSigMatch :: Sexp.T -> Maybe DefunSigMatch
+toDefunSigMatch form
+  | isDefunSigMatch form =
+    case form of
+      _DefunSigMatch Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> argBody3
+        | Just argBody3 <- toArgBody `fromStarList` argBody3 ->
+          DefunSigMatch sexp1 sexp2 argBody3 |> Just
+      _ -> Nothing
+  | otherwise = Nothing
+
+fromDefunSigMatch :: DefunSigMatch -> Sexp.T
+fromDefunSigMatch (DefunSigMatch sexp1 sexp2 argBody3) =
+  Sexp.listStar [Sexp.atom nameDefunSigMatch, sexp1, sexp2, fromArgBody `toStarList` argBody3]
 
 ----------------------------------------
 -- Signature
 ----------------------------------------
 
-sigName :: NameSymbol.T
-sigName = ":defsig"
+nameSignature :: NameSymbol.T
+nameSignature = ":defsig"
 
 isSignature :: Sexp.T -> Bool
-isSignature (sig Sexp.:> _) = Sexp.isAtomNamed sig sigName
+isSignature (form Sexp.:> _) = Sexp.isAtomNamed form nameSignature
 isSignature _ = False
 
 toSignature :: Sexp.T -> Maybe Signature
 toSignature form
   | isSignature form =
     case form of
-      Sexp.List [_defSig, name, sig] ->
-        Signature name sig |> Just
+      _Signature Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+          Signature sexp1 sexp2 |> Just
       _ -> Nothing
   | otherwise = Nothing
 
 fromSignature :: Signature -> Sexp.T
-fromSignature (Signature name sig) = Sexp.list [Sexp.atom sigName, name, sig]
+fromSignature (Signature sexp1 sexp2) =
+  Sexp.list [Sexp.atom nameSignature, sexp1, sexp2]
 
 ----------------------------------------
--- DefMatchSig
+-- Let
 ----------------------------------------
 
-defSigMatchName :: NameSymbol.T
-defSigMatchName = ":defsig-match"
+nameLet :: NameSymbol.T
+nameLet = "let"
 
-isDefunSigMatch :: Sexp.T -> Bool
-isDefunSigMatch (def Sexp.:> _) = Sexp.isAtomNamed def defSigMatchName
-isDefunSigMatch _ = False
+isLet :: Sexp.T -> Bool
+isLet (form Sexp.:> _) = Sexp.isAtomNamed form nameLet
+isLet _ = False
 
-fromDefunSigMatch :: DefunSigMatch -> Sexp.T
-fromDefunSigMatch (DefunSigMatch name sig argsBody) =
-  Sexp.listStar [Sexp.atom defSigMatchName, name, sig, fromArgBodys argsBody]
-
-toDefunSigMatch :: Sexp.T -> Maybe DefunSigMatch
-toDefunSigMatch form
-  | isDefunSigMatch form =
+toLet :: Sexp.T -> Maybe Let
+toLet form
+  | isLet form =
     case form of
-      _def Sexp.:> name Sexp.:> sig Sexp.:> arsMatch
-        | Just ab <- toArgsBody arsMatch ->
-          DefunSigMatch name sig ab |> Just
+      _Let Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> sexp4 Sexp.:> Sexp.Nil ->
+          Let sexp1 sexp2 sexp3 sexp4 |> Just
       _ -> Nothing
   | otherwise = Nothing
+
+fromLet :: Let -> Sexp.T
+fromLet (Let sexp1 sexp2 sexp3 sexp4) =
+  Sexp.list [Sexp.atom nameLet, sexp1, sexp2, sexp3, sexp4]
+
+------------------------------------------------------------
+-- Helpers
+------------------------------------------------------------
+
+fromGen :: (t -> Bool) -> (t -> Maybe a) -> t -> Maybe a
+fromGen pred func form
+  | pred form = func form
+  | otherwise = Nothing
+
+toStarList :: (t -> Sexp.T) -> [t] -> Sexp.T
+toStarList f (x : xs) =
+  f x Sexp.:> toStarList f xs
+toStarList _ [] = Sexp.Nil
+
+fromStarList :: (Sexp.T -> Maybe a) -> Sexp.T -> Maybe [a]
+fromStarList f (x Sexp.:> xs) =
+  (:) <$> f x <*> fromStarList f xs
+fromStarList _ Sexp.Nil = Just []
+fromStarList _ _ = Nothing
