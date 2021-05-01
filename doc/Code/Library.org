@@ -1744,8 +1744,10 @@ wish to talk about rather than just match away at
   from<Form> :: <Form> -> Sexp.T
 #+end_src
 _TODO_
- 1. replace the repeat code with the =to<Form>= with an abstraction
- 2. put the meta data with the form so we don't have to do it by
+ 1. Figure out if we can even express a spec system in
+    Haskell... =to<Form>= and =From<From>= have the exact same signature
+ 2. replace the repeat code with the =to<Form>= with an abstraction
+ 3. put the meta data with the form so we don't have to do it by
     hand in the code that uses this
     1. Use =Juvix.Library.LineNum=
     2. append the =Form= With this

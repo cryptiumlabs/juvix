@@ -98,10 +98,11 @@ Lens.makeLensesWith Lens.camelCaseFields ''Let
 
 toArgBody :: Sexp.T -> Maybe ArgBody
 toArgBody form =
-    case form of
-      sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
-          ArgBody sexp1 sexp2 |> Just
-      _ -> Nothing
+  case form of
+    sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+      ArgBody sexp1 sexp2 |> Just
+    _ ->
+      Nothing
 
 fromArgBody :: ArgBody -> Sexp.T
 fromArgBody (ArgBody sexp1 sexp2) =
@@ -115,7 +116,7 @@ nameDefun :: NameSymbol.T
 nameDefun = ":defun"
 
 isDefun :: Sexp.T -> Bool
-isDefun (form Sexp.:> _) = Sexp.isAtomNamed form nameDefun
+isDefun (Sexp.Cons form _) = Sexp.isAtomNamed form nameDefun
 isDefun _ = False
 
 toDefun :: Sexp.T -> Maybe Defun
@@ -123,9 +124,11 @@ toDefun form
   | isDefun form =
     case form of
       _Defun Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> Sexp.Nil ->
-          Defun sexp1 sexp2 sexp3 |> Just
-      _ -> Nothing
-  | otherwise = Nothing
+        Defun sexp1 sexp2 sexp3 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
 
 fromDefun :: Defun -> Sexp.T
 fromDefun (Defun sexp1 sexp2 sexp3) =
@@ -139,7 +142,7 @@ nameDefunMatch :: NameSymbol.T
 nameDefunMatch = ":defun-match"
 
 isDefunMatch :: Sexp.T -> Bool
-isDefunMatch (form Sexp.:> _) = Sexp.isAtomNamed form nameDefunMatch
+isDefunMatch (Sexp.Cons form _) = Sexp.isAtomNamed form nameDefunMatch
 isDefunMatch _ = False
 
 toDefunMatch :: Sexp.T -> Maybe DefunMatch
@@ -149,8 +152,10 @@ toDefunMatch form
       _DefunMatch Sexp.:> sexp1 Sexp.:> argBody2
         | Just argBody2 <- toArgBody `fromStarList` argBody2 ->
           DefunMatch sexp1 argBody2 |> Just
-      _ -> Nothing
-  | otherwise = Nothing
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
 
 fromDefunMatch :: DefunMatch -> Sexp.T
 fromDefunMatch (DefunMatch sexp1 argBody2) =
@@ -164,7 +169,7 @@ nameDefunSigMatch :: NameSymbol.T
 nameDefunSigMatch = ":defsig-match"
 
 isDefunSigMatch :: Sexp.T -> Bool
-isDefunSigMatch (form Sexp.:> _) = Sexp.isAtomNamed form nameDefunSigMatch
+isDefunSigMatch (Sexp.Cons form _) = Sexp.isAtomNamed form nameDefunSigMatch
 isDefunSigMatch _ = False
 
 toDefunSigMatch :: Sexp.T -> Maybe DefunSigMatch
@@ -174,8 +179,10 @@ toDefunSigMatch form
       _DefunSigMatch Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> argBody3
         | Just argBody3 <- toArgBody `fromStarList` argBody3 ->
           DefunSigMatch sexp1 sexp2 argBody3 |> Just
-      _ -> Nothing
-  | otherwise = Nothing
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
 
 fromDefunSigMatch :: DefunSigMatch -> Sexp.T
 fromDefunSigMatch (DefunSigMatch sexp1 sexp2 argBody3) =
@@ -189,7 +196,7 @@ nameSignature :: NameSymbol.T
 nameSignature = ":defsig"
 
 isSignature :: Sexp.T -> Bool
-isSignature (form Sexp.:> _) = Sexp.isAtomNamed form nameSignature
+isSignature (Sexp.Cons form _) = Sexp.isAtomNamed form nameSignature
 isSignature _ = False
 
 toSignature :: Sexp.T -> Maybe Signature
@@ -197,9 +204,11 @@ toSignature form
   | isSignature form =
     case form of
       _Signature Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
-          Signature sexp1 sexp2 |> Just
-      _ -> Nothing
-  | otherwise = Nothing
+        Signature sexp1 sexp2 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
 
 fromSignature :: Signature -> Sexp.T
 fromSignature (Signature sexp1 sexp2) =
@@ -213,7 +222,7 @@ nameLet :: NameSymbol.T
 nameLet = "let"
 
 isLet :: Sexp.T -> Bool
-isLet (form Sexp.:> _) = Sexp.isAtomNamed form nameLet
+isLet (Sexp.Cons form _) = Sexp.isAtomNamed form nameLet
 isLet _ = False
 
 toLet :: Sexp.T -> Maybe Let
@@ -221,9 +230,11 @@ toLet form
   | isLet form =
     case form of
       _Let Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> sexp4 Sexp.:> Sexp.Nil ->
-          Let sexp1 sexp2 sexp3 sexp4 |> Just
-      _ -> Nothing
-  | otherwise = Nothing
+        Let sexp1 sexp2 sexp3 sexp4 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
 
 fromLet :: Let -> Sexp.T
 fromLet (Let sexp1 sexp2 sexp3 sexp4) =

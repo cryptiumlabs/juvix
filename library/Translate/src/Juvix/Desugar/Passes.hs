@@ -170,7 +170,7 @@ multipleTransDefun = search
     search [] = []
     combineMultiple name =
       Structure.DefunMatch (Sexp.atom name)
-        . fmap (\form -> Structure.AB (form ^. Structure.args) (form ^. Structure.body))
+        . fmap (\form -> Structure.ArgBody (form ^. Structure.args) (form ^. Structure.body))
     sameName name maybeDefunForm
       | Just form <- Structure.toDefun maybeDefunForm,
         Sexp.isAtomNamed (form ^. Structure.name) name =
