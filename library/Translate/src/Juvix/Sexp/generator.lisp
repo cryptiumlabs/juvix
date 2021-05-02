@@ -91,20 +91,19 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
   "case-of takes a name to match on and a pair of match bodies
 (case-of name ((decon1 guard1 … guardn) body2 decon2 body2))"
   (assert (evenp (length match-bodies)))
-  (labels ((rec (x)
+  (labels ((deconstructor-name (x)
+             (if (listp (car x)) (caar x) (car x)))
+           (get-guards (x)
+             (if (listp x) (cdr x) x))
+           (rec (x)
              (if (null x)
                  ""
-                 (format nil "~%~a~a"
-                         (if (listp (car x)) (caar x) (car x))
-                         (concatenate 'string
-                                      (indent-new-lines-by
-                                       2
-                                       (guards (if (listp (car x))
-                                                   (cdar x)
-                                                   (car x))
-                                               (cadr x)
-                                               new-line))
-                                      (rec (cddr x)))))))
+                 (format nil "~%~a~a~a"
+                         (deconstructor-name x)
+                         (indent-new-lines-by
+                          2
+                          (guards (get-guards (car x)) (cadr x) new-line))
+                         (rec (cddr x))))))
     (indent-new-lines-by
      2
      (format nil "case ~a of~a" name (rec match-bodies)))))
@@ -132,7 +131,7 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
                  (indent-new-lines-by 2 body)))))
 
 (defun guard-body (guard body &optional (new-line t))
-  "guard form of a defun"
+  "guard form of a defun, very simple, can only handle 1 pattern"
   (format nil "~%| ~a =~a"
           guard
           (indent-new-lines-by
@@ -165,12 +164,21 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 (defun to-name (name)
   (format nil "to~a" (capitalize-first name)))
 
+;; (defun ignore-sexp-args )
+
+;; ***********************************************************
+;; Generator
+;; ***********************************************************
+
+
 ;; could be done a LOT better, but works well enough to generate haskell
 (defun generate-haskell (con-name pat s-name &key (list-star nil))
   (let ((arg-names
           (mapcar (lambda (x y) (format nil "~a~a" x y))
                   pat
                   (loop for i from 1 to (length pat) collect i)))
+        ;; if the pattern is a star we need to apply a function that
+        ;; makes it take n arguments
         (pat-to
           (if (or (not list-star) (equal (car (last pat)) "sexp"))
               pat
@@ -191,10 +199,10 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
                               (format nil "Just ~a <- ~a ~a" name (to-name pat) name))))
                        pat names))
              (match (names)
-               (format nil "~{~a~^ Sexp.:> ~}~a"
+               (format nil "~{~a~^ Sexp.:> ~}"
                        (append (when s-name (list (format nil "_~a" con-name)))
-                               names)
-                       (if (not list-star) " Sexp.:> Sexp.Nil" "")))
+                               names
+                               (unless list-star '("Sexp.Nil")))))
              (from-construction (pat names)
                (format nil "~{~a~^, ~}"
                        (append (when s-name
@@ -262,6 +270,6 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 
 (generate-haskell "DefunSigMatch" '("sexp" "sexp" "argBody") ":defsig-match" :list-star t)
 
-(generate-haskell "Signature" '("sexp" "sexp") ":defsig")
+(generate-haskell "Signature" '("sexp" "sexp") ":defsig" :list-star t)
 
 (generate-haskell "Let" (repeat 4 "sexp") "let")
