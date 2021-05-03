@@ -14,7 +14,7 @@ steps:
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "22286ec0494c776fcfa9ed82a52d2d3b937a2513bbd83856270c1c351171c984  scripts/pre-run.sh" | sha256sum -c -
+      - echo "0f54b78c4ceeae86cdf75509c63771ad848e9be8ec9a8c8c0bbab1c9d8e2d900  scripts/pre-run.sh" | sha256sum -c -
       - sh ./scripts/pre-run.sh
 
   - name: restore-cache
@@ -151,7 +151,7 @@ steps:
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "22286ec0494c776fcfa9ed82a52d2d3b937a2513bbd83856270c1c351171c984  scripts/pre-run.sh" | sha256sum -c -
+      - echo "0f54b78c4ceeae86cdf75509c63771ad848e9be8ec9a8c8c0bbab1c9d8e2d900  scripts/pre-run.sh" | sha256sum -c -
       - sh ./scripts/pre-run.sh 
 
   - name: restore-cache
@@ -162,7 +162,7 @@ steps:
       restore: true
       bucket: juvix-drone-cache
       region: eu-west-1
-      cache_key: "{{ checksum \"stack.yaml\" }}-{{ checksum \"package.yaml\" }}"
+      cache_key: "{{ checksum \"stack.yaml\" }}"
       archive_format: "gzip"
       mount:
         - ./.stack-work
@@ -199,7 +199,7 @@ steps:
       rebuild: true
       archive_format: "gzip"
       override: false
-      cache_key: "{{ checksum \"stack.yaml\" }}-{{ checksum \"package.yaml\" }}"
+      cache_key: "{{ checksum \"stack.yaml\" }}"
       mount:
         - ./.stack-work
         - ./.stack
@@ -272,6 +272,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: ac87311da24fadf3aa379b24184cb2ac7e94c6f96fb7f5acedf7c58d8f32e13e
+hmac: 213ae0b370a882c29a8537d9c078753f5c29374b664f49ee498fd52e36cfb917
 
 ...
