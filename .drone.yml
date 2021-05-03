@@ -14,7 +14,7 @@ steps:
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "0f54b78c4ceeae86cdf75509c63771ad848e9be8ec9a8c8c0bbab1c9d8e2d900  scripts/pre-run.sh" | sha256sum -c -
+      - echo "464e715db89429f4cf5766f6c288f0b0b3ea65fcdc9b52cabeae4107e7dcb9d8  scripts/pre-run.sh" | sha256sum -c -
       - sh ./scripts/pre-run.sh
 
   - name: restore-cache
@@ -35,9 +35,6 @@ steps:
         from_secret: aws_access_key_id
       AWS_SECRET_ACCESS_KEY:
         from_secret: aws_secret_access_key
-    volumes:
-      - name: cache
-        path: /tmp/cache
     depends_on:
       - script-integrity-check
 
@@ -52,9 +49,6 @@ steps:
   - name: rebuild-cache
     image: meltwater/drone-cache
     pull: if-not-exists
-    volumes:
-      - name: cache
-        path: /tmp/cache
     settings:
       backend: "s3"
       bucket: juvix-drone-cache
@@ -127,11 +121,6 @@ steps:
     depends_on:
       - org-generation-and-code-formatting
 
-volumes:
-  - name: cache
-    host: 
-      path: /tmp/cache
-
 trigger:
   event:
     - pull_request
@@ -151,7 +140,7 @@ steps:
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "0f54b78c4ceeae86cdf75509c63771ad848e9be8ec9a8c8c0bbab1c9d8e2d900  scripts/pre-run.sh" | sha256sum -c -
+      - echo "464e715db89429f4cf5766f6c288f0b0b3ea65fcdc9b52cabeae4107e7dcb9d8  scripts/pre-run.sh" | sha256sum -c -
       - sh ./scripts/pre-run.sh 
 
   - name: restore-cache
@@ -172,9 +161,6 @@ steps:
         from_secret: aws_access_key_id
       AWS_SECRET_ACCESS_KEY:
         from_secret: aws_secret_access_key
-    volumes:
-      - name: cache
-        path: /tmp/cache
     depends_on:
       - script-integrity-check
 
@@ -189,9 +175,6 @@ steps:
   - name: rebuild-cache
     image: meltwater/drone-cache
     pull: if-not-exists
-    volumes:
-      - name: cache
-        path: /tmp/cache
     settings:
       backend: "s3"
       bucket: juvix-drone-cache
@@ -259,11 +242,6 @@ steps:
       - make test-compile
     depends_on:
       - test-suite
-
-volumes:
-  - name: cache
-    host: 
-      path: /tmp/cache
 
 trigger:
   event:
