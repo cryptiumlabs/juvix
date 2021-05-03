@@ -274,6 +274,9 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 
 (generate-haskell "Let" (repeat 4 "sexp") "let")
 
+;; bodys here, as there are multiple!
+(generate-haskell "LetMatch" '("sexp" "argBodys" "sexp") ":let-match")
+
 ;; here we assume predAns is not a list of sexps for the answer, is
 ;; this actually acurate. Future refactor plan
 (generate-haskell "PredAns" (repeat 2 "sexp") nil)

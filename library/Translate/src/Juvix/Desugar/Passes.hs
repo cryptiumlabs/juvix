@@ -47,11 +47,11 @@ condTransform xs = Sexp.foldPred xs (== Structure.nameCond) condToIf
   where
     condToIf atom cdr
       | Just cond <- Structure.toCond (Sexp.Atom atom Sexp.:> cdr),
-        Just last <- lastMay (cond ^. Structure.entailments) =
+        Just last <- lastMay (cond ^. Struct.entailments) =
         let acc =
               -- need to handle the last case to not have an else
               generation last Sexp.Nil |> Sexp.butLast
-         in foldr generation acc (initSafe (cond ^. Structure.entailments))
+         in foldr generation acc (initSafe (cond ^. Struct.entailments))
               |> Sexp.addMetaToCar atom
       | otherwise = error "malformed cond"
     --
@@ -115,7 +115,7 @@ ifTransform xs = Sexp.foldPred xs (== Structure.nameIf) ifToCase
 --        rest)
 -- - Note the f's are exactly the same name
 multipleTransLet :: Sexp.T -> Sexp.T
-multipleTransLet xs = Sexp.foldPred xs (== "let") letToLetMatch
+multipleTransLet xs = Sexp.foldPred xs (== Structure.nameLet) letToLetMatch
   where
     letToLetMatch atom (Sexp.List [a@(Sexp.Atom (Sexp.A name _)), bindings, body, rest]) =
       let (grabbed, notMatched) = grabSimilar name rest
@@ -179,10 +179,10 @@ multipleTransDefun = search
     search [] = []
     combineMultiple name =
       Structure.DefunMatch (Sexp.atom name)
-        . fmap (\form -> Structure.ArgBody (form ^. Structure.args) (form ^. Structure.body))
+        . fmap (\form -> Struct.ArgBody (form ^. Struct.args) (form ^. Struct.body))
     sameName name maybeDefunForm
       | Just form <- Structure.toDefun maybeDefunForm,
-        Sexp.isAtomNamed (form ^. Structure.name) name =
+        Sexp.isAtomNamed (form ^. Struct.name) name =
         Just form
       | otherwise = Nothing
     grabSimilar _nam [] = ([], [])
@@ -225,14 +225,14 @@ combineSig (a : match : xs)
     Just atom <- Sexp.atomFromT (m ^. Structure.name),
     sig ^. Structure.name == m ^. Structure.name =
     --
-    Structure.DefunSigMatch (m ^. Structure.name) (sig ^. Structure.sig) (m ^. Structure.args)
+    Structure.DefunSigMatch (m ^. Struct.name) (sig ^. Struct.sig) (m ^. Struct.args)
       |> Structure.fromDefunSigMatch
       |> Sexp.addMetaToCar atom
       |> (: combineSig xs)
 combineSig (defun : xs)
   | Just def <- Structure.toDefunMatch defun,
     Just atom <- Sexp.atomFromT (def ^. Structure.name) =
-    Structure.DefunSigMatch (def ^. Structure.name) Sexp.Nil (def ^. Structure.args)
+    Structure.DefunSigMatch (def ^. Struct.name) Sexp.Nil (def ^. Struct.args)
       |> Structure.fromDefunSigMatch
       |> Sexp.addMetaToCar atom
       |> (: combineSig xs)

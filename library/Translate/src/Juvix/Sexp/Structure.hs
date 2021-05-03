@@ -91,18 +91,27 @@ data DefunSigMatch = DefunSigMatch
 
 -- TODO ∷ have a property sexp form!?
 
--- | @signature@ is the signature of the term
+-- | @Signature@ is the signature of the term
 data Signature = Signature
   { signatureName :: Sexp.T,
     signatureSig :: Sexp.T
   }
   deriving (Show)
 
+-- | @Let@ is the let form of the language
+-- it has a name, arguments, body, and the body
 data Let = Let
   { letName :: Sexp.T,
     letArgs :: Sexp.T,
     letBody :: Sexp.T,
     letRest :: Sexp.T
+  }
+  deriving (Show)
+
+data LetMatch = LetMatch
+  { letMatchName :: Sexp.T,
+    letMatchArgs :: [ArgBody],
+    letMatchBody :: Sexp.T
   }
   deriving (Show)
 
@@ -112,6 +121,7 @@ Lens.makeLensesWith Lens.camelCaseFields ''ArgBody
 Lens.makeLensesWith Lens.camelCaseFields ''Signature
 Lens.makeLensesWith Lens.camelCaseFields ''DefunSigMatch
 Lens.makeLensesWith Lens.camelCaseFields ''Let
+Lens.makeLensesWith Lens.camelCaseFields ''LetMatch
 Lens.makeLensesWith Lens.camelCaseFields ''Cond
 Lens.makeLensesWith Lens.camelCaseFields ''PredAns
 Lens.makeLensesWith Lens.camelCaseFields ''If
@@ -126,9 +136,19 @@ Lens.makeLensesWith Lens.camelCaseFields ''IfNoElse
 -- from<Form> :: <Form> -> Sexp.T
 --------------------------------------------------------------------------------
 
+------------------------------------------
+-- Not Generated
+------------------------------------------
+
 ifFull :: Sexp.T -> Maybe IfFull
 ifFull sexp =
   fmap Else (toIf sexp) <|> fmap NoElse (toIfNoElse sexp)
+
+fromArgBodys :: [ArgBody] -> Sexp.T
+fromArgBodys = toStarList fromArgBody
+
+toArgBodys :: Sexp.T -> Maybe [ArgBody]
+toArgBodys = fromStarList toArgBody
 
 ----------------------------------------
 -- ArgBody
@@ -277,6 +297,33 @@ toLet form
 fromLet :: Let -> Sexp.T
 fromLet (Let sexp1 sexp2 sexp3 sexp4) =
   Sexp.list [Sexp.atom nameLet, sexp1, sexp2, sexp3, sexp4]
+
+----------------------------------------
+-- LetMatch
+----------------------------------------
+
+nameLetMatch :: NameSymbol.T
+nameLetMatch = ":let-match"
+
+isLetMatch :: Sexp.T -> Bool
+isLetMatch (Sexp.Cons form _) = Sexp.isAtomNamed form nameLetMatch
+isLetMatch _ = False
+
+toLetMatch :: Sexp.T -> Maybe LetMatch
+toLetMatch form
+  | isLetMatch form =
+    case form of
+      _LetMatch Sexp.:> sexp1 Sexp.:> argBodys2 Sexp.:> sexp3 Sexp.:> Sexp.Nil
+        | Just argBodys2 <- toArgBodys argBodys2 ->
+          LetMatch sexp1 argBodys2 sexp3 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromLetMatch :: LetMatch -> Sexp.T
+fromLetMatch (LetMatch sexp1 argBodys2 sexp3) =
+  Sexp.list [Sexp.atom nameLetMatch, sexp1, fromArgBodys argBodys2, sexp3]
 
 ----------------------------------------
 -- PredAns
