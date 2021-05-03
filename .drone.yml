@@ -251,10 +251,6 @@ trigger:
     - develop
 ---
 kind: signature
-<<<<<<< HEAD
-hmac: 92f4e9966065b2b3883b24d2d6d7ab58183c91f7d058f9704bbe45a86066bbf1
-=======
-hmac: cb2c4627c097b7da64ebca5e0a80fa8fb6b9edada119e5f59b56577dcd1e2cea
->>>>>>> 9ff6e7bfd11021b2e6a588dafbd98b5936cbf1ab
+hmac: ba7951a0194aa3a8ee397503724ce777fa47b36924f6fc2b09abaac382ffd278
 
 ...
