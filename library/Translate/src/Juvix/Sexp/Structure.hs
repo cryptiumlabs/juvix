@@ -51,7 +51,36 @@ data DefunMatch = DefunMatch
   }
   deriving (Show)
 
+-- | @ArgBody@ abstracts over the details of arguments and body
 data ArgBody = ArgBody {argsBodyArgs :: Sexp.T, argsBodyBody :: Sexp.T} deriving (Show)
+
+-- | @PredAns@ is an abstraction over questions and answers
+data PredAns = PredAns {predAnsPredicate :: Sexp.T, predAnsAnswer :: Sexp.T}
+  deriving (Show)
+
+-- | @Cond@ here Cond form takes a list of predicate answers
+newtype Cond = Cond {condEntailments :: [PredAns]} deriving (Show)
+
+-- | @If@ has an pred, then, and else.
+data If = If
+  { ifPredicate :: Sexp.T,
+    ifConclusion :: Sexp.T,
+    ifAlternative :: Sexp.T
+  }
+  deriving (Show)
+
+-- | @IfNoElse@ has a pred and a then.
+data IfNoElse = IfNoElse
+  { ifNoElsePredicate :: Sexp.T,
+    ifNoElseConclusion :: Sexp.T
+  }
+  deriving (Show)
+
+-- | @ifFull@ is the full range of If with maybe having an else
+data IfFull
+  = Else If
+  | NoElse IfNoElse
+  deriving (Show)
 
 data DefunSigMatch = DefunSigMatch
   { defunSigMatchName :: Sexp.T,
@@ -83,6 +112,10 @@ Lens.makeLensesWith Lens.camelCaseFields ''ArgBody
 Lens.makeLensesWith Lens.camelCaseFields ''Signature
 Lens.makeLensesWith Lens.camelCaseFields ''DefunSigMatch
 Lens.makeLensesWith Lens.camelCaseFields ''Let
+Lens.makeLensesWith Lens.camelCaseFields ''Cond
+Lens.makeLensesWith Lens.camelCaseFields ''PredAns
+Lens.makeLensesWith Lens.camelCaseFields ''If
+Lens.makeLensesWith Lens.camelCaseFields ''IfNoElse
 
 --------------------------------------------------------------------------------
 -- Converter functions
@@ -92,6 +125,11 @@ Lens.makeLensesWith Lens.camelCaseFields ''Let
 -- to<Form>   :: Sexp.T -> Maybe <Form>
 -- from<Form> :: <Form> -> Sexp.T
 --------------------------------------------------------------------------------
+
+ifFull :: Sexp.T -> Maybe IfFull
+ifFull sexp =
+  fmap Else (toIf sexp) <|> fmap NoElse (toIfNoElse sexp)
+
 ----------------------------------------
 -- ArgBody
 ----------------------------------------
@@ -239,6 +277,101 @@ toLet form
 fromLet :: Let -> Sexp.T
 fromLet (Let sexp1 sexp2 sexp3 sexp4) =
   Sexp.list [Sexp.atom nameLet, sexp1, sexp2, sexp3, sexp4]
+
+----------------------------------------
+-- PredAns
+----------------------------------------
+
+toPredAns :: Sexp.T -> Maybe PredAns
+toPredAns form =
+  case form of
+    sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+      PredAns sexp1 sexp2 |> Just
+    _ ->
+      Nothing
+
+fromPredAns :: PredAns -> Sexp.T
+fromPredAns (PredAns sexp1 sexp2) =
+  Sexp.list [sexp1, sexp2]
+
+----------------------------------------
+-- Cond
+----------------------------------------
+
+nameCond :: NameSymbol.T
+nameCond = ":cond"
+
+isCond :: Sexp.T -> Bool
+isCond (Sexp.Cons form _) = Sexp.isAtomNamed form nameCond
+isCond _ = False
+
+toCond :: Sexp.T -> Maybe Cond
+toCond form
+  | isCond form =
+    case form of
+      _Cond Sexp.:> predAns1
+        | Just predAns1 <- toPredAns `fromStarList` predAns1 ->
+          Cond predAns1 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromCond :: Cond -> Sexp.T
+fromCond (Cond predAns1) =
+  Sexp.listStar [Sexp.atom nameCond, fromPredAns `toStarList` predAns1]
+
+----------------------------------------
+-- If
+----------------------------------------
+
+nameIf :: NameSymbol.T
+nameIf = "if"
+
+isIf :: Sexp.T -> Bool
+isIf (Sexp.Cons form _) = Sexp.isAtomNamed form nameIf
+isIf _ = False
+
+toIf :: Sexp.T -> Maybe If
+toIf form
+  | isIf form =
+    case form of
+      _If Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> Sexp.Nil ->
+        If sexp1 sexp2 sexp3 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromIf :: If -> Sexp.T
+fromIf (If sexp1 sexp2 sexp3) =
+  Sexp.list [Sexp.atom nameIf, sexp1, sexp2, sexp3]
+
+----------------------------------------
+-- IfNoElse
+----------------------------------------
+
+nameIfNoElse :: NameSymbol.T
+nameIfNoElse = "if"
+
+isIfNoElse :: Sexp.T -> Bool
+isIfNoElse (Sexp.Cons form _) = Sexp.isAtomNamed form nameIfNoElse
+isIfNoElse _ = False
+
+toIfNoElse :: Sexp.T -> Maybe IfNoElse
+toIfNoElse form
+  | isIfNoElse form =
+    case form of
+      _IfNoElse Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+        IfNoElse sexp1 sexp2 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromIfNoElse :: IfNoElse -> Sexp.T
+fromIfNoElse (IfNoElse sexp1 sexp2) =
+  Sexp.list [Sexp.atom nameIfNoElse, sexp1, sexp2]
 
 ------------------------------------------------------------
 -- Helpers

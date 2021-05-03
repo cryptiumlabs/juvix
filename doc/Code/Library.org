@@ -1830,6 +1830,7 @@ done with no extra information needed. Thus we export the following passes
   + [[Library]]
   + [[Library/Sexp]]
   + [[Structure]]
+  + [[Structure]]
 **** Sexp
 ***** Structure
 Hardeing S-expressions into a more readable form. Here we use a

@@ -24,6 +24,7 @@ import Control.Lens hiding ((|>))
 import qualified Data.Set as Set
 import Juvix.Library
 import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp.Structure as Struct
 import qualified Juvix.Sexp.Structure as Structure
 import Prelude (error)
 
@@ -42,19 +43,20 @@ import Prelude (error)
 -- - BNF output form:
 --   + (if pred-1 result-1 (if pred-2 result-2 (… (if pred-n result-n))))
 condTransform :: Sexp.T -> Sexp.T
-condTransform xs = Sexp.foldPred xs (== ":cond") condToIf
+condTransform xs = Sexp.foldPred xs (== Structure.nameCond) condToIf
   where
-    condToIf atom cdr =
-      let acc =
-            generation (Sexp.last cdr) Sexp.Nil
-              |> Sexp.butLast
-       in Sexp.foldr generation acc (Sexp.butLast cdr)
-            |> Sexp.addMetaToCar atom
+    condToIf atom cdr
+      | Just cond <- Structure.toCond (Sexp.Atom atom Sexp.:> cdr),
+        Just last <- lastMay (cond ^. Structure.entailments) =
+        let acc =
+              generation last Sexp.Nil |> Sexp.butLast
+         in foldr generation acc (tailSafe (cond ^. Structure.entailments))
+              |> Sexp.addMetaToCar atom
+      | otherwise = error "malformed cond"
     --
-    generation (Sexp.Cons condition body) acc =
-      Sexp.list [Sexp.atom "if", condition, Sexp.car body, acc]
-    generation _ _ =
-      error "malformed cond"
+    generation predAns acc =
+      Structure.If (predAns ^. Struct.predicate) (predAns ^. Struct.answer) acc
+        |> Structure.fromIf
 
 -- | @ifTransform@ - transforms a generated if form into a case
 -- - BNF input form:
@@ -68,14 +70,21 @@ ifTransform :: Sexp.T -> Sexp.T
 ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
   where
     ifToCase atom cdr =
-      case cdr of
-        Sexp.List [pred, then', else'] ->
-          Sexp.list (caseListElse pred then' else')
-        Sexp.List [pred, then'] ->
-          Sexp.list (caseList pred then')
-        _ ->
-          error "malformed if"
-            |> Sexp.addMetaToCar atom
+      ( case Structure.ifFull (Sexp.Atom atom Sexp.:> cdr) of
+          Just (Structure.Else ifThenElse) ->
+            caseListElse
+              (ifThenElse ^. Struct.predicate)
+              (ifThenElse ^. Struct.conclusion)
+              (ifThenElse ^. Struct.alternative)
+              |> Sexp.list
+          Just (Structure.NoElse ifThen) ->
+            caseList (ifThen ^. Struct.predicate) (ifThen ^. Struct.conclusion)
+              |> Sexp.list
+          Nothing ->
+            error "malformed if"
+      )
+        |> Sexp.addMetaToCar atom
+    -- Bad these functions should be refactored into using the case transform
     caseList pred then' =
       [Sexp.atom "case", pred, Sexp.list [Sexp.list [Sexp.atom "True"], then']]
     caseListElse pred then' else' =

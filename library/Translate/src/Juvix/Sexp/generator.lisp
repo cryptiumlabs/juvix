@@ -273,3 +273,13 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 (generate-haskell "Signature" '("sexp" "sexp") ":defsig" :list-star t)
 
 (generate-haskell "Let" (repeat 4 "sexp") "let")
+
+;; here we assume predAns is not a list of sexps for the answer, is
+;; this actually acurate. Future refactor plan
+(generate-haskell "PredAns" (repeat 2 "sexp") nil)
+
+(generate-haskell "Cond" '("predAns") ":cond" :list-star t)
+
+(generate-haskell "If" (repeat 3 "sexp") "if")
+
+(generate-haskell "IfNoElse" (repeat 2 "sexp") "if")
