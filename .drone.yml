@@ -5,6 +5,7 @@ name: juvix-ci-build-pr
 
 workspace:
   path: /drone/workspace
+  GIT_LFS_SKIP_SMUDGE: "1"
 
 environment:
   STACK_ROOT: /drone/workspace/.stack
@@ -251,6 +252,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 1b8885c82c358da84c1441c9748f316b9f68728ea0eef9a703c7311715cb43ea
+hmac: 8cd62d1e29c4abce865e0ebd30c32fca09b67246cec8f40eccd569cfd1e838b4
 
 ...
