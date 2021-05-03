@@ -1,17 +1,16 @@
 * Config
 - _Relies on_
   + [[Library]]
-* Interactive
-- _Relies on_
-  + [[HR]]
-  + [[Naturals]]
-  + [[Library]]
 * Main
 - _Relies on_
+  + [[Michelson]]
+  + [[Plonk]]
   + [[Library]]
   + [[Feedback]]
   + [[Pipeline]]
 * Options
 - _Relies on_
+  + [[Michelson]]
+  + [[Plonk]]
   + [[Library]]
   + [[Pipeline]]

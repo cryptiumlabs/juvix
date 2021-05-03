@@ -230,15 +230,27 @@ decideRecordOrDef xs _ _ pres ty =
       []
     )
 
+splitByConstructor :: Sexp.T -> [(Symbol, Sexp.T)]
+splitByConstructor dat
+  | Just s <- Sexp.toList dat =
+    case traverse
+      ( \c -> case eleToSymbol $ Sexp.car c of
+          Nothing -> Nothing
+          Just constructor -> Just (constructor, Sexp.cdr c)
+      )
+      s of
+      Just xs -> xs
+      Nothing -> []
+  | otherwise = []
+
 collectConstructors :: Sexp.T -> [Symbol]
 collectConstructors dat
   | Just s <- Sexp.toList dat =
-    let foo = traverse (eleToSymbol . Sexp.car) s
-     in case foo of
-          Nothing -> []
-          Just xs ->
-            -- filter out the record constructors, which really aren't constructors
-            filter (\x -> x /= ":record-d" && x /= ":") xs
+    case traverse (eleToSymbol . Sexp.car) s of
+      Nothing -> []
+      Just xs -> xs
+  -- filter out the record constructors, which really aren't constructors
+  -- filter (\x -> x /= ":record-d" && x /= ":") xs
   | otherwise = []
 
 --------------------------------------------------------------------------------

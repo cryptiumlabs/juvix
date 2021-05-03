@@ -1,0 +1,42 @@
+mod Prelude.Circuit where
+
+open Prelude
+
+sig field : ty
+let field = %Circuit.field
+
+sig int : ty
+let int = %Circuit.int
+
+sig bool : ty
+let bool = %Circuit.bool
+
+-- arithmetic functions
+sig add : (x : ty) -> x -> x -> x
+let add _ = %Circuit.add
+
+sig mul : (x : ty) -> x -> x -> x
+let mul _ = %Circuit.mul
+
+sig sub : (x : ty) -> x -> x -> x
+let sub _ = %Circuit.sub
+
+sig div : (x : ty) -> x -> x -> x
+let div _ = %Circuit.div
+
+sig exp : (x : ty) -> x -> int -> x
+let exp _ = %Circuit.exp
+
+-- boolean functions
+sig and% : (x : ty) -> x -> x -> x
+let and% _ = %Circuit.and
+
+sig or : (x : ty) -> x -> x -> x
+let or _ = %Circuit.or
+
+sig xor : (x : ty) -> x -> x -> x
+let xor _ = %Circuit.xor
+
+-- comparison functions
+sig eq : (x : ty) -> x -> x -> bool
+let eq _ = %Circuit.eq

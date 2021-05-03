@@ -35,7 +35,7 @@ dependencies:
   - frontend
   - core
   - translate
-  - michelson
+  - galois-field
   # - llvm
   # - interaction-net
   # - arithmetic-circuit
@@ -57,6 +57,9 @@ dependencies:
   - fgl
   - fgl-visualize
   - bytestring
+  - megaparsec
+  - aeson
+  - wl-pprint-text
 
   ###########################
   # Dependency for Morley
@@ -128,5 +131,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - Pipeline
+    - michelson
+    - plonk
     - tasty
     - tasty-hunit

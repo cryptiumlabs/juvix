@@ -2,8 +2,10 @@ cradle:
   stack:
     - path: ./test
       component: "juvix:test:juvix-test"
-    - path: ./src
+    - path: ./lib
       component: "juvix:lib"
+    - path: ./src
+      component: "juvix:src"
     - path: ./app
       component: "juvix:exe:juvix"
     - path: ./bench

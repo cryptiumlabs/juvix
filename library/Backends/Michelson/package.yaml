@@ -19,8 +19,12 @@ dependencies:
 - base >= 4.7 && < 5
 - core
 - standard-library
+- translate
+- Pipeline
+- unordered-containers
 - containers
 - text
+- wl-pprint-text
 ###########################
 # Dependency for Param
 ###########################
