@@ -21,6 +21,7 @@ import qualified Juvix.Core.IR.Types.Globals as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype)
 
+-- | type check datatype and function declarations
 typeCheckDeclaration ::
   ( Param.CanApply primTy,
     Param.CanApply primVal,
@@ -40,10 +41,10 @@ typeCheckDeclaration ::
     HasThrow "typecheckError" (TypecheckError' extV IR.NoExt primTy primVal) (IR.TypeCheck ext primTy primVal m),
     HasThrow "typecheckError" (TypecheckError' IR.NoExt extT primTy primVal) (IR.TypeCheck ext primTy primVal m)
   ) =>
-  -- Telescope containing a list of 
+  -- | Telescope containing a list of 
   -- (name, usage, ty (of type Value') and the extension)
   IR.Telescope extV extT primTy primVal ->
-  -- Raw telescope containing ty (of type Term')
+  -- | Raw telescope containing ty (of type Term')
   IR.RawTelescope extT primTy primVal ->
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
@@ -55,6 +56,7 @@ typeCheckDeclaration ::
   IR.TypeCheck ext primTy primVal m [IR.RawGlobal' extT primTy primVal]
 typeCheckDeclaration tel rtel param [] [] =
   return []
+-- type checking datatype declarations
 typeCheckDeclaration tel rtel param dts fns =
   case dts of
     (hdd@(IR.RawDatatype name lpos args levels cons) : tld) ->
@@ -70,8 +72,8 @@ typeCheckDeclaration tel rtel param dts fns =
         return $ IR.RawGDatatype hdd : rest <> checkedCons
     _ -> do
       return []
--- TODO add to sig once typechecked? Keeping track of all globals may be enough?
+  -- TODO add to sig once typechecked? Keeping track of all globals may be
+  -- enough?
+-- type checking function declarations
 typeCheckDeclaration tel rtel param _ (IR.RawFunction name usage ty cls : tlf) =
-  undefined
-
--- TODO run typeCheckFuns
+  undefined -- TODO run typeCheckFuns

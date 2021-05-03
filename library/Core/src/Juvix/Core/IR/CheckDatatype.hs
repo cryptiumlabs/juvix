@@ -15,9 +15,9 @@ import Juvix.Core.IR.Types.Globals as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 
+-- | check all constructors of a datatype
 typeCheckAllCons ::
   ( HasThrowTC' NoExt extT primTy primVal m,
-    -- HasState "typeSigs" _ m,
     Eq primTy,
     Eq primVal,
     CanTC' ext primTy primVal m,
@@ -28,13 +28,14 @@ typeCheckAllCons ::
   ) =>
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
+  -- | 
   Telescope extV extT primTy primVal ->
   -- | Positivity of its parameters
   [IR.Pos] ->
   RawTelescope extT primTy primVal ->
   -- | a hashmap of global names and their info
   GlobalsT' NoExt ext primTy primVal ->
-  -- | The constructor to be checked
+  -- | The constructors to be checked
   [RawDataCon' extT primTy primVal] ->
   TypeCheck ext primTy primVal m [IR.RawGlobal' extT primTy primVal]
 typeCheckAllCons param tel pos rtel globals =
@@ -42,7 +43,6 @@ typeCheckAllCons param tel pos rtel globals =
 
 typeCheckConstructor :: forall ext extT extV primTy primVal m.
   ( HasThrowTC' NoExt extT primTy primVal m,
-    -- HasState "typeSigs" _ m,
     Eq primTy,
     Eq primVal,
     CanTC' ext primTy primVal m,
@@ -63,7 +63,6 @@ typeCheckConstructor :: forall ext extT extV primTy primVal m.
   RawDataCon' extT primTy primVal ->
   TypeCheck ext primTy primVal m (IR.RawGlobal' extT primTy primVal)
 typeCheckConstructor param tel lpos rtel globals con = do
-  -- sig <- get @"typeSigs" -- get signatures
   let cname = IR.rawConName con
       conTy = IR.rawConType con
       (name, t) = teleToType rtel conTy
@@ -114,7 +113,8 @@ typeToTele (n, t) = ttt (n, t) []
         )
     ttt x tel = (tel, snd x)
 
--- | checkDataType checks the datatype by checking all arguments
+-- | checkDataType checks the datatype by checking all arguments.
+-- The data constructors are checked by another function.
 checkDataType ::
   ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
     Param.CanApply primTy,
@@ -143,7 +143,6 @@ checkDataType tel dtName param =
   mapM_ (checkDataTypeArg tel dtName param . IR.rawArgType)
 
 -- | checkDataTypeArg checks an argument of the datatype
--- (its constructors are checked by checkConType)
 checkDataTypeArg ::
   ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
     Param.CanApply primTy,
@@ -164,6 +163,7 @@ checkDataTypeArg ::
   Telescope extV extT primTy primVal ->
   -- | name of the datatype
   GlobalName ->
+  -- | targeted backend/parameterisation
   Param.Parameterisation primTy primVal ->
   -- | the arg to be checked.
   IR.Term' extT primTy primVal ->
@@ -172,9 +172,10 @@ checkDataTypeArg tel dtName param (Pi _ t1 t2 _) = do
   _ <- typeTerm param t1 (Annotation mempty (VStar 0))
   checkDataTypeArg tel dtName param t2
 checkDataTypeArg _ _ _ (Star' _ _) = return ()
+-- the arg can only be of star type of function type
 checkDataTypeArg _ _ _ arg = throwTC $ DatatypeError arg
 
--- | checkConType check constructor type
+-- | type check a constructor
 checkConType ::
   ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
     Param.CanApply primTy,
@@ -197,16 +198,19 @@ checkConType ::
   GlobalName ->
   Param.Parameterisation primTy primVal ->
   -- | the expression that is left to be checked.
-  IR.Value' extV primTy (TypedPrim primTy primVal) ->
+  -- TODO may need to be Value' extV primTy (TypedPrim primTy primVal)?
+  IR.Value' extV primTy primVal ->
   m ()
 checkConType tel datatypeName param e =
   case e of
+    -- the constructor could be a function type
     VPi' _ _ t2 _ ->
       checkConType
         tel
         datatypeName
         param
         t2
+    -- or application?
     IR.VNeutral' app _ ->
       let (dtName, paraTel) = unapps app []
        in case dtName of
@@ -223,9 +227,12 @@ checkConType tel datatypeName param e =
       where
         unapps (IR.NApp' f x _) acc = unapps f (x : acc)
         unapps f acc = (f, acc)
+    -- or a star type
+    IR.VStar' _ _ -> return ()
+    -- a constructor cannot be any other type
     _ -> throwTC $ ConTypeError e
 
--- check that the data type and the parameter arguments
+-- | check that the data type and the parameter arguments
 -- are written down like declared in telescope
 checkDeclared ::
   (HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m) =>
