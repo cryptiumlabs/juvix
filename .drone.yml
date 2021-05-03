@@ -35,9 +35,6 @@ steps:
         from_secret: aws_access_key_id
       AWS_SECRET_ACCESS_KEY:
         from_secret: aws_secret_access_key
-    volumes:
-      - name: cache
-        path: /tmp/cache
     depends_on:
       - script-integrity-check
 
@@ -52,9 +49,6 @@ steps:
   - name: rebuild-cache
     image: meltwater/drone-cache
     pull: if-not-exists
-    volumes:
-      - name: cache
-        path: /tmp/cache
     settings:
       backend: "s3"
       bucket: juvix-drone-cache
@@ -127,11 +121,6 @@ steps:
     depends_on:
       - org-generation-and-code-formatting
 
-volumes:
-  - name: cache
-    host: 
-      path: /tmp/cache
-
 trigger:
   event:
     - pull_request
@@ -173,9 +162,6 @@ steps:
         from_secret: aws_access_key_id
       AWS_SECRET_ACCESS_KEY:
         from_secret: aws_secret_access_key
-    volumes:
-      - name: cache
-        path: /tmp/cache
     depends_on:
       - script-integrity-check
 
@@ -190,9 +176,6 @@ steps:
   - name: rebuild-cache
     image: meltwater/drone-cache
     pull: if-not-exists
-    volumes:
-      - name: cache
-        path: /tmp/cache
     settings:
       backend: "s3"
       bucket: juvix-drone-cache
@@ -261,11 +244,6 @@ steps:
     depends_on:
       - test-suite
 
-volumes:
-  - name: cache
-    host: 
-      path: /tmp/cache
-
 trigger:
   event:
     - push
@@ -273,6 +251,10 @@ trigger:
     - develop
 ---
 kind: signature
+<<<<<<< HEAD
 hmac: 92f4e9966065b2b3883b24d2d6d7ab58183c91f7d058f9704bbe45a86066bbf1
+=======
+hmac: cb2c4627c097b7da64ebca5e0a80fa8fb6b9edada119e5f59b56577dcd1e2cea
+>>>>>>> 9ff6e7bfd11021b2e6a588dafbd98b5936cbf1ab
 
 ...
