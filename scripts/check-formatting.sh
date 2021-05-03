@@ -9,5 +9,6 @@ if [ -z "$(git status src/ library/ test/ --untracked-files=no --porcelain)" ]; 
 else
   ormolu --version
   git status src/ library/ test/ --untracked-files=no --porcelain
+  git diff
   exit 1
 fi

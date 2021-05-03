@@ -5,6 +5,7 @@ name: juvix-ci-build-pr
 
 workspace:
   path: /drone/workspace
+  GIT_LFS_SKIP_SMUDGE: "1"
 
 environment:
   STACK_ROOT: /drone/workspace/.stack
@@ -14,7 +15,7 @@ steps:
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "464e715db89429f4cf5766f6c288f0b0b3ea65fcdc9b52cabeae4107e7dcb9d8  scripts/pre-run.sh" | sha256sum -c -
+      - echo "cc407849fd688c544ccc98550b5af412b870db95175163130d5bc10f91a3511d  scripts/pre-run.sh" | sha256sum -c -
       - sh ./scripts/pre-run.sh
 
   - name: restore-cache
@@ -134,13 +135,14 @@ workspace:
 
 environment:
   STACK_ROOT: /drone/workspace/.stack
+  GIT_LFS_SKIP_SMUDGE: "1"
 
 steps:
   - name: script-integrity-check
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "464e715db89429f4cf5766f6c288f0b0b3ea65fcdc9b52cabeae4107e7dcb9d8  scripts/pre-run.sh" | sha256sum -c -
+      - echo "cc407849fd688c544ccc98550b5af412b870db95175163130d5bc10f91a3511d  scripts/pre-run.sh" | sha256sum -c -
       - sh ./scripts/pre-run.sh 
 
   - name: restore-cache
@@ -250,6 +252,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: cb2c4627c097b7da64ebca5e0a80fa8fb6b9edada119e5f59b56577dcd1e2cea
+hmac: 8cd62d1e29c4abce865e0ebd30c32fca09b67246cec8f40eccd569cfd1e838b4
 
 ...
