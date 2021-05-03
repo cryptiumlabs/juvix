@@ -3,7 +3,7 @@ git config user.name "Drone CI"
 
 if [ -z "$(git status --porcelain)" ]; then 
     echo "No changes to commit."
-    exit 78
+    exit 0
 fi
 
 REMOTE=$(git remote get-url origin | cut -c 9-)
