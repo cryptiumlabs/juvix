@@ -49,8 +49,9 @@ condTransform xs = Sexp.foldPred xs (== Structure.nameCond) condToIf
       | Just cond <- Structure.toCond (Sexp.Atom atom Sexp.:> cdr),
         Just last <- lastMay (cond ^. Structure.entailments) =
         let acc =
+              -- need to handle the last case to not have an else
               generation last Sexp.Nil |> Sexp.butLast
-         in foldr generation acc (tailSafe (cond ^. Structure.entailments))
+         in foldr generation acc (initSafe (cond ^. Structure.entailments))
               |> Sexp.addMetaToCar atom
       | otherwise = error "malformed cond"
     --
@@ -63,11 +64,11 @@ condTransform xs = Sexp.foldPred xs (== Structure.nameCond) condToIf
 --   1. (if pred then else)
 --   2. (if pred then)
 -- - BNF output form:
---   1. (case pred (true then) (false else))
---   2. (case pred (true then))
+--   1. (case pred ((True) then) ((False) else))
+--   2. (case pred ((True) then))
 -- - Note =case=, =then=, and =else= are literals
 ifTransform :: Sexp.T -> Sexp.T
-ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
+ifTransform xs = Sexp.foldPred xs (== Structure.nameIf) ifToCase
   where
     ifToCase atom cdr =
       ( case Structure.ifFull (Sexp.Atom atom Sexp.:> cdr) of
@@ -76,13 +77,12 @@ ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
               (ifThenElse ^. Struct.predicate)
               (ifThenElse ^. Struct.conclusion)
               (ifThenElse ^. Struct.alternative)
-              |> Sexp.list
           Just (Structure.NoElse ifThen) ->
             caseList (ifThen ^. Struct.predicate) (ifThen ^. Struct.conclusion)
-              |> Sexp.list
           Nothing ->
             error "malformed if"
       )
+        |> Sexp.list
         |> Sexp.addMetaToCar atom
     -- Bad these functions should be refactored into using the case transform
     caseList pred then' =
