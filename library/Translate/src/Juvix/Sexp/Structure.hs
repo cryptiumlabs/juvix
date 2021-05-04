@@ -111,6 +111,8 @@ data Let = Let
 
 data LetMatch = LetMatch
   { letMatchName :: Sexp.T,
+    -- args are ungrouped, so we have to handle that in the ouptut
+    -- structure
     letMatchArgs :: [ArgBody],
     letMatchBody :: Sexp.T
   }
@@ -160,11 +162,13 @@ ifFull :: Sexp.T -> Maybe IfFull
 ifFull sexp =
   fmap Else (toIf sexp) <|> fmap NoElse (toIfNoElse sexp)
 
+-- these are ungrouned fromArgBodys, where we groupBy2 both ways
 fromArgBodys :: [ArgBody] -> Sexp.T
-fromArgBodys = toStarList fromArgBody
+fromArgBodys = Sexp.unGroupBy2 . toStarList fromArgBody
 
+-- these are ungrouned fromArgBodys, where we groupBy2 both ways
 toArgBodys :: Sexp.T -> Maybe [ArgBody]
-toArgBodys = fromStarList toArgBody
+toArgBodys = fromStarList toArgBody . Sexp.groupBy2
 
 matchConstructor :: Sexp.T -> Sexp.T
 matchConstructor x = Sexp.list [x]

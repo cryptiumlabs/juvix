@@ -127,18 +127,39 @@ multipleTransLet xs = Sexp.foldPred xs (== Structure.nameLet) letToLetMatch
       let currentForm = Sexp.Atom atom Sexp.:> cdr
        in case Structure.toLet currentForm of
             Just let' ->
-              let (grabbed, notMatched) = grabSim (let' ^. Struct.name) currentForm
-               in Struct.LetMatch (let' ^. Struct.name) grabbed notMatched
+              let (letPatternMatches, notMatched) =
+                    grabSim (let' ^. Struct.name) currentForm
+               in Struct.LetMatch (let' ^. Struct.name) letPatternMatches notMatched
                     |> Struct.fromLetMatch
                     |> Sexp.addMetaToCar atom
             Nothing -> error "malformed let"
     grabSim name xs =
-      case Structure.toLet xs of
-        Just let'
-          | let' ^. Struct.name == name ->
-            grabSim name (let' ^. Struct.rest)
-              |> first (Structure.ArgBody (let' ^. Struct.args) (let' ^. Struct.body) :)
-        _ -> ([], xs)
+      case grabSimilarBinding name Structure.toLet xs of
+        Just (structure, let') ->
+          grabSim name (let' ^. Struct.rest)
+            |> first (structure :)
+        Nothing ->
+          ([], xs)
+
+-- | @grabSimilarBindings@ grabs forms with the same name with a
+-- transformation, and gives back an ArgBody structure and the matched
+-- structure
+grabSimilarBinding ::
+  ( Eq a,
+    Structure.HasName s a,
+    Structure.HasArgs s Sexp.T,
+    Structure.HasBody s Sexp.T
+  ) =>
+  a ->
+  (t -> Maybe s) ->
+  t ->
+  Maybe (Structure.ArgBody, s)
+grabSimilarBinding name transform form = transform form >>= f
+  where
+    f form
+      | form ^. Structure.name == name =
+        Just (Structure.ArgBody (form ^. Struct.args) (form ^. Struct.body), form)
+      | otherwise = Nothing
 
 -- This one and sig combining are odd mans out, as they happen on a
 -- list of transforms
@@ -162,33 +183,28 @@ multipleTransLet xs = Sexp.foldPred xs (== Structure.nameLet) letToLetMatch
 multipleTransDefun :: [Sexp.T] -> [Sexp.T]
 multipleTransDefun = search
   where
-    search (defun : xs)
+    search ys@(defun : _)
       | Just form <- Structure.toDefun defun,
-        Just name <- Sexp.nameFromT (form ^. Structure.name),
         -- we do this to get the meta information
         Just atom <- Sexp.atomFromT (form ^. Structure.name) =
-        let (sameDefun, toSearch) = grabSimilar name xs
-         in combineMultiple name (form : sameDefun)
+        let (matchBody, toSearch) = grabSim (form ^. Structure.name) ys
+         in Structure.DefunMatch (form ^. Structure.name) matchBody
               |> Structure.fromDefunMatch
               |> Sexp.addMetaToCar atom
               |> (: search toSearch)
     search (x : xs) = x : search xs
     search [] = []
-    combineMultiple name =
-      Structure.DefunMatch (Sexp.atom name)
-        . fmap (\form -> Struct.ArgBody (form ^. Struct.args) (form ^. Struct.body))
-    sameName name maybeDefunForm
-      | Just form <- Structure.toDefun maybeDefunForm,
-        Sexp.isAtomNamed (form ^. Struct.name) name =
-        Just form
-      | otherwise = Nothing
-    grabSimilar _nam [] = ([], [])
-    grabSimilar name (defn : xs)
-      | Just form <- sameName name defn =
-        let (same, rest) = grabSimilar name xs
-         in (form : same, rest)
-      | otherwise =
-        ([], defn : xs)
+    grabSim name (defn : xs) =
+      case grabSimilarBinding name Structure.toDefun defn of
+        Just (structure, _def') ->
+          grabSim name xs |> first (structure :)
+        Nothing ->
+          ([], xs)
+    grabSim _name [] =
+      ([], [])
+
+-- grabSim name xs =
+--   case Structure.toDefun ${1:T}
 
 -- This pass will also be removed, but is here for comparability
 -- reasons we just drop sigs with no defuns for now ☹. Fix this up when
