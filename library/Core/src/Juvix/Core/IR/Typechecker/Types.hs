@@ -248,7 +248,7 @@ data TypecheckError' extV extT primTy primVal
   | ConAppTypeError
       {ty :: IR.Value' extV primTy primVal}
   | ConTypeError
-      {invalidConTy :: IR.Value' extV primTy primVal}
+      {invalidConTy :: IR.Value' extV primTy (P.TypedPrim primTy primVal)}
   | ParamVarNError
       { tel :: IR.RawTelescope extT primTy primVal,
         expectedN :: IR.Name,
