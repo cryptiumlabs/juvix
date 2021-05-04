@@ -32,7 +32,7 @@ typeCheckAllCons ::
   ) =>
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
-  -- | 
+  -- |
   Telescope NoExt extT primTy primVal ->
   -- | Positivity of its parameters
   [IR.Pos] ->
@@ -45,7 +45,8 @@ typeCheckAllCons ::
 typeCheckAllCons param tel pos rtel globals =
   mapM (typeCheckConstructor param tel pos rtel globals)
 
-typeCheckConstructor :: forall extT primTy primVal m.
+typeCheckConstructor ::
+  forall extT primTy primVal m.
   ( HasThrowTC' NoExt extT primTy primVal m,
     Eq primTy,
     Eq primVal,
