@@ -24,7 +24,7 @@ steps:
     settings:
       backend: "s3"
       restore: true
-      bucket: juvix-drone-cache
+      bucket: juvix-drone-cache-v2
       region: eu-west-1
       cache_key: "{{ checksum \"stack.yaml\" }}"
       archive_format: "gzip"
@@ -52,7 +52,7 @@ steps:
     pull: if-not-exists
     settings:
       backend: "s3"
-      bucket: juvix-drone-cache
+      bucket: juvix-drone-cache-v2
       region: eu-west-1
       rebuild: true
       archive_format: "gzip"
@@ -151,7 +151,7 @@ steps:
     settings:
       backend: "s3"
       restore: true
-      bucket: juvix-drone-cache
+      bucket: juvix-drone-cache-v2
       region: eu-west-1
       cache_key: "{{ checksum \"stack.yaml\" }}"
       archive_format: "gzip"
@@ -179,7 +179,7 @@ steps:
     pull: if-not-exists
     settings:
       backend: "s3"
-      bucket: juvix-drone-cache
+      bucket: juvix-drone-cache-v2
       region: eu-west-1
       rebuild: true
       archive_format: "gzip"
@@ -252,6 +252,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 39fba7d3f114c9df2d055b7e98f4315601d6bcab8b7df1c6375a2da39d260228
+hmac: f3991a879d008440212a8c79a536947853242ca0892612559b9b7815f9a7178d
 
 ...
