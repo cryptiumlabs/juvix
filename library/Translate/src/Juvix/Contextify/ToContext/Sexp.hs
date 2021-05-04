@@ -141,7 +141,8 @@ type' t@(assocName Sexp.:> _ Sexp.:> dat) ctx
             |> Context.SumCon
             |> Context.add (NameSpace.Pub con)
         newCtx = foldr addSum ctx constructors
-     in pure $
+
+     in traceShow ("TYPE DECLARE", t) pure $
           Type.PS
             { ctxS = Context.add (NameSpace.Pub name) (Context.TypeDeclar t) newCtx,
               opensS = [],

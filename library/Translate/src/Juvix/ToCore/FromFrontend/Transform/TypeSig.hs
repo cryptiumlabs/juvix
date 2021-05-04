@@ -51,13 +51,18 @@ transformTypeSig ::
   NameSymbol.T ->
   Sexp.T ->
   m [CoreSigHR primTy primVal]
-transformTypeSig q name (nameAndData Sexp.:> args Sexp.:> typeForm)
+transformTypeSig q name (typeCon Sexp.:> args Sexp.:> typeForm)
   | Just typeArgs <- Sexp.toList args >>= traverse eleToSymbol = do
-    (baseTy, hd) <- transformIndices typeArgs nameAndData
+    (baseTy, hd) <- transformIndices typeArgs typeCon
     traceM "transformTypeSig"
-    pTraceShowM (nameAndData, baseTy, typeArgs)
+    pTraceShowM (typeCon, baseTy, typeArgs)
     let dataType = foldr makeTPi baseTy typeArgs
-    (dataCons, conSigs) <- unzip <$> transformConSigs q hd typeForm
+    traceM "Datatype"
+    pTraceShowM (dataType, typeForm)
+    (dataCons, conSigs) <- unzip <$> transformConSigs q hd typeCon typeForm
+    traceM "DataCons"
+    pTraceShowM (dataCons, conSigs)
+
     let dataSig = DataSig {dataType, dataCons}
     pure $ dataSig : conSigs
   where
@@ -88,11 +93,13 @@ transformConSigs ::
   NameSymbol.Mod ->
   -- | datatype head
   Maybe (HR.Term primTy primVal) ->
+  -- | type constructor
+  Sexp.T ->
   -- | rhs
   Sexp.T ->
   m [(NameSymbol.T, CoreSigHR primTy primVal)]
-transformConSigs pfx hd =
-  traverse (transformProduct pfx hd) <=< toProducts
+transformConSigs pfx hd typeCon =
+  traverse (transformProduct pfx hd typeCon) <=< toProducts
   where
     -- We have a single constructor, which is a record
     toProducts (r@(record Sexp.:> _) Sexp.:> Sexp.Nil)
@@ -102,7 +109,8 @@ transformConSigs pfx hd =
         --   ":record-d",
         --   ["Datatypes"],
         --   Nothing)
-
+        traceM "ToProducts Record"
+        pTraceShowM (r)
         throwFF $ RecordUnimplemented r
     -- we can't have another standalone product here, so just send to
     -- sum
@@ -126,11 +134,13 @@ transformProduct ::
   NameSymbol.Mod ->
   -- | datatype head
   Maybe (HR.Term primTy primVal) ->
+  -- | type constructor
+  Sexp.T ->
   (Symbol, Sexp.T) ->
   m (NameSymbol.T, CoreSigHR primTy primVal)
-transformProduct q hd (x, prod) =
+transformProduct q hd typeCon (x, prod) =
   (NameSymbol.qualify1 q x,) . makeSig
-    <$> transformConSig q (NameSymbol.fromSymbol x) hd prod
+    <$> transformConSig q (NameSymbol.fromSymbol x) hd typeCon prod
   where
     makeSig ty = pTraceShow ("makeSig", ty) ConSig {conType = Just ty}
 
@@ -140,17 +150,32 @@ transformConSig ::
   NameSymbol.T ->
   -- | datatype head
   Maybe (HR.Term primTy primVal) ->
+  -- | type constructor
+  Sexp.T ->
   Sexp.T ->
   m (HR.Term primTy primVal)
-transformConSig q name mHd r@((t Sexp.:> ts) Sexp.:> _)
+transformConSig q name mHd typeCon r@((t Sexp.:> ts) Sexp.:> _)
   | named ":record-d" = do
-    throwFF $ RecordUnimplemented r
+
+    traceM "Transform Con Sig Record"
+    pTraceShowM (r, name, mHd, typeCon)
+    pTraceShowM (Sexp.list [arrow, Sexp.list $ removeFieldNames ts, Sexp.car typeCon])
+    let convertedSexp = Sexp.list [arrow, Sexp.list $ removeFieldNames ts, Sexp.car typeCon]
+    transformConSig q name mHd typeCon convertedSexp
+    -- throwFF $ RecordUnimplemented r
+
   | named ":arrow" = transformTermHR q ts
   | isNothing mHd = do
     transformTermHR q ts
   where
+
+    arrow = Sexp.atom "TopLevel.Prelude.->"
+    removeFieldNames fields 
+      | Just l <- Sexp.toList (Sexp.groupBy2 fields)  = g <$> l
+
+    g (Sexp.List [s, e]) = e
     named = Sexp.isAtomNamed t
-transformConSig q name mHd r@(t Sexp.:> ts)
+transformConSig q name mHd _ r@(t Sexp.:> ts)
   -- TODO: Should check if there any data constructor with a signature (See GADT)
   | isNothing mHd = do
     throwFF $ InvalidConstructor name r
@@ -163,5 +188,5 @@ transformConSig q name mHd r@(t Sexp.:> ts)
      in foldrM makeArr hd $ zip names xs
   where
     named = Sexp.isAtomNamed t
-transformConSig _ _ _ r = do
+transformConSig _ _ _ _ r = do
   error "malformed transformConSig"
