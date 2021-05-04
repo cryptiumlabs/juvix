@@ -270,7 +270,7 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 
 (generate-haskell "DefunSigMatch" '("sexp" "sexp" "argBody") ":defsig-match" :list-star t)
 
-(generate-haskell "Signature" '("sexp" "sexp") ":defsig" :list-star t)
+(generate-haskell "Signature" '("sexp" "sexp") ":defsig")
 
 (generate-haskell "Let" (repeat 4 "sexp") "let")
 

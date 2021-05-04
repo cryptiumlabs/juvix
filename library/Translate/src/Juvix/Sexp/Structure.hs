@@ -284,7 +284,7 @@ toSignature :: Sexp.T -> Maybe Signature
 toSignature form
   | isSignature form =
     case form of
-      _Signature Sexp.:> sexp1 Sexp.:> sexp2 ->
+      _Signature Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
         Signature sexp1 sexp2 |> Just
       _ ->
         Nothing
@@ -293,7 +293,7 @@ toSignature form
 
 fromSignature :: Signature -> Sexp.T
 fromSignature (Signature sexp1 sexp2) =
-  Sexp.listStar [Sexp.atom nameSignature, sexp1, sexp2]
+  Sexp.list [Sexp.atom nameSignature, sexp1, sexp2]
 
 ----------------------------------------
 -- Let
