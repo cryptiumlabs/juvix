@@ -70,14 +70,14 @@ typeCheckConstructor :: forall extT primTy primVal m.
   -- | The constructor to be checked
   RawDataCon' extT primTy primVal ->
   TypeCheck NoExt primTy primVal m (IR.RawGlobal' extT primTy primVal)
-typeCheckConstructor param tel lpos rtel globals con = do
+typeCheckConstructor param tel _lpos rtel globals con = do
   let cname = IR.rawConName con
       conTy = IR.rawConType con
       (name, t) = teleToType rtel conTy
   -- FIXME replace 'lift' with whatever capability does
   typechecked <- lift $ typeTerm param t (Annotation mempty (VStar 0))
   evaled <- lift $ liftEval $ Eval.evalTerm (Eval.lookupFun @NoExt globals) typechecked
-  checkConType tel cname param evaled
+  checkConType tel param evaled
   let (_, target) = typeToTele (name, t)
   -- FIXME replace 'lift'
   lift $ checkDeclared cname rtel target
@@ -196,14 +196,11 @@ checkConType ::
   ) =>
   -- | an env that contains the parameters of the datatype
   Telescope NoExt extT primTy primVal ->
-  -- | name of the datatype
-  GlobalName ->
   Param.Parameterisation primTy primVal ->
   -- | the expression that is left to be checked.
-  -- TODO may need to be Value' NoExt primTy (TypedPrim primTy primVal)?
   IR.Value' NoExt primTy (TypedPrim primTy primVal) ->
   TypeCheck NoExt primTy primVal m ()
-checkConType tel datatypeName param e =
+checkConType tel param e =
   case e of
     -- the constructor could be a function type
     VPi' _ _ t2 _ ->
@@ -211,9 +208,6 @@ checkConType tel datatypeName param e =
         tel
         param
         t2
-    -- or application?
-    IR.VNeutral' app _ ->
-      pure () -- will be handled by checkDeclared
     -- or a star type
     IR.VStar' _ _ -> return ()
     -- a constructor cannot be any other type

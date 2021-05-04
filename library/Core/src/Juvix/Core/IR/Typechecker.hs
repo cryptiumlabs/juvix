@@ -3,6 +3,7 @@
 -- Datatype declarations are typechecked by @checkDataType@ in CheckDataType.hs.
 -- Function declarations are typechecked by @typeCheckFuns@ in CheckFunction.hs.
 -- Typechecked declarations are added to the signature.
+
 module Juvix.Core.IR.Typechecker
   ( module Juvix.Core.IR.Typechecker,
     module Typed,
@@ -12,11 +13,9 @@ where
 
 import Juvix.Core.IR.CheckDatatype
 import qualified Juvix.Core.IR.Evaluator as Eval
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import Juvix.Core.IR.Typechecker.Env as Env
 import Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
-import Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.IR.Types.Globals as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype)
@@ -50,12 +49,12 @@ typeCheckDeclaration ::
   [IR.RawFunction' extT primTy primVal] ->
   -- | A list of Globals to be added to the global state
   IR.TypeCheck IR.NoExt primTy primVal m [IR.RawGlobal' extT primTy primVal]
-typeCheckDeclaration tel rtel param [] [] =
+typeCheckDeclaration _tel _rtel _param [] [] =
   return []
 -- type checking datatype declarations
 typeCheckDeclaration tel rtel param dts fns =
   case dts of
-    (hdd@(IR.RawDatatype name lpos args levels cons) : tld) ->
+    (hdd@(IR.RawDatatype name lpos args _levels cons) : tld) ->
       do
         globals <- lift $ ask @"globals"
         -- check the first datatype's args
