@@ -209,7 +209,6 @@ checkConType tel datatypeName param e =
     VPi' _ _ t2 _ ->
       checkConType
         tel
-        datatypeName
         param
         t2
     -- or application?

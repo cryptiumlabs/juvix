@@ -15,7 +15,7 @@ steps:
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "cc407849fd688c544ccc98550b5af412b870db95175163130d5bc10f91a3511d  scripts/pre-run.sh" | sha256sum -c -
+      - echo "943041e97f3e66ecc7f0beafe0231601790436f03b13f2934140e69d3d0cea12  scripts/pre-run.sh" | sha256sum -c -
       - sh ./scripts/pre-run.sh
 
   - name: restore-cache
@@ -24,7 +24,7 @@ steps:
     settings:
       backend: "s3"
       restore: true
-      bucket: juvix-drone-cache
+      bucket: juvix-drone-cache-v2
       region: eu-west-1
       cache_key: "{{ checksum \"stack.yaml\" }}"
       archive_format: "gzip"
@@ -40,7 +40,7 @@ steps:
       - script-integrity-check
 
   - name: test-suite
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     commands:
       - make test
@@ -52,7 +52,7 @@ steps:
     pull: if-not-exists
     settings:
       backend: "s3"
-      bucket: juvix-drone-cache
+      bucket: juvix-drone-cache-v2
       region: eu-west-1
       rebuild: true
       archive_format: "gzip"
@@ -74,7 +74,7 @@ steps:
       - test-suite
 
   - name: test-parser
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -83,7 +83,7 @@ steps:
       - test-suite
 
   - name: test-typecheck
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -92,7 +92,7 @@ steps:
       - test-suite
 
   - name: test-compile
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -101,7 +101,7 @@ steps:
       - test-suite
   
   - name: org-generation-and-code-formatting
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -142,7 +142,7 @@ steps:
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "cc407849fd688c544ccc98550b5af412b870db95175163130d5bc10f91a3511d  scripts/pre-run.sh" | sha256sum -c -
+      - echo "943041e97f3e66ecc7f0beafe0231601790436f03b13f2934140e69d3d0cea12  scripts/pre-run.sh" | sha256sum -c -
       - sh ./scripts/pre-run.sh 
 
   - name: restore-cache
@@ -151,7 +151,7 @@ steps:
     settings:
       backend: "s3"
       restore: true
-      bucket: juvix-drone-cache
+      bucket: juvix-drone-cache-v2
       region: eu-west-1
       cache_key: "{{ checksum \"stack.yaml\" }}"
       archive_format: "gzip"
@@ -167,7 +167,7 @@ steps:
       - script-integrity-check
 
   - name: test-suite
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     commands:
       - make test
@@ -179,7 +179,7 @@ steps:
     pull: if-not-exists
     settings:
       backend: "s3"
-      bucket: juvix-drone-cache
+      bucket: juvix-drone-cache-v2
       region: eu-west-1
       rebuild: true
       archive_format: "gzip"
@@ -201,7 +201,7 @@ steps:
       - test-suite
 
   - name: check-formatting
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -210,7 +210,7 @@ steps:
       - test-suite
 
   - name: check-org-gen
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -219,7 +219,7 @@ steps:
       - test-suite
 
   - name: test-parser
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -228,7 +228,7 @@ steps:
       - test-suite
 
   - name: test-typecheck
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -237,7 +237,7 @@ steps:
       - test-suite
 
   - name: test-compile
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -252,6 +252,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 8cd62d1e29c4abce865e0ebd30c32fca09b67246cec8f40eccd569cfd1e838b4
+hmac: 841b51b7384d6ba8dc3ccc87d38e6c9ebbd5388acda7d979cd31b03a1acd4537
 
 ...
