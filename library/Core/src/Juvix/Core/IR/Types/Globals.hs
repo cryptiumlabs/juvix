@@ -478,7 +478,6 @@ newtype TypeCheck ext primTy primVal m a
     )
     via MonadState (InnerTCSig ext primTy primVal m)
 
-
 data SigDef ext primTy primVal
   = -- | function constant to its type, clauses
     FunSig

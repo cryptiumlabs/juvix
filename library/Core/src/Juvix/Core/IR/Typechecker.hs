@@ -37,14 +37,14 @@ typeCheckDeclaration ::
     HasThrow "typecheckError" (TypecheckError' IR.NoExt extT primTy primVal) m,
     HasReader "globals" (GlobalsT' IR.NoExt extT primTy primVal) m
   ) =>
-  -- | Telescope containing a list of 
+  -- | Telescope containing a list of
   -- (name, usage, ty (of type Value') and the extension)
   IR.Telescope IR.NoExt extT primTy primVal ->
   -- | Raw telescope containing ty (of type Term')
   IR.RawTelescope extT primTy primVal ->
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
-  -- | A list of datatype declarations to be checked 
+  -- | A list of datatype declarations to be checked
   [IR.RawDatatype' extT primTy primVal] ->
   -- | A list of function declarations to be checked
   [IR.RawFunction' extT primTy primVal] ->
@@ -69,8 +69,8 @@ typeCheckDeclaration tel rtel param dts fns =
         return $ IR.RawGDatatype hdd : rest <> checkedCons
     _ -> do
       return []
-  -- TODO add to sig once typechecked? Keeping track of all globals may be
-  -- enough?
+-- TODO add to sig once typechecked? Keeping track of all globals may be
+-- enough?
 -- type checking function declarations
 typeCheckDeclaration tel rtel param _ (IR.RawFunction name usage ty cls : tlf) =
   undefined -- TODO run typeCheckFuns
