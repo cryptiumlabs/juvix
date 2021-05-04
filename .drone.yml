@@ -15,7 +15,7 @@ steps:
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "cc407849fd688c544ccc98550b5af412b870db95175163130d5bc10f91a3511d  scripts/pre-run.sh" | sha256sum -c -
+      - echo "943041e97f3e66ecc7f0beafe0231601790436f03b13f2934140e69d3d0cea12  scripts/pre-run.sh" | sha256sum -c -
       - sh ./scripts/pre-run.sh
 
   - name: restore-cache
@@ -142,7 +142,7 @@ steps:
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - echo "cc407849fd688c544ccc98550b5af412b870db95175163130d5bc10f91a3511d  scripts/pre-run.sh" | sha256sum -c -
+      - echo "943041e97f3e66ecc7f0beafe0231601790436f03b13f2934140e69d3d0cea12  scripts/pre-run.sh" | sha256sum -c -
       - sh ./scripts/pre-run.sh 
 
   - name: restore-cache
@@ -252,6 +252,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: f3991a879d008440212a8c79a536947853242ca0892612559b9b7815f9a7178d
+hmac: 841b51b7384d6ba8dc3ccc87d38e6c9ebbd5388acda7d979cd31b03a1acd4537
 
 ...
