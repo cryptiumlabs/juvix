@@ -286,3 +286,7 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 (generate-haskell "If" (repeat 3 "sexp") "if")
 
 (generate-haskell "IfNoElse" (repeat 2 "sexp") "if")
+
+(generate-haskell "DeconBody" (repeat 2 "sexp") nil)
+
+(generate-haskell "Case" '("sexp" "deconBody") "case" :list-star t)

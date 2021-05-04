@@ -52,7 +52,8 @@ data DefunMatch = DefunMatch
   deriving (Show)
 
 -- | @ArgBody@ abstracts over the details of arguments and body
-data ArgBody = ArgBody {argsBodyArgs :: Sexp.T, argsBodyBody :: Sexp.T} deriving (Show)
+data ArgBody = ArgBody {argsBodyArgs :: Sexp.T, argsBodyBody :: Sexp.T}
+  deriving (Show)
 
 -- | @PredAns@ is an abstraction over questions and answers
 data PredAns = PredAns {predAnsPredicate :: Sexp.T, predAnsAnswer :: Sexp.T}
@@ -115,6 +116,19 @@ data LetMatch = LetMatch
   }
   deriving (Show)
 
+data Case = Case
+  { caseOn :: Sexp.T,
+    caseImplications :: [DeconBody]
+  }
+  deriving (Show)
+
+-- | @DeconBody@ is an abstraction over a matching body form
+data DeconBody = DeconBody
+  { deconBodyDeconsturctor :: Sexp.T,
+    deconBodyBody :: Sexp.T
+  }
+  deriving (Show)
+
 Lens.makeLensesWith Lens.camelCaseFields ''Defun
 Lens.makeLensesWith Lens.camelCaseFields ''DefunMatch
 Lens.makeLensesWith Lens.camelCaseFields ''ArgBody
@@ -126,6 +140,8 @@ Lens.makeLensesWith Lens.camelCaseFields ''Cond
 Lens.makeLensesWith Lens.camelCaseFields ''PredAns
 Lens.makeLensesWith Lens.camelCaseFields ''If
 Lens.makeLensesWith Lens.camelCaseFields ''IfNoElse
+Lens.makeLensesWith Lens.camelCaseFields ''Case
+Lens.makeLensesWith Lens.camelCaseFields ''DeconBody
 
 --------------------------------------------------------------------------------
 -- Converter functions
@@ -149,6 +165,9 @@ fromArgBodys = toStarList fromArgBody
 
 toArgBodys :: Sexp.T -> Maybe [ArgBody]
 toArgBodys = fromStarList toArgBody
+
+matchConstructor :: Sexp.T -> Sexp.T
+matchConstructor x = Sexp.list [x]
 
 ----------------------------------------
 -- ArgBody
@@ -261,7 +280,7 @@ toSignature :: Sexp.T -> Maybe Signature
 toSignature form
   | isSignature form =
     case form of
-      _Signature Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+      _Signature Sexp.:> sexp1 Sexp.:> sexp2 ->
         Signature sexp1 sexp2 |> Just
       _ ->
         Nothing
@@ -270,7 +289,7 @@ toSignature form
 
 fromSignature :: Signature -> Sexp.T
 fromSignature (Signature sexp1 sexp2) =
-  Sexp.list [Sexp.atom nameSignature, sexp1, sexp2]
+  Sexp.listStar [Sexp.atom nameSignature, sexp1, sexp2]
 
 ----------------------------------------
 -- Let
@@ -419,6 +438,49 @@ toIfNoElse form
 fromIfNoElse :: IfNoElse -> Sexp.T
 fromIfNoElse (IfNoElse sexp1 sexp2) =
   Sexp.list [Sexp.atom nameIfNoElse, sexp1, sexp2]
+
+----------------------------------------
+-- DeconBody
+----------------------------------------
+
+toDeconBody :: Sexp.T -> Maybe DeconBody
+toDeconBody form =
+  case form of
+    sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+      DeconBody sexp1 sexp2 |> Just
+    _ ->
+      Nothing
+
+fromDeconBody :: DeconBody -> Sexp.T
+fromDeconBody (DeconBody sexp1 sexp2) =
+  Sexp.list [sexp1, sexp2]
+
+----------------------------------------
+-- Case
+----------------------------------------
+
+nameCase :: NameSymbol.T
+nameCase = "case"
+
+isCase :: Sexp.T -> Bool
+isCase (Sexp.Cons form _) = Sexp.isAtomNamed form nameCase
+isCase _ = False
+
+toCase :: Sexp.T -> Maybe Case
+toCase form
+  | isCase form =
+    case form of
+      _Case Sexp.:> sexp1 Sexp.:> deconBody2
+        | Just deconBody2 <- toDeconBody `fromStarList` deconBody2 ->
+          Case sexp1 deconBody2 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromCase :: Case -> Sexp.T
+fromCase (Case sexp1 deconBody2) =
+  Sexp.listStar [Sexp.atom nameCase, sexp1, fromDeconBody `toStarList` deconBody2]
 
 ------------------------------------------------------------
 -- Helpers

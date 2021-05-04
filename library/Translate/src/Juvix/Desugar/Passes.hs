@@ -49,8 +49,8 @@ condTransform xs = Sexp.foldPred xs (== Structure.nameCond) condToIf
       | Just cond <- Structure.toCond (Sexp.Atom atom Sexp.:> cdr),
         Just last <- lastMay (cond ^. Struct.entailments) =
         let acc =
-              -- need to handle the last case to not have an else
-              generation last Sexp.Nil |> Sexp.butLast
+              Structure.IfNoElse (last ^. Struct.predicate) (last ^. Struct.answer)
+                |> Structure.fromIfNoElse
          in foldr generation acc (initSafe (cond ^. Struct.entailments))
               |> Sexp.addMetaToCar atom
       | otherwise = error "malformed cond"
@@ -82,13 +82,19 @@ ifTransform xs = Sexp.foldPred xs (== Structure.nameIf) ifToCase
           Nothing ->
             error "malformed if"
       )
-        |> Sexp.list
+        |> Structure.fromCase
         |> Sexp.addMetaToCar atom
     -- Bad these functions should be refactored into using the case transform
     caseList pred then' =
-      [Sexp.atom "case", pred, Sexp.list [Sexp.list [Sexp.atom "True"], then']]
+      Structure.Case
+        pred
+        [createDeconBody "True" then']
     caseListElse pred then' else' =
-      caseList pred then' <> [Sexp.list [Sexp.list [Sexp.atom "False"], else']]
+      Structure.Case
+        pred
+        [createDeconBody "True" then', createDeconBody "False" else']
+    createDeconBody con entailment =
+      Struct.DeconBody (Struct.matchConstructor (Sexp.atom con)) entailment
 
 ------------------------------------------------------------
 -- Defun Transformation
@@ -117,31 +123,22 @@ ifTransform xs = Sexp.foldPred xs (== Structure.nameIf) ifToCase
 multipleTransLet :: Sexp.T -> Sexp.T
 multipleTransLet xs = Sexp.foldPred xs (== Structure.nameLet) letToLetMatch
   where
-    letToLetMatch atom (Sexp.List [a@(Sexp.Atom (Sexp.A name _)), bindings, body, rest]) =
-      let (grabbed, notMatched) = grabSimilar name rest
-       in Sexp.list
-            [ Sexp.atom ":let-match",
-              a,
-              putTogetherSplices (Sexp.list [bindings, body] : grabbed),
-              notMatched
-            ]
-            |> Sexp.addMetaToCar atom
-    letToLetMatch _atom _ =
-      error "malformed let"
-    --
-    grabSimilar name (Sexp.List [let1, name1, bindings, body, rest])
-      | Sexp.isAtomNamed let1 "let" && Sexp.isAtomNamed name1 name =
-        grabSimilar name rest
-          |> first (Sexp.list [bindings, body] :)
-    grabSimilar _name xs = ([], xs)
-    --
-    putTogetherSplices =
-      foldr spliceBindingBody Sexp.Nil
-    --
-    spliceBindingBody (Sexp.List [bindings, body]) acc =
-      Sexp.Cons bindings (Sexp.Cons body acc)
-    spliceBindingBody _ _ =
-      error "doesn't happen"
+    letToLetMatch atom cdr =
+      let currentForm = Sexp.Atom atom Sexp.:> cdr
+       in case Structure.toLet currentForm of
+            Just let' ->
+              let (grabbed, notMatched) = grabSim (let' ^. Struct.name) currentForm
+               in Struct.LetMatch (let' ^. Struct.name) grabbed notMatched
+                    |> Struct.fromLetMatch
+                    |> Sexp.addMetaToCar atom
+            Nothing -> error "malformed let"
+    grabSim name xs =
+      case Structure.toLet xs of
+        Just let'
+          | let' ^. Struct.name == name ->
+            grabSim name (let' ^. Struct.rest)
+              |> first (Structure.ArgBody (let' ^. Struct.args) (let' ^. Struct.body) :)
+        _ -> ([], xs)
 
 -- This one and sig combining are odd mans out, as they happen on a
 -- list of transforms
