@@ -156,22 +156,20 @@ transformConSig ::
   m (HR.Term primTy primVal)
 transformConSig q name mHd typeCon r@((t Sexp.:> ts) Sexp.:> _)
   | named ":record-d" = do
-
     traceM "Transform Con Sig Record"
     pTraceShowM (r, name, mHd, typeCon)
     pTraceShowM (Sexp.list [arrow, Sexp.list $ removeFieldNames ts, Sexp.car typeCon])
     let convertedSexp = Sexp.list [arrow, Sexp.list $ removeFieldNames ts, Sexp.car typeCon]
     transformConSig q name mHd typeCon convertedSexp
-    -- throwFF $ RecordUnimplemented r
+  -- throwFF $ RecordUnimplemented r
 
   | named ":arrow" = transformTermHR q ts
   | isNothing mHd = do
     transformTermHR q ts
   where
-
     arrow = Sexp.atom "TopLevel.Prelude.->"
-    removeFieldNames fields 
-      | Just l <- Sexp.toList (Sexp.groupBy2 fields)  = g <$> l
+    removeFieldNames fields
+      | Just l <- Sexp.toList (Sexp.groupBy2 fields) = g <$> l
 
     g (Sexp.List [s, e]) = e
     named = Sexp.isAtomNamed t
