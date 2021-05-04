@@ -906,11 +906,9 @@ Typechecked declarations are added to the signature.
 - _Relies on_
   + [[CheckDatatype]]
   + [[IR/Evaluator]]
-  + [[OnlyExts]]
   + [[Typechecker/Env]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[IR/Types/Base]]
   + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]
