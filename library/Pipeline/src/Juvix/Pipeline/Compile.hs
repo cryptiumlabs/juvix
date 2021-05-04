@@ -36,9 +36,9 @@ unsafeEvalGlobal ::
   IR.Global primTy primVal
 unsafeEvalGlobal globals g =
   case g of
-    RawGDatatype (RawDatatype n pos a l cons) -> 
+    RawGDatatype (RawDatatype n pos a l cons) ->
       GDatatype (Datatype n pos (argEval globals <$> a) l (conEval globals <$> cons))
-    RawGDataCon (RawDataCon n t d) -> 
+    RawGDataCon (RawDataCon n t d) ->
       GDataCon $ DataCon n (unsafeEval globals t) (funEval globals <$> d)
     RawGFunction (RawFunction n u t cs) ->
       GFunction $
@@ -53,9 +53,9 @@ convGlobal ::
   IR.RawGlobal ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val)
 convGlobal ty g =
   case g of
-    RawGDatatype (RawDatatype n pos a l cons) -> 
+    RawGDatatype (RawDatatype n pos a l cons) ->
       RawGDatatype (RawDatatype n pos (argReturn ty <$> a) l (conReturn ty <$> cons))
-    RawGDataCon (RawDataCon n t d) -> 
+    RawGDataCon (RawDataCon n t d) ->
       RawGDataCon (RawDataCon n (baseToReturn ty t) (funReturn ty <$> d))
     RawGFunction (RawFunction n u t cs) ->
       RawGFunction (RawFunction n u (baseToReturn ty t) (funClauseReturn ty <$> cs))
@@ -65,36 +65,32 @@ convGlobal ty g =
 argReturn ::
   ty ->
   IR.RawDataArg ty val ->
-  IR.RawDataArg ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val) 
-argReturn ty arg@RawDataArg{ rawArgType } = 
-  arg { rawArgType = baseToReturn ty rawArgType}
+  IR.RawDataArg ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val)
+argReturn ty arg@RawDataArg {rawArgType} =
+  arg {rawArgType = baseToReturn ty rawArgType}
 
 argEval ::
   IR.CanEval IR.NoExt IR.NoExt primTy primVal =>
   IR.RawGlobals primTy primVal ->
   IR.RawDataArg primTy primVal ->
   IR.DataArg primTy primVal
-argEval globals  arg@RawDataArg{ rawArgName, rawArgUsage, rawArgType }   =
-  DataArg rawArgName rawArgUsage (unsafeEval globals rawArgType) 
-
+argEval globals arg@RawDataArg {rawArgName, rawArgUsage, rawArgType} =
+  DataArg rawArgName rawArgUsage (unsafeEval globals rawArgType)
 
 conReturn ::
-  ty -> 
+  ty ->
   IR.RawDataCon ty val ->
-  IR.RawDataCon ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val) 
-conReturn ty con@RawDataCon{ rawConType, rawConDef } = 
-  con { rawConType = baseToReturn ty rawConType, rawConDef = funReturn ty <$> rawConDef }
+  IR.RawDataCon ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val)
+conReturn ty con@RawDataCon {rawConType, rawConDef} =
+  con {rawConType = baseToReturn ty rawConType, rawConDef = funReturn ty <$> rawConDef}
 
 conEval ::
   IR.CanEval IR.NoExt IR.NoExt primTy primVal =>
   IR.RawGlobals primTy primVal ->
   IR.RawDataCon primTy primVal ->
   IR.DataCon primTy primVal
-conEval globals con@RawDataCon{ rawConName, rawConType, rawConDef }  =
-  DataCon rawConName (unsafeEval globals rawConType) (funEval globals <$> rawConDef)  
-
-
-
+conEval globals con@RawDataCon {rawConName, rawConType, rawConDef} =
+  DataCon rawConName (unsafeEval globals rawConType) (funEval globals <$> rawConDef)
 
 funReturn ::
   ty ->
@@ -109,8 +105,7 @@ funEval ::
   IR.RawFunction primTy primVal ->
   IR.Function primTy primVal
 funEval globals (RawFunction name usage term clauses) =
-  Function name usage (unsafeEval globals term) (funClauseEval globals <$> clauses) 
-
+  Function name usage (unsafeEval globals term) (funClauseEval globals <$> clauses)
 
 funClauseReturn ::
   ty ->
