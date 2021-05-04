@@ -199,7 +199,7 @@ multipleTransDefun = search
         Just (structure, _def') ->
           grabSim name xs |> first (structure :)
         Nothing ->
-          ([], xs)
+          ([], defn : xs)
     grabSim _name [] =
       ([], [])
 
