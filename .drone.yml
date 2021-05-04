@@ -40,7 +40,7 @@ steps:
       - script-integrity-check
 
   - name: test-suite
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     commands:
       - make test
@@ -74,7 +74,7 @@ steps:
       - test-suite
 
   - name: test-parser
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -83,7 +83,7 @@ steps:
       - test-suite
 
   - name: test-typecheck
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -92,7 +92,7 @@ steps:
       - test-suite
 
   - name: test-compile
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -101,7 +101,7 @@ steps:
       - test-suite
   
   - name: org-generation-and-code-formatting
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -167,7 +167,7 @@ steps:
       - script-integrity-check
 
   - name: test-suite
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     commands:
       - make test
@@ -201,7 +201,7 @@ steps:
       - test-suite
 
   - name: check-formatting
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -210,7 +210,7 @@ steps:
       - test-suite
 
   - name: check-org-gen
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -219,7 +219,7 @@ steps:
       - test-suite
 
   - name: test-parser
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -228,7 +228,7 @@ steps:
       - test-suite
 
   - name: test-typecheck
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -237,7 +237,7 @@ steps:
       - test-suite
 
   - name: test-compile
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -252,6 +252,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 20a70b31cef8e34e613e54d077564acdd50087bcce8c0c30fa4a6fcc8482b77a
+hmac: 39fba7d3f114c9df2d055b7e98f4315601d6bcab8b7df1c6375a2da39d260228
 
 ...
