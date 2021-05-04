@@ -65,7 +65,6 @@ mkDef typeCons dataConstructor s@Context.Sum {sumTDef, sumTName} c = do
         defPrecedence = Context.default'
       }
 
--- (-> (-> f1 f2) f3)
 -- data Bar = Foo Bool Int
 -- (-> Bool (-> Int Bar)
 -- data Bar = Foo Bool Int F
@@ -73,13 +72,20 @@ mkDef typeCons dataConstructor s@Context.Sum {sumTDef, sumTName} c = do
 -- data Bar = Foo Bool
 
 -- TODO: We're only handling the ADT case with no records or GADTs
+-- TODO: Handle records
 generateSumConsSexp :: Sexp.T -> Sexp.T -> Maybe Sexp.T
 generateSumConsSexp typeCons (Sexp.cdr -> declaration) = do
-  d <- Sexp.foldr1 f declaration
-  pure $ Sexp.list [arr, d, typeCons]
+  d <- sanitizeRecord <$> Sexp.foldr1 f declaration
+  pure $ Sexp.list [arrow, d, typeCons]
   where
-    f n acc = Sexp.list [n, arr, acc]
-    arr = Sexp.atom "TopLevel.Prelude.->"
+    sanitizeRecord (x Sexp.:> fields) 
+      | Sexp.isAtomNamed x ":record-d" = Sexp.list $ removeFieldNames fields
+    sanitizeRecord xs = xs
+    removeFieldNames fields 
+      | Just l <- Sexp.toList (Sexp.groupBy2 fields)  = g <$> l
+    g (Sexp.List [s, e]) = e
+    f n acc = Sexp.list [n, arrow, acc]
+    arrow = Sexp.atom "TopLevel.Prelude.->"
 
 contextToCore ::
   (Show primTy, Show primVal) =>
