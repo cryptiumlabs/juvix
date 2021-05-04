@@ -52,12 +52,31 @@ convGlobal ::
   IR.RawGlobal ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val)
 convGlobal ty g =
   case g of
-    RawGDatatype (RawDatatype n pos a l cons) -> undefined
-    RawGDataCon (RawDataCon n t d) -> traceShow (ty, n, t, d) RawGDataCon (RawDataCon n (baseToReturn ty t) (funReturn ty <$> d))
+    RawGDatatype (RawDatatype n pos a l cons) -> 
+      RawGDatatype (RawDatatype n pos (argReturn ty <$> a) l (conReturn ty <$> cons))
+    RawGDataCon (RawDataCon n t d) -> 
+      RawGDataCon (RawDataCon n (baseToReturn ty t) (funReturn ty <$> d))
     RawGFunction (RawFunction n u t cs) ->
       RawGFunction (RawFunction n u (baseToReturn ty t) (funClauseReturn ty <$> cs))
     RawGAbstract (RawAbstract n u t) ->
       RawGAbstract (RawAbstract n u (baseToReturn ty t))
+
+argReturn ::
+  ty ->
+  IR.RawDataArg ty val ->
+  IR.RawDataArg ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val) 
+argReturn ty arg@RawDataArg{ rawArgType } = 
+  arg { rawArgType = baseToReturn ty rawArgType}
+
+conReturn ::
+  ty -> 
+  IR.RawDataCon ty val ->
+  IR.RawDataCon ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val) 
+conReturn ty con@RawDataCon{ rawConType, rawConDef } = 
+  con { rawConType = baseToReturn ty rawConType, rawConDef = funReturn ty <$> rawConDef }
+
+
+
 
 funReturn ::
   ty ->
