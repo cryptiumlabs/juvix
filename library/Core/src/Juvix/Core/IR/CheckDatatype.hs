@@ -1,7 +1,7 @@
 -- | Datatype declarations are typechecked here. Usages are passed along.
 module Juvix.Core.IR.CheckDatatype
   ( typeCheckAllCons,
-    checkDataType
+    checkDataType,
   )
 where
 
@@ -205,7 +205,7 @@ checkConType ::
 checkConType tel param e =
   case e of
     -- the constructor could be a function type
-    VPi' _ _ t2 _ -> 
+    VPi' _ _ t2 _ ->
       -- no need to check function argument because
       -- it's been type checked in typeCheckConstructor (?)
       checkConType tel param t2
