@@ -125,6 +125,10 @@ steps:
 trigger:
   event:
     - pull_request
+
+node:
+  project: juvix
+
 ---
 kind: pipeline
 type: docker
@@ -250,8 +254,12 @@ trigger:
     - push
   branch:
     - develop
+
+node:
+  project: juvix
+  
 ---
 kind: signature
-hmac: 841b51b7384d6ba8dc3ccc87d38e6c9ebbd5388acda7d979cd31b03a1acd4537
+hmac: d6586d12f45c4008045177e00912f534fb86da4b1d55483a6f02ee720bf5f9c2
 
 ...
