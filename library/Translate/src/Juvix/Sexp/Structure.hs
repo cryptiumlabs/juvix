@@ -601,7 +601,7 @@ toArrow :: Sexp.T -> Maybe Arrow
 toArrow form
   | isArrow form =
     case form of
-      _Arrow Sexp.:> sexp1 Sexp.:> sexp2 ->
+      _Arrow Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
         Arrow sexp1 sexp2 |> Just
       _ ->
         Nothing
@@ -610,7 +610,7 @@ toArrow form
 
 fromArrow :: Arrow -> Sexp.T
 fromArrow (Arrow sexp1 sexp2) =
-  Sexp.listStar [Sexp.atom nameArrow, sexp1, sexp2]
+  Sexp.list [Sexp.atom nameArrow, sexp1, sexp2]
 
 ----------------------------------------
 -- Lambda

@@ -294,7 +294,7 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 
 (generate-haskell "Do" '("sexp") ":do" :list-star t)
 
-(generate-haskell "Arrow" '("sexp" "sexp") "%<-" :list-star t)
+(generate-haskell "Arrow" '("sexp" "sexp") "%<-")
 
 (generate-haskell "Lambda" '("sexp" "sexp") "lambda")
 
