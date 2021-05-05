@@ -205,11 +205,10 @@ checkConType ::
 checkConType tel param e =
   case e of
     -- the constructor could be a function type
-    VPi' _ _ t2 _ ->
-      checkConType
-        tel
-        param
-        t2
+    VPi' _ _ t2 _ -> 
+      -- no need to check function argument because
+      -- it's been type checked in typeCheckConstructor (?)
+      checkConType tel param t2
     -- or a star type
     IR.VStar' _ _ -> return ()
     -- a constructor cannot be any other type
