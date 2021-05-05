@@ -24,6 +24,7 @@ import Juvix.ToCore.Types
     throwFF,
   )
 import Prelude (error)
+import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 
 -- | Transform S-expression form into Human Readable form
 -- N.B. doesn't deal with pattern variables since HR doesn't have them.
@@ -53,7 +54,11 @@ transformTermHR q p@(name Sexp.:> form)
   | named ":refinement" = throwFF $ RefinementsUnimplemented p
   | named ":let-type" = throwFF $ ExprUnimplemented p
   | named ":list" = throwFF $ ListUnimplemented p
-  | named "case" = throwFF $ ExprUnimplemented p
+  | named "case" = do
+      traceM "Is it CASE?"
+      pTraceShowM (p)
+    --   throwFF $ ExprUnimplemented p
+      transformApplication q p
   | named ":u" = throwFF $ UniversesUnimplemented p
   -- Rest
   | named ":custom-arrow" = transformArrow form
