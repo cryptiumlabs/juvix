@@ -1857,7 +1857,6 @@ _TODO_
        can automatically fill in this meta data
 - _Relies on_
   + [[Library]]
-  + [[LineNum]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
 **** ToCore

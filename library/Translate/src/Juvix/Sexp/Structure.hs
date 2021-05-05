@@ -31,7 +31,6 @@ module Juvix.Sexp.Structure where
 
 import qualified Control.Lens as Lens hiding ((|>))
 import Juvix.Library
-import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 
@@ -131,6 +130,49 @@ data DeconBody = DeconBody
   }
   deriving (Show)
 
+newtype Do = Do
+  { doStatements :: Sexp.T
+  }
+  deriving (Show)
+
+data Arrow = Arrow
+  { arrowName :: Sexp.T,
+    arrowBody :: Sexp.T
+  }
+  deriving (Show)
+
+data Lambda = Lambda
+  { lambdaArgs :: Sexp.T,
+    lambdabody :: Sexp.T
+  }
+  deriving (Show)
+
+-- | @NameBind@ represents a type naming scheme in a record
+data NameBind = Pun Punned | NotPun NotPunned
+  deriving (Show)
+
+-- | @NotPunned@ represents a punned type name in a record
+data NotPunned = NotPunned
+  { notPunnedName :: Sexp.T,
+    notPunnedValue :: Sexp.T
+  }
+  deriving (Show)
+
+newtype Punned = Punned
+  { punnedName :: Sexp.T
+  }
+  deriving (Show)
+
+newtype Record = Record
+  { recordValue :: [NameBind]
+  }
+  deriving (Show)
+
+newtype RecordNoPunned = RecordNoPunned
+  { recordNoPunnedValue :: [NotPunned]
+  }
+  deriving (Show)
+
 Lens.makeLensesWith Lens.camelCaseFields ''Defun
 Lens.makeLensesWith Lens.camelCaseFields ''DefunMatch
 Lens.makeLensesWith Lens.camelCaseFields ''ArgBody
@@ -144,6 +186,13 @@ Lens.makeLensesWith Lens.camelCaseFields ''If
 Lens.makeLensesWith Lens.camelCaseFields ''IfNoElse
 Lens.makeLensesWith Lens.camelCaseFields ''Case
 Lens.makeLensesWith Lens.camelCaseFields ''DeconBody
+Lens.makeLensesWith Lens.camelCaseFields ''Do
+Lens.makeLensesWith Lens.camelCaseFields ''Arrow
+Lens.makeLensesWith Lens.camelCaseFields ''Lambda
+Lens.makeLensesWith Lens.camelCaseFields ''Record
+Lens.makeLensesWith Lens.camelCaseFields ''Punned
+Lens.makeLensesWith Lens.camelCaseFields ''NotPunned
+Lens.makeLensesWith Lens.camelCaseFields ''RecordNoPunned
 
 --------------------------------------------------------------------------------
 -- Converter functions
@@ -154,13 +203,29 @@ Lens.makeLensesWith Lens.camelCaseFields ''DeconBody
 -- from<Form> :: <Form> -> Sexp.T
 --------------------------------------------------------------------------------
 
-------------------------------------------
--- Not Generated
-------------------------------------------
+-------------------------------------------
+-- Not Generated, due to limited generation
+-------------------------------------------
 
-ifFull :: Sexp.T -> Maybe IfFull
-ifFull sexp =
+toIfFull :: Sexp.T -> Maybe IfFull
+toIfFull sexp =
   fmap Else (toIf sexp) <|> fmap NoElse (toIfNoElse sexp)
+
+--------------------
+-- Name Bind
+--------------------
+
+toNameBind :: Sexp.T -> Maybe NameBind
+toNameBind sexp =
+  fmap Pun (toPunned sexp) <|> fmap NotPun (toNotPunned sexp)
+
+fromNameBind :: NameBind -> Sexp.T
+fromNameBind (Pun pun) = fromPunned pun
+fromNameBind (NotPun notPun) = fromNotPunned notPun
+
+--------------------
+-- Args Bodys
+--------------------
 
 -- these are ungrouned fromArgBodys, where we groupBy2 both ways
 fromArgBodys :: [ArgBody] -> Sexp.T
@@ -172,6 +237,15 @@ toArgBodys = fromStarList toArgBody . Sexp.groupBy2
 
 matchConstructor :: Sexp.T -> Sexp.T
 matchConstructor x = Sexp.list [x]
+
+--------------------
+-- NotPunned no Grouping
+--------------------
+fromNotPunnedGroup :: [NotPunned] -> Sexp.T
+fromNotPunnedGroup = Sexp.unGroupBy2 . toStarList fromNotPunned
+
+toNotPunnedGroup :: Sexp.T -> Maybe [NotPunned]
+toNotPunnedGroup = fromStarList toNotPunned . Sexp.groupBy2
 
 ----------------------------------------
 -- ArgBody
@@ -485,6 +559,170 @@ toCase form
 fromCase :: Case -> Sexp.T
 fromCase (Case sexp1 deconBody2) =
   Sexp.listStar [Sexp.atom nameCase, sexp1, fromDeconBody `toStarList` deconBody2]
+
+----------------------------------------
+-- Do
+----------------------------------------
+
+nameDo :: NameSymbol.T
+nameDo = ":do"
+
+isDo :: Sexp.T -> Bool
+isDo (Sexp.Cons form _) = Sexp.isAtomNamed form nameDo
+isDo _ = False
+
+toDo :: Sexp.T -> Maybe Do
+toDo form
+  | isDo form =
+    case form of
+      _Do Sexp.:> sexp1 ->
+        Do sexp1 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromDo :: Do -> Sexp.T
+fromDo (Do sexp1) =
+  Sexp.listStar [Sexp.atom nameDo, sexp1]
+
+----------------------------------------
+-- Arrow
+----------------------------------------
+
+nameArrow :: NameSymbol.T
+nameArrow = "%<-"
+
+isArrow :: Sexp.T -> Bool
+isArrow (Sexp.Cons form _) = Sexp.isAtomNamed form nameArrow
+isArrow _ = False
+
+toArrow :: Sexp.T -> Maybe Arrow
+toArrow form
+  | isArrow form =
+    case form of
+      _Arrow Sexp.:> sexp1 Sexp.:> sexp2 ->
+        Arrow sexp1 sexp2 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromArrow :: Arrow -> Sexp.T
+fromArrow (Arrow sexp1 sexp2) =
+  Sexp.listStar [Sexp.atom nameArrow, sexp1, sexp2]
+
+----------------------------------------
+-- Lambda
+----------------------------------------
+
+nameLambda :: NameSymbol.T
+nameLambda = "lambda"
+
+isLambda :: Sexp.T -> Bool
+isLambda (Sexp.Cons form _) = Sexp.isAtomNamed form nameLambda
+isLambda _ = False
+
+toLambda :: Sexp.T -> Maybe Lambda
+toLambda form
+  | isLambda form =
+    case form of
+      _Lambda Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+        Lambda sexp1 sexp2 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromLambda :: Lambda -> Sexp.T
+fromLambda (Lambda sexp1 sexp2) =
+  Sexp.list [Sexp.atom nameLambda, sexp1, sexp2]
+
+----------------------------------------
+-- Punned
+----------------------------------------
+
+toPunned :: Sexp.T -> Maybe Punned
+toPunned form =
+  case form of
+    sexp1 Sexp.:> Sexp.Nil ->
+      Punned sexp1 |> Just
+    _ ->
+      Nothing
+
+fromPunned :: Punned -> Sexp.T
+fromPunned (Punned sexp1) =
+  Sexp.list [sexp1]
+
+----------------------------------------
+-- NotPunned
+----------------------------------------
+
+toNotPunned :: Sexp.T -> Maybe NotPunned
+toNotPunned form =
+  case form of
+    sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+      NotPunned sexp1 sexp2 |> Just
+    _ ->
+      Nothing
+
+fromNotPunned :: NotPunned -> Sexp.T
+fromNotPunned (NotPunned sexp1 sexp2) =
+  Sexp.list [sexp1, sexp2]
+
+----------------------------------------
+-- Record
+----------------------------------------
+
+nameRecord :: NameSymbol.T
+nameRecord = ":record"
+
+isRecord :: Sexp.T -> Bool
+isRecord (Sexp.Cons form _) = Sexp.isAtomNamed form nameRecord
+isRecord _ = False
+
+toRecord :: Sexp.T -> Maybe Record
+toRecord form
+  | isRecord form =
+    case form of
+      _Record Sexp.:> nameBind1
+        | Just nameBind1 <- toNameBind `fromStarList` nameBind1 ->
+          Record nameBind1 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromRecord :: Record -> Sexp.T
+fromRecord (Record nameBind1) =
+  Sexp.listStar [Sexp.atom nameRecord, fromNameBind `toStarList` nameBind1]
+
+----------------------------------------
+-- RecordNoPunned
+----------------------------------------
+
+nameRecordNoPunned :: NameSymbol.T
+nameRecordNoPunned = ":record-no-pun"
+
+isRecordNoPunned :: Sexp.T -> Bool
+isRecordNoPunned (Sexp.Cons form _) = Sexp.isAtomNamed form nameRecordNoPunned
+isRecordNoPunned _ = False
+
+toRecordNoPunned :: Sexp.T -> Maybe RecordNoPunned
+toRecordNoPunned form
+  | isRecordNoPunned form =
+    case form of
+      _RecordNoPunned Sexp.:> notPunnedGroup1
+        | Just notPunnedGroup1 <- toNotPunnedGroup notPunnedGroup1 ->
+          RecordNoPunned notPunnedGroup1 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromRecordNoPunned :: RecordNoPunned -> Sexp.T
+fromRecordNoPunned (RecordNoPunned notPunnedGroup1) =
+  Sexp.listStar [Sexp.atom nameRecordNoPunned, fromNotPunnedGroup notPunnedGroup1]
 
 ------------------------------------------------------------
 -- Helpers

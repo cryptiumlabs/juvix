@@ -172,19 +172,20 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 
 
 ;; could be done a LOT better, but works well enough to generate haskell
-(defun generate-haskell (con-name pat s-name &key (list-star nil))
+(defun generate-haskell (con-name pat s-name &key (list-star nil) (un-grouped nil))
   (let ((arg-names
           (mapcar (lambda (x y) (format nil "~a~a" x y))
                   pat
                   (loop for i from 1 to (length pat) collect i)))
         ;; if the pattern is a star we need to apply a function that
         ;; makes it take n arguments
+        ;; we worry about grouping, as it ruins constructors if they aren't there...
         (pat-to
-          (if (or (not list-star) (equal (car (last pat)) "sexp"))
+          (if (or (not list-star) un-grouped (equal (car (last pat)) "sexp"))
               pat
               (apply-on-last (lambda (x) (format nil "~a `fromStarList`" x)) pat)))
         (pat-from
-          (if (or (not list-star) (equal (car (last pat)) "sexp"))
+          (if (or (not list-star) un-grouped (equal (car (last pat)) "sexp"))
               pat
               (apply-on-last (lambda (x) (format nil "~a `toStarList`" x)) pat)))
         (form-name (format nil "name~a" con-name))
@@ -290,3 +291,19 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 (generate-haskell "DeconBody" (repeat 2 "sexp") nil)
 
 (generate-haskell "Case" '("sexp" "deconBody") "case" :list-star t)
+
+(generate-haskell "Do" '("sexp") ":do" :list-star t)
+
+(generate-haskell "Arrow" '("sexp" "sexp") "%<-" :list-star t)
+
+(generate-haskell "Lambda" '("sexp" "sexp") "lambda")
+
+(generate-haskell "Punned" '("sexp") nil)
+
+(generate-haskell "NotPunned" '("sexp" "sexp") nil)
+
+(generate-haskell "Record" '("nameBind") ":record" :list-star t)
+
+(generate-haskell "RecordNoPunned" '("notPunnedGroup") ":record-no-pun"
+                  :list-star t
+                  :un-grouped t)

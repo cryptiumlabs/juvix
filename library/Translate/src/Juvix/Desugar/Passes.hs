@@ -71,7 +71,7 @@ ifTransform :: Sexp.T -> Sexp.T
 ifTransform xs = Sexp.foldPred xs (== Structure.nameIf) ifToCase
   where
     ifToCase atom cdr =
-      ( case Structure.ifFull (Sexp.Atom atom Sexp.:> cdr) of
+      ( case Structure.toIfFull (Sexp.Atom atom Sexp.:> cdr) of
           Just (Structure.Else ifThenElse) ->
             caseListElse
               (ifThenElse ^. Struct.predicate)
@@ -275,49 +275,51 @@ combineSig [] = []
 --             (Prelude.>> body-n
 --                (… (Prelude.>>= body-n (lambda (name-n) return)))))))
 translateDo :: Sexp.T -> Sexp.T
-translateDo xs = Sexp.foldPred xs (== ":do") doToBind
+translateDo xs = Sexp.foldPred xs (== Structure.nameDo) doToBind
   where
     doToBind atom sexp =
       Sexp.foldr generation acc (Sexp.butLast sexp)
         |> Sexp.addMetaToCar atom
       where
         acc =
-          case Sexp.last sexp of
-            -- toss away last %<-... we should likely throw a warning for this
-            Sexp.List [Sexp.Atom (Sexp.A "%<-" _), _name, body] -> body
-            xs -> xs
+          let last = Sexp.last sexp
+           in case last |> Structure.toArrow of
+                -- toss away last %<-... we should likely throw a warning for this
+                Just arr -> arr ^. Struct.body
+                Nothing -> last
         generation body acc =
-          case body of
-            Sexp.List [Sexp.Atom (Sexp.A "%<-" _), name, body] ->
+          case Structure.toArrow body of
+            Just arr ->
               Sexp.list
                 [ Sexp.atom "Prelude.>>=",
-                  body,
-                  Sexp.list [Sexp.atom "lambda", Sexp.list [name], acc]
+                  arr ^. Struct.body,
+                  Structure.Lambda (Sexp.list [arr ^. Struct.name]) acc
+                    |> Structure.fromLambda
                 ]
-            notBinding ->
-              Sexp.list [Sexp.atom "Prelude.>>", notBinding, acc]
+            Nothing ->
+              Sexp.list [Sexp.atom "Prelude.>>", body, acc]
 
 -- | @removePunnedRecords@ - removes the record puns from the syntax to
 -- have an uniform a-list
 -- - BNF input:
 --   + (:record (punned-1) (name-2 body-2) … (punned-n))
 -- - BNF output:
---   + (:record punned-1 punned-1 name-2 body-2 … punned-n punned-n)
+--   + (:record-no-pun punned-1 punned-1 name-2 body-2 … punned-n punned-n)
 removePunnedRecords :: Sexp.T -> Sexp.T
-removePunnedRecords xs = Sexp.foldPred xs (== ":record") removePunned
+removePunnedRecords xs = Sexp.foldPred xs (== Structure.nameRecord) removePunned
   where
-    removePunned atom sexp =
-      Sexp.listStar
-        [ Sexp.atom ":record-no-pun",
-          Sexp.foldr f Sexp.Nil sexp
-        ]
-        |> Sexp.addMetaToCar atom
+    removePunned atom cdr =
+      case Structure.toRecord (Sexp.Atom atom Sexp.:> cdr) of
+        Just record ->
+          fmap f (record ^. Struct.value)
+            |> Structure.RecordNoPunned
+            |> Structure.fromRecordNoPunned
+            |> Sexp.addMetaToCar atom
+        Nothing -> error "malformed record"
       where
-        f (Sexp.List [field, bind]) acc =
-          field Sexp.:> bind Sexp.:> acc
-        f (Sexp.List [pun]) acc =
-          pun Sexp.:> pun Sexp.:> acc
-        f _ _ = error "malformed record"
+        f (Structure.Pun punned) =
+          Structure.NotPunned (punned ^. Struct.name) (punned ^. Struct.name)
+        f (Structure.NotPun notPunned) = notPunned
 
 ------------------------------------------------------------
 -- Module Pass
@@ -369,7 +371,7 @@ moduleTransform xs = Sexp.foldPred xs (== ":defmodule") moduleToRecord
           ignoreCond body (\b -> Sexp.foldr combine (generatedRecord b) b)
         ]
         |> Sexp.addMetaToCar atom
-    moduleToRecord _ _ = error "malformed record"
+    moduleToRecord _ _ = error "malformed defmodule"
 
 -- | @moduleLetTransform@ - See @moduleTransform@'s comment
 moduleLetTransform :: Sexp.T -> Sexp.T
@@ -384,7 +386,7 @@ moduleLetTransform xs = Sexp.foldPred xs (== ":let-mod") moduleToRecord
           rest
         ]
         |> Sexp.addMetaToCar atom
-    moduleToRecord _ _ = error "malformed record"
+    moduleToRecord _ _ = error "malformed let-mod"
 
 ----------------------------------------
 -- Module Helpers
