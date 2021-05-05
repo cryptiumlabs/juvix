@@ -1,6 +1,7 @@
 -- | Datatype declarations are typechecked here. Usages are passed along.
 module Juvix.Core.IR.CheckDatatype
-  ( module Juvix.Core.IR.CheckDatatype,
+  ( typeCheckAllCons,
+    checkDataType
   )
 where
 

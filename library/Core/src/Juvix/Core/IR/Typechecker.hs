@@ -3,6 +3,7 @@
 -- Datatype declarations are typechecked by @checkDataType@ in CheckDataType.hs.
 -- Function declarations are typechecked by @typeCheckFuns@ in CheckFunction.hs.
 -- Typechecked declarations are added to the signature.
+
 module Juvix.Core.IR.Typechecker
   ( module Juvix.Core.IR.Typechecker,
     module Typed,
