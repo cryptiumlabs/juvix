@@ -502,6 +502,7 @@ Surface language
   + [[Application]]
   + [[ErasedAnn/Types]]
   + [[IR/Evaluator]]
+  + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
@@ -509,7 +510,6 @@ Surface language
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Library/Usage]]
-  + [[IR/Types]]
 ******* Pipeline <<Plonk/Pipeline>>
 - _Relies on_
   + [[Builder]]
@@ -1496,10 +1496,10 @@ Can be added to via core translation
   + [[Core/IR]]
   + [[IR/Types/Base]]
   + [[Globals]]
+  + [[Core/Parameterisation]]
   + [[Library]]
   + [[Feedback]]
   + [[ToCore/Types]]
-  + [[Core/Parameterisation]]
 ***** Internal <<Pipeline/Internal>>
 - _Relies on_
   + [[Core]]
