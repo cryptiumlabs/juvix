@@ -7,6 +7,7 @@ module Juvix.Pipeline.Compile
   )
 where
 
+import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.IR.Types.Base (Elim', Term')
