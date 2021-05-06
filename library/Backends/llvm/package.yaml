@@ -1,7 +1,7 @@
 name:                llvm
 version:             0.1.0.0
 github:              "heliaxdev/juvix"
-license:             BSD3
+license:             GPL-3
 author:              "Heliax AG <hello@heliax.dev>"
 maintainer:          "Heliax AG <hello@heliax.dev>"
 copyright:           "2021 Heliax AG"
