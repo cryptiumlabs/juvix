@@ -509,6 +509,7 @@ Surface language
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Library/Usage]]
+  + [[IR/Types]]
 ******* Pipeline <<Plonk/Pipeline>>
 - _Relies on_
   + [[Builder]]
@@ -1498,6 +1499,7 @@ Can be added to via core translation
   + [[Library]]
   + [[Feedback]]
   + [[ToCore/Types]]
+  + [[Core/Parameterisation]]
 ***** Internal <<Pipeline/Internal>>
 - _Relies on_
   + [[Core]]

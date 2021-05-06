@@ -22,6 +22,7 @@ import Juvix.Backends.Plonk.Types as Types
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.IR.Evaluator as Eval
+import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Types as Core
@@ -30,7 +31,6 @@ import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import Prelude (Show (..))
-import qualified Juvix.Core.IR.Types as IR
 
 isBool :: PrimTy f -> Bool
 isBool PBool = True
@@ -119,7 +119,6 @@ instance Core.CanApply (PrimTy f) where
   apply fun args =
     PApplication fun args
       |> Right
-
 
 data ApplyError f
   = CompilationError CompilationError
