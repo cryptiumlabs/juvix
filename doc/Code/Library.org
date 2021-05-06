@@ -572,6 +572,8 @@ Surface language
   + [[ErasedAnn]]
   + [[Library]]
   + [[Usage]]
+** llvm
+*** Setup <<llvm/Setup>>
 * Core
 ** Setup <<Core/Setup>>
 ** src
