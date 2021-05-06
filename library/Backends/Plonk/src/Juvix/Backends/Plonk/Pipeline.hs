@@ -78,8 +78,6 @@ instance
       (TypedPrim (Types.PrimTy f) (Types.PrimVal f))
       (Types.PrimTy f),
     Show (Arg (Types.PrimTy f)),
-    Show
-      (Arg (TypedPrim (Types.PrimTy f) (Types.PrimVal f))),
     Show (ApplyErrorExtra (Types.PrimTy f)),
     Show
       (ApplyErrorExtra (TypedPrim (Types.PrimTy f) (Types.PrimVal f))),

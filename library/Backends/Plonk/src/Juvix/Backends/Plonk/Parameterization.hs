@@ -30,12 +30,13 @@ import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import Prelude (Show (..))
+import qualified Juvix.Core.IR.Types as IR
 
 isBool :: PrimTy f -> Bool
 isBool PBool = True
 isBool _ = False
 
-hasType :: PrimVal f -> Param.PrimType (PrimTy f) -> Bool
+hasType :: Eq f => PrimVal f -> Param.PrimType (PrimTy f) -> Bool
 hasType (PConst _v) ty
   | length ty == 1 = True
   | otherwise = False
@@ -107,6 +108,11 @@ instance Core.CanApply (PrimTy f) where
     Core.arity hd - fromIntegral (length rest)
   arity x = 0 -- TODO: Refine if/when extending PrimTy
 
+  type Arg (PrimTy f) = Arg' IR.NoExt f
+  pureArg _ = Nothing
+  freeArg _ = fmap App.VarArg . App.freeVar (Proxy @IR.NoExt)
+  boundArg _ = fmap App.VarArg . App.boundVar (Proxy @IR.NoExt)
+
   apply (PApplication fn args1) args2 =
     PApplication fn (args1 <> args2)
       |> Right
@@ -114,11 +120,12 @@ instance Core.CanApply (PrimTy f) where
     PApplication fun args
       |> Right
 
+
 data ApplyError f
   = CompilationError CompilationError
   | ReturnTypeNotPrimitive (ErasedAnn.Type (PrimTy f))
 
-instance Show (ApplyError f) where
+instance Show f => Show (ApplyError f) where
   show (CompilationError perr) = show perr
   show (ReturnTypeNotPrimitive ty) =
     "not a primitive type:\n\t" <> show ty

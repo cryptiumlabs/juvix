@@ -58,8 +58,8 @@ data PrimTy f
   = PField
   | PInt
   | PBool
-  | PApplication (PrimTy f) (NonEmpty (PrimTy f))
-  deriving (Show, Eq, Generic, Data)
+  | PApplication (PrimTy f) (NonEmpty (Arg' IR.NoExt f))
+  deriving (Show, Eq, Generic)
 
 type Return' ext f = App.Return' ext (P.PrimType (PrimTy f)) (PrimVal f)
 
