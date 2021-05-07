@@ -1,6 +1,10 @@
 name:                plonk
 version:             0.1.0.0
-license:             BSD3
+github:              "heliaxdev/juvix"
+license:             GPL-3
+author:              "Heliax AG <hello@heliax.dev>"
+maintainer:          "Heliax AG <hello@heliax.dev>"
+copyright:           "2021 Heliax AG"
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package

@@ -1,10 +1,10 @@
 name:                Pipeline
 version:             0.1.0.0
-github:              "healiaxdev/Pipeline"
-license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2021 Author name here"
+github:              "heliaxdev/juvix"
+license:             GPL-3
+author:              "Heliax AG <hello@heliax.dev>"
+maintainer:          "Heliax AG <hello@heliax.dev>"
+copyright:           "2021 Heliax AG"
 
 extra-source-files:
 - README.org
