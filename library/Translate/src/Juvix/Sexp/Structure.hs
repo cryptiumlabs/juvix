@@ -33,6 +33,7 @@ import qualified Control.Lens as Lens hiding ((|>))
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
+import Juvix.Sexp.Structure.Helpers
 
 -- | @Defun@ is the base defun structure
 -- currently it does not have matching
@@ -723,23 +724,3 @@ toRecordNoPunned form
 fromRecordNoPunned :: RecordNoPunned -> Sexp.T
 fromRecordNoPunned (RecordNoPunned notPunnedGroup1) =
   Sexp.listStar [Sexp.atom nameRecordNoPunned, fromNotPunnedGroup notPunnedGroup1]
-
-------------------------------------------------------------
--- Helpers
-------------------------------------------------------------
-
-fromGen :: (t -> Bool) -> (t -> Maybe a) -> t -> Maybe a
-fromGen pred func form
-  | pred form = func form
-  | otherwise = Nothing
-
-toStarList :: (t -> Sexp.T) -> [t] -> Sexp.T
-toStarList f (x : xs) =
-  f x Sexp.:> toStarList f xs
-toStarList _ [] = Sexp.Nil
-
-fromStarList :: (Sexp.T -> Maybe a) -> Sexp.T -> Maybe [a]
-fromStarList f (x Sexp.:> xs) =
-  (:) <$> f x <*> fromStarList f xs
-fromStarList _ Sexp.Nil = Just []
-fromStarList _ _ = Nothing

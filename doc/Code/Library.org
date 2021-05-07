@@ -1859,6 +1859,11 @@ _TODO_
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
+  + [[Structure/Helpers]]
+****** Helpers <<Structure/Helpers>>
+- _Relies on_
+  + [[Library]]
+  + [[Library/Sexp]]
 **** ToCore
 ***** FromFrontend
 - _Relies on_
