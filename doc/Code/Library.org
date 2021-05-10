@@ -502,7 +502,6 @@ Surface language
   + [[Application]]
   + [[ErasedAnn/Types]]
   + [[IR/Evaluator]]
-  + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
