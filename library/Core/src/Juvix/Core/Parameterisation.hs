@@ -18,7 +18,12 @@ module Juvix.Core.Parameterisation
     ApplyError' (..),
     CanApply (..),
     apply1,
+    apply1Maybe,
+    applyMaybe,
     mapApplyErr,
+    check3Equal,
+    check2Equal,
+    checkFirst2AndLast,
   )
 where
 
@@ -195,3 +200,21 @@ instance HR.ToPPAnn (PP.Ann ty) => HR.ToPPAnn (PPAnn ty) where
       PAArrow -> pure HR.ATyCon
       PAPunct -> pure HR.APunct
       PATy a' -> HR.toPPAnn a'
+
+check3Equal :: Eq a => NonEmpty a -> Bool
+check3Equal (x :| [y, z])
+  | x == y && x == z = True
+  | otherwise = False
+check3Equal (_ :| _) = False
+
+check2Equal :: Eq a => NonEmpty a -> Bool
+check2Equal (x :| [y])
+  | x == y = True
+  | otherwise = False
+check2Equal (_ :| _) = False
+
+checkFirst2AndLast :: Eq t => NonEmpty t -> (t -> Bool) -> Bool
+checkFirst2AndLast (x :| [y, last]) check
+  | check2Equal (x :| [y]) && check last = True
+  | otherwise = False
+checkFirst2AndLast (_ :| _) _ = False

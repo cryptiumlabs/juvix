@@ -38,3 +38,6 @@ tmp/
 
 # OSX
 .DS_Store
+
+# liquid
+*.liquid

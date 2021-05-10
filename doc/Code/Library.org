@@ -275,6 +275,7 @@ Serves as a module for various debugging functions
 - _Relies on_
   + [[Compilation]]
   + [[Michelson/Parameterisation]]
+  + [[Michelson/Pipeline]]
 ******* Contract <<Michelson/Contract>>
 This module provides a default contract environment
 ******* Optimisation
@@ -320,6 +321,16 @@ Module that implements the backend parameters for the Michelson backend.
   + [[NameSymbol]]
   + [[PrettyPrint]]
   + [[Usage]]
+******* Pipeline <<Michelson/Pipeline>>
+- _Relies on_
+  + [[Compilation]]
+  + [[Michelson/Parameterisation]]
+  + [[Core/IR]]
+  + [[Core/Pipeline]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Juvix/Pipeline]]
+  + [[FromFrontend]]
 ******* Compilation
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
@@ -447,6 +458,129 @@ Module that implements the backend parameters for the Michelson backend.
   + [[Compilation/Types]]
   + [[VirtualStack]]
   + [[Untyped]]
+  + [[Library]]
+  + [[Usage]]
+** Plonk
+*** Setup <<Plonk/Setup>>
+*** src
+**** Juvix
+***** Backends
+****** Plonk
+- _Relies on_
+  + [[Builder]]
+  + [[Circuit]]
+  + [[Assignment]]
+  + [[Plonk/Compiler]]
+  + [[Plonk/Dot]]
+  + [[Plonk/IR]]
+  + [[Lang]]
+  + [[Parameterization]]
+  + [[Plonk/Pipeline]]
+  + [[Plonk/Types]]
+******* Builder
+- _Relies on_
+  + [[Circuit]]
+  + [[Plonk/IR]]
+  + [[Library]]
+******* Compiler <<Plonk/Compiler>>
+- _Relies on_
+  + [[Builder]]
+  + [[Circuit]]
+  + [[Plonk/IR]]
+  + [[Plonk/Types]]
+  + [[ErasedAnn/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
+******* Dot <<Plonk/Dot>>
+Visualise circuits using Graphviz
+- _Relies on_
+  + [[Circuit]]
+  + [[Library]]
+******* IR <<Plonk/IR>>
+- _Relies on_
+  + [[Circuit]]
+  + [[Library]]
+******* Lang
+Surface language
+- _Relies on_
+  + [[Builder]]
+  + [[Circuit]]
+  + [[Plonk/IR]]
+  + [[Library]]
+******* Parameterization
+- _Relies on_
+  + [[Plonk/Types]]
+  + [[Application]]
+  + [[ErasedAnn/Types]]
+  + [[IR/Evaluator]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+  + [[Usage]]
+******* Pipeline <<Plonk/Pipeline>>
+- _Relies on_
+  + [[Builder]]
+  + [[Circuit]]
+  + [[Plonk/Compiler]]
+  + [[Plonk/Dot]]
+  + [[Parameterization]]
+  + [[Plonk/Types]]
+  + [[Core/Parameterisation]]
+  + [[Core/IR]]
+  + [[OnlyExts]]
+  + [[Typechecker/Types]]
+  + [[Core/Parameterisation]]
+  + [[Core/Pipeline]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Juvix/Pipeline]]
+  + [[FromFrontend]]
+******* Types <<Plonk/Types>>
+- _Relies on_
+  + [[Application]]
+  + [[ErasedAnn]]
+  + [[ErasedAnn/Types]]
+  + [[IR/Types]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+******* Circuit
+- _Relies on_
+  + [[Library]]
+******** Assignment
+- _Relies on_
+  + [[Circuit]]
+  + [[Library]]
+*** test
+**** Main <<Plonk/test/Main>>
+- _Relies on_
+  + [[Library]]
+**** Test
+***** AnnTerm
+- _Relies on_
+  + [[Plonk]]
+  + [[Plonk]]
+  + [[ErasedAnn]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Usage]]
+***** Compiler <<Test/Compiler>>
+- _Relies on_
+  + [[Plonk]]
+  + [[Plonk]]
+  + [[Core]]
+  + [[Library]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Juvix/Pipeline]]
+***** Example
+****** Polynomial
+- _Relies on_
+  + [[Plonk]]
+  + [[Plonk]]
+  + [[ErasedAnn]]
   + [[Library]]
   + [[Usage]]
 * Core
@@ -626,7 +760,7 @@ temporary lexical bindings as our code encounters binders.
 - _Relies on_
   + [[Erasure/Types]]
   + [[Erasure/Types]]
-  + [[IR]]
+  + [[Core/IR]]
   + [[Typechecker/Types]]
   + [[IR/Types/Base]]
   + [[Library]]
@@ -696,7 +830,7 @@ temporary lexical bindings as our code encounters binders.
 - _Relies on_
   + [[HRAnn/Extend]]
   + [[IR/Types/Base]]
-***** IR
+***** IR <<Core/IR>>
 - _Relies on_
   + [[CheckTerm]]
   + [[IR/Evaluator]]
@@ -909,7 +1043,7 @@ Quantitative type implementation inspired by
 *** Conv
 - _Relies on_
   + [[HR]]
-  + [[IR]]
+  + [[Core/IR]]
   + [[Translate]]
   + [[Library]]
 *** Erasure <<test/Erasure>>
@@ -917,7 +1051,7 @@ Quantitative type implementation inspired by
   + [[Application]]
   + [[Erased]]
   + [[Core/Erasure]]
-  + [[IR]]
+  + [[Core/IR]]
   + [[IR/Typechecker]]
   + [[Core/Parameterisation]]
   + [[Unit]]
@@ -927,6 +1061,21 @@ Quantitative type implementation inspired by
 *** Main <<Core/test/Main>>
 - _Relies on_
   + [[Library]]
+*** Typechecker <<test/Typechecker>>
+Tests for the type checker and evaluator in Core/IR/Typechecker.hs
+- _Relies on_
+  + [[Core/IR]]
+  + [[CheckTerm]]
+  + [[IR/Evaluator]]
+  + [[OnlyExts]]
+  + [[Core/Parameterisation]]
+  + [[All]]
+  + [[Naturals]]
+  + [[Unit]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[Usage]]
 *** Common
 **** Context <<test/Common/Context>>
 - _Relies on_
@@ -951,21 +1100,6 @@ Tests that weak works as expected
   + [[IR/Evaluator]]
   + [[IR/Types]]
   + [[Library]]
-*** Typechecker <<test/Typechecker>>
-Tests for the type checker and evaluator in Core/IR/Typechecker.hs
-- _Relies on_
-  + [[IR]]
-  + [[CheckTerm]]
-  + [[IR/Evaluator]]
-  + [[OnlyExts]]
-  + [[Core/Parameterisation]]
-  + [[All]]
-  + [[Naturals]]
-  + [[Unit]]
-  + [[Core/Types]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[Usage]]
 * EasyPipeline
 ** Setup <<EasyPipeline/Setup>>
 ** src
@@ -1026,7 +1160,6 @@ with any stage of the compiler while modifying the source code.
   end of the parse
 - _Relies on_
   + [[Frontend/Types]]
-  + [[Frontend/Types/Base]]
   + [[Library]]
   + [[Library/Parser]]
   + [[Library/Parser]]
@@ -1230,7 +1363,7 @@ Can be added to via core translation
   + [[Library]]
   + [[NameSymbol]]
 **** Visualize
-***** Dot
+***** Dot <<Visualize/Dot>>
 - Generates a dot file in order to produce a simple image of a
   interaction net
 - Also provides a way of generating gifs (and the images used to
@@ -1260,7 +1393,7 @@ Can be added to via core translation
   + [[InteractionNet/Nets/Default]]
   + [[Type]]
   + [[Library]]
-  + [[Dot]]
+  + [[Visualize/Dot]]
   + [[Visualize/Graph]]
 *** Spec <<InteractionNet/test/Spec>>
 *** Nets
@@ -1356,18 +1489,6 @@ Can be added to via core translation
 ** Setup <<Pipeline/Setup>>
 ** src
 *** Juvix
-**** Backends
-- [[Backends]] are the targets for optimized code output specific to a
-  platform
-- Currently the LLVM backend will serve as the reference
-  implementation
-- The following backends are planned
-  1. LLVM
-  2. Michelson
-  3. WASM
-     - Most likely through LLVM
-  4. Various Arithmetic Circuits
-     - For use in ZKP's
 **** Core
 - _Relies on_
   + [[Juvix/Contextify]]
@@ -1390,7 +1511,7 @@ Can be added to via core translation
   + [[Prim]]
   + [[Core/Erasure]]
   + [[HR]]
-  + [[IR]]
+  + [[Core/IR]]
   + [[IR/Typechecker]]
   + [[Translate]]
   + [[Core/Types]]
@@ -1431,22 +1552,25 @@ Can be added to via core translation
   + [[HashMap]]
 **** Pipeline <<Juvix/Pipeline>>
 - _Relies on_
-  + [[Backend]]
+  + [[Application]]
+  + [[Core/Common/Context]]
+  + [[ErasedAnn]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Library/Sexp]]
   + [[Compile]]
+  + [[Pipeline/Internal]]
   + [[Pipeline/Internal]]
   + [[Pipeline/Types]]
 ***** Compile
 - _Relies on_
   + [[Application]]
-  + [[Core/Common/Context]]
-  + [[IR]]
+  + [[Core/IR]]
   + [[IR/Types/Base]]
   + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Feedback]]
-  + [[Library/Sexp]]
-  + [[Pipeline/Internal]]
   + [[ToCore/Types]]
 ***** Internal <<Pipeline/Internal>>
 - _Relies on_
@@ -1468,52 +1592,28 @@ Can be added to via core translation
   + [[Typechecker/Types]]
   + [[Core/Types]]
   + [[Library]]
-***** Backend
-- _Relies on_
-  + [[Backend/Internal]]
-  + [[Backend/Michelson]]
-****** Internal <<Backend/Internal>>
-- _Relies on_
-  + [[Application]]
-  + [[Core/Common/Context]]
-  + [[ErasedAnn]]
-  + [[Library]]
-  + [[Library/Sexp]]
-  + [[Compile]]
-****** Michelson <<Backend/Michelson>>
-- _Relies on_
-  + [[Compilation]]
-  + [[Michelson/Parameterisation]]
-  + [[IR]]
-  + [[Core/Pipeline]]
-  + [[Library]]
-  + [[Feedback]]
-  + [[Backend/Internal]]
-  + [[Compile]]
-  + [[Pipeline/Internal]]
-  + [[Pipeline/Types]]
-  + [[FromFrontend]]
 ** test
-*** Encoding <<test/Encoding>>
+*** Main <<Pipeline/test/Main>>
+- _Relies on_
+  + [[Library]]
+*** Test
+**** Encoding <<Test/Encoding>>
 - _Relies on_
   + [[Encoding/Encoding]]
   + [[Mendler]]
   + [[Scott]]
   + [[Encoding/Types]]
   + [[Library]]
-*** Main <<Pipeline/test/Main>>
-- _Relies on_
-  + [[Library]]
-*** Pipeline <<test/Pipeline>>
+**** Pipeline <<Test/Pipeline>>
 - _Relies on_
   + [[Backends/Michelson]]
   + [[Compilation]]
-  + [[IR]]
+  + [[Core/IR]]
   + [[Core/Pipeline]]
   + [[Core/Types]]
   + [[Library]]
   + [[Usage]]
-*** RecGroups
+**** RecGroups
 - _Relies on_
   + [[Traverse]]
   + [[Library]]
@@ -1676,6 +1776,21 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Desugar]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
+  + [[Library/Sexp]]
 **** Contextify <<Juvix/Contextify>>
 - _Relies on_
   + [[Contextify/Environment]]
@@ -1794,27 +1909,12 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Library]]
   + [[Library/Sexp]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Desugar]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[Library]]
-  + [[Library/Sexp]]
 **** ToCore
 ***** FromFrontend
 - _Relies on_
   + [[Core/Common/Context]]
   + [[HR]]
-  + [[IR]]
+  + [[Core/IR]]
   + [[Core/Parameterisation]]
   + [[Translate]]
   + [[Library]]
@@ -1826,7 +1926,7 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Core/Common/Context]]
   + [[HR]]
-  + [[IR]]
+  + [[Core/IR]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
@@ -1835,48 +1935,48 @@ done with no extra information needed. Thus we export the following passes
   + [[Library/Sexp]]
   + [[Usage]]
 ** test
-*** Contextify <<test/Contextify>>
+*** Main <<Translate/test/Main>>
+- _Relies on_
+  + [[Library]]
+*** Test
+**** Contextify <<Test/Contextify>>
 - _Relies on_
   + [[Juvix/Contextify]]
   + [[Contextify/Environment]]
   + [[ResolveOpenInfo]]
   + [[Core/Common/Context]]
-  + [[Desugar]]
-  + [[Frontend/Parser]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types/Base]]
   + [[Library]]
-  + [[NameSymbol]]
   + [[Library/Sexp]]
-*** Golden
+**** Golden
 - _Relies on_
   + [[Frontend/Parser]]
   + [[Frontend/Sexp]]
   + [[Frontend/Types]]
   + [[Frontend/Types/Base]]
   + [[Library]]
-*** Main <<Translate/test/Main>>
-- _Relies on_
-  + [[Library]]
-*** Context
-**** Environment <<Context/Environment>>
+**** Context
+***** Environment <<Context/Environment>>
 - _Relies on_
   + [[Juvix/Contextify]]
   + [[Contextify/Environment]]
+  + [[Closure]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+***** Helpers <<Context/Helpers>>
+- _Relies on_
+  + [[Juvix/Contextify]]
   + [[ResolveOpenInfo]]
   + [[ToContext/Types]]
-  + [[Closure]]
   + [[Core/Common/Context]]
   + [[Desugar]]
   + [[Frontend/Parser]]
   + [[Frontend/Sexp]]
   + [[Frontend/Types/Base]]
   + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
   + [[Library/Sexp]]
-*** Contextualise
-**** Contextify <<Contextualise/Contextify>>
+**** Contextualise
+***** Contextify <<Contextualise/Contextify>>
 - _Relies on_
   + [[Juvix/Contextify]]
   + [[Core/Common/Context]]
@@ -1887,17 +1987,29 @@ done with no extra information needed. Thus we export the following passes
   + [[Library]]
   + [[Parser/Internal]]
   + [[Library/Sexp]]
-**** Infix
-***** ShuntYard <<Infix/ShuntYard>>
+***** Infix
+****** ShuntYard <<Infix/ShuntYard>>
 - _Relies on_
   + [[InfixPrecedence/ShuntYard]]
   + [[Library]]
-*** Conversion
-**** ML
+**** Conversion
+***** ML
 Temporary conversion from the Sexpression syntax to the ML syntax
-*** Desugar
-**** Sexp <<Desugar/Sexp>>
+**** Desugar
+***** Sexp <<Desugar/Sexp>>
 - _Relies on_
   + [[Desugar/Passes]]
   + [[Library]]
+  + [[Library/Sexp]]
+**** Sexp
+***** Helpers <<Sexp/Helpers>>
+- _Relies on_
+  + [[Juvix/Contextify]]
+  + [[Core/Common/Context]]
+  + [[Desugar]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types/Base]]
+  + [[Library]]
+  + [[NameSymbol]]
   + [[Library/Sexp]]

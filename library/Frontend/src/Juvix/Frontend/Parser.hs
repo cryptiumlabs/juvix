@@ -28,13 +28,11 @@ import qualified Data.Set as Set
 import qualified Data.Text.Encoding as Encoding
 import Data.Word8 (isDigit)
 import qualified Juvix.Frontend.Types as Types
-import qualified Juvix.Frontend.Types.Base as Types
 import Juvix.Library hiding (guard, list, mod, product, sum)
 import Juvix.Library.Parser (Parser, ParserError, skipLiner, spaceLiner, spacer)
 import qualified Juvix.Library.Parser as J
 import qualified Text.Megaparsec as P
 import qualified Text.Megaparsec.Byte as P
-import qualified Text.Megaparsec.Char.Lexer as PC
 import Prelude (fail)
 
 --------------------------------------------------------------------------------
@@ -145,10 +143,6 @@ expressionGen p =
 -- used to remove do from parsing
 expression' :: Parser Types.Expression
 expression' = expressionGen app''
-
--- used to remove app from parsing
-expression'' :: Parser Types.Expression
-expression'' = expressionGen do'''
 
 -- used to remove both from parsing
 expression''' :: Parser Types.Expression
@@ -725,9 +719,6 @@ prefixSepGen parser = do
 prefixSymbolDotPermissive :: Parser (NonEmpty Symbol)
 prefixSymbolDotPermissive = J.sepBy1H prefixSymbol (P.char J.dot)
 
-prefixCapitalDotPermissive :: Parser (NonEmpty Symbol)
-prefixCapitalDotPermissive = J.sepBy1H prefixCapital (P.char J.dot)
-
 prefixSymbolDot :: Parser (NonEmpty Symbol)
 prefixSymbolDot = prefixSepGen prefixSymbol
 
@@ -804,18 +795,12 @@ topLevelSN = spaceLiner topLevel
 expression'SN :: Parser Types.Expression
 expression'SN = spaceLiner expression'
 
-expression''SN :: Parser Types.Expression
-expression''SN = spaceLiner expression''
-
 expression'''SN :: Parser Types.Expression
 expression'''SN = spaceLiner expression'''
 
 -- TODO: Add Docs
 expressionSN :: Parser Types.Expression
 expressionSN = spaceLiner expression
-
-expressionS :: Parser Types.Expression
-expressionS = spacer expression
 
 signatureConstraintSN :: Parser [Types.Expression]
 signatureConstraintSN = spaceLiner signatureConstraint
@@ -850,15 +835,6 @@ condLogicSN = spaceLiner . condLogic
 typePSN :: Parser Types.Type
 typePSN = spaceLiner typeP
 
-typePS :: Parser Types.Type
-typePS = spacer typeP
-
-recordSN :: Parser Types.Record
-recordSN = spaceLiner record
-
-recordS :: Parser Types.Record
-recordS = spacer record
-
 nameTypeSN :: Parser Types.NameType
 nameTypeSN = spaceLiner nameType
 
@@ -874,23 +850,14 @@ nameParserSN = spaceLiner nameParser
 sumSN :: Parser Types.Sum
 sumSN = spaceLiner sum
 
-sumS :: Parser Types.Sum
-sumS = spaceLiner sum
-
 prefixCapitalDotSN :: Parser (NonEmpty Symbol)
 prefixCapitalDotSN = spaceLiner prefixCapitalDot
-
-prefixCapitalSN :: Parser Symbol
-prefixCapitalSN = spaceLiner prefixCapital
 
 prefixSymbolDotSN :: Parser (NonEmpty Symbol)
 prefixSymbolDotSN = spaceLiner prefixSymbolDot
 
 prefixSymbolSN :: Parser Symbol
 prefixSymbolSN = spaceLiner prefixSymbol
-
-prefixSymbolS :: Parser Symbol
-prefixSymbolS = spacer prefixSymbol
 
 constantSN :: Parser Types.Constant
 constantSN = spaceLiner constant

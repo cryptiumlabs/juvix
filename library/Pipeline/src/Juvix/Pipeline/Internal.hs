@@ -24,7 +24,7 @@ import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.ToCore.FromFrontend as FF
 
 data Error
-  = PipeLine Core.Error
+  = PipelineErr Core.Error
   | ParseErr ParserError
   deriving (Show)
 
@@ -36,10 +36,11 @@ toCore paths = do
     Right x -> do
       from <- Core.ofFrontend x
       case from of
-        Left errr -> pure $ Left (PipeLine errr)
+        Left errr -> pure $ Left (PipelineErr errr)
         Right con -> pure $ Right con
 
 contextToCore ::
+  (Show primTy, Show primVal) =>
   Context.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
   Either (FF.Error primTy primVal) (FF.CoreDefs primTy primVal)
@@ -53,7 +54,9 @@ contextToCore ctx param = do
     pure $ FF.CoreDefs {defs, order = fmap Context.name <$> ordered}
 
 addSig ::
-  ( HasThrow "fromFrontendError" (FF.Error primTy primVal) m,
+  ( Show primTy,
+    Show primVal,
+    HasThrow "fromFrontendError" (FF.Error primTy primVal) m,
     HasReader "param" (P.Parameterisation primTy primVal) m,
     HasState "coreSigs" (FF.CoreSigsHR primTy primVal) m,
     HasState "patVars" (HM.HashMap IR.GlobalName IR.PatternVar) m
@@ -65,7 +68,9 @@ addSig (Context.Entry x feDef) = do
   for_ msig $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
 
 addDef ::
-  ( HasThrow "fromFrontendError" (FF.Error primTy primVal) m,
+  ( Show primTy,
+    Show primVal,
+    HasThrow "fromFrontendError" (FF.Error primTy primVal) m,
     HasReader "param" (P.Parameterisation primTy primVal) m,
     HasState "core" (HM.HashMap NameSymbol.T (FF.CoreDef primTy primVal)) m,
     HasState "coreSigs" (FF.CoreSigsHR primTy primVal) m,

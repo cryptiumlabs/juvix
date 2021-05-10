@@ -38,22 +38,6 @@ import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Type as Untyped
 import Prelude (Show (..), error)
 
--- | Check if the next three types are equal.
--- TODO ∷ refactor this all to not be so bad
--- DO EXTRA CHECKS
-check3Equal :: Eq a => NonEmpty a -> Bool
-check3Equal (x :| [y, z])
-  | x == y && x == z = True
-  | otherwise = False
-check3Equal (_ :| _) = False
-
--- | Check if the next two types are equal.
-check2Equal :: Eq a => NonEmpty a -> Bool
-check2Equal (x :| [y])
-  | x == y = True
-  | otherwise = False
-check2Equal (_ :| _) = False
-
 -- | Can the given type be used as a boolean? Note that in addition to
 -- booleans, integers and natural numbers re valid is well.
 isBool :: PrimTy -> Bool
@@ -62,53 +46,45 @@ isBool (PrimTy (M.Ty M.TInt _)) = True
 isBool (PrimTy (M.Ty M.TNat _)) = True
 isBool _ = False
 
--- | Check if the first two types are equal, and that the last type adhere to
--- the @check@ function.
-checkFirst2AndLast :: Eq t => NonEmpty t -> (t -> Bool) -> Bool
-checkFirst2AndLast (x :| [y, last]) check
-  | check2Equal (x :| [y]) && check last = True
-  | otherwise = False
-checkFirst2AndLast (_ :| _) _ = False
-
 -- | Check if the value has the given type.
 hasType :: RawPrimVal -> P.PrimType PrimTy -> Bool
 hasType tm (P.PrimType ty) = hasType' tm ty
 
 hasType' :: RawPrimVal -> NonEmpty PrimTy -> Bool
-hasType' AddTimeStamp ty = check3Equal ty
-hasType' AddI ty = check3Equal ty
-hasType' AddN ty = check3Equal ty
-hasType' SubI ty = check3Equal ty
-hasType' SubN ty = check3Equal ty
-hasType' SubTimeStamp ty = check3Equal ty
-hasType' MulI ty = check3Equal ty
-hasType' MulN ty = check3Equal ty
-hasType' MulMutez ty = check3Equal ty
-hasType' ORI ty = check3Equal ty
-hasType' OrB ty = check3Equal ty
-hasType' AndI ty = check3Equal ty
-hasType' AndB ty = check3Equal ty
-hasType' XorI ty = check3Equal ty
-hasType' XorB ty = check3Equal ty
-hasType' NotI ty = check2Equal ty
-hasType' NotB ty = check2Equal ty
-hasType' CompareI ty = checkFirst2AndLast ty isBool
-hasType' CompareS ty = checkFirst2AndLast ty isBool
-hasType' CompareP ty = checkFirst2AndLast ty isBool
-hasType' CompareTimeStamp ty = checkFirst2AndLast ty isBool
-hasType' CompareMutez ty = checkFirst2AndLast ty isBool
-hasType' CompareHash ty = checkFirst2AndLast ty isBool
+hasType' AddTimeStamp ty = P.check3Equal ty
+hasType' AddI ty = P.check3Equal ty
+hasType' AddN ty = P.check3Equal ty
+hasType' SubI ty = P.check3Equal ty
+hasType' SubN ty = P.check3Equal ty
+hasType' SubTimeStamp ty = P.check3Equal ty
+hasType' MulI ty = P.check3Equal ty
+hasType' MulN ty = P.check3Equal ty
+hasType' MulMutez ty = P.check3Equal ty
+hasType' ORI ty = P.check3Equal ty
+hasType' OrB ty = P.check3Equal ty
+hasType' AndI ty = P.check3Equal ty
+hasType' AndB ty = P.check3Equal ty
+hasType' XorI ty = P.check3Equal ty
+hasType' XorB ty = P.check3Equal ty
+hasType' NotI ty = P.check2Equal ty
+hasType' NotB ty = P.check2Equal ty
+hasType' CompareI ty = P.checkFirst2AndLast ty isBool
+hasType' CompareS ty = P.checkFirst2AndLast ty isBool
+hasType' CompareP ty = P.checkFirst2AndLast ty isBool
+hasType' CompareTimeStamp ty = P.checkFirst2AndLast ty isBool
+hasType' CompareMutez ty = P.checkFirst2AndLast ty isBool
+hasType' CompareHash ty = P.checkFirst2AndLast ty isBool
 -- Hacks make more exact later
-hasType' EDivI (x :| [y, _]) = check2Equal (x :| [y])
+hasType' EDivI (x :| [y, _]) = P.check2Equal (x :| [y])
 hasType' (Inst M.TRANSFER_TOKENS {}) (_ :| [_, _, _]) = True
 hasType' (Inst M.UNIT {}) (_ :| []) = True
 hasType' (Inst M.BALANCE {}) (_ :| []) = True
 hasType' (Inst (M.IF_CONS _ _)) (bool :| rest)
   | empty == rest = False
-  | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
+  | otherwise = isBool bool && P.check2Equal (NonEmpty.fromList rest)
 hasType' (Inst (M.IF _ _)) (bool :| rest)
   | empty == rest = False
-  | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
+  | otherwise = isBool bool && P.check2Equal (NonEmpty.fromList rest)
 -- todo check this properly
 hasType' (Inst M.PAIR {}) (_ :| (_ : (_ : []))) = True
 -- todo check this properly

@@ -1,8 +1,8 @@
 module Main where
 
 import Juvix.Library (IO)
-import Pipeline (tests)
-import qualified RecGroups
+import Test.Pipeline (tests)
+import qualified Test.RecGroups as RecGroups
 import qualified Test.Tasty as T
 
 pipelineTests :: T.TestTree

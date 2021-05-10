@@ -5,6 +5,7 @@ name: juvix-ci-build-pr
 
 workspace:
   path: /drone/workspace
+  GIT_LFS_SKIP_SMUDGE: "1"
 
 environment:
   STACK_ROOT: /drone/workspace/.stack
@@ -14,6 +15,7 @@ steps:
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
+      - echo "cc407849fd688c544ccc98550b5af412b870db95175163130d5bc10f91a3511d  scripts/pre-run.sh" | sha256sum -c -
       - sh ./scripts/pre-run.sh
 
   - name: restore-cache
@@ -34,9 +36,6 @@ steps:
         from_secret: aws_access_key_id
       AWS_SECRET_ACCESS_KEY:
         from_secret: aws_secret_access_key
-    volumes:
-      - name: cache
-        path: /tmp/cache
     depends_on:
       - script-integrity-check
 
@@ -51,9 +50,6 @@ steps:
   - name: rebuild-cache
     image: meltwater/drone-cache
     pull: if-not-exists
-    volumes:
-      - name: cache
-        path: /tmp/cache
     settings:
       backend: "s3"
       bucket: juvix-drone-cache
@@ -126,11 +122,6 @@ steps:
     depends_on:
       - org-generation-and-code-formatting
 
-volumes:
-  - name: cache
-    host: 
-      path: /tmp/cache
-
 trigger:
   event:
     - pull_request
@@ -144,13 +135,15 @@ workspace:
 
 environment:
   STACK_ROOT: /drone/workspace/.stack
+  GIT_LFS_SKIP_SMUDGE: "1"
 
 steps:
   - name: script-integrity-check
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - sh ./scripts/pre-run.sh
+      - echo "cc407849fd688c544ccc98550b5af412b870db95175163130d5bc10f91a3511d  scripts/pre-run.sh" | sha256sum -c -
+      - sh ./scripts/pre-run.sh 
 
   - name: restore-cache
     image: meltwater/drone-cache
@@ -160,7 +153,7 @@ steps:
       restore: true
       bucket: juvix-drone-cache
       region: eu-west-1
-      cache_key: "{{ checksum \"stack.yaml\" }}-{{ checksum \"package.yaml\" }}"
+      cache_key: "{{ checksum \"stack.yaml\" }}"
       archive_format: "gzip"
       mount:
         - ./.stack-work
@@ -170,9 +163,6 @@ steps:
         from_secret: aws_access_key_id
       AWS_SECRET_ACCESS_KEY:
         from_secret: aws_secret_access_key
-    volumes:
-      - name: cache
-        path: /tmp/cache
     depends_on:
       - script-integrity-check
 
@@ -187,9 +177,6 @@ steps:
   - name: rebuild-cache
     image: meltwater/drone-cache
     pull: if-not-exists
-    volumes:
-      - name: cache
-        path: /tmp/cache
     settings:
       backend: "s3"
       bucket: juvix-drone-cache
@@ -197,7 +184,7 @@ steps:
       rebuild: true
       archive_format: "gzip"
       override: false
-      cache_key: "{{ checksum \"stack.yaml\" }}-{{ checksum \"package.yaml\" }}"
+      cache_key: "{{ checksum \"stack.yaml\" }}"
       mount:
         - ./.stack-work
         - ./.stack
@@ -258,11 +245,6 @@ steps:
     depends_on:
       - test-suite
 
-volumes:
-  - name: cache
-    host: 
-      path: /tmp/cache
-
 trigger:
   event:
     - push
@@ -270,6 +252,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: fac2caa0b0262a83c2d76f4d1c5350711c6c244287a7cac01ea08ef272d04482
+hmac: 8cd62d1e29c4abce865e0ebd30c32fca09b67246cec8f40eccd569cfd1e838b4
 
 ...

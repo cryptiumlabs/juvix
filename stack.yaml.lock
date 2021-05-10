@@ -165,17 +165,6 @@ packages:
   original:
     url: https://github.com/phile314/tasty-silver/archive/f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b.tar.gz
 - completed:
-    size: 16425
-    url: https://github.com/adjoint-io/sonic/archive/77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d.tar.gz
-    name: sonic
-    version: 0.3.0
-    sha256: a2004eb9ea30eba13294c768106847aa6cb1e5cdddfb763cd397ceb6da5c04b9
-    pantry-tree:
-      size: 1385
-      sha256: 144ced136259458ad7a3fc5d7684ec7244dd80afb950041ff34cbf76d6d5e2f5
-  original:
-    url: https://github.com/adjoint-io/sonic/archive/77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d.tar.gz
-- completed:
     subdir: code/morley
     name: morley
     version: 1.14.0
