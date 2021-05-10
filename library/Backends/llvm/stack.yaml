@@ -39,7 +39,12 @@ packages:
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
-# extra-deps: []
+extra-deps:
+- ../../Core
+- ../../StandardLibrary
+- capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
+- github: heliaxdev/extensible-data
+  commit: d11dee6006169cb537e95af28c3541a24194dea8
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
