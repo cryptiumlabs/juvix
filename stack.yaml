@@ -10,7 +10,7 @@ packages:
 - ./library/EasyPipeline
 - ./library/Backends/Michelson
 - ./library/Backends/Plonk
-# - ./library/Backends/LLVM
+- ./library/Backends/llvm
 # - ./library/InteractionNet
 # - ./library/InteractionNetIR
 
