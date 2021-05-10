@@ -118,7 +118,7 @@ data ApplyError f
   = CompilationError CompilationError
   | ReturnTypeNotPrimitive (ErasedAnn.Type (PrimTy f))
 
-instance Show (ApplyError f) where
+instance Show f => Show (ApplyError f) where
   show (CompilationError perr) = show perr
   show (ReturnTypeNotPrimitive ty) =
     "not a primitive type:\n\t" <> show ty

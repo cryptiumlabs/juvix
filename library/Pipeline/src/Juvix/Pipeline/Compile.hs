@@ -11,6 +11,7 @@ import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.IR.Types.Base (Elim', Term')
 import Juvix.Core.IR.Types.Globals
+import qualified Juvix.Core.Parameterisation as Parameterisation
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import Juvix.ToCore.Types (CoreDef (..))
@@ -32,7 +33,14 @@ isMain (IR.RawGFunction (IR.RawFunction (_ :| ["main"]) _ _ _)) = True
 isMain _ = False
 
 unsafeEvalGlobal ::
-  (IR.CanEval IR.NoExt IR.NoExt primTy primVal, Show primTy, Show primVal) =>
+  ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
+    Show primTy,
+    Show primVal,
+    Show (Parameterisation.ApplyErrorExtra primTy),
+    Show (Parameterisation.ApplyErrorExtra primVal),
+    Show (Parameterisation.Arg primTy),
+    Show (Parameterisation.Arg primVal)
+  ) =>
   IR.RawGlobals primTy primVal ->
   IR.RawGlobal primTy primVal ->
   IR.Global primTy primVal
@@ -72,7 +80,14 @@ argReturn ty arg@RawDataArg {rawArgType} =
   arg {rawArgType = baseToReturn ty rawArgType}
 
 argEval ::
-  (IR.CanEval IR.NoExt IR.NoExt primTy primVal, Show primTy, Show primVal) =>
+  ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
+    Show primTy,
+    Show primVal,
+    Show (Parameterisation.ApplyErrorExtra primTy),
+    Show (Parameterisation.ApplyErrorExtra primVal),
+    Show (Parameterisation.Arg primTy),
+    Show (Parameterisation.Arg primVal)
+  ) =>
   IR.RawGlobals primTy primVal ->
   IR.RawDataArg primTy primVal ->
   IR.DataArg primTy primVal
@@ -87,7 +102,14 @@ conReturn ty con@RawDataCon {rawConType, rawConDef} =
   con {rawConType = baseToReturn ty rawConType, rawConDef = funReturn ty <$> rawConDef}
 
 conEval ::
-  (IR.CanEval IR.NoExt IR.NoExt primTy primVal, Show primTy, Show primVal) =>
+  ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
+    Show primTy,
+    Show primVal,
+    Show (Parameterisation.ApplyErrorExtra primTy),
+    Show (Parameterisation.ApplyErrorExtra primVal),
+    Show (Parameterisation.Arg primTy),
+    Show (Parameterisation.Arg primVal)
+  ) =>
   IR.RawGlobals primTy primVal ->
   IR.RawDataCon primTy primVal ->
   IR.DataCon primTy primVal
@@ -102,7 +124,14 @@ funReturn ty (RawFunction name usage term clauses) =
   RawFunction name usage (baseToReturn ty term) (funClauseReturn ty <$> clauses)
 
 funEval ::
-  (IR.CanEval IR.NoExt IR.NoExt primTy primVal, Show primTy, Show primVal) =>
+  ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
+    Show primTy,
+    Show primVal,
+    Show (Parameterisation.ApplyErrorExtra primTy),
+    Show (Parameterisation.ApplyErrorExtra primVal),
+    Show (Parameterisation.Arg primTy),
+    Show (Parameterisation.Arg primVal)
+  ) =>
   IR.RawGlobals primTy primVal ->
   IR.RawFunction primTy primVal ->
   IR.Function primTy primVal
@@ -118,19 +147,39 @@ funClauseReturn ty (RawFunClause _tel patts term catchall) =
 
 -- TODO
 
-funClauseEval 
-  :: (IR.CanEval IR.NoExt IR.NoExt primTy primVal, Show primTy, Show primVal)
-  => IR.RawGlobals primTy primVal ->
+funClauseEval ::
+  ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
+    Show primTy,
+    Show primVal,
+    Show (Parameterisation.ApplyErrorExtra primTy),
+    Show (Parameterisation.ApplyErrorExtra primVal),
+    Show (Parameterisation.Arg primTy),
+    Show (Parameterisation.Arg primVal)
+  ) =>
+  IR.RawGlobals primTy primVal ->
   IR.RawFunClause primTy primVal ->
   IR.FunClause primTy primVal
-funClauseEval globals (RawFunClause tel patts rhs _catchall) =
-  FunClause (telescopeEval globals tel) patts rhs undefined undefined undefined --TODO
+funClauseEval globals (RawFunClause tel patts rhs catchall) =
+  FunClause
+    (telescopeEval globals tel)
+    patts
+    rhs
+    Nothing -- TODO:-- | @Δ ⊢ t@.  The type of the rhs under @clauseTel@.
+    catchall
+    Nothing --TODO
 
-telescopeEval
-  :: (IR.CanEval IR.NoExt IR.NoExt primTy primVal, Show primTy, Show primVal)
-  => IR.RawGlobals primTy primVal
-  -> RawTelescope IR.NoExt primTy primVal
-  -> Telescope IR.NoExt primTy primVal
+telescopeEval ::
+  ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
+    Show primTy,
+    Show primVal,
+    Show (Parameterisation.ApplyErrorExtra primTy),
+    Show (Parameterisation.ApplyErrorExtra primVal),
+    Show (Parameterisation.Arg primTy),
+    Show (Parameterisation.Arg primVal)
+  ) =>
+  IR.RawGlobals primTy primVal ->
+  RawTelescope IR.NoExt primTy primVal ->
+  Telescope IR.NoExt primTy primVal
 telescopeEval globals ts = f <$> ts
   where
     f (n, t) = (n, unsafeEval globals t)
@@ -179,8 +228,17 @@ elimToReturn ty e =
     IR.Ann u a b c -> IR.Ann u (baseToReturn ty a) (baseToReturn ty b) c
 
 unsafeEval ::
-  (IR.CanEval IR.NoExt IR.NoExt primTy primVal, Show primTy, Show primVal) =>
+  ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
+    Show (Parameterisation.Arg primTy),
+    Show (Parameterisation.ApplyErrorExtra primTy),
+    Show (Parameterisation.ApplyErrorExtra primVal),
+    Show (Parameterisation.Arg primVal),
+    Show primTy,
+    Show primVal
+  ) =>
   IR.RawGlobals primTy primVal ->
   IR.Term primTy primVal ->
   IR.Value primTy primVal
-unsafeEval globals t = pTraceShow ("unsafeEval", t, globals) either (panic "Failed to eval term") identity . IR.evalTerm (IR.rawLookupFun' globals) $ t
+unsafeEval globals t = case pTraceShow ("unsafeEval", t, globals) IR.evalTerm (IR.rawLookupFun' globals) t of
+  Right v -> v
+  Left v -> pTraceShow ("Can't eval", v) panic "Failed to eval term"
