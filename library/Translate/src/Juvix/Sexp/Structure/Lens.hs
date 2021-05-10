@@ -1,6 +1,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell #-}
+
 module Juvix.Sexp.Structure.Lens where
 
 import qualified Control.Lens as Lens hiding ((|>))
