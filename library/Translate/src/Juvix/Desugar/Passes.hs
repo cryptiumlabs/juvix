@@ -24,8 +24,8 @@ import Control.Lens hiding ((|>))
 import qualified Data.Set as Set
 import Juvix.Library
 import qualified Juvix.Library.Sexp as Sexp
-import qualified Juvix.Sexp.Structure as Struct
 import qualified Juvix.Sexp.Structure as Structure
+import Juvix.Sexp.Structure.Lens
 import Prelude (error)
 
 --------------------------------------------------------------------------------
@@ -47,16 +47,16 @@ condTransform xs = Sexp.foldPred xs (== Structure.nameCond) condToIf
   where
     condToIf atom cdr
       | Just cond <- Structure.toCond (Sexp.Atom atom Sexp.:> cdr),
-        Just last <- lastMay (cond ^. Struct.entailments) =
+        Just last <- lastMay (cond ^. entailments) =
         let acc =
-              Structure.IfNoElse (last ^. Struct.predicate) (last ^. Struct.answer)
+              Structure.IfNoElse (last ^. predicate) (last ^. answer)
                 |> Structure.fromIfNoElse
-         in foldr generation acc (initSafe (cond ^. Struct.entailments))
+         in foldr generation acc (initSafe (cond ^. entailments))
               |> Sexp.addMetaToCar atom
       | otherwise = error "malformed cond"
     --
     generation predAns acc =
-      Structure.If (predAns ^. Struct.predicate) (predAns ^. Struct.answer) acc
+      Structure.If (predAns ^. predicate) (predAns ^. answer) acc
         |> Structure.fromIf
 
 -- | @ifTransform@ - transforms a generated if form into a case
@@ -74,11 +74,11 @@ ifTransform xs = Sexp.foldPred xs (== Structure.nameIf) ifToCase
       ( case Structure.toIfFull (Sexp.Atom atom Sexp.:> cdr) of
           Just (Structure.Else ifThenElse) ->
             caseListElse
-              (ifThenElse ^. Struct.predicate)
-              (ifThenElse ^. Struct.conclusion)
-              (ifThenElse ^. Struct.alternative)
+              (ifThenElse ^. predicate)
+              (ifThenElse ^. conclusion)
+              (ifThenElse ^. alternative)
           Just (Structure.NoElse ifThen) ->
-            caseList (ifThen ^. Struct.predicate) (ifThen ^. Struct.conclusion)
+            caseList (ifThen ^. predicate) (ifThen ^. conclusion)
           Nothing ->
             error "malformed if"
       )
@@ -94,7 +94,7 @@ ifTransform xs = Sexp.foldPred xs (== Structure.nameIf) ifToCase
         pred
         [createDeconBody "True" then', createDeconBody "False" else']
     createDeconBody con entailment =
-      Struct.DeconBody (Struct.matchConstructor (Sexp.atom con)) entailment
+      Structure.DeconBody (Structure.matchConstructor (Sexp.atom con)) entailment
 
 ------------------------------------------------------------
 -- Defun Transformation
@@ -128,15 +128,15 @@ multipleTransLet xs = Sexp.foldPred xs (== Structure.nameLet) letToLetMatch
        in case Structure.toLet currentForm of
             Just let' ->
               let (letPatternMatches, notMatched) =
-                    grabSim (let' ^. Struct.name) currentForm
-               in Struct.LetMatch (let' ^. Struct.name) letPatternMatches notMatched
-                    |> Struct.fromLetMatch
+                    grabSim (let' ^. name) currentForm
+               in Structure.LetMatch (let' ^. name) letPatternMatches notMatched
+                    |> Structure.fromLetMatch
                     |> Sexp.addMetaToCar atom
             Nothing -> error "malformed let"
     grabSim name xs =
       case grabSimilarBinding name Structure.toLet xs of
         Just (structure, let') ->
-          grabSim name (let' ^. Struct.rest)
+          grabSim name (let' ^. rest)
             |> first (structure :)
         Nothing ->
           ([], xs)
@@ -146,19 +146,19 @@ multipleTransLet xs = Sexp.foldPred xs (== Structure.nameLet) letToLetMatch
 -- structure
 grabSimilarBinding ::
   ( Eq a,
-    Structure.HasName s a,
-    Structure.HasArgs s Sexp.T,
-    Structure.HasBody s Sexp.T
+    HasName s a,
+    HasArgs s Sexp.T,
+    HasBody s Sexp.T
   ) =>
   a ->
   (t -> Maybe s) ->
   t ->
   Maybe (Structure.ArgBody, s)
-grabSimilarBinding name transform form = transform form >>= f
+grabSimilarBinding nameGiven transform form = transform form >>= f
   where
     f form
-      | form ^. Structure.name == name =
-        Just (Structure.ArgBody (form ^. Struct.args) (form ^. Struct.body), form)
+      | form ^. name == nameGiven =
+        Just (Structure.ArgBody (form ^. args) (form ^. body), form)
       | otherwise = Nothing
 
 -- This one and sig combining are odd mans out, as they happen on a
@@ -186,9 +186,9 @@ multipleTransDefun = search
     search ys@(defun : _)
       | Just form <- Structure.toDefun defun,
         -- we do this to get the meta information
-        Just atom <- Sexp.atomFromT (form ^. Structure.name) =
-        let (matchBody, toSearch) = grabSim (form ^. Structure.name) ys
-         in Structure.DefunMatch (form ^. Structure.name) matchBody
+        Just atom <- Sexp.atomFromT (form ^. name) =
+        let (matchBody, toSearch) = grabSim (form ^. name) ys
+         in Structure.DefunMatch (form ^. name) matchBody
               |> Structure.fromDefunMatch
               |> Sexp.addMetaToCar atom
               |> (: search toSearch)
@@ -232,20 +232,20 @@ multipleTransDefun = search
 --         ((arg-n1 … arg-nn) body-n))
 combineSig :: [Sexp.T] -> [Sexp.T]
 combineSig (a : match : xs)
-  | Just sig <- Structure.toSignature a,
+  | Just signature' <- Structure.toSignature a,
     Just m <- Structure.toDefunMatch match,
     -- we do this to get the meta information
-    Just atom <- Sexp.atomFromT (m ^. Structure.name),
-    sig ^. Structure.name == m ^. Structure.name =
+    Just atom <- Sexp.atomFromT (m ^. name),
+    signature' ^. name == m ^. name =
     --
-    Structure.DefunSigMatch (m ^. Struct.name) (sig ^. Struct.sig) (m ^. Struct.args)
+    Structure.DefunSigMatch (m ^. name) (signature' ^. sig) (m ^. args)
       |> Structure.fromDefunSigMatch
       |> Sexp.addMetaToCar atom
       |> (: combineSig xs)
 combineSig (defun : xs)
   | Just def <- Structure.toDefunMatch defun,
-    Just atom <- Sexp.atomFromT (def ^. Structure.name) =
-    Structure.DefunSigMatch (def ^. Struct.name) Sexp.Nil (def ^. Struct.args)
+    Just atom <- Sexp.atomFromT (def ^. name) =
+    Structure.DefunSigMatch (def ^. name) Sexp.Nil (def ^. args)
       |> Structure.fromDefunSigMatch
       |> Sexp.addMetaToCar atom
       |> (: combineSig xs)
@@ -285,19 +285,19 @@ translateDo xs = Sexp.foldPred xs (== Structure.nameDo) doToBind
           let last = Sexp.last sexp
            in case last |> Structure.toArrow of
                 -- toss away last %<-... we should likely throw a warning for this
-                Just arr -> arr ^. Struct.body
+                Just arr -> arr ^. body
                 Nothing -> last
-        generation body acc =
-          case Structure.toArrow body of
+        generation bodyOf acc =
+          case Structure.toArrow bodyOf of
             Just arr ->
               Sexp.list
                 [ Sexp.atom "Prelude.>>=",
-                  arr ^. Struct.body,
-                  Structure.Lambda (Sexp.list [arr ^. Struct.name]) acc
+                  arr ^. body,
+                  Structure.Lambda (Sexp.list [arr ^. name]) acc
                     |> Structure.fromLambda
                 ]
             Nothing ->
-              Sexp.list [Sexp.atom "Prelude.>>", body, acc]
+              Sexp.list [Sexp.atom "Prelude.>>", bodyOf, acc]
 
 -- | @removePunnedRecords@ - removes the record puns from the syntax to
 -- have an uniform a-list
@@ -311,14 +311,14 @@ removePunnedRecords xs = Sexp.foldPred xs (== Structure.nameRecord) removePunned
     removePunned atom cdr =
       case Structure.toRecord (Sexp.Atom atom Sexp.:> cdr) of
         Just record ->
-          fmap f (record ^. Struct.value)
+          fmap f (record ^. value)
             |> Structure.RecordNoPunned
             |> Structure.fromRecordNoPunned
             |> Sexp.addMetaToCar atom
         Nothing -> error "malformed record"
       where
         f (Structure.Pun punned) =
-          Structure.NotPunned (punned ^. Struct.name) (punned ^. Struct.name)
+          Structure.NotPunned (punned ^. name) (punned ^. name)
         f (Structure.NotPun notPunned) = notPunned
 
 ------------------------------------------------------------

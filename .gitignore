@@ -36,5 +36,7 @@ tmp/
 *.parsed
 *.HRGolden
 
+*.liquid
+
 # OSX
 .DS_Store

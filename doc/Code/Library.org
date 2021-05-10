@@ -1830,7 +1830,7 @@ done with no extra information needed. Thus we export the following passes
   + [[Library]]
   + [[Library/Sexp]]
   + [[Structure]]
-  + [[Structure]]
+  + [[Lens]]
 **** Sexp
 ***** Structure
 Hardeing S-expressions into a more readable form. Here we use a
@@ -1864,6 +1864,9 @@ _TODO_
 - _Relies on_
   + [[Library]]
   + [[Library/Sexp]]
+****** Lens
+- _Relies on_
+  + [[Structure]]
 **** ToCore
 ***** FromFrontend
 - _Relies on_
