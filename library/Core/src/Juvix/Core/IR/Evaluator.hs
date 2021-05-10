@@ -212,13 +212,13 @@ toOnlyExtsT ::
   NoExtensions ext1 primTy primVal =>
   IR.Term' ext1 primTy primVal ->
   IR.Term' (OnlyExts.T ext2) primTy primVal
-toOnlyExtsT = extTransformT $ OnlyExts.injector `compose` forgetter
+toOnlyExtsT = extTransformT $ OnlyExts.injector `composeTE` forgetterTE
 
 toOnlyExtsE ::
   NoExtensions ext1 primTy primVal =>
   IR.Elim' ext1 primTy primVal ->
   IR.Elim' (OnlyExts.T ext2) primTy primVal
-toOnlyExtsE = extTransformE $ OnlyExts.injector `compose` forgetter
+toOnlyExtsE = extTransformE $ OnlyExts.injector `composeTE` forgetterTE
 
 toLambda ::
   forall ext ext' primTy primVal.

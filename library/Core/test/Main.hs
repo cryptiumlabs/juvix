@@ -7,13 +7,15 @@ import qualified IR.Weak as Weak
 import Juvix.Library (IO)
 import qualified Test.Tasty as T
 import Typechecker (coreCheckerEval)
+import Unify (coreUnifier)
 
 coreTests :: T.TestTree
 coreTests =
   T.testGroup
     "Core tests"
     [ coreCheckerEval,
-      coreConversions
+      coreConversions,
+      coreUnifier
     ]
 
 allCheckedTests :: T.TestTree

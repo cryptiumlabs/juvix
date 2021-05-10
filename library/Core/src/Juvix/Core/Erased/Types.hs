@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unused-type-patterns #-}
+
 module Juvix.Core.Erased.Types
   ( module Juvix.Core.Erased.Types,
     Term' (..),
@@ -10,11 +12,6 @@ where
 -- import Juvix.Core.Erased.Extend
 import Juvix.Core.Erased.Types.Base
 import qualified Juvix.Core.IR.Typechecker.Types as TC
-import Juvix.Core.IR.Types.Base hiding
-  ( Term' (..),
-    defaultExtTerm,
-    extendTerm,
-  )
 import Juvix.Core.IR.Types.Globals
 import Juvix.Library hiding (Datatype, Type)
 

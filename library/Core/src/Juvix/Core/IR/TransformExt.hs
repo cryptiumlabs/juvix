@@ -1,10 +1,68 @@
 {-# LANGUAGE ViewPatterns #-}
 
 -- | Transformations between different extensions.
-module Juvix.Core.IR.TransformExt where
+module Juvix.Core.IR.TransformExt
+  ( ExtTransformTEF (..),
+    ExtTransformTE,
+    pattern ExtTransformTE,
+    -- fields of ExtTransformTE
+    etStar,
+    etPrimTy,
+    etPrim,
+    etPi,
+    etLam,
+    etSig,
+    etPair,
+    etUnitTy,
+    etUnit,
+    etLet,
+    etElim,
+    etBound,
+    etFree,
+    etApp,
+    etAnn,
+    etTermX,
+    etElimX,
+    extTransformTF,
+    extTransformEF,
+    extTransformT,
+    extTransformE,
+    forgetterTE,
+    extForgetT,
+    extForgetE,
+    composeTE,
+    ExtTransformVNF (..),
+    ExtTransformVN,
+    pattern ExtTransformVN,
+    -- fields of ExtTransformVN
+    etVStar,
+    etVPrimTy,
+    etVPrim,
+    etVPi,
+    etVLam,
+    etVSig,
+    etVPair,
+    etVUnitTy,
+    etVUnit,
+    etVNeutral,
+    etNBound,
+    etNFree,
+    etNApp,
+    etValueX,
+    etNeutralX,
+    extTransformVF,
+    extTransformNF,
+    extTransformV,
+    extTransformN,
+    forgetterVN,
+    extForgetV,
+    extForgetN,
+    composeVN,
+  )
+where
 
 import Data.Coerce
-import Juvix.Core.IR.Types (Elim, NoExt, Term)
+import Juvix.Core.IR.Types (Elim, Neutral, NoExt, Term, Value)
 import Juvix.Core.IR.Types.Base
 import Juvix.Library hiding (Coerce)
 
@@ -31,10 +89,7 @@ data ExtTransformTEF f ext1 ext2 primTy primVal = ExtTransformTEF
 type ExtTransformTE = ExtTransformTEF Identity
 
 pattern Coerce :: Coercible a b => a -> b
-pattern Coerce f <-
-  (coerce -> f)
-  where
-    Coerce f = coerce f
+pattern Coerce f <- (coerce -> f) where Coerce f = coerce f
 
 pattern ExtTransformTE ::
   (XStar ext1 primTy primVal -> XStar ext2 primTy primVal) ->
@@ -148,12 +203,12 @@ extTransformE ::
   Elim' ext2 primTy primVal
 extTransformE fs t = runIdentity $ extTransformEF fs t
 
-forgetter ::
+forgetterTE ::
   ( TermX ext primTy primVal ~ Void,
     ElimX ext primTy primVal ~ Void
   ) =>
   ExtTransformTE ext NoExt primTy primVal
-forgetter =
+forgetterTE =
   ExtTransformTE
     { etStar = const (),
       etPrimTy = const (),
@@ -180,7 +235,7 @@ extForgetT ::
   ) =>
   Term' ext primTy primVal ->
   Term primTy primVal
-extForgetT = extTransformT forgetter
+extForgetT = extTransformT forgetterTE
 
 extForgetE ::
   ( TermX ext primTy primVal ~ Void,
@@ -188,14 +243,14 @@ extForgetE ::
   ) =>
   Elim' ext primTy primVal ->
   Elim primTy primVal
-extForgetE = extTransformE forgetter
+extForgetE = extTransformE forgetterTE
 
-compose ::
+composeTE ::
   Monad f =>
   ExtTransformTEF f ext2 ext3 primTy primVal ->
   ExtTransformTEF f ext1 ext2 primTy primVal ->
   ExtTransformTEF f ext1 ext3 primTy primVal
-compose fs gs =
+composeTE fs gs =
   ExtTransformTEF
     { etfStar = etfStar fs <=< etfStar gs,
       etfPrimTy = etfPrimTy fs <=< etfPrimTy gs,
@@ -214,4 +269,184 @@ compose fs gs =
       etfAnn = etfAnn fs <=< etfAnn gs,
       etfTermX = etfTermX fs <=< etfTermX gs,
       etfElimX = etfElimX fs <=< etfElimX gs
+    }
+
+data ExtTransformVNF f ext1 ext2 primTy primVal = ExtTransformVNF
+  { etfVStar :: XVStar ext1 primTy primVal -> f (XVStar ext2 primTy primVal),
+    etfVPrimTy :: XVPrimTy ext1 primTy primVal -> f (XVPrimTy ext2 primTy primVal),
+    etfVPi :: XVPi ext1 primTy primVal -> f (XVPi ext2 primTy primVal),
+    etfVLam :: XVLam ext1 primTy primVal -> f (XVLam ext2 primTy primVal),
+    etfVSig :: XVSig ext1 primTy primVal -> f (XVSig ext2 primTy primVal),
+    etfVPair :: XVPair ext1 primTy primVal -> f (XVPair ext2 primTy primVal),
+    etfVUnitTy :: XVUnitTy ext1 primTy primVal -> f (XVUnitTy ext2 primTy primVal),
+    etfVUnit :: XVUnit ext1 primTy primVal -> f (XVUnit ext2 primTy primVal),
+    etfVNeutral ::
+      XVNeutral ext1 primTy primVal ->
+      f (XVNeutral ext2 primTy primVal),
+    etfVPrim :: XVPrim ext1 primTy primVal -> f (XVPrim ext2 primTy primVal),
+    etfNBound :: XNBound ext1 primTy primVal -> f (XNBound ext2 primTy primVal),
+    etfNFree :: XNFree ext1 primTy primVal -> f (XNFree ext2 primTy primVal),
+    etfNApp :: XNApp ext1 primTy primVal -> f (XNApp ext2 primTy primVal),
+    etfValueX :: ValueX ext1 primTy primVal -> f (ValueX ext2 primTy primVal),
+    etfNeutralX :: NeutralX ext1 primTy primVal -> f (NeutralX ext2 primTy primVal)
+  }
+
+type ExtTransformVN = ExtTransformVNF Identity
+
+pattern ExtTransformVN ::
+  (XVStar ext1 primTy primVal -> XVStar ext2 primTy primVal) ->
+  (XVPrimTy ext1 primTy primVal -> XVPrimTy ext2 primTy primVal) ->
+  (XVPi ext1 primTy primVal -> XVPi ext2 primTy primVal) ->
+  (XVLam ext1 primTy primVal -> XVLam ext2 primTy primVal) ->
+  (XVSig ext1 primTy primVal -> XVSig ext2 primTy primVal) ->
+  (XVPair ext1 primTy primVal -> XVPair ext2 primTy primVal) ->
+  (XVUnitTy ext1 primTy primVal -> XVUnitTy ext2 primTy primVal) ->
+  (XVUnit ext1 primTy primVal -> XVUnit ext2 primTy primVal) ->
+  (XVNeutral ext1 primTy primVal -> XVNeutral ext2 primTy primVal) ->
+  (XVPrim ext1 primTy primVal -> XVPrim ext2 primTy primVal) ->
+  (XNBound ext1 primTy primVal -> XNBound ext2 primTy primVal) ->
+  (XNFree ext1 primTy primVal -> XNFree ext2 primTy primVal) ->
+  (XNApp ext1 primTy primVal -> XNApp ext2 primTy primVal) ->
+  (ValueX ext1 primTy primVal -> ValueX ext2 primTy primVal) ->
+  (NeutralX ext1 primTy primVal -> NeutralX ext2 primTy primVal) ->
+  ExtTransformVN ext1 ext2 primTy primVal
+pattern ExtTransformVN
+  { etVStar,
+    etVPrimTy,
+    etVPi,
+    etVLam,
+    etVSig,
+    etVPair,
+    etVUnitTy,
+    etVUnit,
+    etVNeutral,
+    etVPrim,
+    etNBound,
+    etNFree,
+    etNApp,
+    etValueX,
+    etNeutralX
+  } =
+  ExtTransformVNF
+    { etfVStar = Coerce etVStar,
+      etfVPrimTy = Coerce etVPrimTy,
+      etfVPi = Coerce etVPi,
+      etfVLam = Coerce etVLam,
+      etfVSig = Coerce etVSig,
+      etfVPair = Coerce etVPair,
+      etfVUnitTy = Coerce etVUnitTy,
+      etfVUnit = Coerce etVUnit,
+      etfVNeutral = Coerce etVNeutral,
+      etfVPrim = Coerce etVPrim,
+      etfNBound = Coerce etNBound,
+      etfNFree = Coerce etNFree,
+      etfNApp = Coerce etNApp,
+      etfValueX = Coerce etValueX,
+      etfNeutralX = Coerce etNeutralX
+    }
+
+extTransformVF ::
+  Applicative f =>
+  ExtTransformVNF f ext1 ext2 primTy primVal ->
+  Value' ext1 primTy primVal ->
+  f (Value' ext2 primTy primVal)
+extTransformVF fs = \case
+  VStar' ℓ a -> VStar' ℓ <$> etfVStar fs a
+  VPrimTy' p a -> VPrimTy' p <$> etfVPrimTy fs a
+  VPi' π s t a ->
+    VPi' π <$> extTransformVF fs s <*> extTransformVF fs t <*> etfVPi fs a
+  VLam' t a ->
+    VLam' <$> extTransformVF fs t <*> etfVLam fs a
+  VSig' π s t a ->
+    VSig' π <$> extTransformVF fs s <*> extTransformVF fs t <*> etfVSig fs a
+  VPair' s t a ->
+    VPair' <$> extTransformVF fs s <*> extTransformVF fs t <*> etfVPair fs a
+  VUnitTy' a -> VUnitTy' <$> etfVUnitTy fs a
+  VUnit' a -> VUnit' <$> etfVUnit fs a
+  VNeutral' n a -> VNeutral' <$> extTransformNF fs n <*> etfVNeutral fs a
+  VPrim' p a -> VPrim' p <$> etfVPrim fs a
+  ValueX a -> ValueX <$> etfValueX fs a
+
+extTransformV ::
+  ExtTransformVN ext1 ext2 primTy primVal ->
+  Value' ext1 primTy primVal ->
+  Value' ext2 primTy primVal
+extTransformV fs = runIdentity . extTransformVF fs
+
+extTransformNF ::
+  Applicative f =>
+  ExtTransformVNF f ext1 ext2 primTy primVal ->
+  Neutral' ext1 primTy primVal ->
+  f (Neutral' ext2 primTy primVal)
+extTransformNF fs = \case
+  NBound' i a -> NBound' i <$> etfNBound fs a
+  NFree' x a -> NFree' x <$> etfNFree fs a
+  NApp' f s a ->
+    NApp' <$> extTransformNF fs f <*> extTransformVF fs s <*> etfNApp fs a
+  NeutralX a -> NeutralX <$> etfNeutralX fs a
+
+extTransformN ::
+  ExtTransformVN ext1 ext2 primTy primVal ->
+  Neutral' ext1 primTy primVal ->
+  Neutral' ext2 primTy primVal
+extTransformN fs = runIdentity . extTransformNF fs
+
+forgetterVN ::
+  ( ValueX ext primTy primVal ~ Void,
+    NeutralX ext primTy primVal ~ Void
+  ) =>
+  ExtTransformVN ext NoExt primTy primVal
+forgetterVN =
+  ExtTransformVN
+    { etVStar = const (),
+      etVPrimTy = const (),
+      etVPrim = const (),
+      etVPi = const (),
+      etVSig = const (),
+      etVPair = const (),
+      etVUnitTy = const (),
+      etVUnit = const (),
+      etVLam = const (),
+      etVNeutral = const (),
+      etNBound = const (),
+      etNFree = const (),
+      etNApp = const (),
+      etValueX = absurd,
+      etNeutralX = absurd
+    }
+
+extForgetV ::
+  (ValueX ext primTy primVal ~ Void, NeutralX ext primTy primVal ~ Void) =>
+  Value' ext primTy primVal ->
+  Value primTy primVal
+extForgetV = extTransformV forgetterVN
+
+extForgetN ::
+  (ValueX ext primTy primVal ~ Void, NeutralX ext primTy primVal ~ Void) =>
+  Neutral' ext primTy primVal ->
+  Neutral primTy primVal
+extForgetN = extTransformN forgetterVN
+
+composeVN ::
+  Monad f =>
+  ExtTransformVNF f ext2 ext3 primTy primVal ->
+  ExtTransformVNF f ext1 ext2 primTy primVal ->
+  ExtTransformVNF f ext1 ext3 primTy primVal
+composeVN fs gs =
+  ExtTransformVNF
+    { etfVStar = etfVStar fs <=< etfVStar gs,
+      etfVPrimTy = etfVPrimTy fs <=< etfVPrimTy gs,
+      etfVPi = etfVPi fs <=< etfVPi gs,
+      etfVLam = etfVLam fs <=< etfVLam gs,
+      etfVSig = etfVSig fs <=< etfVSig gs,
+      etfVPair = etfVPair fs <=< etfVPair gs,
+      etfVUnitTy = etfVUnitTy fs <=< etfVUnitTy gs,
+      etfVUnit = etfVUnit fs <=< etfVUnit gs,
+      etfVNeutral = etfVNeutral fs <=< etfVNeutral gs,
+      etfVPrim = etfVPrim fs <=< etfVPrim gs,
+      etfNBound = etfNBound fs <=< etfNBound gs,
+      etfNFree = etfNFree fs <=< etfNFree gs,
+      etfNApp = etfNApp fs <=< etfNApp gs,
+      etfValueX = etfValueX fs <=< etfValueX gs,
+      etfNeutralX = etfNeutralX fs <=< etfNeutralX gs
     }

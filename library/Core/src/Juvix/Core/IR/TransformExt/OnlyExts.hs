@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unused-type-patterns #-}
+
 -- | A transformation that discards all annotations on term/elim nodes, but
 -- keeps the extensions.
 module Juvix.Core.IR.TransformExt.OnlyExts where

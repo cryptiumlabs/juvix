@@ -683,7 +683,6 @@ temporary lexical bindings as our code encounters binders.
 - _Relies on_
   + [[Erased/Types/Base]]
   + [[Typechecker/Types]]
-  + [[IR/Types/Base]]
   + [[Globals]]
   + [[Library]]
 ******* Base <<Erased/Types/Base>>
@@ -728,9 +727,9 @@ temporary lexical bindings as our code encounters binders.
   + [[Usage]]
 ***** Erasure <<Core/Erasure>>
 - _Relies on_
-  + [[Algorithm]]
+  + [[Erasure/Algorithm]]
   + [[Erasure/Types]]
-****** Algorithm
+****** Algorithm <<Erasure/Algorithm>>
 - _Relies on_
   + [[Erasure/Types]]
   + [[Erasure/Types]]
@@ -978,6 +977,53 @@ Quantitative type implementation inspired by
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
+***** Unify <<Core/Unify>>
+- _Relies on_
+  + [[Unify/Algorithm]]
+  + [[Unify/Types]]
+****** Algorithm <<Unify/Algorithm>>
+- _Relies on_
+  + [[Evaluator/Weak]]
+  + [[IR/Types]]
+  + [[MetaVar]]
+  + [[Unify/Types]]
+  + [[Library]]
+  + [[Usage]]
+****** Extend <<Unify/Extend>>
+- _Relies on_
+  + [[IR/Types/Base]]
+  + [[MetaVar]]
+****** MetaVar
+- _Relies on_
+  + [[Evaluator/Weak]]
+  + [[Library]]
+****** Subst <<Unify/Subst>>
+- _Relies on_
+  + [[Evaluator/Weak]]
+  + [[MetaVar]]
+  + [[MetaVar]]
+  + [[Term]]
+  + [[Library]]
+****** Term
+- _Relies on_
+  + [[TransformExt]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Unify/Extend]]
+  + [[MetaVar]]
+  + [[MetaVar]]
+  + [[Library]]
+****** Types <<Unify/Types>>
+- _Relies on_
+  + [[Evaluator/Weak]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[MetaVar]]
+  + [[MetaVar]]
+  + [[Unify/Subst]]
+  + [[Term]]
+  + [[Library]]
+  + [[Usage]]
 ** test
 *** Conv
 - _Relies on_
@@ -1014,6 +1060,14 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Library]]
   + [[HashMap]]
   + [[Usage]]
+*** Unify <<test/Unify>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[IR/Types]]
+  + [[Naturals]]
+  + [[Core/Unify]]
+  + [[MetaVar]]
+  + [[Library]]
 *** Common
 **** Context <<test/Common/Context>>
 - _Relies on_
