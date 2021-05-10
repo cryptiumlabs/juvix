@@ -347,6 +347,7 @@ instructionOf x ty =
     Types.Constant _ -> error "tried to convert a to prim"
     Types.Inst _ -> error "tried to convert an inst to an inst!"
 
+
 appM :: Env.Reduction m => Types.RawTerm -> [Types.RawTerm] -> m Env.Expanded
 appM form@(Types.Ann _u ty t) args =
   let app = inst form >>= flip applyExpanded args

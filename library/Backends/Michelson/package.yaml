@@ -85,8 +85,11 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - directory
     - michelson
     - tasty
+    - tasty-golden
     - tasty-hunit
-    - tasty-silver
     - tasty-quickcheck
+    - tasty-silver
+    - unordered-containers

@@ -20,6 +20,20 @@ import qualified Michelson.Untyped.Value as Value
 import qualified Tezos.Core as Core
 import qualified Tezos.Crypto as Crypto
 
+-- dummyInterpretContract ::
+--   Alias.Contract -> Maybe (Interpret.ContractReturn st)
+-- dummyInterpretContract contract = interpret <$> Entry.mkEntrypointCall (Entry.EpNameUnsafe "") Entry.starParamNotes
+--   where
+--     interpret entry = 
+--       Interpret.interpret
+--         contract
+--         entry
+--         Value.ValueUnit
+--         Value.ValueUnit
+--         Contract.dummyContractEnv
+-- TODO
+dummyInterpretContract = notImplemented
+
 dummyInterpret ::
   Types.EmptyInstr ->
   Either Types.CompilationError Alias.Value

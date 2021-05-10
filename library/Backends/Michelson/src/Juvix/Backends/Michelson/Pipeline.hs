@@ -48,5 +48,8 @@ instance HasBackend BMichelson where
     let (res, _logs) = M.compileContract $ CorePipeline.toRaw term
     case res of
       Right c -> do
+        -- TODO: Maybe avoid having writeout. 
+        -- Need some other interpretation for tests
+        -- Maybe use effects 
         writeout out $ M.untypedContractToSource (fst c)
       Left err -> Feedback.fail $ show err
