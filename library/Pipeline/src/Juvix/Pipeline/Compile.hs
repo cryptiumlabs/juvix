@@ -7,7 +7,6 @@ module Juvix.Pipeline.Compile
   )
 where
 
-import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.IR.Types.Base (Elim', Term')
@@ -16,6 +15,8 @@ import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import Juvix.ToCore.Types (CoreDef (..))
 import qualified Prelude as P
+import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
+
 
 type Pipeline = Feedback.FeedbackT [] P.String IO
 
@@ -117,19 +118,19 @@ funClauseReturn ty (RawFunClause _tel patts term catchall) =
 
 -- TODO
 
-funClauseEval ::
-  (IR.CanEval IR.NoExt IR.NoExt primTy primVal, Show primTy, Show primVal) =>
-  IR.RawGlobals primTy primVal ->
+funClauseEval 
+  :: (IR.CanEval IR.NoExt IR.NoExt primTy primVal, Show primTy, Show primVal)
+  => IR.RawGlobals primTy primVal ->
   IR.RawFunClause primTy primVal ->
   IR.FunClause primTy primVal
 funClauseEval globals (RawFunClause tel patts rhs _catchall) =
   FunClause (telescopeEval globals tel) patts rhs undefined undefined undefined --TODO
 
-telescopeEval ::
-  (IR.CanEval IR.NoExt IR.NoExt primTy primVal, Show primTy, Show primVal) =>
-  IR.RawGlobals primTy primVal ->
-  RawTelescope IR.NoExt primTy primVal ->
-  Telescope IR.NoExt primTy primVal
+telescopeEval
+  :: (IR.CanEval IR.NoExt IR.NoExt primTy primVal, Show primTy, Show primVal)
+  => IR.RawGlobals primTy primVal
+  -> RawTelescope IR.NoExt primTy primVal
+  -> Telescope IR.NoExt primTy primVal
 telescopeEval globals ts = f <$> ts
   where
     f (n, t) = (n, unsafeEval globals t)
