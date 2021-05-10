@@ -1,0 +1,16 @@
+mod Identity where
+
+open Prelude
+open Michelson
+
+sig make-pair : list operation -> int -> pair (list operation) int
+let make-pair = %Michelson.pair
+
+sig nil : list operation
+let nil = %Michelson.nil
+
+sig car : pair int int -> int
+let car = %Michelson.car
+
+sig main : pair int int -> pair (list operation) int
+let main = \params -> make-pair nil (car params)

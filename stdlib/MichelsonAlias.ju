@@ -1,0 +1,28 @@
+mod Prelude.Michelson.Alias where
+
+open Prelude
+open Prelude.Michelson
+
+declare infixl (+) 5
+sig (+) : nat -> nat -> nat
+let (+) = add nat
+
+declare infixl (-) 4
+sig (-) : nat -> nat -> nat
+let (-) = sub nat
+
+declare infixl (*) 3
+sig (*) : nat -> nat -> nat
+let (*) = mul nat
+
+declare infixl (/) 2
+sig (/) : nat -> nat -> nat
+let (/) = div nat
+
+declare infixl (||) 5
+sig (||) : bool -> bool -> bool
+let (||) = or bool
+
+declare infixl (&&) 5
+sig (&&) : bool -> bool -> bool
+let (&&) = and%

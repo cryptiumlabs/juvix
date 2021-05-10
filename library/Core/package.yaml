@@ -1,0 +1,92 @@
+name:                core
+version:             0.1.0.0
+github:              "heliaxdev/juvix"
+license:             GPL-3
+author:              "Heliax AG <hello@heliax.dev>"
+maintainer:          "Heliax AG <hello@heliax.dev>"
+copyright:           "2020 Heliax AG"
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/Core#readme>
+
+dependencies:
+- base >= 4.11 && < 5
+- standard-library
+- text
+- parsec
+- extensible-data
+- containers
+- unordered-containers
+- stm-containers
+- lens
+- dlist
+
+default-extensions:
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - NoMonomorphismRestriction
+  - RankNTypes
+  - LambdaCase
+  - UnicodeSyntax
+  - GADTs
+  - ScopedTypeVariables
+  - DeriveDataTypeable
+  - DeriveGeneric
+  - DerivingStrategies
+  - FlexibleContexts
+  - FlexibleInstances
+  - DataKinds
+  - GeneralizedNewtypeDeriving
+  - DefaultSignatures
+  - QuasiQuotes
+  - TypeOperators
+  - MultiParamTypeClasses
+  - MultiWayIf
+  - TypeInType
+  - DerivingVia
+  - TypeApplications
+  - StandaloneDeriving
+  - FunctionalDependencies
+  - PatternSynonyms
+  - TypeFamilies
+  - ConstraintKinds
+  - EmptyDataDeriving
+  - TemplateHaskell
+  - NamedFieldPuns
+  - DisambiguateRecordFields
+  - TupleSections
+  - BlockArguments
+
+ghc-options:
+  - -ferror-spans
+  - -Wall
+  - -fno-warn-orphans
+  - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
+  - -j
+  - -static
+  - -fwrite-ide-info
+
+library:
+  source-dirs: src
+
+tests:
+  core-test:
+    main:                Main.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - core
+    - tasty
+    - tasty-hunit
+    - tasty-silver
+    - tasty-quickcheck

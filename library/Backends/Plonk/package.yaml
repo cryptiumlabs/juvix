@@ -1,0 +1,106 @@
+name:                plonk
+version:             0.1.0.0
+github:              "heliaxdev/juvix"
+license:             GPL-3
+author:              "Heliax AG <hello@heliax.dev>"
+maintainer:          "Heliax AG <hello@heliax.dev>"
+copyright:           "2021 Heliax AG"
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+
+dependencies:
+  - aeson
+  - base >= 4.7 && < 5
+  - core
+  - Pipeline
+  - translate
+  - unordered-containers
+  - containers
+  - elliptic-curve
+  - filepath
+  - galois-field
+  - pairing
+  - parsec
+  - process-extras
+  - poly
+  - semirings
+  - standard-library
+  - text
+  - vector
+  - wl-pprint-text
+  
+  ###########################
+  # Pretty printer
+  ###########################
+  - pretty-simple
+
+default-extensions:
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - NoMonomorphismRestriction
+  - RankNTypes
+  - LambdaCase
+  - UnicodeSyntax
+  - GADTs
+  - DerivingVia
+  - MultiWayIf
+  - DataKinds
+  - TypeApplications
+  - ConstraintKinds
+  - StandaloneDeriving
+  - TypeFamilies
+  - NamedFieldPuns
+  - DisambiguateRecordFields
+  - TupleSections
+  - DeriveGeneric
+  - DeriveDataTypeable
+  - GeneralizedNewtypeDeriving
+  - ScopedTypeVariables
+  - FlexibleContexts
+  - FlexibleInstances
+  - MultiParamTypeClasses
+
+
+library:
+  source-dirs: src
+  exposed-modules:
+    - Juvix.Backends.Plonk
+  ghc-options:
+    -Werror
+    -Wall
+    -Wcompat
+    -Wincomplete-record-updates
+    -Wredundant-constraints
+    -Wno-unused-matches
+    -Wno-name-shadowing
+    -Wno-type-defaults
+    -Wno-orphans
+    -Wno-incomplete-uni-patterns
+    -Wno-incomplete-patterns
+tests:
+  plonk-test:
+    main:                Main.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - directory
+    - generic-arbitrary
+    - plonk
+    - protolude
+    - QuickCheck
+    - scientific
+    - tasty
+    - tasty-golden
+    - tasty-hunit
+    - tasty-quickcheck
+    - tasty-silver
+    - unordered-containers

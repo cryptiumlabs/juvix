@@ -1,0 +1,19 @@
+mod Duplicate where
+
+open Prelude
+open Michelson
+
+sig make-pair : list operation -> pair nat nat -> pair (list operation) (pair nat nat)
+let make-pair = %Michelson.pair
+
+sig make-pair2 : nat -> nat -> pair nat nat
+let make-pair2 = %Michelson.pair
+
+sig nil : list operation
+let nil = %Michelson.nil
+
+sig car : pair nat (pair nat nat) -> nat
+let car = %Michelson.car
+
+sig main : pair nat (pair nat nat) -> pair (list operation) (pair nat nat)
+let main = \ps -> make-pair nil (make-pair2 (car ps) (car ps))

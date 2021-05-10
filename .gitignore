@@ -6,11 +6,15 @@
 
 # Emacs Temporary
 *.*~
+*.*#
 
 # Haskell temporary
 .ghci
 .stack-work/
-juvix.cabal
+.stack/
+*/.stack-work/
+*.hie
+*.cabal
 
 # Juvix temporary
 juvix.yaml
@@ -27,3 +31,13 @@ tmp/
 # LLVM temporary
 *.ll
 *.s
+
+# Testing temporary
+*.parsed
+*.HRGolden
+
+# OSX
+.DS_Store
+
+# liquid
+*.liquid

@@ -1,11 +1,12 @@
 # Contributing
 
-Contributions are welcome! Please consider the following guidelines.
+Contributions are welcome! Please follow the [style guide](https://github.com/cryptiumlabs/juvix/blob/develop/doc/STYLEGUIDE.md) and the below guidelines.
 
 ## Code formatting
 
-- Run `make format` to automatically format your code.
-- Any changes to code style should be submitted as pull requests to https://github.com/cryptiumlabs/ormolu
+The formatter should run each time you commit. See "Pre-commit hooks" section
+below. 
+See also the [style guide](https://github.com/cryptiumlabs/juvix/blob/develop/doc/STYLEGUIDE.md).
 
 ## Documentation
 

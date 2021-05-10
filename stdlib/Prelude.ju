@@ -1,0 +1,33 @@
+mod Prelude where
+
+-- it seems custom arrow syntax is not operational
+
+let ty_ = %Builtin.Type
+
+sig ty : ty_ 1
+let ty = ty_ 0
+
+let omega = %Builtin.Omega
+let arr = %Builtin.Arrow
+let dpair = %Builtin.Pair
+
+let (->) = arr omega
+declare infixr (->) 1
+
+let (:) = %Builtin.Colon
+declare infixr (:) 2
+
+sig id : (a : ty) -> a -> a
+let id _ x = x
+
+sig const : (a : ty) -> (b : ty) -> a -> b -> a
+let const _ _ x = \_ -> x
+
+-- sig flip : (a : ty) -> (b : ty) -> (c : ty) -> b -> a -> c
+-- let flip _ _ _ f x y = f y x
+
+-- TODO FIXME
+--declare infixl (.) 9
+
+--sig (.) : (a : ty) -> (b : ty) -> (c : ty) -> (b -> c) -> (a -> b) -> (a -> c)
+--let (.) f g = \x -> f (g x)

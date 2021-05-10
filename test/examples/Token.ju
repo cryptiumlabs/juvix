@@ -1,0 +1,126 @@
+open Prelude
+
+mod Token =
+  let Address = s : String.T {String.length s == 36}
+
+  type Storage = {
+    total-supply : Nat.T,
+    accounts     : Accounts.T { Accounts.measure-value == total-supply }
+  }
+
+  sig empty-storage : Storage
+  let empty-storage = {
+    total-supply = 0,
+    accounts     = Accounts.empty,
+  }
+
+  type T = {
+    storage : Storage,
+    version : Nat.T,
+    name    : String.T,
+    symbol  : Char.T,
+    owner   : Address,
+  }
+end
+
+mod Transaction =
+
+  type Transfer = {
+    from-account : Token.Address,
+    to-account   : Token.Address,
+    ammount      : Nat.T,
+  }
+
+  type Mint = {
+    mint-amount     : Nat.T,
+    mint-to-account : Token.Address,
+  }
+
+  type Burn = {
+    burn-amount       : Nat.T,
+    burn-from-account : Token.Address,
+  }
+
+  type Data =
+    | Transfer : Transfer -> Data
+    | Mint     : Mint     -> Data
+    | Burn     : Burn     -> Data
+
+  type T = {
+    data               : Data,
+    authorized-account : Token.Address,
+  }
+end
+
+sig has-n : Accounts.T -> Token.Address -> Nat -> Bool
+let has-n accounts add to-transfer =
+  case Accounts.select accounts add of
+    | Just n  -> to-transfer <= n
+    | Nothing -> False
+
+sig account-sub : acc : Accounts.T
+               -> add : Token.Address
+               -> num : Nat.T {has-n acc add num}
+               -> Accounts.T
+let account-sub accounts add number =
+case Accounts.select accounts add of
+  | Just balance ->
+      Accounts.put accounts add (balance - number)
+
+sig account-add : Accounts.T -> Token.Address -> Nat.T -> Accounts.T
+let account-add accounts add number =
+  Accounts.update accounts ((+) number) add
+
+sig transfer-stor : stor  : Token.Storage
+                 -> from  : Token.Address
+                 -> to    : Token.Address
+                 -> num   : Nat.T {has-n stor.accounts from num}
+                 -> Token.Storage
+let transfer-stor stor add-from add-to num =
+  let new-acc = account-add (account-sub stor.accounts add-from) add-to num in
+    { total-supply = stor.total-supply
+      , accounts     = new-acc
+    }
+
+mod Validation =
+  let T = Token.T -> Transaction.T -> Bool
+
+  let mint token tx =
+    case tx.data of
+      | Transaction.Mint ->
+        token.owner == tx.authorized-account
+      | _ ->
+        false
+
+  let transfer token tx =
+    case tx.data of
+      | Transaction.Transfer {from-account, amount} ->
+        has-n token.storage.accounts from-account amount
+        && tx.authorized-account == from-account
+      | _ ->
+        false
+
+  let Burn token tx =
+    case tx.data of
+      | Transaction.Burn {burn-from-account, burn-amount} ->
+        has-n token.storage.accounts burn-from-account burn-amount
+        && tx.authorized-account == burn-from-account
+      | _ ->
+        false
+end
+
+type Error
+  = NotEnoughFunds
+  | NotSameAccount
+  | NotOwnerToken
+  | NotEnoughTokens
+
+sig exec : Token.T -> Transaction.T -> Either.T Error Token.T
+let exec token tx =
+  case tx.data of
+    | Transfer _ ->
+      if | Validation.transfer token tx = Right (transfer token tx)
+         | else                         = Left  NotEnoughFunds
+    | Mint _ ->
+      if | Validation.mint token tx = Right (mint token tx)
+         | else                     = Left  NotEnoughFunds

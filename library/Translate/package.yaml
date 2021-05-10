@@ -1,0 +1,85 @@
+name:                translate
+version:             0.1.0.0
+github:              "heliaxdev/juvix"
+license:             GPL-3
+author:              "Heliax AG <hello@heliax.dev>"
+maintainer:          "Heliax AG <hello@heliax.dev>"
+copyright:           "2020 Heliax AG"
+
+description:         Please see the README on GitHub at <https://github.com/githubuser/Translate#readme>
+
+dependencies:
+- base >= 4.11 && < 5
+- standard-library
+- core
+- frontend
+- extensible-data
+- unordered-containers
+- stm-containers
+- list-t
+- lens
+- containers
+- dlist
+- syb
+- megaparsec
+- pretty-simple
+
+default-extensions:
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - NoMonomorphismRestriction
+  - RankNTypes
+  - LambdaCase
+  - UnicodeSyntax
+  - GADTs
+  - DerivingVia
+  - MultiWayIf
+  - DataKinds
+  - TypeApplications
+  - ConstraintKinds
+  - PatternSynonyms
+  - FlexibleContexts
+  - FlexibleInstances
+  - QuasiQuotes
+  - TemplateHaskell
+  - TypeFamilies
+  - NamedFieldPuns
+  - DisambiguateRecordFields
+  - TupleSections
+  - DeriveGeneric
+  - DeriveDataTypeable
+  - GeneralizedNewtypeDeriving
+  - StandaloneDeriving
+  - BlockArguments
+
+ghc-options:
+  - -ferror-spans
+  - -Wall
+  - -fno-warn-orphans
+  - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
+  - -j
+  - -static
+  - -fwrite-ide-info
+
+library:
+  source-dirs: src
+
+tests:
+  translate-test:
+    main:                Main.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - elliptic-curve
+    - translate
+    - tasty
+    - tasty-hunit
+    - tasty-silver
+    - tasty-quickcheck
+    - text
+    - bytestring
+    - pretty-simple

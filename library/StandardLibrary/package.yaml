@@ -1,0 +1,87 @@
+name:                standard-library
+version:             0.1.0.0
+github:              "heliaxdev/juvix"
+license:             GPL-3
+author:              "Heliax AG <hello@heliax.dev>"
+maintainer:          "Heliax AG <hello@heliax.dev>"
+copyright:           "2020 Heliax AG"
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/StandardLibrary#readme>
+
+dependencies:
+- base >= 4.11 && < 5
+- protolude
+- wl-pprint-text
+- containers
+- text
+- hashable
+- unordered-containers
+- capability
+- time
+- lens
+- megaparsec
+- word8
+- bytestring
+- mtl
+
+default-extensions:
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - RankNTypes
+  - LambdaCase
+  - TypeSynonymInstances
+  - FlexibleInstances
+  - KindSignatures
+
+ghc-options:
+  - -ferror-spans
+  - -Wall
+  - -fno-warn-orphans
+  - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
+  - -j
+  - -static
+  - -fwrite-ide-info
+
+# TODO: Specify which packages are exported
+
+when:
+  condition: flag(incomplete-error)
+  ghc-options:
+    - -Werror=incomplete-patterns
+    - -Werror=missing-fields
+    - -Werror=missing-methods
+
+flags:
+  incomplete-error:
+    description: >
+      Incomplete patterns, missing record fields, and missing class methods are
+      an error
+    manual: true
+    default: false
+
+library:
+  source-dirs: src
+
+tests:
+  standard-library-test:
+    main:                Main.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - standard-library
+    - tasty
+    - tasty-hunit
+    - tasty-silver
+    - tasty-quickcheck
+    - pretty-simple

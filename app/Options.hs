@@ -1,39 +1,52 @@
-module Options where
+{-# LANGUAGE DeriveDataTypeable #-}
 
+module Options
+  ( Context (..),
+    Options (..),
+    Backend (..),
+    Command (..),
+    options,
+  )
+where
+
+import Data.Curve.Weierstrass.BLS12381 (Fr)
+import Data.Data
+import qualified Juvix.Backends.Michelson as Michelson
+import qualified Juvix.Backends.Plonk as Plonk
+import Juvix.Library hiding (option)
+import Juvix.Pipeline
 import Options.Applicative
-import Protolude hiding (option)
 
-data Context
-  = Context
-      { contextWorkingDirectory ∷ FilePath,
-        contextHomeDirectory ∷ FilePath
-      }
+data Context = Context
+  { contextWorkingDirectory :: FilePath,
+    contextHomeDirectory :: FilePath
+  }
 
-data Options
-  = Options
-      { optionsCommand ∷ Command,
-        optionsConfigPath ∷ FilePath
-      }
+data Options = Options
+  { optionsCommand :: Command,
+    optionsConfigPath :: FilePath
+  }
 
 data Backend
-  = Unit
-  | Naturals
-  | Michelson
+  = Plonk (Plonk.BPlonk Fr)
+  | Michelson Michelson.BMichelson
+  deriving (Eq, Show)
 
 data Command
   = Version
   | Config
   | Interactive
+  | Parse FilePath Backend
   | Typecheck FilePath Backend
   | Compile FilePath FilePath Backend
   | Init
   | Plan
   | Apply
 
-options ∷ Context → Parser Options
+options :: Context -> Parser Options
 options ctx = Options <$> commandOptions <*> configOptions ctx
 
-configOptions ∷ Context → Parser FilePath
+configOptions :: Context -> Parser FilePath
 configOptions ctx =
   strOption
     ( short 'c'
@@ -44,7 +57,7 @@ configOptions ctx =
         <> help "Path to YAML configuration file"
     )
 
-commandOptions ∷ Parser Command
+commandOptions :: Parser Command
 commandOptions =
   subparser
     ( command "version" (info versionOptions (progDesc "Display version information"))
@@ -54,50 +67,40 @@ commandOptions =
               configurationOptions
               (progDesc "Adjust runtime configuration or generate an example config file")
           )
-        <> command "interactive" (info interactiveOptions (progDesc "Launch interactive mode"))
-        <> command "init" (info initOptions (progDesc "Initialise deployment configuration"))
-        <> command "plan" (info planOptions (progDesc "Plan deployment"))
-        <> command "apply" (info applyOptions (progDesc "Execute deployment"))
-        <> command "typecheck" (info typecheckOptions (progDesc "Typecheck a core file"))
-        <> command "compile" (info compileOptions (progDesc "Compile a core file"))
+        <> command "parse" (info parseOptions (progDesc "Parse a Juvix source file"))
+        <> command "typecheck" (info typecheckOptions (progDesc "Typecheck a Juvix source file"))
+        <> command "compile" (info compileOptions (progDesc "Compile a Juvix source file"))
     )
 
-versionOptions ∷ Parser Command
+versionOptions :: Parser Command
 versionOptions = pure Version
 
-configurationOptions ∷ Parser Command
+configurationOptions :: Parser Command
 configurationOptions = pure Config
 
-interactiveOptions ∷ Parser Command
-interactiveOptions = pure Interactive
+parseOptions :: Parser Command
+parseOptions = Parse <$> inputFileOptions <*> backendOptions
 
-initOptions ∷ Parser Command
-initOptions = pure Init
+typecheckOptions :: Parser Command
+typecheckOptions = Typecheck <$> inputFileOptions <*> backendOptions
 
-planOptions ∷ Parser Command
-planOptions = pure Plan
+compileOptions :: Parser Command
+compileOptions = Compile <$> inputFileOptions <*> outputFileOptions <*> backendOptions
 
-applyOptions ∷ Parser Command
-applyOptions = pure Apply
+inputFileOptions :: Parser FilePath
+inputFileOptions = argument str (metavar "INPUTFILE")
 
-typecheckOptions ∷ Parser Command
-typecheckOptions = Typecheck <$> fileOptions <*> backendOptions
+outputFileOptions :: Parser FilePath
+outputFileOptions = argument str (metavar "OUTPUTFILE")
 
-compileOptions ∷ Parser Command
-compileOptions = Compile <$> fileOptions <*> fileOptions <*> backendOptions
-
-fileOptions ∷ Parser FilePath
-fileOptions = argument str (metavar "FILE")
-
-backendOptions ∷ Parser Backend
+backendOptions :: Parser Backend
 backendOptions =
   option
     ( maybeReader
         ( \case
-            "unit" → pure Unit
-            "naturals" → pure Naturals
-            "michelson" → pure Michelson
-            _ → Nothing
+            "plonk" -> pure $ Plonk Plonk.BPlonk
+            "michelson" -> pure $ Michelson Michelson.BMichelson
+            _ -> Nothing
         )
     )
-    (long "backend" <> short 'b' <> metavar "BACKEND" <> help "Target backend")
+    (long "backend" <> short 'b' <> metavar "BACKEND" <> help "Target backend" <> showDefault)

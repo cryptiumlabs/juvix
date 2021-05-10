@@ -1,0 +1,94 @@
+name:                interaction-net
+version:             0.1.0.0
+github:              "heliaxdev/juvix"
+license:             GPL-3
+author:              "Heliax AG <hello@heliax.dev>"
+maintainer:          "Heliax AG <hello@heliax.dev>"
+copyright:           "2020 Heliax AG"
+
+description:         Please see the README on GitHub at <https://github.com/githubuser/InteractionNet#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- aeson
+- jsonschema-gen
+- lens
+- fgl
+- containers
+- unordered-containers
+- enummapset
+- parsec
+###########################
+# Visualize dependencies
+###########################
+- text
+- fgl-visualize
+- directory
+- turtle
+###########################
+# Libraries
+###########################
+# we use core for 2 translation files
+- standard-library
+- core
+
+# TODO :: Thin this somehow
+default-extensions:
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - NoMonomorphismRestriction
+  - RankNTypes
+  - LambdaCase
+  - UnicodeSyntax
+  - GADTs
+  - ScopedTypeVariables
+  - DeriveDataTypeable
+  - DeriveGeneric
+  - DerivingStrategies
+  - FlexibleContexts
+  - FlexibleInstances
+  - DataKinds
+  - GeneralizedNewtypeDeriving
+  - DefaultSignatures
+  - QuasiQuotes
+  - TypeOperators
+  - MultiParamTypeClasses
+  - MultiWayIf
+  - TypeInType
+  - DerivingVia
+  - TypeApplications
+  - StandaloneDeriving
+  - FunctionalDependencies
+  - PatternSynonyms
+  - TypeFamilies
+  - ConstraintKinds
+  - EmptyDataDeriving
+  - TemplateHaskell
+  - NamedFieldPuns
+  - DisambiguateRecordFields
+  - TupleSections
+  - BlockArguments
+
+ghc-options:
+  - -ferror-spans
+  - -Wall
+  - -fno-warn-orphans
+  - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
+  - -j
+  - -static
+  - -fwrite-ide-info
+
+library:
+  source-dirs: src
+
+tests:
+  interaction-net-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - interaction-net

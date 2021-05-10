@@ -1,0 +1,16 @@
+resolver: lts-17.3
+
+packages:
+- .
+- ../StandardLibrary
+
+extra-deps:
+- capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
+- github: metastatedev/extensible-data
+  commit: d11dee6006169cb537e95af28c3541a24194dea8
+
+###############################
+# For eac solver
+###############################
+- github: cwgoes/haskell-z3
+  commit: 889597234bcdf5620c5a69d3405ab4d607ba4d71

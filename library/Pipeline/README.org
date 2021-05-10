@@ -1,0 +1,6 @@
+* Pipeline
+
+This package provides The Juvix pipeline by stitching together various
+parts of the compiler into a complete pipeline.
+
+
