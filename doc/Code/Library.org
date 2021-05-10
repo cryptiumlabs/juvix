@@ -4,7 +4,7 @@
 *** src
 **** Juvix
 ***** Backends
-****** LLVM <<Backends/LLVM>>
+****** LLVM <<LLVM/src/Juvix/Backends/LLVM>>
 - Serves as the LLVM backend compiler to Juvix.
 - This is an alternative to the interpreter provided.
 ******* DSL
@@ -463,7 +463,7 @@ Module that implements the backend parameters for the Michelson backend.
   + [[Plonk/Dot]]
   + [[Plonk/IR]]
   + [[Lang]]
-  + [[Parameterization]]
+  + [[Plonk/Parameterization]]
   + [[Plonk/Pipeline]]
   + [[Plonk/Types]]
 ******* Builder
@@ -496,7 +496,7 @@ Surface language
   + [[Circuit]]
   + [[Plonk/IR]]
   + [[Library]]
-******* Parameterization
+******* Parameterization <<Plonk/Parameterization>>
 - _Relies on_
   + [[Plonk/Types]]
   + [[Application]]
@@ -515,7 +515,7 @@ Surface language
   + [[Circuit]]
   + [[Plonk/Compiler]]
   + [[Plonk/Dot]]
-  + [[Parameterization]]
+  + [[Plonk/Parameterization]]
   + [[Plonk/Types]]
   + [[Application]]
   + [[Core/IR]]
@@ -574,6 +574,16 @@ Surface language
   + [[Usage]]
 ** llvm
 *** Setup <<llvm/Setup>>
+*** src
+**** Juvix
+***** Backends
+****** LLVM <<llvm/src/Juvix/Backends/LLVM>>
+- _Relies on_
+  + [[LLVM/Parameterization]]
+******* Parameterization <<LLVM/Parameterization>>
+- _Relies on_
+  + [[Core/Parameterisation]]
+  + [[Library]]
 * Core
 ** Setup <<Core/Setup>>
 ** src
