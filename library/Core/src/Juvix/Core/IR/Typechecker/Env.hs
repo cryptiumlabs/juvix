@@ -2,18 +2,18 @@
 
 module Juvix.Core.IR.Typechecker.Env where
 
+import Control.Monad.Trans
 import qualified Data.HashMap.Strict as HashMap
+import qualified Data.Map as Map
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import Juvix.Core.IR.Typechecker.Types
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
+import Juvix.Core.IR.Types.Globals (Pos)
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype, Pos)
 import qualified Juvix.Library.Usage as Usage
-import Control.Monad.Trans
-import qualified Data.Map as Map
-import Juvix.Core.IR.Types.Globals (Pos)
 
 data EnvCtx' ext primTy primVal = EnvCtx
   { globals :: GlobalsT primTy primVal
@@ -242,4 +242,3 @@ newtype TypeCheck ext primTy primVal m a
       HasSource "typeSigs" (Signature ext primTy primVal)
     )
     via MonadState (InnerTCSig ext primTy primVal m)
-

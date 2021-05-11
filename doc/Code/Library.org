@@ -922,6 +922,7 @@ Typechecked declarations are added to the signature.
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Usage]]
+  + [[Globals]]
 ******* Types <<Typechecker/Types>>
 - _Relies on_
   + [[Application]]
