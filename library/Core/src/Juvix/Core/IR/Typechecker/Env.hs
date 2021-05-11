@@ -13,6 +13,7 @@ import Juvix.Library hiding (Datatype, Pos)
 import qualified Juvix.Library.Usage as Usage
 import Control.Monad.Trans
 import qualified Data.Map as Map
+import Juvix.Core.IR.Types.Globals (Pos)
 
 data EnvCtx' ext primTy primVal = EnvCtx
   { globals :: GlobalsT primTy primVal
@@ -229,15 +230,6 @@ data SigDef ext primTy primVal
     ConSig (IR.Value' ext primTy primVal)
   | -- | data type constant to # parameters, positivity of parameters, type
     DataSig Int [Pos] (IR.Value' ext primTy primVal)
-
--- | Positivity (of data parameters)
-data Pos
-  = -- | strictly positive
-    SPos
-  | -- | other
-    NSPos
-  deriving (Generic, Eq, Show, Data)
-
 
 -- Return type of all type-checking functions.
 -- state monad for global signature

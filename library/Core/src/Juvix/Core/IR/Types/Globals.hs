@@ -456,3 +456,11 @@ deriving instance
 deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawFunClause' ext primTy primVal)
+
+-- | Positivity (of data parameters)
+data Pos
+  = -- | strictly positive
+    SPos
+  | -- | other
+    NSPos
+  deriving (Generic, Eq, Show, Data, NFData)
