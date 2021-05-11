@@ -105,7 +105,6 @@ instance
     where
       pretty0 = fmap HR.toPPAnn . PP.pretty0
 
-
 -- | Class that implements application for its argument.
 class CanApply a where
   -- | Type to represent extra errors that might occur during application.
