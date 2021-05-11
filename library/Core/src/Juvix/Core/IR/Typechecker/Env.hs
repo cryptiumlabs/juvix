@@ -9,8 +9,10 @@ import Juvix.Core.IR.Typechecker.Types
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
-import Juvix.Library hiding (Datatype)
+import Juvix.Library hiding (Datatype, Pos)
 import qualified Juvix.Library.Usage as Usage
+import Control.Monad.Trans
+import qualified Data.Map as Map
 
 data EnvCtx' ext primTy primVal = EnvCtx
   { globals :: GlobalsT primTy primVal
@@ -206,3 +208,46 @@ execInner' ::
   InnerState' ext primTy primVal ->
   m (a, InnerState' ext primTy primVal)
 execInner' (InnerTC m) = runStateT m
+
+-- | A map of global names to signatures
+type Signature ext primTy primVal =
+  Map.Map IR.GlobalName (SigDef ext primTy primVal)
+
+type InnerTCSig ext primTy primVal =
+  StateT (Signature ext primTy primVal)
+
+-- | Signatures of functions, constructors, and datatypes
+data SigDef ext primTy primVal
+  = -- | function constant to its type, clauses
+    FunSig
+      (IR.Value' ext primTy primVal)
+      ( Either
+          (NonEmpty (IR.RawFunClause' ext primTy primVal))
+          (NonEmpty (IR.FunClause' ext ext primTy primVal))
+      )
+  | -- | constructor constant to its type
+    ConSig (IR.Value' ext primTy primVal)
+  | -- | data type constant to # parameters, positivity of parameters, type
+    DataSig Int [Pos] (IR.Value' ext primTy primVal)
+
+-- | Positivity (of data parameters)
+data Pos
+  = -- | strictly positive
+    SPos
+  | -- | other
+    NSPos
+  deriving (Generic, Eq, Show, Data)
+
+
+-- Return type of all type-checking functions.
+-- state monad for global signature
+newtype TypeCheck ext primTy primVal m a
+  = TypeCheck (InnerTCSig ext primTy primVal m a)
+  deriving newtype (Functor, Applicative, Monad, MonadIO, MonadTrans)
+  deriving
+    ( HasState "typeSigs" (Signature ext primTy primVal),
+      HasSink "typeSigs" (Signature ext primTy primVal),
+      HasSource "typeSigs" (Signature ext primTy primVal)
+    )
+    via MonadState (InnerTCSig ext primTy primVal m)
+

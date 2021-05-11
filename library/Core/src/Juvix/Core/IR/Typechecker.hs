@@ -47,7 +47,7 @@ typeCheckDeclaration ::
   -- | A list of function declarations to be checked
   [IR.RawFunction' extT primTy primVal] ->
   -- | A list of Globals to be added to the global state
-  IR.TypeCheck IR.NoExt primTy primVal m [IR.RawGlobal' extT primTy primVal]
+  Env.TypeCheck IR.NoExt primTy primVal m [IR.RawGlobal' extT primTy primVal]
 typeCheckDeclaration _tel _rtel _param [] [] =
   return []
 -- type checking datatype declarations

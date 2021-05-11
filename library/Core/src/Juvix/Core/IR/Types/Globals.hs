@@ -3,9 +3,7 @@
 
 module Juvix.Core.IR.Types.Globals where
 
-import Control.Monad.Trans
 import Data.Kind (Constraint)
-import qualified Data.Map as Map
 import Juvix.Core.IR.Types.Base
 import Juvix.Library hiding (Pos)
 import Juvix.Library.HashMap (HashMap)
@@ -458,43 +456,3 @@ deriving instance
 deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawFunClause' ext primTy primVal)
-
-type Signature ext primTy primVal =
-  Map.Map GlobalName (SigDef ext primTy primVal)
-
-type InnerTCSig ext primTy primVal =
-  StateT (Signature ext primTy primVal)
-
--- Return type of all type-checking functions.
--- state monad for global signature
--- TODO move this somewhere
-newtype TypeCheck ext primTy primVal m a
-  = TypeCheck (InnerTCSig ext primTy primVal m a)
-  deriving newtype (Functor, Applicative, Monad, MonadIO, MonadTrans)
-  deriving
-    ( HasState "typeSigs" (Signature ext primTy primVal),
-      HasSink "typeSigs" (Signature ext primTy primVal),
-      HasSource "typeSigs" (Signature ext primTy primVal)
-    )
-    via MonadState (InnerTCSig ext primTy primVal m)
-
-data SigDef ext primTy primVal
-  = -- | function constant to its type, clauses
-    FunSig
-      (Value' ext primTy primVal)
-      ( Either
-          (NonEmpty (RawFunClause' ext primTy primVal))
-          (NonEmpty (FunClause' ext ext primTy primVal))
-      )
-  | -- | constructor constant to its type
-    ConSig (Value' ext primTy primVal)
-  | -- | data type constant to # parameters, positivity of parameters, type
-    DataSig Int [Pos] (Value' ext primTy primVal)
-
--- | Positivity
-data Pos
-  = -- | strictly positive
-    SPos
-  | -- | other
-    NSPos
-  deriving (Generic, Eq, Show, Data, NFData)
