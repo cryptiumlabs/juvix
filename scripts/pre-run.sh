@@ -16,10 +16,8 @@ CHECK="[ci]"
 
 echo $COMMIT_MESSAGE
 
-
-case "$COMMIT_MESSAGE" in 
-  *"$CHECK"*)
+# check commit comment. If contains [ci], then exit pipeline sucessfully
+if [[ "$COMMIT_MESSAGE" == *"$CHECK"* ]]; then
     echo "Skipping pipeline."
     exit 78
-    ;;
-esac
+fi
