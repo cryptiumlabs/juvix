@@ -112,7 +112,7 @@ steps:
       - test-parser
 
   - name: push changes
-    image: alpine/git:v2.30.1
+    image: openanalytics/alpine-git-lfs-client
     pull: if-not-exists
     commands:
       - sh ./scripts/push-changes.sh
