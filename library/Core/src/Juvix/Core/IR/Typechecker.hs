@@ -67,6 +67,7 @@ typeCheckDeclaration tel rtel param dts fns =
         return $ IR.RawGDatatype hdd : rest <> checkedCons
     _ -> do
       return []
+
 -- TODO add to sig once typechecked? Keeping track of all globals may be
 -- enough?
 -- TODO type checking function declarations
