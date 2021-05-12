@@ -2,7 +2,7 @@
 ;; -----------------------------------
 ;; Configuration variables
 ;; -----------------------------------
-(defparameter *defualt-resolver* 17.3)
+(defparameter *default-resolver* 17.3)
 
 ;; -----------------------------------
 ;; General Abstractions Types
@@ -11,7 +11,7 @@
   "this is the main data type of the stack yaml file. We include
 relative pathing, so we can properly depend on other stack-yaml
 packages."
-  (resolver *defualt-resolver* :type single-float)
+  (resolver *default-resolver* :type single-float)
   ;; list of pacakges we rely on, which are local dires
   ;; list stack-yaml
   (packages nil :type list)
@@ -21,7 +21,8 @@ packages."
   ;; the name of the yaml file
   (name "" :type string)
   ;; needed to know where the other projects are
-  (path-to-other "." :type string))
+  ;; by default this is in their sistor directories
+  (path-to-other "../" :type string))
 
 (defstruct groups
   "Groups are the main way we group dependencies, often 1 dependency
@@ -182,11 +183,11 @@ lists are indented by an extra 2 each"
 (defun format-extra-deps (extra-deps)
   ;; ~{~a~^~%~} means format a list with new lines between them
   (when extra-deps
-    (format nil "extra-deps:~%~{~a~^~%~}~%~%"
+    (format nil "extra-deps:~%~%~{~a~^~%~}~%~%"
             (mapcar #'group->string extra-deps))))
 
 (defun format-resolver (resolver)
-  (format nil "resolver: ~a" resolver))
+  (format nil "resolver: lts-~a" resolver))
 
 (defun stack-yaml->string (yaml-config)
   (format nil "~a~%~%~a~%~%~a"
@@ -255,32 +256,49 @@ lists are indented by an extra 2 each"
 
 (defparameter *standard-library*
   (make-stack-yaml
-   :extra-deps (list (make-groups :comment "general Dependecies"
+   :extra-deps (list (make-groups :comment "General Dependencies"
                                   :deps (list *capability*)))
-   :name          "StandardLibrary"
-   :path-to-other "../../"))
+   :name          "StandardLibrary"))
+
+(defparameter *frontend*
+  (make-stack-yaml
+   ;; why is this one ahead again!?
+   :resolver 17.9
+   :packages (list *standard-library*)
+   :extra-deps (list (make-groups :comment "General Dependencies"
+                                  :deps (list *capability*)))
+   :name "Frontend"))
 
 (defparameter *Michelson*
   (make-stack-yaml
    :packages (list *standard-library*)
-   :name "Michelson"
-   :path-to-other "../../"))
+   :name "Michelson"))
 
 
 ;; -----------------------------------
 ;; Ouptut for YAML generation
 ;; -----------------------------------
 
-(defun print-standard-library ()
-  (format t (stack-yaml->string *standard-library*)))
+(defun print-yaml (table)
+  (format t (stack-yaml->string table)))
 
-(defun generate-standard-library (out-file)
+(defun generate-yaml-file (table out-file)
   (with-open-file (stream out-file
                           :direction         :output
                           :if-exists         :supersede
                           :if-does-not-exist :create)
-    (format stream (stack-yaml->string *standard-library*))))
+    (format stream (stack-yaml->string table))))
+
+(defun print-standard-library ()
+  (print-yaml *standard-library*))
+
+(defun generate-standard-library (out-file)
+  (generate-yaml-file *standard-library* out-file))
 
 (defun generate-translate-yaml ()
   (format t (format-packages *michelson*))
   (format t (group->string *morley-deps*)))
+
+(defun main ()
+  (generate-yaml-file *standard-library* "library/StandardLibrary/stack.yaml")
+  (generate-yaml-file *frontend* "library/Frontend/stack.yaml"))
