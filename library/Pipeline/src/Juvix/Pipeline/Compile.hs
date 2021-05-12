@@ -8,6 +8,7 @@ module Juvix.Pipeline.Compile
   )
 where
 
+import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.IR.Types.Base (Elim', Term')
@@ -17,8 +18,6 @@ import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import Juvix.ToCore.Types (CoreDef (..))
 import qualified Prelude as P
-import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
-
 
 type Pipeline = Feedback.FeedbackT [] P.String IO
 
