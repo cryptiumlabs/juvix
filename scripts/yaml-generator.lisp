@@ -34,9 +34,10 @@ list of deps are."
   (deps '() :type list))
 
 (deftype dependency ()
-  "depedency is the dependency sum type consisting of sha | git | bare"
+  "depedency is the dependency sum type consisting of sha | git | bare | github"
   `(or (satisfies dependency-sha-p)
       (satisfies dependency-git-p)
+      (satisfies dependency-github-p)
       (satisfies dependency-bare-p)))
 
 (defstruct dependency-sha
@@ -45,6 +46,13 @@ list of deps are."
   (sha  "" :type string))
 
 (defstruct dependency-git
+  "git is for git based stack dependencies"
+  (name "" :type string)
+  commit
+  (subdirs nil :type list))
+
+;; todo make the struct inherent depndency-git
+(defstruct dependency-github
   "git is for git based stack dependencies"
   (name "" :type string)
   commit
@@ -102,6 +110,11 @@ is replaced with replacement."
 ;; Operations on the types
 ;; -----------------------------------
 
+(defun github->git (git)
+  (make-dependency-git :name (dependency-github-name git)
+                       :commit (dependency-github-commit git)
+                       :subdirs (dependency-github-subdirs git)))
+
 (defun string->dep-sha (string)
   "takes a string and maybes produces a sha from it. Returning nil if
 it's not a properly formatted string."
@@ -109,10 +122,10 @@ it's not a properly formatted string."
     (when (cdr sha)
       (make-dependency-sha :name (car sha) :sha (cadr sha)))))
 
-(defun dep-git->list-string (git)
+(defun dep-git->list-string (git &key (github nil))
   "turns a dependecy-git structure into a list of strings"
   (append (list
-           (format nil "git: ~a" (dependency-git-name git)))
+           (format nil (if github "github: ~a" "git: ~a") (dependency-git-name git)))
           ;; it may not be there
           (when (dependency-git-commit git)
             (list (format nil "commit: ~a" (dependency-git-commit git))))
@@ -143,6 +156,10 @@ lists are indented by an extra 2 each"
   "turns a dependecy-git structure into a string"
   (indent-new-lines-by 2 (list->string (dep-git->list-string git))))
 
+(defun dep-github->string (git)
+  "turns a dependecy-git structure into a string"
+  (indent-new-lines-by 2 (list->string (dep-git->list-string (github->git git) :github t))))
+
 (defun dep-bare->string (bare)
   "turns a bare dependency structure into a string"
   (format nil "~a" (dependency-bare-name bare)))
@@ -152,6 +169,8 @@ lists are indented by an extra 2 each"
   "turns a dependency into a string to be pasted into a YAML file"
   (cond ((dependency-sha-p dep)
          (dep-sha->string dep))
+        ((dependency-github-p dep)
+         (dep-github->string dep))
         ((dependency-git-p dep)
          (dep-git->string dep))
         (t
@@ -183,7 +202,7 @@ lists are indented by an extra 2 each"
 (defun format-extra-deps (extra-deps)
   ;; ~{~a~^~%~} means format a list with new lines between them
   (when extra-deps
-    (format nil "extra-deps:~%~%~{~a~^~%~}~%~%"
+    (format nil "extra-deps:~%~%~{~a~^~%~%~}~%~%"
             (mapcar #'group->string extra-deps))))
 
 (defun format-resolver (resolver)
@@ -219,9 +238,19 @@ lists are indented by an extra 2 each"
 (defparameter *capability*
   (string->dep-sha "capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345"))
 
+(defparameter *extensible*
+  (make-dependency-github :name "metastatedev/extensible-data"
+                          :commit "d11dee6006169cb537e95af28c3541a24194dea8"))
+
 ;; -----------------------------------
 ;; Groups for YAML generation
 ;; -----------------------------------
+
+(defparameter *eac-solver*
+  (make-groups :comment "For the EAC Solver"
+               :deps (list
+                      (make-dependency-github :name "cwgoes/haskell-z3"
+                                              :commit "889597234bcdf5620c5a69d3405ab4d607ba4d71"))))
 
 (defparameter *morley-arithmetic-circuit-deps*
   (make-groups :comment "Morley and Arithmetic Circuits deps"
@@ -258,7 +287,7 @@ lists are indented by an extra 2 each"
   (make-stack-yaml
    :extra-deps (list (make-groups :comment "General Dependencies"
                                   :deps (list *capability*)))
-   :name          "StandardLibrary"))
+   :name "StandardLibrary"))
 
 (defparameter *frontend*
   (make-stack-yaml
@@ -268,6 +297,14 @@ lists are indented by an extra 2 each"
    :extra-deps (list (make-groups :comment "General Dependencies"
                                   :deps (list *capability*)))
    :name "Frontend"))
+
+(defparameter *core*
+  (make-stack-yaml
+   :name     "Core"
+   :packages (list *standard-library*)
+   :extra-deps (list (make-groups :comment "General Dependencies"
+                                  :deps (list *capability* *extensible*))
+                     *eac-solver*)))
 
 (defparameter *Michelson*
   (make-stack-yaml
@@ -301,4 +338,5 @@ lists are indented by an extra 2 each"
 
 (defun main ()
   (generate-yaml-file *standard-library* "library/StandardLibrary/stack.yaml")
-  (generate-yaml-file *frontend* "library/Frontend/stack.yaml"))
+  (generate-yaml-file *frontend* "library/Frontend/stack.yaml")
+  (generate-yaml-file *core* "library/Core/stack.yaml"))
