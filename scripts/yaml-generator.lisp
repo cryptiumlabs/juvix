@@ -66,6 +66,9 @@ hash"
   (concatenate 'string (apply #'concatenate 'string (repeat n " "))
                string))
 
+(defun format-list-newline (list)
+  (format nil "~{~a~^~%~}" list))
+
 ;; taken from http://cl-cookbook.sourceforge.net/strings.html
 (defun replace-all (string part replacement &key (test #'char=))
 "Returns a new string in which all the occurences of the part
@@ -123,13 +126,13 @@ it's not a properly formatted string."
 (defun list->string (list)
   "writes a list recursively into a string with a newline, nested
 lists are indented by an extra 2 each"
-  (format nil "~{~a~^~%~}"
-          (mapcar (lambda (str)
-                    (if (listp str)
-                        (indent-new-lines-by 2
-                                             (format nil "  ~a" (list->string str)))
-                        str))
-                  list)))
+  (format-list-newline
+   (mapcar (lambda (str)
+             (if (listp str)
+                 (indent-new-lines-by 2
+                                      (format nil "  ~a" (list->string str)))
+                 str))
+           list)))
 
 (defun dep-sha->string (sha)
   "generate the yaml sha that is needed in the yaml files"
@@ -143,7 +146,7 @@ lists are indented by an extra 2 each"
   "turns a bare dependency structure into a string"
   (format nil "~a" (dependency-bare-name bare)))
 
-(declaim (ftype (function (dependency) string) dep->string))
+(declaim (ftype (function (dependency) (or t string)) dep->string))
 (defun dep->string (dep)
   "turns a dependency into a string to be pasted into a YAML file"
   (cond ((dependency-sha-p dep)
@@ -154,6 +157,7 @@ lists are indented by an extra 2 each"
          (dep-bare->string dep))))
 
 (defun group->string (group)
+  ;; ~{- ~a~^~%~} means format a list with a - infront and a new line
   (format nil "~a~%~{- ~a~^~%~}"
           (format-comment (groups-comment group))
           (mapcar #'dep->string (groups-deps group))))
@@ -165,21 +169,31 @@ lists are indented by an extra 2 each"
 (defun format-packages (stack-yaml)
   "generates the format-packages string"
   (let ((pre-amble (stack-yaml-path-to-other stack-yaml)))
+      ;; ~{~a~^~%~} means format a list with new lines
     (format nil "packages:~%~{~a~^~%~}"
-            (list
-             "."
+            (cons
+             "- ."
              (mapcar (lambda (stack-yaml-dep)
-                       (format nil "~a~a"
+                       (format nil "- ~a~a"
                                pre-amble
                                (stack-yaml-name stack-yaml-dep)))
                      (stack-yaml-packages stack-yaml))))))
 
+(defun format-extra-deps (extra-deps)
+  ;; ~{~a~^~%~} means format a list with new lines between them
+  (when extra-deps
+    (format nil "extra-deps:~%~{~a~^~%~}~%~%"
+            (mapcar #'group->string extra-deps))))
+
+(defun format-resolver (resolver)
+  (format nil "resolver: ~a" resolver))
+
 (defun stack-yaml->string (yaml-config)
-  (format nil "~a~%~a~%~a~%~a"
-          (stack-yaml-resolver yaml-config)
+  (format nil "~a~%~%~a~%~%~a"
+          (format-resolver (stack-yaml-resolver yaml-config))
           ;; TODO
           (format-packages yaml-config)
-          (stack-yaml-extra-deps yaml-config)))
+          (format-extra-deps (stack-yaml-extra-deps yaml-config))))
 
 ;; -----------------------------------
 ;; Dependencies for YAML generation
@@ -241,7 +255,7 @@ lists are indented by an extra 2 each"
 
 (defparameter *standard-library*
   (make-stack-yaml
-   :extra-deps (list (make-groups :comment "general"
+   :extra-deps (list (make-groups :comment "general Dependecies"
                                   :deps (list *capability*)))
    :name          "StandardLibrary"
    :path-to-other "../../"))
@@ -257,5 +271,16 @@ lists are indented by an extra 2 each"
 ;; Ouptut for YAML generation
 ;; -----------------------------------
 
+(defun print-standard-library ()
+  (format t (stack-yaml->string *standard-library*)))
+
+(defun generate-standard-library (out-file)
+  (with-open-file (stream out-file
+                          :direction         :output
+                          :if-exists         :supersede
+                          :if-does-not-exist :create)
+    (format stream (stack-yaml->string *standard-library*))))
+
 (defun generate-translate-yaml ()
+  (format t (format-packages *michelson*))
   (format t (group->string *morley-deps*)))
