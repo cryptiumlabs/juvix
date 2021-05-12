@@ -1,10 +1,10 @@
 name:                core
 version:             0.1.0.0
-github:              "githubuser/Core"
-license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2020 Author name here"
+github:              "heliaxdev/juvix"
+license:             GPL-3
+author:              "Heliax AG <hello@heliax.dev>"
+maintainer:          "Heliax AG <hello@heliax.dev>"
+copyright:           "2020 Heliax AG"
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -27,6 +27,7 @@ dependencies:
 - lens
 - dlist
 - pretty-simple
+- mtl
 
 default-extensions:
   - NoImplicitPrelude

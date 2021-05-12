@@ -4,7 +4,6 @@
 module Juvix.Core.IR.Types.Globals where
 
 import Data.Kind (Constraint)
-import qualified Data.Map as Map
 import Juvix.Core.IR.Types.Base
 import Juvix.Library hiding (Pos)
 import Juvix.Library.HashMap (HashMap)
@@ -348,17 +347,65 @@ type RawGlobals' ext primTy primVal =
 type Globals' extV extT primTy primVal =
   HashMap GlobalName (Global' extV extT primTy primVal)
 
-type RawTelescope ext primTy primVal =
-  [(Name, Term' ext primTy primVal)]
+data RawTeleEle' ext primTy primVal = RawTeleEle
+  { rawName :: Name,
+    rawUsage :: Usage,
+    rawTy :: Term' ext primTy primVal,
+    rawExtension :: XPi ext primTy primVal
+  }
+  deriving (Generic)
 
-type Telescope ext primTy primVal =
-  [(Name, Value' ext primTy primVal)]
+deriving instance
+  RawGlobalAll Show ext primTy primVal =>
+  Show (RawTeleEle' ext primTy primVal)
+
+deriving instance
+  RawGlobalAll Eq ext primTy primVal =>
+  Eq (RawTeleEle' ext primTy primVal)
+
+deriving instance
+  (Data ext, RawGlobalAll Data ext primTy primVal) =>
+  Data (RawTeleEle' ext primTy primVal)
+
+deriving instance
+  RawGlobalAll NFData ext primTy primVal =>
+  NFData (RawTeleEle' ext primTy primVal)
+
+type RawTelescope ext primTy primVal =
+  [RawTeleEle' ext primTy primVal]
+
+data TeleEle' extV extT primTy primVal = TeleEle
+  { name :: Name,
+    usage :: Usage,
+    ty :: Value' extV primTy primVal,
+    extension :: XPi extT primTy primVal
+  }
+  deriving (Generic)
+
+deriving instance
+  GlobalAll Show extV extT primTy primVal =>
+  Show (TeleEle' extV extT primTy primVal)
+
+deriving instance
+  GlobalAll Eq extV extT primTy primVal =>
+  Eq (TeleEle' extV extT primTy primVal)
+
+deriving instance
+  (Data extV, Data extT, GlobalAll Data extV extT primTy primVal) =>
+  Data (TeleEle' extV extT primTy primVal)
+
+deriving instance
+  GlobalAll NFData extV extT primTy primVal =>
+  NFData (TeleEle' extV extT primTy primVal)
+
+type Telescope extV extT primTy primVal =
+  [TeleEle' extV extT primTy primVal]
 
 data FunClause' extV extT primTy primVal = FunClause
   { -- | @Δ@: The types of the pattern variables in dependency order.
     -- , namedClausePats :: NAPs (Using Name instead atm)
     -- ^ @Δ ⊢ ps@.  The de Bruijn indices refer to @Δ@.
-    clauseTel :: Telescope extV primTy primVal,
+    clauseTel :: Telescope extV extT primTy primVal,
     clausePats :: [Pattern' extT primTy primVal], --TODO [SplitPattern]
     -- TODO make it a Maybe
     -- @Just v@ for a regular clause, @Nothing@ for an absurd one.
@@ -410,28 +457,7 @@ deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawFunClause' ext primTy primVal)
 
-type Signature ty ext primTy primVal = Map.Map GlobalName (SigDef ty ext primTy primVal)
-
--- Return type of all type-checking functions.
--- state monad for global signature
--- TODO move this somewhere
-type TypeCheck ty ext primTy primVal a =
-  StateT (Signature ty ext primTy primVal) IO a
-
-data SigDef extV extT primTy primVal
-  = -- | function constant to its type, clauses
-    FunSig
-      (Value' extV primTy primVal)
-      ( Either
-          (NonEmpty (RawFunClause' extT primTy primVal))
-          (NonEmpty (FunClause' extV extT primTy primVal))
-      )
-  | -- | constructor constant to its type
-    ConSig (Value' extV primTy primVal)
-  | -- | data type constant to # parameters, positivity of parameters, type
-    DataSig Int [Pos] (Value' extV primTy primVal)
-
--- | Positivity
+-- | Positivity (of data parameters)
 data Pos
   = -- | strictly positive
     SPos

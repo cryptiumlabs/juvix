@@ -801,6 +801,17 @@ temporary lexical bindings as our code encounters binders.
   + [[IR/Typechecker]]
   + [[IR/Types]]
   + [[Library]]
+****** CheckDatatype
+Datatype declarations are typechecked here. Usages are passed along.
+- _Relies on_
+  + [[CheckTerm]]
+  + [[IR/Evaluator]]
+  + [[OnlyExts]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Globals]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
 ****** CheckTerm
 This file contains the functions and aux functions to typecheck terms.
 @typeTerm@ and @typeElim@ are called by functions for typechecking
@@ -894,11 +905,13 @@ Datatype declarations are typechecked by @checkDataType@ in CheckDataType.hs.
 Function declarations are typechecked by @typeCheckFuns@ in CheckFunction.hs.
 Typechecked declarations are added to the signature.
 - _Relies on_
+  + [[CheckDatatype]]
+  + [[IR/Evaluator]]
   + [[Typechecker/Env]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[IR/Types/Base]]
   + [[Globals]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 ******* Env <<Typechecker/Env>>
 - _Relies on_
@@ -1832,6 +1845,44 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Library]]
   + [[Library/Sexp]]
+  + [[Structure]]
+  + [[Lens]]
+**** Sexp
+***** Structure
+Hardeing S-expressions into a more readable form. Here we use a
+mixture of record structures and aliases. Each cover a form that we
+wish to talk about rather than just match away at
+- _The form for transformation follows this structure_
+#+begin_src haskell
+  -- the data type
+  data Form = ... deriving (Show)
+  is<Form>   :: Sexp.T -> Bool
+  to<Form>   :: Sexp.T -> Maybe <Form>
+  from<Form> :: <Form> -> Sexp.T
+#+end_src
+_TODO_
+ 1. Figure out if we can even express a spec system in
+    Haskell... =to<Form>= and =From<From>= have the exact same signature
+ 2. replace the repeat code with the =to<Form>= with an abstraction
+ 3. put the meta data with the form so we don't have to do it by
+    hand in the code that uses this
+    1. Use =Juvix.Library.LineNum=
+    2. append the =Form= With this
+    3. have to<Form> fill this
+    4. Have extra smart consturctors that are =<form>=, so that we
+       can automatically fill in this meta data
+- _Relies on_
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
+  + [[Structure/Helpers]]
+****** Helpers <<Structure/Helpers>>
+- _Relies on_
+  + [[Library]]
+  + [[Library/Sexp]]
+****** Lens
+- _Relies on_
+  + [[Structure]]
 **** ToCore
 ***** Types <<ToCore/Types>>
 - _Relies on_

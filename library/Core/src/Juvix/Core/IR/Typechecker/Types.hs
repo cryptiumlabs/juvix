@@ -240,6 +240,27 @@ data TypecheckError' extV extT primTy primVal
   | EvalError
       { evalErr :: Eval.Error IR.NoExt T primTy (P.TypedPrim primTy primVal)
       }
+  | -- | datatype typechecking errors
+    DatatypeError
+      {invalidType :: IR.Term' extT primTy primVal}
+  | ConDatatypeName
+      {dtName :: IR.Neutral' extV primTy primVal}
+  | ConAppTypeError
+      {ty :: IR.Value' extV primTy primVal}
+  | ConTypeError
+      {invalidConTy :: IR.Value' extV primTy (P.TypedPrim primTy primVal)}
+  | ParamVarNError
+      { tel :: IR.RawTelescope extT primTy primVal,
+        expectedN :: IR.Name,
+        inputN :: IR.Name
+      }
+  | ParamError
+      {exp :: IR.Term' extT primTy primVal}
+  | DeclError
+      { tg :: IR.Term' extT primTy primVal,
+        name :: IR.GlobalName,
+        tel :: IR.RawTelescope extT primTy primVal
+      }
 
 type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
 
@@ -251,7 +272,9 @@ deriving instance
     Eq (P.ApplyErrorExtra primTy),
     Eq (P.ApplyErrorExtra (P.TypedPrim primTy primVal)),
     IR.ValueAll Eq extV primTy (P.TypedPrim primTy primVal),
+    IR.ValueAll Eq extV primTy primVal,
     IR.NeutralAll Eq extV primTy (P.TypedPrim primTy primVal),
+    IR.NeutralAll Eq extV primTy primVal,
     IR.TermAll Eq extT primTy primVal,
     Eq (IR.TermX extT primTy (P.TypedPrim primTy primVal)),
     IR.ElimAll Eq extT primTy primVal,
@@ -268,7 +291,9 @@ instance
     Show (P.ApplyErrorExtra primTy),
     Show (P.ApplyErrorExtra (P.TypedPrim primTy primVal)),
     IR.ValueAll Show extV primTy (P.TypedPrim primTy primVal),
+    IR.ValueAll Show extV primTy primVal,
     IR.NeutralAll Show extV primTy (P.TypedPrim primTy primVal),
+    IR.NeutralAll Show extV primTy primVal,
     IR.TermAll Show extT primTy primVal,
     Show (IR.TermX extT primTy (P.TypedPrim primTy primVal)),
     IR.ElimAll Show extT primTy primVal,
@@ -324,6 +349,34 @@ instance
   show (PartiallyAppliedConstructor pat) =
     "Partially-applied constructor in pattern " <> show pat
   show (EvalError err) = show err
+  show (DatatypeError arg) =
+    "checkDataType: invalid datatype arg: " <> show arg
+  show (ConDatatypeName dtName) =
+    "checkConType: datatype should be a free variable but it isn't: "
+      <> show dtName
+  show (ConAppTypeError ty) =
+    "checkConType: datatype name or parameters don't match: "
+      <> show ty
+  show (ConTypeError ty) =
+    "checkConType: invalid datatype: " <> show ty
+  show (ParamVarNError tel expectedN inputN) =
+    "checkParams: target parameter mismatch. The input telescope is "
+      <> show tel
+      <> ". One of the name in the telescope is "
+      <> show expectedN
+      <> ", which does not match the input expression's variable name: "
+      <> show inputN
+  show (ParamError exp) =
+    "checkParams: target parameter mismatch. The input expression"
+      <> show exp
+      <> "isn't a variable (Var)."
+  show (DeclError tg name tel) =
+    "checkDeclared: target mismatch "
+      <> show tg
+      <> ". Input name is "
+      <> show name
+      <> ". Input telescope is "
+      <> show tel
 
 type HasThrowTC' extV extT primTy primVal m =
   HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m

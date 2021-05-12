@@ -8,7 +8,6 @@ module Juvix.Core.IR.CheckTerm
   )
 where
 
-import qualified Data.HashMap.Strict as HashMap
 import qualified Data.IntMap.Strict as IntMap
 import Data.List.NonEmpty ((<|))
 import qualified Juvix.Core.Application as App

@@ -38,6 +38,7 @@ nameSymbolFromSymbol = NameSymbol.fromSymbol
 -- Body
 --------------------------------------------------------------------------------
 
+-- |
 empty :: NameSymbol.T -> IO (T term ty sumRep)
 empty sym = do
   empty <- atomically fullyEmpty
