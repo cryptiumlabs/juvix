@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+
 module Juvix.Pipeline.Compile
   ( Pipeline,
     toCoreDef,
@@ -192,11 +193,13 @@ telescopeEval ::
   Telescope IR.NoExt IR.NoExt primTy primVal
 telescopeEval globals ts = f <$> ts
   where
-    f rawT@RawTeleEle{..} 
-      = TeleEle { name = rawName
-                , usage = rawUsage
-                , ty = unsafeEval globals rawTy
-                , extension = rawExtension }
+    f rawT@RawTeleEle {..} =
+      TeleEle
+        { name = rawName,
+          usage = rawUsage,
+          ty = unsafeEval globals rawTy,
+          extension = rawExtension
+        }
 
 pattEval ::
   ty ->
