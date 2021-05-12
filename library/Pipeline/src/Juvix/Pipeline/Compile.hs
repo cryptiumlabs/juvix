@@ -146,8 +146,6 @@ funClauseReturn ::
 funClauseReturn ty (RawFunClause tel patts term catchall) =
   RawFunClause (telescopeReturn ty tel) (map (pattEval ty) patts) (baseToReturn ty term) catchall
 
-
-
 funClauseEval ::
   ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
     Show primTy,
@@ -173,11 +171,11 @@ telescopeReturn ::
   ty ->
   RawTelescope IR.NoExt ty val ->
   RawTelescope IR.NoExt ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val)
-telescopeReturn ty = fmap f 
+telescopeReturn ty = fmap f
   where
-    f t@RawTeleEle{rawTy} = t { rawTy = baseToReturn ty rawTy, rawExtension = notImplemented } 
+    f t@RawTeleEle {rawTy} = t {rawTy = baseToReturn ty rawTy, rawExtension = notImplemented}
 
--- piToReturn 
+-- piToReturn
 
 telescopeEval ::
   ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
