@@ -142,10 +142,10 @@ funClauseReturn ::
   ty ->
   IR.RawFunClause ty val ->
   IR.RawFunClause ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val)
-funClauseReturn ty (RawFunClause _tel patts term catchall) =
-  RawFunClause [] (map (pattEval ty) patts) (baseToReturn ty term) catchall
+funClauseReturn ty (RawFunClause tel patts term catchall) =
+  RawFunClause (telescopeReturn ty tel) (map (pattEval ty) patts) (baseToReturn ty term) catchall
 
--- TODO
+
 
 funClauseEval ::
   ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
@@ -167,6 +167,16 @@ funClauseEval globals (RawFunClause tel patts rhs catchall) =
     Nothing -- TODO:-- | @Δ ⊢ t@.  The type of the rhs under @clauseTel@.
     catchall
     Nothing --TODO
+
+telescopeReturn ::
+  ty ->
+  RawTelescope IR.NoExt ty val ->
+  RawTelescope IR.NoExt ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val)
+telescopeReturn ty = fmap f 
+  where
+    f t@RawTeleEle{rawTy} = t { rawTy = baseToReturn ty rawTy, rawExtension = notImplemented } 
+
+-- piToReturn 
 
 telescopeEval ::
   ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
@@ -243,6 +253,6 @@ unsafeEval ::
   IR.RawGlobals primTy primVal ->
   IR.Term primTy primVal ->
   IR.Value primTy primVal
-unsafeEval globals t = case pTraceShow ("unsafeEval", t, globals) IR.evalTerm (IR.rawLookupFun' globals) t of
-  Right v -> v
+unsafeEval globals t = case pTraceShow ("unsafeEval", t) IR.evalTerm (IR.rawLookupFun' globals) t of
+  Right v -> pTraceShow ("Can eval!", v) v
   Left v -> pTraceShow ("Can't eval", v) panic "Failed to eval term"
