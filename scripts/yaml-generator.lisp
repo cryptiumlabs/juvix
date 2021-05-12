@@ -22,7 +22,9 @@ packages."
   (name "" :type string)
   ;; needed to know where the other projects are
   ;; by default this is in their sistor directories
-  (path-to-other "../" :type string))
+  (path-to-other "../" :type string)
+  ;; extra is typically used for allow-newer: true
+  extra)
 
 (defstruct groups
   "Groups are the main way we group dependencies, often 1 dependency
@@ -208,12 +210,18 @@ lists are indented by an extra 2 each"
 (defun format-resolver (resolver)
   (format nil "resolver: lts-~a" resolver))
 
+(defun format-extra (extra)
+  (if extra
+      (format nil "~%~%~a" extra)
+      ""))
+
 (defun stack-yaml->string (yaml-config)
-  (format nil "~a~%~%~a~%~%~a"
+  (format nil "~a~%~%~a~%~%~a~a"
           (format-resolver (stack-yaml-resolver yaml-config))
           ;; TODO
           (format-packages yaml-config)
-          (format-extra-deps (stack-yaml-extra-deps yaml-config))))
+          (format-extra-deps (stack-yaml-extra-deps yaml-config))
+          (format-extra (stack-yaml-extra yaml-config))))
 
 ;; -----------------------------------
 ;; Dependencies for YAML generation
@@ -235,12 +243,21 @@ lists are indented by an extra 2 each"
                        :commit "9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174"
                        :subdirs (list "tezos-bake-monitor-lib")))
 
+(defparameter *tezos-morley*
+  (make-dependency-git :name "https://gitlab.com/morley-framework/morley.git"
+                       :commit "53961f48d0d3fb61051fceaa6c9ed6becb7511e5"
+                       :subdirs (list "code/morley" "code/morley-prelude")))
+
+
 (defparameter *capability*
   (string->dep-sha "capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345"))
 
 (defparameter *extensible*
   (make-dependency-github :name "metastatedev/extensible-data"
                           :commit "d11dee6006169cb537e95af28c3541a24194dea8"))
+
+(defparameter *tasty*
+  (string->dep-sha "tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638"))
 
 ;; -----------------------------------
 ;; Groups for YAML generation
@@ -249,15 +266,59 @@ lists are indented by an extra 2 each"
 (defparameter *eac-solver*
   (make-groups :comment "For the EAC Solver"
                :deps (list
-                      (make-dependency-github :name "cwgoes/haskell-z3"
-                                              :commit "889597234bcdf5620c5a69d3405ab4d607ba4d71"))))
+                      (make-dependency-github
+                       :name "cwgoes/haskell-z3"
+                       :commit "889597234bcdf5620c5a69d3405ab4d607ba4d71"))))
+
+(defparameter *tasty-silver*
+  (make-groups :comment "Testing with tasty silver"
+               :deps (list
+                      (make-dependency-github
+                       :name "phile314/tasty-silver"
+                       :commit "f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b")
+                      *tasty*)))
+
+(defparameter *fmt-withdraw*
+  (make-groups :comment "Fmt witherable"
+               :deps (list
+                      (string->dep-sha
+                       "fmt-0.6.1.2@sha256:405a1bfc0ba0fd99f6eb1ee71f100045223f79204f961593012f28fd99cd1237,5319")
+                      (string->dep-sha
+                       "witherable-0.3.5@sha256:6590a15735b50ac14dcc138d4265ff1585d5f3e9d3047d5ebc5abf4cd5f50084,1476")
+                      (string->dep-sha
+                       "witherable-class-0@sha256:91f05518f9f4af5b02424f13ee7dcdab5d6618e01346aa2f388a72ff93e2e501,775"))))
+
+(defparameter *morley-deps*
+  (make-groups :comment "Morley Specific dependencies"
+               :deps (list
+                      *tezos-bake-monitor*
+                      *tezos-morley*)))
+
+(defparameter *morley-sub-deps*
+  (make-groups
+   :comment "Git depdencies caused by Morley specific dependencies"
+   :deps (list
+          (make-dependency-bare :name "base58-bytestring-0.1.0")
+          (make-dependency-git :name "https://github.com/serokell/base-noprelude.git"
+                               :commit "87df0899801dcdffd08ef7c3efd3c63e67e623c2")
+          (make-dependency-bare :name "hex-text-0.1.0.0")
+          (make-dependency-bare :name "show-type-0.1.1")
+          (make-dependency-git :name "https://github.com/int-index/caps.git"
+                               :commit "c5d61837eb358989b581ed82b1e79158c4823b1b")
+          (string->dep-sha
+           "named-0.3.0.1@sha256:2975d50c9c5d88095026ffc1303d2d9be52e5f588a8f8bcb7003a04b79f10a06,2312")
+          (make-dependency-bare :name "cryptonite-0.27")
+          (make-dependency-bare :name "uncaught-exception-0.1.0")
+          (make-dependency-bare :name "tasty-hunit-compat-0.2.0.1")
+          (string->dep-sha
+           "with-utf8-1.0.2.2@sha256:42eed140390b3e93d9482b084d1d0150e8774667f39c33bd47e84815751fad09,3057"))))
 
 (defparameter *morley-arithmetic-circuit-deps*
-  (make-groups :comment "Morley and Arithmetic Circuits deps"
+  (make-groups :comment "Shared Deps Between Arithmetic Circuits and Morley"
                :deps (list
-                      *galois-field*
                       *elliptic-curve*
-                      *pairing*)))
+                      *pairing*
+                      *galois-field*)))
 
 (defparameter *sub-morley-arithmetic-circuit-deps*
   (make-groups :comment "Sub dependencies of arithmetic-circuit git"
@@ -273,43 +334,63 @@ lists are indented by an extra 2 each"
                       (string->dep-sha
                        "monoidal-containers-0.6.0.1@sha256:7d776942659eb4d70d8b8da5d734396374a6eda8b4622df9e61e26b24e9c8e40,2501"))))
 
-(defparameter *morley-deps*
-  (make-groups :comment "Morley Specific dependencies"
-               :deps (list
-                      *tezos-bake-monitor*)))
-
 
 ;; -----------------------------------
 ;; stack-yaml for the YAML generation
 ;; -----------------------------------
 
+(defun make-general-depencies (&rest deps)
+  (make-groups :comment "General Dependencies" :deps deps))
+
 (defparameter *standard-library*
   (make-stack-yaml
-   :extra-deps (list (make-groups :comment "General Dependencies"
-                                  :deps (list *capability*)))
-   :name "StandardLibrary"))
+   :name "StandardLibrary"
+   :extra-deps (list (make-general-depencies *capability*))))
 
 (defparameter *frontend*
   (make-stack-yaml
    ;; why is this one ahead again!?
-   :resolver 17.9
-   :packages (list *standard-library*)
-   :extra-deps (list (make-groups :comment "General Dependencies"
-                                  :deps (list *capability*)))
-   :name "Frontend"))
+   :resolver   17.9
+   :name       "Frontend"
+   :packages   (list *standard-library*)
+   :extra-deps (list (make-general-depencies *capability*))))
 
 (defparameter *core*
   (make-stack-yaml
-   :name     "Core"
-   :packages (list *standard-library*)
-   :extra-deps (list (make-groups :comment "General Dependencies"
-                                  :deps (list *capability* *extensible*))
+   :name       "Core"
+   :packages   (list *standard-library*)
+   :extra-deps (list (make-general-depencies *capability* *extensible*)
                      *eac-solver*)))
+
+(defparameter *translate*
+  (make-stack-yaml
+   :name "Translate"
+   :packages   (list *core* *frontend* *standard-library*)
+   :extra-deps (list (make-general-depencies *capability* *extensible*)
+                     *tasty-silver*
+                     *eac-solver*)))
+
+(defparameter *Pipeline*
+  (make-stack-yaml
+   :packages (list *standard-library*)
+   ;; hack name, for sub dirs
+   :name "Pipeline"
+   :path-to-other "../"))
 
 (defparameter *Michelson*
   (make-stack-yaml
-   :packages (list *standard-library*)
-   :name "Michelson"))
+   ;; hack name, for sub dirs
+   :name "Backends/Michelson"
+   :path-to-other "../../"
+   :packages      (list *standard-library* *core* *pipeline*)
+   :extra-deps    (list (make-general-depencies *capability* *extensible*)
+                        *fmt-withdraw*
+                        *eac-solver*
+                        *morley-arithmetic-circuit-deps*
+                        *morley-deps*
+                        *morley-sub-deps*)))
+
+(defparameter *LLVM* 3)
 
 
 ;; -----------------------------------
@@ -338,5 +419,7 @@ lists are indented by an extra 2 each"
 
 (defun main ()
   (generate-yaml-file *standard-library* "library/StandardLibrary/stack.yaml")
-  (generate-yaml-file *frontend* "library/Frontend/stack.yaml")
-  (generate-yaml-file *core* "library/Core/stack.yaml"))
+  (generate-yaml-file *frontend*         "library/Frontend/stack.yaml")
+  (generate-yaml-file *core*             "library/Core/stack.yaml")
+  (generate-yaml-file *translate*        "library/Translate/stack.yaml")
+  (generate-yaml-file *Michelson*        "library/Backends/Michelson/stack.yaml"))

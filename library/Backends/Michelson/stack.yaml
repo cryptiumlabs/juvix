@@ -7,88 +7,63 @@ packages:
 - ../../Pipeline
 
 extra-deps:
+
+########################
+# General Dependencies #
+########################
 - capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
 - github: metastatedev/extensible-data
   commit: d11dee6006169cb537e95af28c3541a24194dea8
 
+##################
+# Fmt witherable #
+##################
 - fmt-0.6.1.2@sha256:405a1bfc0ba0fd99f6eb1ee71f100045223f79204f961593012f28fd99cd1237,5319
 - witherable-0.3.5@sha256:6590a15735b50ac14dcc138d4265ff1585d5f3e9d3047d5ebc5abf4cd5f50084,1476
 - witherable-class-0@sha256:91f05518f9f4af5b02424f13ee7dcdab5d6618e01346aa2f388a72ff93e2e501,775
 
-
-###############################
-# For eac solver in core
-###############################
+######################
+# For the EAC Solver #
+######################
 - github: cwgoes/haskell-z3
   commit: 889597234bcdf5620c5a69d3405ab4d607ba4d71
 
-
-################################################################################
-# morley deps
-################################################################################
-
-# - github: adjoint-io/galois-field
-#   commit: 3b13705fe26ea1dc03e1a6d7dac4089085c5362d
-
-# - github: adjoint-io/elliptic-curve
-#   commit: 445e196a550e36e0f25bd4d9d6a38676b4cf2be8
-
-- git: https://gitlab.com/morley-framework/morley.git
-  commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
-  subdirs:
-  - code/morley
-  - code/morley-prelude
-
-- git: https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git
-  commit: 9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174
-  subdirs:
-   -  tezos-bake-monitor-lib
-
-##################################################
-# sub deps of the git
-##################################################
-
-# takes the deps straight from michelson
-
-- base58-bytestring-0.1.0
-- git: https://github.com/serokell/base-noprelude.git
-  commit: 87df0899801dcdffd08ef7c3efd3c63e67e623c2
-
+#######################################
+# Morley and Arithmetic Circuits deps #
+#######################################
 - git: https://github.com/serokell/galois-field.git
   commit: 576ba98ec947370835a1f308895037c7aa7f8b71
-
-- hex-text-0.1.0.0
-
-- show-type-0.1.1
-
-- git: https://github.com/int-index/caps.git
-  commit: c5d61837eb358989b581ed82b1e79158c4823b1b
-
-- named-0.3.0.1@sha256:2975d50c9c5d88095026ffc1303d2d9be52e5f588a8f8bcb7003a04b79f10a06,2312
-
-- cryptonite-0.27
-
-- uncaught-exception-0.1.0
-
-- tasty-hunit-compat-0.2.0.1
-
 - git: https://github.com/serokell/elliptic-curve.git
   commit: b8a3d0cf8f7bacfed77dc3b697f5d08bd33396a8
-
 - git: https://github.com/serokell/pairing.git
   commit: cf86cf1f6b03f478a439703b050c520a9d455353
 
+################################
+# Morley Specific dependencies #
+################################
+- git: https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git
+  commit: 9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174
+  subdirs:
+    - tezos-bake-monitor-lib
+- git: https://gitlab.com/morley-framework/morley.git
+  commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
+  subdirs:
+    - code/morley
+    - code/morley-prelude
+
+#########################################################
+# Git depdencies caused by Morley specific dependencies #
+#########################################################
+- base58-bytestring-0.1.0
+- git: https://github.com/serokell/base-noprelude.git
+  commit: 87df0899801dcdffd08ef7c3efd3c63e67e623c2
+- hex-text-0.1.0.0
+- show-type-0.1.1
+- git: https://github.com/int-index/caps.git
+  commit: c5d61837eb358989b581ed82b1e79158c4823b1b
+- named-0.3.0.1@sha256:2975d50c9c5d88095026ffc1303d2d9be52e5f588a8f8bcb7003a04b79f10a06,2312
+- cryptonite-0.27
+- uncaught-exception-0.1.0
+- tasty-hunit-compat-0.2.0.1
 - with-utf8-1.0.2.2@sha256:42eed140390b3e93d9482b084d1d0150e8774667f39c33bd47e84815751fad09,3057
 
-
-# rely on the 14.1.0 patch to nonprelude
-# - github: haskell-hvr/base-noprelude
-#   commit: f382c80eb10521fb6a56d6451b6f983000cb010a
-
-# - named-0.3.0.1@sha256:418543272f0c844a77639b05276ee3906d5f305cd4cab46fafcb4f15b7f1e60d,2312
-# - semirings-0.5.4@sha256:5bd49c52a22c876c93d030cafa96b1233e9e7c42dacbe9f49686574368578c9c,2998
-
-# - github: adjoint-io/pairing
-#   commit: 9e3fd026fb43fd64917a3b267d0d8d351eba77cc
-
-# - groups-0.4.1.0@sha256:019c80b002e2df85e0f047206f6ab7a409f92e8fd0b9ba8150ed4c463585b6e7,600
