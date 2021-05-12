@@ -12,7 +12,7 @@ where
 import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR as IR
-import Juvix.Core.IR.Types.Base (Elim', Term')
+import Juvix.Core.IR.Types.Base (Elim', Term', XPi)
 import Juvix.Core.IR.Types.Globals
 import qualified Juvix.Core.Parameterisation as Parameterisation
 import Juvix.Library
@@ -173,9 +173,7 @@ telescopeReturn ::
   RawTelescope IR.NoExt ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val)
 telescopeReturn ty = fmap f
   where
-    f t@RawTeleEle {rawTy} = t {rawTy = baseToReturn ty rawTy, rawExtension = notImplemented}
-
--- piToReturn
+    f t@RawTeleEle{rawTy, rawExtension} = t { rawTy = baseToReturn ty rawTy, rawExtension = rawExtension } 
 
 telescopeEval ::
   ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
@@ -202,7 +200,7 @@ telescopeEval globals ts = f <$> ts
 pattEval ::
   ty ->
   IR.Pattern ty val ->
-  IR.Pattern ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val) -- ty' -- Param.PrimValIR
+  IR.Pattern ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val) 
 pattEval ty patt =
   case patt of
     IR.PCon n ps -> IR.PCon n (map (pattEval ty) ps)
@@ -216,7 +214,7 @@ pattEval ty patt =
 baseToReturn ::
   ty ->
   Term' IR.NoExt ty val ->
-  Term' IR.NoExt ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val) -- ty' -- Param.PrimValIR
+  Term' IR.NoExt ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val) 
 baseToReturn ty t =
   case t of
     IR.Star u -> IR.Star u
