@@ -5,7 +5,7 @@ Contributions are welcome! Please follow the [style guide](https://github.com/cr
 ## Code formatting
 
 The formatter should run each time you commit. See "Pre-commit hooks" section
-below. 
+below.
 See also the [style guide](https://github.com/cryptiumlabs/juvix/blob/develop/doc/STYLEGUIDE.md).
 
 ## Documentation
@@ -40,6 +40,27 @@ The mainline branch is `develop` (this will change post-1.0.0). Feature developm
 Name your feature branches with a name or handle of the branch owner as a prefix, followed by a brief description preceded by a slash, e.g. `cwgoes/eal-inference-bugfix`.
 
 Pushing minor changes (typo fixes) to another person's branch is fine. Ask before pushing major changes.
+## Version changelogs
+
+The format for the changelog follows the PVP format below.
+
+```
+  ︻ ︻ ︻ ︻
+V 0。1。0。0
+  m  m  m p
+  a  a  i a
+  j  j  n t
+  o  o  o c
+  r  r  r h
+  ︼ ︼ ︼ ︼
+```
+
+Major release will bump the major version, milestones bump the minor
+version, and pull requests bump the patch number.
+
+Every patch should thus update the Changelog file in the root
+directory with what is changed.
+
 
 ## Reviews & merging
 

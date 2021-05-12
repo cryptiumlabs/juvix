@@ -1,0 +1,5 @@
+* Changelog for Juvix
+** V0.1.0.0
+- Changelog created.
+- Documentation around how to bump the changelog in the contributors
+  guide.
