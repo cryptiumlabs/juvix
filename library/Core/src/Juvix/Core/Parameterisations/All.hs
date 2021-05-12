@@ -29,18 +29,6 @@ data Val
   | UnitVal Unit.Val
   deriving (Show, Eq)
 
-natTyToAll :: Naturals.Ty -> Ty
-natTyToAll = NatTy
-
-natValToAll :: Naturals.Val -> Val
-natValToAll = NatVal
-
-unitTyToAll :: Unit.Ty -> Ty
-unitTyToAll = UnitTy
-
-unitValToAll :: Unit.Val -> Val
-unitValToAll = UnitVal
-
 unNatTy :: Ty -> Maybe Naturals.Ty
 unNatTy (NatTy t) = pure t
 unNatTy _ = empty
@@ -53,10 +41,6 @@ hasType :: Val -> P.PrimType Ty -> Bool
 hasType (NatVal x) (traverse unNatTy -> Just tys) = Naturals.hasType x tys
 hasType (UnitVal x) (traverse unUnitTy -> Just tys) = Unit.hasType x tys
 hasType _ _ = False
-
-typeOf :: Val -> P.PrimType Ty
-typeOf (NatVal x) = NatTy <$> Naturals.typeOf x
-typeOf (UnitVal _) = UnitTy Unit.Ty :| []
 
 instance P.CanApply Ty where
   arity _ = 0

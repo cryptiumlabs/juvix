@@ -5,7 +5,6 @@ import Juvix.Core.Erasure.Types (eraseAnn, exec)
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
-import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Library hiding (empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
@@ -79,10 +78,10 @@ eraseFunction ::
   IR.Function primTy1 primVal1 ->
   m (Erasure.Function primTy2 primVal2)
 eraseFunction (IR.Function name usage ty clauses) = do
-  let (tys, ret) = piTypeToList (IR.quote0 ty)
-  clauses <- flip mapM clauses $ \(IR.FunClause _tel patts term _rhsTy _catchAll _unreachable) -> do
-    let ty_ret = listToPiType (drop (length patts) tys, ret)
-    (patts, ty) <- erasePatterns (patts, (tys, ret))
+  let (tys, ret) = piTypeToList (IR.quote ty)
+  clauses <- flip mapM clauses $ \(IR.FunClause _tel patts _term _rhsTy _catchAll _unreachable) -> do
+    -- let ty_ret = listToPiType (drop (length patts) tys, ret)
+    (patts, _ty) <- erasePatterns (patts, (tys, ret))
     patts <- mapM erasePattern patts
     -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
     -- term <- eraseTerm term
@@ -94,11 +93,11 @@ eraseFunClause ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.FunClause primTy1 primVal1 ->
   m b
-eraseFunClause (IR.FunClause _tel patts term _rhsTy _catchAll _unreachable) = do
+eraseFunClause (IR.FunClause _tel patts _term _rhsTy _catchAll _unreachable) = do
   patts <- mapM erasePattern patts
   -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
   -- term <- eraseTerm term
-  pure (Erasure.FunClause patts undefined)
+  _ <- pure (Erasure.FunClause patts undefined)
   undefined
 
 erasePattern ::
@@ -153,11 +152,11 @@ piTypeToList ty =
       let (rest, res) = piTypeToList ret in ((usage, arg) : rest, res)
     _ -> ([], ty)
 
-listToPiType ::
-  ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal) ->
-  IR.Term primTy primVal
-listToPiType ([], ret) = ret
-listToPiType ((u, x) : xs, ret) = IR.Pi u x (listToPiType (xs, ret))
+-- listToPiType ::
+--   ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal) ->
+--   IR.Term primTy primVal
+-- listToPiType ([], ret) = ret
+-- listToPiType ((u, x) : xs, ret) = IR.Pi u x (listToPiType (xs, ret))
 
 eraseTerm ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>

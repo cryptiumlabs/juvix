@@ -69,6 +69,6 @@ typeCheckDeclaration tel rtel param dts fns =
       return []
 -- TODO add to sig once typechecked? Keeping track of all globals may be
 -- enough?
--- type checking function declarations
-typeCheckDeclaration tel rtel param _ (IR.RawFunction name usage ty cls : tlf) =
-  undefined -- TODO run typeCheckFuns
+-- TODO type checking function declarations
+-- typeCheckDeclaration tel rtel param _ (IR.RawFunction name usage ty cls : tlf) =
+--   undefined
