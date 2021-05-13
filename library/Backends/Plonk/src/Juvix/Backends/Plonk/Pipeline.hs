@@ -8,6 +8,7 @@ where
 import qualified Data.Aeson as A
 import Data.Field.Galois (GaloisField)
 import qualified Data.HashMap.Strict as HM
+import Debug.Pretty.Simple (pTraceShowM)
 import qualified Juvix.Backends.Plonk.Builder as Builder
 import qualified Juvix.Backends.Plonk.Circuit as Circuit
 import qualified Juvix.Backends.Plonk.Compiler as Compiler
@@ -18,8 +19,6 @@ import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
-
-import Debug.Pretty.Simple (pTraceShowM)
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
     TypedPrim,

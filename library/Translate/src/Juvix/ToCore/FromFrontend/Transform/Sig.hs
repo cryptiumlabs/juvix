@@ -94,7 +94,6 @@ transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
   traceM "ConSig!"
   pTraceShowM conSig
 
-
   pure $ conSig : fromMaybe [] defSigs
   where
     conSigM = case sumTDef of
@@ -113,7 +112,7 @@ transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
         pTraceShowM ("mkty fn", fn, isFn fn, t1)
 
         mkTy (Just t1)
-        -- HR.Pi (Usage.SNat 1) "" (primTy param p) <$> mkTy (Just t2)
+    -- HR.Pi (Usage.SNat 1) "" (primTy param p) <$> mkTy (Just t2)
     mkTy (Just (Sexp.Atom Sexp.A {atomName = p} Sexp.:> fn Sexp.:> t2)) | isFn fn =
       do
         param <- ask @"param"
@@ -126,11 +125,11 @@ transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
       pure trm
     mkTy Nothing = panic "Shouldn't happen"
     isFn fn = Sexp.isAtomNamed fn "TopLevel.Prelude.->"
-    primTy param p
-      = maybe
-          (panic $ "Can't lookup primTy " <> show p) 
-          HR.PrimTy 
-          (HM.lookup p (P.builtinTypes param))
+    primTy param p =
+      maybe
+        (panic $ "Can't lookup primTy " <> show p)
+        HR.PrimTy
+        (HM.lookup p (P.builtinTypes param))
 transformNormalSig _ _ Ctx.CurrentNameSpace =
   pure []
 transformNormalSig _ _ Ctx.Information {} =

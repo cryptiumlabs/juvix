@@ -85,16 +85,16 @@ contextToCore ::
   Either (FF.Error primTy primVal) (FF.CoreDefs primTy primVal)
 contextToCore ctx param =
   FF.execEnv ctx param do
-  newCtx <- Context.mapWithContext' ctx updateCtx
+    newCtx <- Context.mapWithContext' ctx updateCtx
 
-  let ordered = Context.recGroups newCtx
-  traceM "Ordered"
-  pTraceShowM ordered
-  for_ ordered \grp -> do
-    traverse_ addSig grp
-    traverse_ addDef grp
-  defs <- get @"core"
-  pure $ FF.CoreDefs {defs, order = fmap Context.name <$> ordered}
+    let ordered = Context.recGroups newCtx
+    traceM "Ordered"
+    pTraceShowM ordered
+    for_ ordered \grp -> do
+      traverse_ addSig grp
+      traverse_ addDef grp
+    defs <- get @"core"
+    pure $ FF.CoreDefs {defs, order = fmap Context.name <$> ordered}
   where
     updateCtx def typeCons dataCons s@Context.Sum {sumTDef} c =
       case sumTDef of
