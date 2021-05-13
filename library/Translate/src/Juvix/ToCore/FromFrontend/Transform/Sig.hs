@@ -99,7 +99,7 @@ transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
   where
     conSigM = case sumTDef of
       Nothing -> pure $ ConSig {conType = Nothing}
-      Just Ctx.D{defMTy} -> do
+      Just Ctx.D {defMTy} -> do
         ty <- mkTy defMTy
         pure $ ConSig (Just ty)
 

@@ -1,6 +1,4 @@
-module Juvix.ToCore.FromFrontend.Transform.Def
-  (transformDef)
- where
+module Juvix.ToCore.FromFrontend.Transform.Def (transformDef) where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NonEmpty
