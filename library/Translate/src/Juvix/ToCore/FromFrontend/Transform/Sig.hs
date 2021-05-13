@@ -1,4 +1,4 @@
-module Juvix.ToCore.FromFrontend.Transform.Sig where
+module Juvix.ToCore.FromFrontend.Transform.Sig (transformSig) where
 
 import qualified Data.HashMap.Strict as HM
 import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
@@ -81,6 +81,8 @@ transformNormalSig q x (Ctx.TypeDeclar typ) = do
 transformNormalSig _ _ (Ctx.Unknown sig) =
   throwFF $ UnknownUnsupported (sig >>= eleToSymbol)
 transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
+  -- TODO: Lookup constructor signature from the context (consig)
+  -- Use that type to check sumTDef
   traceM "SumCon!"
   pTraceShowM (x, sumTDef)
   let x' = conDefName x
@@ -93,9 +95,9 @@ transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
   where
     conSigM = case sumTDef of
       Nothing -> pure $ ConSig {conType = Nothing}
-      Just Ctx.D {defMTy} -> do
+      Just Ctx.D{defMTy} -> do
         ty <- mkTy defMTy
-        pure $ ConSig (Just ty)
+        pure $ ConSig (Just ty) 
 
     -- data Bar = Foo Bool Int
     -- (-> Bool (-> Int Bar)

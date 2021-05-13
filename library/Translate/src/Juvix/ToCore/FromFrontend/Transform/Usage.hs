@@ -1,4 +1,4 @@
-module Juvix.ToCore.FromFrontend.Transform.Usage where
+module Juvix.ToCore.FromFrontend.Transform.Usage (transformUsage, transformGUsage) where
 
 import qualified Juvix.Core.IR as IR
 import Juvix.Library

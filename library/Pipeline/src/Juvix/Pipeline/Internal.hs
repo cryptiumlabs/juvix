@@ -65,14 +65,7 @@ mkDef typeCons dataConstructor s@Context.Sum {sumTDef, sumTName} c = do
         defPrecedence = Context.default'
       }
 
--- data Bar = Foo Bool Int
--- (-> Bool (-> Int Bar)
--- data Bar = Foo Bool Int F
--- -> Bool -> Int -> F Bar
--- data Bar = Foo Bool
-
 -- TODO: We're only handling the ADT case with no records or GADTs
--- TODO: Handle records
 generateSumConsSexp :: Sexp.T -> Sexp.T -> Maybe Sexp.T
 generateSumConsSexp typeCons (Sexp.cdr -> declaration) = do
   d <- sanitizeRecord <$> Sexp.foldr1 f declaration
