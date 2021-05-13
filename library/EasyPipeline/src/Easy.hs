@@ -68,7 +68,7 @@ defMichelson :: Options
 defMichelson =
   def
     { prelude =
-      -- TODO: Avoid relative paths
+        -- TODO: Avoid relative paths
         [ "../../stdlib/Prelude.ju",
           "../../stdlib/Michelson.ju",
           "../../stdlib/MichelsonAlias.ju"
@@ -84,8 +84,6 @@ defCircuit =
           "../../stdlib/Circuit.ju"
         ]
     }
-
-
 
 -- These functions help us stop at various part of the pipeline
 
