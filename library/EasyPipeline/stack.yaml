@@ -6,7 +6,6 @@ packages:
 - ../Frontend
 - ../Core
 - ../Translate
-- ../Backends/Michelson
 - ../Pipeline
 
 extra-deps:

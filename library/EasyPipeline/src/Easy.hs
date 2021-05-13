@@ -18,7 +18,6 @@
 -- with any stage of the compiler while modifying the source code.
 module Easy where
 
-import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as ResolveOpen
 import qualified Juvix.Contextify.ToContext.Types as ContextifyT
