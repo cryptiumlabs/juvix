@@ -18,6 +18,8 @@ import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
+
+import Debug.Pretty.Simple (pTraceShowM)
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
     TypedPrim,
@@ -92,12 +94,14 @@ instance
     let res = Pipeline.contextToCore ctx (Parameterization.param @f)
     case res of
       Right (FF.CoreDefs _order globals) -> do
+        pTraceShowM ("Globals", globals)
         let globalDefs = HM.mapMaybe Pipeline.toCoreDef globals
         case HM.elems $ HM.filter Pipeline.isMain globalDefs of
           [] -> Feedback.fail "No main function found"
           [IR.RawGFunction f]
             | IR.RawFunction _name usage ty (clause :| []) <- f,
               IR.RawFunClause _ [] term _ <- clause -> do
+              pTraceShowM ("GlobalDefs", globalDefs)
               let convGlobals = map (Pipeline.convGlobal Types.PField) globalDefs
                   newGlobals = HM.map (Pipeline.unsafeEvalGlobal convGlobals) convGlobals
                   lookupGlobal = IR.rawLookupFun' globalDefs

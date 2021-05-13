@@ -65,11 +65,9 @@ mkDef typeCons dataConstructor s@Context.Sum {sumTDef, sumTName} c = do
         defPrecedence = Context.default'
       }
 
--- TODO: We're only handling the ADT case with no records or GADTs
 generateSumConsSexp :: Sexp.T -> Sexp.T -> Maybe Sexp.T
 generateSumConsSexp typeCons (Sexp.cdr -> declaration) = do
-  d <- sanitizeRecord <$> Sexp.foldr1 f declaration
-  pure $ Sexp.list [arrow, d, typeCons]
+  pure . sanitizeRecord $ Sexp.foldr f typeCons declaration
   where
     sanitizeRecord (x Sexp.:> fields)
       | Sexp.isAtomNamed x ":record-d" = Sexp.list $ removeFieldNames fields
@@ -77,7 +75,7 @@ generateSumConsSexp typeCons (Sexp.cdr -> declaration) = do
     removeFieldNames fields
       | Just l <- Sexp.toList (Sexp.groupBy2 fields) = g <$> l
     g (Sexp.List [s, e]) = e
-    f n acc = Sexp.list [n, arrow, acc]
+    f n acc = Sexp.list [arrow, n, acc]
     arrow = Sexp.atom "TopLevel.Prelude.->"
 
 contextToCore ::
@@ -85,18 +83,18 @@ contextToCore ::
   Context.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
   Either (FF.Error primTy primVal) (FF.CoreDefs primTy primVal)
-contextToCore ctx param = do
+contextToCore ctx param =
   FF.execEnv ctx param do
-    newCtx <- Context.mapWithContext' ctx updateCtx
+  newCtx <- Context.mapWithContext' ctx updateCtx
 
-    let ordered = Context.recGroups newCtx
-    traceM "Ordered"
-    pTraceShowM ordered
-    for_ ordered \grp -> do
-      traverse_ addSig grp
-      traverse_ addDef grp
-    defs <- get @"core"
-    pure $ FF.CoreDefs {defs, order = fmap Context.name <$> ordered}
+  let ordered = Context.recGroups newCtx
+  traceM "Ordered"
+  pTraceShowM ordered
+  for_ ordered \grp -> do
+    traverse_ addSig grp
+    traverse_ addDef grp
+  defs <- get @"core"
+  pure $ FF.CoreDefs {defs, order = fmap Context.name <$> ordered}
   where
     updateCtx def typeCons dataCons s@Context.Sum {sumTDef} c =
       case sumTDef of
@@ -119,10 +117,10 @@ addSig ::
   Context.Entry Sexp.T Sexp.T Sexp.T ->
   m ()
 addSig (Context.Entry x feDef) = do
-  msig <- FF.transformSig x feDef
+  sigs <- FF.transformSig x feDef
   traceShowM ("Add Sig!", x)
-  pTraceShowM (x, feDef, msig)
-  for_ msig $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
+  pTraceShowM (x, feDef, sigs)
+  for_ sigs $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
 
 addDef ::
   ( Show primTy,
@@ -138,13 +136,14 @@ addDef ::
   m ()
 addDef (Context.Entry x feDef) = do
   defs <- FF.transformDef x feDef
-  for_ defs \def ->
+  for_ defs \def -> do
+    pTraceShowM ("Add Def", def)
     modify @"core" $ HM.insert (defName def) def
 
 defName :: FF.CoreDef primTy primVal -> NameSymbol.T
 defName = \case
-  FF.CoreDef (IR.RawGDatatype (IR.RawDatatype {rawDataName = x})) -> x
-  FF.CoreDef (IR.RawGDataCon (IR.RawDataCon {rawConName = x})) -> x
-  FF.CoreDef (IR.RawGFunction (IR.RawFunction {rawFunName = x})) -> x
-  FF.CoreDef (IR.RawGAbstract (IR.RawAbstract {rawAbsName = x})) -> x
+  FF.CoreDef (IR.RawGDatatype IR.RawDatatype {rawDataName = x}) -> x
+  FF.CoreDef (IR.RawGDataCon IR.RawDataCon {rawConName = x}) -> x
+  FF.CoreDef (IR.RawGFunction IR.RawFunction {rawFunName = x}) -> x
+  FF.CoreDef (IR.RawGAbstract IR.RawAbstract {rawAbsName = x}) -> x
   FF.SpecialDef x _ -> x

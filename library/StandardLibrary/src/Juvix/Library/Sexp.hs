@@ -25,6 +25,7 @@ module Juvix.Library.Sexp
     unGroupBy2,
     snoc,
     findKey,
+    flatten
   )
 where
 
@@ -176,7 +177,7 @@ nameFromT (Atom (A name _)) = Just name
 nameFromT _ = Nothing
 
 assoc :: T -> T -> Maybe T
-assoc t xs = findKey car t xs -- cadr <$> findKey car t xs
+assoc t xs = cadr <$> findKey car t xs
 
 groupBy2 :: T -> T
 groupBy2 (a1 :> a2 :> rest) =
@@ -200,3 +201,8 @@ findKey f k (x :> xs)
   | f x == k = Just x
   | otherwise = findKey f k xs
 findKey f k _ = Nothing
+
+flatten :: T -> T
+flatten ((x :> y) :> z) = flatten x :> (flatten y :> z)
+flatten ((Atom a) :> y) = Atom a :> flatten y
+flatten e = e 

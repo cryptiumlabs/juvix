@@ -178,7 +178,7 @@ instance (Show primTy, Show primVal) => Show (Error primTy primVal) where
       "Builtin binding\n" <> show def <> "\nshould not have a type signature"
     WrongNumberBuiltinArgs s n args ->
       "Builtin " <> show s <> " should have " <> show n <> " args\n"
-        <> "but has been applied to\n"
+        <> "but has been applied to " <> show (length $ Sexp.toList args) <> "\n"
         <> show args
     UnexpectedOmega ->
       "%Builtin.Omega cannot be used as an arbitrary term, only as\n"

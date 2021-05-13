@@ -134,9 +134,11 @@ transformApplication ::
   NameSymbol.Mod ->
   Sexp.T ->
   m (HR.Term primTy primVal)
-transformApplication q (f Sexp.:> args)
+transformApplication q a@(f Sexp.:> args)
   | Just xs <- Sexp.toList args = do
-    getSpecialSig q f >>= flip go xs
+    mSig <- getSpecialSig q f
+    pTraceShowM ("TransformApplication!", a, f, args, mSig, xs)
+    go mSig xs
   where
     go Nothing xs = do
       f' <- toElim f =<< transformTermHR q f

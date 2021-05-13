@@ -46,7 +46,7 @@ unsafeEvalGlobal ::
   IR.RawGlobal primTy primVal ->
   IR.Global primTy primVal
 unsafeEvalGlobal globals g =
-  case g of
+  case pTraceShow ("unsafeEvalGlobal", g) g of
     RawGDatatype (RawDatatype n pos a l cons) ->
       GDatatype (Datatype n pos (argEval globals <$> a) l (conEval globals <$> cons))
     RawGDataCon (RawDataCon n t d) ->
