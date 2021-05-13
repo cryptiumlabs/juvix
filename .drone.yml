@@ -5,10 +5,10 @@ name: juvix-ci-build-pr
 
 workspace:
   path: /drone/workspace
-  GIT_LFS_SKIP_SMUDGE: "1"
 
 environment:
   STACK_ROOT: /drone/workspace/.stack
+  GIT_LFS_SKIP_SMUDGE: "1"
 
 steps:
   - name: script-integrity-check
@@ -260,6 +260,6 @@ node:
   
 ---
 kind: signature
-hmac: eaa0945a60b18d3f3dc931a705f7451c50dd26fd1d5cd3177d74e12514902cd3
+hmac: 145fad4ea448f62f4224919bde136ab7a45bf1f29b7d0a11b90b49cc7ddb23c6
 
 ...
