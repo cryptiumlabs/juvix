@@ -64,16 +64,29 @@ def =
       currentContextName = "Juvix-User"
     }
 
--- @defMichelson@ gives us the entire prelude
+-- @defMichelson@ gives us Michelson prelude
 defMichelson :: Options
 defMichelson =
   def
     { prelude =
+      -- TODO: Avoid relative paths
         [ "../../stdlib/Prelude.ju",
           "../../stdlib/Michelson.ju",
           "../../stdlib/MichelsonAlias.ju"
         ]
     }
+
+-- @defCircuit@ gives us the circuit prelude
+defCircuit :: Options
+defCircuit =
+  def
+    { prelude =
+        [ "../../stdlib/Prelude.ju",
+          "../../stdlib/Circuit.ju"
+        ]
+    }
+
+
 
 -- These functions help us stop at various part of the pipeline
 
