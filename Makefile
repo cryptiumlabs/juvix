@@ -46,7 +46,7 @@ org-gen:
 	org-generation app/ doc/Code/App.org test/ doc/Code/Test.org src/ doc/Code/Juvix.org bench/ doc/Code/Bench.org library/ doc/Code/Library.org
 
 test:
-	stack test --fast --jobs=$(THREADS) --test-arguments "--hide-successes --ansi-tricks false"
+	stack --allow-different-user test --fast --jobs=$(THREADS) --test-arguments "--hide-successes --ansi-tricks false"
 
 test-parser: build
 	find test/examples/demo -name "*.ju" | xargs -t -n 1 -I % stack exec juvix -- parse % -b "michelson"
