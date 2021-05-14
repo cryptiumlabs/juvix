@@ -25,7 +25,7 @@ module Juvix.Library.Sexp
     unGroupBy2,
     snoc,
     findKey,
-    flatten
+    flatten,
   )
 where
 
@@ -205,4 +205,4 @@ findKey f k _ = Nothing
 flatten :: T -> T
 flatten ((x :> y) :> z) = flatten x :> (flatten y :> z)
 flatten ((Atom a) :> y) = Atom a :> flatten y
-flatten e = e 
+flatten e = e

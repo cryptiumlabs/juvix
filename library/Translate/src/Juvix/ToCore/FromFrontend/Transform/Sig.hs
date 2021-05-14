@@ -94,7 +94,6 @@ transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
   traceM "ConSig!"
   pTraceShowM conSig
 
-
   pure $ conSig : fromMaybe [] defSigs
   where
     conSigM = case sumTDef of
