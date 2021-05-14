@@ -56,7 +56,7 @@ transformDef x def = do
       where
         transformCon x ty def = do
           traceM "TransformCon"
-          pTraceShowM (x, conDefName x, def)
+          pTraceShowM (x, conDefName x, def, ty, hrToIR ty)
           -- def <- traverse (transformFunction q (conDefName x)) def
           pure $
             IR.RawDataCon

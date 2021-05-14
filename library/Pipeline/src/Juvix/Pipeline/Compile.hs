@@ -253,5 +253,5 @@ unsafeEval ::
   IR.Term primTy primVal ->
   IR.Value primTy primVal
 unsafeEval globals t = case pTraceShow ("unsafeEval", t) IR.evalTerm (IR.rawLookupFun' globals) t of
-  Right v -> pTraceShow ("Can eval!", v) v
+  Right v -> pTraceShow ("Can eval!", v, globals) v
   Left v -> pTraceShow ("Can't eval", v) panic "Failed to eval term"
