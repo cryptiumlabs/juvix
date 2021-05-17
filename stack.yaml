@@ -90,5 +90,14 @@ extra-deps:
 - hashing-0.1.0.1@sha256:98861f16791946cdf28e3c7a6ee9ac8b72d546d6e33c569c7087ef18253294e7,2816
 - monoidal-containers-0.6.0.1@sha256:7d776942659eb4d70d8b8da5d734396374a6eda8b4622df9e61e26b24e9c8e40,2501
 
+####################################
+# Michelson Morely Testing library #
+####################################
+- git: https://gitlab.com/morley-framework/morley.git
+  commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
+  subdirs:
+    - code/morley
+    - code/morley-prelude
+
 
 allow-newer: true

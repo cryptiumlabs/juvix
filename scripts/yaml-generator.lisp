@@ -357,6 +357,11 @@ lists are indented by an extra 2 each"
           *base-no-prelude-special*))
   "like *morley-sub-deps* but is an extra layer of dependency that is not used elsewhere")
 
+(defparameter *morley-deps-testing*
+  (make-dependency-git :name "https://gitlab.com/morley-framework/morley.git"
+                       :commit "53961f48d0d3fb61051fceaa6c9ed6becb7511e5"
+                       :subdirs (list "code/morley" "code/morley-prelude")))
+
 (defparameter *morley-arithmetic-circuit-deps*
   (make-groups :comment "Shared Deps Between Arithmetic Circuits and Morley"
                :deps (list
@@ -573,7 +578,10 @@ common ones to include"
                    *easy-pipeline*
                    *plonk*)
    :path-to-other "./library/"
-   :extra-deps (big-dep-list)
+   :extra-deps
+   (append (big-dep-list)
+           (list (make-groups :comment "Michelson Morely Testing library"
+                              :deps (list *morley-deps-testing*))))
    :extra "allow-newer: true"))
 
 ;; -----------------------------------
