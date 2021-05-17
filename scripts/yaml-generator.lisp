@@ -212,7 +212,7 @@ lists are indented by an extra 2 each"
 
 (defun format-extra (extra)
   (if extra
-      (format nil "~%~%~a" extra)
+      (format nil "~%~a" extra)
       ""))
 
 (defun stack-yaml->string (yaml-config)
@@ -416,10 +416,22 @@ lists are indented by an extra 2 each"
                         *morley-deps*
                         *morley-sub-deps*)))
 
+(defparameter *interaction-net*
+  (make-stack-yaml
+   :name "InteractionNet"))
+
 (defparameter *LLVM*
   (make-stack-yaml
+   :resolver 17.9
    :name "Backends/LLVM"
-   :path-to-other "../../"))
+   :path-to-other "../../"
+   :packages (list *standard-library* *core* *interaction-net*)
+   :extra-deps (list (make-general-depencies *capability* *extensible*)
+                     *llvm-hs-deps*
+                     *llvm-hs-extra-deps*
+                     *eac-solver*
+                     *interaction-net-extra-deps*)
+   :extra "allow-newer: true"))
 
 
 ;; -----------------------------------
@@ -451,4 +463,5 @@ lists are indented by an extra 2 each"
   (generate-yaml-file *frontend*         "library/Frontend/stack.yaml")
   (generate-yaml-file *core*             "library/Core/stack.yaml")
   (generate-yaml-file *translate*        "library/Translate/stack.yaml")
-  (generate-yaml-file *Michelson*        "library/Backends/Michelson/stack.yaml"))
+  (generate-yaml-file *Michelson*        "library/Backends/Michelson/stack.yaml")
+  (generate-yaml-file *LLVM*             "library/Backends/LLVM/stack.yaml"))
