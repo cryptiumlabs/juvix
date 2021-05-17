@@ -100,7 +100,6 @@ transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
       Just Ctx.D {defMTy} -> do
         ConSig <$> traverse (transformTermHR q) defMTy
       _ -> pure $ ConSig {conType = Nothing}
-
 transformNormalSig _ _ Ctx.CurrentNameSpace =
   pure []
 transformNormalSig _ _ Ctx.Information {} =
