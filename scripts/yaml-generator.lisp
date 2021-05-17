@@ -321,18 +321,44 @@ lists are indented by an extra 2 each"
                       *galois-field*)))
 
 (defparameter *sub-morley-arithmetic-circuit-deps*
-  (make-groups :comment "Sub dependencies of arithmetic-circuit git"
+  (make-groups
+   :comment "Sub dependencies of arithmetic-circuit git"
+   :deps (list
+          (string->dep-sha
+           "constraints-extras-0.3.0.2@sha256:bf6884be65958e9188ae3c9e5547abfd6d201df021bff8a4704c2c4fe1e1ae5b,1784")
+          (string->dep-sha
+           "dependent-sum-0.7.1.0@sha256:5599aa89637db434431b1dd3fa7c34bc3d565ee44f0519bfbc877be1927c2531,2068")
+          (string->dep-sha
+           "dependent-sum-template-0.1.0.3@sha256:0bbbacdfbd3abf2a15aaf0cf2c27e5bdd159b519441fec39e1e6f2f54424adde,1682")
+          (string->dep-sha
+           "hashing-0.1.0.1@sha256:98861f16791946cdf28e3c7a6ee9ac8b72d546d6e33c569c7087ef18253294e7,2816")
+          (string->dep-sha
+           "monoidal-containers-0.6.0.1@sha256:7d776942659eb4d70d8b8da5d734396374a6eda8b4622df9e61e26b24e9c8e40,2501"))))
+
+
+(defparameter *llvm-hs-deps*
+  (make-groups :comment "LLVM-HS Library dependencies"
+               :deps (list
+                      (make-dependency-bare :name "llvm-hs-9.0.1")
+                      (make-dependency-bare :name "llvm-hs-pure-9.0.0")
+                      (string->dep-sha
+                       "llvm-hs-pretty-0.6.2.0@sha256:4c600122965e8dff586bdca0044ec2b1896f2875c2da5ad89bbab9799c9697cd,1670"))))
+
+(defparameter *llvm-hs-extra-deps*
+  (make-groups :comment "LLVM-HS Library Extra dependencies"
                :deps (list
                       (string->dep-sha
-                       "constraints-extras-0.3.0.2@sha256:bf6884be65958e9188ae3c9e5547abfd6d201df021bff8a4704c2c4fe1e1ae5b,1784")
+                       "derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422")
                       (string->dep-sha
-                       "dependent-sum-0.7.1.0@sha256:5599aa89637db434431b1dd3fa7c34bc3d565ee44f0519bfbc877be1927c2531,2068")
-                      (string->dep-sha
-                       "dependent-sum-template-0.1.0.3@sha256:0bbbacdfbd3abf2a15aaf0cf2c27e5bdd159b519441fec39e1e6f2f54424adde,1682")
-                      (string->dep-sha
-                       "hashing-0.1.0.1@sha256:98861f16791946cdf28e3c7a6ee9ac8b72d546d6e33c569c7087ef18253294e7,2816")
-                      (string->dep-sha
-                       "monoidal-containers-0.6.0.1@sha256:7d776942659eb4d70d8b8da5d734396374a6eda8b4622df9e61e26b24e9c8e40,2501"))))
+                       "derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817"))))
+
+
+(defparameter *interaction-net-extra-deps*
+  (make-groups :comment "For Interaction Nets"
+               :deps (list
+                      (make-dependency-github
+                       :name "cryptiumlabs/jsonschema-gen"
+                       :commit "0639cd166ec59a04d07a3a7d49bdf343e567000e"))))
 
 
 ;; -----------------------------------
@@ -390,7 +416,10 @@ lists are indented by an extra 2 each"
                         *morley-deps*
                         *morley-sub-deps*)))
 
-(defparameter *LLVM* 3)
+(defparameter *LLVM*
+  (make-stack-yaml
+   :name "Backends/LLVM"
+   :path-to-other "../../"))
 
 
 ;; -----------------------------------
