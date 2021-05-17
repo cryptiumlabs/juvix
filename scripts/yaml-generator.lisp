@@ -3,13 +3,13 @@
 ;; This code was designed in a single file, so no extra build tools
 ;; were needed. To make a change jump to the
 
-;; -----------------------------------
-;; stack-yaml for the YAML generation
-;; -----------------------------------
+;;; ----------------------------------------------------------------------
+;;; stack-yaml for the YAML generation
+;;; ----------------------------------------------------------------------
 
 ;; Section in the code
 
-;; Library code looks like
+;; Library definitions look like
 
 '(defparameter *interaction-net-IR*
   ;; make a stack.yaml configuration
@@ -97,6 +97,10 @@
 ;; If you to bump the default resolver for the projects please edit
 ;; *default-resolver* with the new number.
 
+;; Please note that variables need to be done in dependency order as
+;; they are resolved immediately. So if there are mutually recursive
+;; packages, you'll need to declare them before hand with just their
+;; name so it can be processed as a local package
 
 ;; With all that said, Happy hacking!
 
@@ -329,9 +333,14 @@ lists are indented by an extra 2 each"
   (make-groups :comment (groups-comment g1)
                :deps (append (groups-deps g1) (groups-deps g2))))
 
-;; -----------------------------------
-;; Dependencies for YAML generation
-;; -----------------------------------
+;;; ----------------------------------------------------------------------
+;;; Dependencies for YAML generation
+;;; ----------------------------------------------------------------------
+
+;; --------------------------------------
+;; Crypto Style Dependencies
+;; --------------------------------------
+
 (defparameter *galois-field*
   (make-dependency-git :name   "https://github.com/serokell/galois-field.git"
                        :commit "576ba98ec947370835a1f308895037c7aa7f8b71"))
@@ -349,6 +358,10 @@ lists are indented by an extra 2 each"
   (make-dependency-git :name   "https://github.com/serokell/pairing.git"
                        :commit "cf86cf1f6b03f478a439703b050c520a9d455353"))
 
+;; --------------------------------------
+;; Tezos Style Dependencies
+;; --------------------------------------
+
 (defparameter *tezos-bake-monitor*
   (make-dependency-git :name "https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git"
                        :commit "9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174"
@@ -359,6 +372,19 @@ lists are indented by an extra 2 each"
                        :commit "53961f48d0d3fb61051fceaa6c9ed6becb7511e5"
                        :subdirs (list "code/morley" "code/morley-prelude")))
 
+(defparameter *base-no-prelude-standard*
+  (string->dep-sha
+   "base-noprelude-4.13.0.0@sha256:3cccbfda38e1422ca5cc436d58858ba51ff9114d2ed87915a6569be11e4e5a90,6842")
+  "this is the standard version of base no prelude")
+
+(defparameter *base-no-prelude-special*
+  (make-dependency-git :name "https://github.com/serokell/base-noprelude.git"
+                       :commit "87df0899801dcdffd08ef7c3efd3c63e67e623c2")
+  "this is a special version of base no prelude we have to use with Michelson backend")
+
+;; --------------------------------------
+;; Stadnard Library Style Dependencies
+;; --------------------------------------
 
 (defparameter *capability*
   (string->dep-sha "capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345"))
@@ -382,51 +408,17 @@ lists are indented by an extra 2 each"
   (string->dep-sha
    "unexceptionalio-0.5.0@sha256:ad0b2d4d1f62a3e24cdb80360eea42ab3f0a0559af42aba19b5cf373378913ce,1682"))
 
-(defparameter *base-no-prelude-standard*
-  (string->dep-sha
-   "base-noprelude-4.13.0.0@sha256:3cccbfda38e1422ca5cc436d58858ba51ff9114d2ed87915a6569be11e4e5a90,6842")
-  "this is the standard version of base no prelude")
-
-(defparameter *base-no-prelude-special*
-  (make-dependency-git :name "https://github.com/serokell/base-noprelude.git"
-                       :commit "87df0899801dcdffd08ef7c3efd3c63e67e623c2")
-  "this is a special version of base no prelude we have to use with Michelson backend")
-
 (defparameter *sr-extra*
   (make-dependency-github :name "seereason/sr-extra"
                           :commit "d5435dcb2ae5da5f9e0fb8e5a3c40f99937a046f"))
 
-;; -----------------------------------
-;; Groups for YAML generation
-;; -----------------------------------
+;;; ----------------------------------------------------------------------
+;;; Groups for YAML generation
+;;; ----------------------------------------------------------------------
 
-(defparameter *eac-solver*
-  (make-groups :comment "For the EAC Solver"
-               :deps (list
-                      (make-dependency-github
-                       :name "cwgoes/haskell-z3"
-                       :commit "889597234bcdf5620c5a69d3405ab4d607ba4d71"))))
-
-(defparameter *tasty-silver*
-  (make-groups :comment "Testing with tasty silver"
-               :deps (list
-                      (make-dependency-github
-                       :name "phile314/tasty-silver"
-                       :commit "f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b")
-                      *tasty*)))
-
-
-(defparameter *withdraw*
-  (make-groups :comment "Witherable"
-               :deps (list
-                      (string->dep-sha
-                       "witherable-0.3.5@sha256:6590a15735b50ac14dcc138d4265ff1585d5f3e9d3047d5ebc5abf4cd5f50084,1476")
-                      (string->dep-sha
-                       "witherable-class-0@sha256:91f05518f9f4af5b02424f13ee7dcdab5d6618e01346aa2f388a72ff93e2e501,775"))))
-
-(defparameter *fmt-withdraw*
-  (merge-group (make-groups :comment "Fmt witherable" :deps (list *fmt*))
-               *withdraw*))
+;; --------------------------------------
+;; Tezos Dependency Groups
+;; --------------------------------------
 
 (defparameter *morley-deps*
   (make-groups :comment "Morley Specific dependencies"
@@ -464,6 +456,11 @@ lists are indented by an extra 2 each"
                        :commit "53961f48d0d3fb61051fceaa6c9ed6becb7511e5"
                        :subdirs (list "code/morley" "code/morley-prelude")))
 
+;; --------------------------------------
+;; Tezos ∧ Arithmetic Circuit dependcy Groups
+;; --------------------------------------
+
+
 (defparameter *morley-arithmetic-circuit-deps*
   (make-groups :comment "Shared Deps Between Arithmetic Circuits and Morley"
                :deps (list
@@ -493,6 +490,9 @@ lists are indented by an extra 2 each"
           (string->dep-sha
            "monoidal-containers-0.6.0.1@sha256:7d776942659eb4d70d8b8da5d734396374a6eda8b4622df9e61e26b24e9c8e40,2501"))))
 
+;; --------------------------------------
+;; LLVM Extra Depenecy groups
+;; --------------------------------------
 
 (defparameter *llvm-hs-deps*
   (make-groups :comment "LLVM-HS Library dependencies"
@@ -511,12 +511,49 @@ lists are indented by an extra 2 each"
                        "derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817"))))
 
 
+;; --------------------------------------
+;; Interaction Net Groups Depencenies
+;; --------------------------------------
+
 (defparameter *interaction-net-extra-deps*
   (make-groups :comment "For Interaction Nets json-schema"
                :deps (list
                       (make-dependency-github
                        :name "cryptiumlabs/jsonschema-gen"
                        :commit "0639cd166ec59a04d07a3a7d49bdf343e567000e"))))
+
+;; --------------------------------------
+;; General Extra Groups
+;; --------------------------------------
+
+(defparameter *eac-solver*
+  (make-groups :comment "For the EAC Solver"
+               :deps (list
+                      (make-dependency-github
+                       :name "cwgoes/haskell-z3"
+                       :commit "889597234bcdf5620c5a69d3405ab4d607ba4d71"))))
+
+(defparameter *tasty-silver*
+  (make-groups :comment "Testing with tasty silver"
+               :deps (list
+                      (make-dependency-github
+                       :name "phile314/tasty-silver"
+                       :commit "f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b")
+                      *tasty*)))
+
+
+(defparameter *withdraw*
+  (make-groups :comment "Witherable"
+               :deps (list
+                      (string->dep-sha
+                       "witherable-0.3.5@sha256:6590a15735b50ac14dcc138d4265ff1585d5f3e9d3047d5ebc5abf4cd5f50084,1476")
+                      (string->dep-sha
+                       "witherable-class-0@sha256:91f05518f9f4af5b02424f13ee7dcdab5d6618e01346aa2f388a72ff93e2e501,775"))))
+
+(defparameter *fmt-withdraw*
+  (merge-group (make-groups :comment "Fmt witherable" :deps (list *fmt*))
+               *withdraw*))
+
 
 (defparameter *graph-visualizer*
   (make-groups
@@ -554,9 +591,9 @@ common ones to include"
             *morley-arithmetic-circuit-deps*)
         *sub-morley-arithmetic-circuit-deps*))
 
-;; -----------------------------------
-;; stack-yaml for the YAML generation
-;; -----------------------------------
+;;; ----------------------------------------------------------------------
+;;; stack-yaml for the YAML generation
+;;; ----------------------------------------------------------------------
 
 (defparameter *standard-library*
   (make-stack-yaml
@@ -697,9 +734,9 @@ common ones to include"
                               :deps (list *morley-deps-testing*))))
    :extra "allow-newer: true"))
 
-;; -----------------------------------
-;; Ouptut for YAML generation
-;; -----------------------------------
+;;; ----------------------------------------------------------------------
+;;; Ouptut for YAML generation
+;;; ----------------------------------------------------------------------
 
 (defun print-yaml (table)
   (format t (stack-yaml->string table)))
