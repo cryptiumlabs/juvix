@@ -803,7 +803,6 @@ Datatype declarations are typechecked here. Usages are passed along.
 - _Relies on_
   + [[CheckTerm]]
   + [[IR/Evaluator]]
-  + [[OnlyExts]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Globals]]

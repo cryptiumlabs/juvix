@@ -35,7 +35,7 @@ compileBinOp m op args = do
     BExp -> do
       let (Ann.Ann _ _ (Ann.Prim (PConst exponent))) = e2
       tmp1 <- mulToImm (Right e1Out) (Right e1Out)
-      Left <$> foldrM f tmp1 (replicate (fromIntegral $ exponent - 2) (0::Int))
+      Left <$> foldrM f tmp1 (replicate (fromIntegral $ exponent - 2) (0 :: Int))
       where
         f _n tmp = mulToImm (Left tmp) (Right e1Out)
     -- SUB(x, y) = x + (-y)
