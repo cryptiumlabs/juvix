@@ -36,8 +36,10 @@ transformTermHR ::
   m (HR.Term primTy primVal)
 transformTermHR _ (Sexp.Atom a@Sexp.N {}) =
   HR.Prim <$> getParamConstant a
-transformTermHR q (Sexp.Atom Sexp.A {atomName}) =
-  toName <$> lookupSigWithSymbol (Just q) atomName
+transformTermHR q (Sexp.Atom Sexp.A {atomName}) = do
+  term <- lookupSigWithSymbol (Just q) atomName
+  pTraceShowM ("Transform Term Atom", atomName, term, toName term)
+  pure $ toName term
   where
     toName = HR.Elim . HR.Var . maybe atomName fst
 transformTermHR q p@(name Sexp.:> form)

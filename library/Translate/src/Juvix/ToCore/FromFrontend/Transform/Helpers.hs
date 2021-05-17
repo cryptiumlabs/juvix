@@ -60,8 +60,6 @@ lookupSigWithSymbol ::
   m (Maybe (NameSymbol.T, CoreSig HR.T primTy primVal))
 lookupSigWithSymbol q x' = do
   gets @"coreSigs" \sigs -> do
-    -- traceM "CoreSigs"
-    -- pTraceShowM sigs
     case q of
       Nothing -> look x sigs
       Just q -> look x sigs <|> look qx sigs

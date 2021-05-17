@@ -23,12 +23,14 @@ import qualified Juvix.FreeVars as FV
 import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Data.List.NonEmpty as NonEmpty
+import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 
 -- | Traverses a whole context by performing an action on each recursive group.
 -- The groups are passed in dependency order but the order of elements within
 -- each group is arbitrary.
 traverseContext ::
-  (Applicative f, Monoid t, Data a, Data b, Data c) =>
+  (Show a, Show b, Show c, Applicative f, Monoid t, Data a, Data b, Data c) =>
   -- | process one recursive group
   (Group a b c -> f t) ->
   Context.T a b c ->
@@ -37,7 +39,7 @@ traverseContext f = foldMapA f . recGroups
 
 -- | As 'traverseContext' but ignoring the return value.
 traverseContext_ ::
-  (Applicative f, Data a, Data b, Data c) =>
+  (Show a, Show b, Show c, Applicative f, Data a, Data b, Data c) =>
   -- | process one recursive group
   (Group a b c -> f z) ->
   Context.T a b c ->
@@ -47,7 +49,7 @@ traverseContext_ f = traverse_ f . recGroups
 -- | Same as 'traverseContext', but the groups are split up into single
 -- definitions.
 traverseContext1 ::
-  (Monoid t, Applicative f, Data a, Data b, Data c) =>
+  (Show a, Show b, Show c, Monoid t, Applicative f, Data a, Data b, Data c) =>
   -- | process one definition
   (NameSymbol.T -> Context.Definition a b c -> f t) ->
   Context.T a b c ->
@@ -56,7 +58,7 @@ traverseContext1 = traverseContext . foldMapA . onEntry
 
 -- | Same as 'traverseContext1', but ignoring the return value.
 traverseContext1_ ::
-  (Applicative f, Data a, Data b, Data c) =>
+  (Show a, Show b, Show c, Applicative f, Data a, Data b, Data c) =>
   -- | process one definition
   (NameSymbol.T -> Context.Definition a b c -> f z) ->
   Context.T a b c ->
@@ -74,7 +76,7 @@ onEntry f (Entry {name, def}) = f name def
 -- elements of previous groups. The first element of each pair is its
 -- fully-qualified name.
 recGroups ::
-  (Data term, Data ty, Data sumRep) =>
+  (Show ty, Show term, Show sumRep, Data term, Data ty, Data sumRep) =>
   Context.T term ty sumRep ->
   [Group term ty sumRep]
 recGroups ctx@(Context.T {topLevelMap}) =
@@ -84,7 +86,19 @@ recGroups ctx@(Context.T {topLevelMap}) =
       edges = map (\(n, gs) -> (gs, n, get n)) $ HashMap.toList groups
       (g, fromV', _) = Graph.graphFromEdges edges
       fromV v = let (gs, _, _) = fromV' v in gs
-   in Graph.topSort g |> reverse |> concatMap fromV
+   in Graph.topSort g |> reverse |> concatMap fromV |> sortBy orderDatatypes
+
+
+-- Data type comes before data constructor
+orderDatatypes 
+  :: NonEmpty (Entry term1 ty1 sumRep1)
+  -> NonEmpty (Entry term2 ty2 sumRep2) -> Ordering
+orderDatatypes (a NonEmpty.:| _as) (b NonEmpty.:| _bs) = case (def a, def b) of
+  (Context.SumCon Context.Sum {sumTName}, Context.TypeDeclar _)
+    | sumTName `elem` name b -> GT
+  (Context.TypeDeclar _, Context.SumCon Context.Sum {sumTName})
+    | sumTName `elem` name a -> LT
+  (_ , _) ->  EQ 
 
 injectTopLevel :: (Semigroup a, IsString a) => a -> a
 injectTopLevel name = Context.topLevelName <> "." <> name
