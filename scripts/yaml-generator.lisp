@@ -491,12 +491,27 @@ common ones to include"
 
 (defparameter *interaction-net*
   (make-stack-yaml
-   :name "InteractionNet"))
+   :name       "InteractionNet"
+   :resolver   17.9
+   :packages   (list *standard-library* *core*)
+   :extra-deps (list (make-general-depencies *capability* *extensible*)
+                     *interaction-net-extra-deps*
+                     *graph-visualizer*
+                     *eac-solver*)
+   :extra "allow-newer: true"))
+
+(defparameter *interaction-net-IR*
+  (make-stack-yaml
+   :name       "InteractionNetIR"
+   :resolver   17.9
+   :packages   (list *standard-library* *core*)
+   :extra-deps (list (make-general-depencies *capability* *extensible*)
+                     *eac-solver*)))
 
 (defparameter *LLVM*
   (make-stack-yaml
-   :resolver 17.9
    :name "Backends/LLVM"
+   :resolver 17.9
    :path-to-other "../../"
    :packages (list *standard-library* *core* *interaction-net*)
    :extra-deps (list (make-general-depencies *capability* *extensible*)
@@ -586,13 +601,15 @@ common ones to include"
   (format t (group->string *morley-deps*)))
 
 (defun main ()
-  (generate-yaml-file *standard-library* "library/StandardLibrary/stack.yaml")
-  (generate-yaml-file *frontend*         "library/Frontend/stack.yaml")
-  (generate-yaml-file *core*             "library/Core/stack.yaml")
-  (generate-yaml-file *translate*        "library/Translate/stack.yaml")
-  (generate-yaml-file *Michelson*        "library/Backends/Michelson/stack.yaml")
-  (generate-yaml-file *LLVM*             "library/Backends/LLVM/stack.yaml")
-  (generate-yaml-file *plonk*            "library/Backends/Plonk/stack.yaml")
-  (generate-yaml-file *easy-pipeline*    "library/EasyPipeline/stack.yaml")
-  (generate-yaml-file *Pipeline*         "library/Pipeline/stack.yaml")
-  (generate-yaml-file *juvix*            "stack.yaml"))
+  (generate-yaml-file *standard-library*   "library/StandardLibrary/stack.yaml")
+  (generate-yaml-file *frontend*           "library/Frontend/stack.yaml")
+  (generate-yaml-file *core*               "library/Core/stack.yaml")
+  (generate-yaml-file *translate*          "library/Translate/stack.yaml")
+  (generate-yaml-file *Michelson*          "library/Backends/Michelson/stack.yaml")
+  (generate-yaml-file *LLVM*               "library/Backends/LLVM/stack.yaml")
+  (generate-yaml-file *plonk*              "library/Backends/Plonk/stack.yaml")
+  (generate-yaml-file *easy-pipeline*      "library/EasyPipeline/stack.yaml")
+  (generate-yaml-file *Pipeline*           "library/Pipeline/stack.yaml")
+  (generate-yaml-file *interaction-net*    "library/InteractionNet/stack.yaml")
+  (generate-yaml-file *interaction-net-IR* "library/InteractionNetIR/stack.yaml")
+  (generate-yaml-file *juvix*              "stack.yaml"))
