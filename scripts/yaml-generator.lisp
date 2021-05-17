@@ -421,6 +421,29 @@ lists are indented by an extra 2 each"
 ;; stack-yaml for the YAML generation
 ;; -----------------------------------
 
+(defun big-dep-list (&key (plonk nil))
+  "For the packages with lots of dependecies, these tend to be the
+common ones to include"
+  (list (make-general-depencies *capability*
+                                *extensible*
+                                *aeson-options*
+                                *un-exceptionalio*
+                                *sr-extra*)
+        *llvm-hs-extra-deps*
+        *withdraw*
+        *graph-visualizer*
+        *tasty-silver*
+        *morley-sub-deps*
+        (make-groups
+         :comment "For special deps that are similar to Michelson but not quite the same"
+         :deps (list *base-no-prelude-standard*))
+        *interaction-net-extra-deps*
+        ;; no morley plonk given as plonk wants a different one
+        (if plonk
+            *morley-arithmetic-circuit-deps-plonk*
+            *morley-arithmetic-circuit-deps*)
+        *sub-morley-arithmetic-circuit-deps*))
+
 (defun make-general-depencies (&rest deps)
   (make-groups :comment "General Dependencies" :deps deps))
 
@@ -451,13 +474,6 @@ lists are indented by an extra 2 each"
    :extra-deps (list (make-general-depencies *capability* *extensible*)
                      *tasty-silver*
                      *eac-solver*)))
-
-(defparameter *Pipeline*
-  (make-stack-yaml
-   :packages (list *standard-library*)
-   ;; hack name, for sub dirs
-   :name "Pipeline"
-   :path-to-other "../"))
 
 (defparameter *Michelson*
   (make-stack-yaml
@@ -490,6 +506,32 @@ lists are indented by an extra 2 each"
                      *interaction-net-extra-deps*)
    :extra "allow-newer: true"))
 
+(defparameter *Pipeline*
+  (make-stack-yaml
+   :packages (list *standard-library*
+                   *frontend*
+                   *core*
+                   *translate*
+                   *michelson*
+                   *plonk*)
+   ;; hack name, for sub dirs
+   :name "Pipeline"
+   :extra-deps (big-dep-list)
+   :extra "allow-newer: true"))
+
+(defparameter *Easy-Pipeline*
+  (make-stack-yaml
+   :packages (list *standard-library*
+                   *frontend*
+                   *core*
+                   *translate*
+                   *michelson*
+                   *pipeline*)
+   ;; hack name, for sub dirs
+   :name "EasyPipeline"
+   :extra-deps (big-dep-list)
+   :extra "allow-newer: true"))
+
 
 (defparameter *plonk*
   (make-stack-yaml
@@ -501,22 +543,7 @@ lists are indented by an extra 2 each"
                    *pipeline*
                    *translate*
                    *michelson*)
-   :extra-deps (list (make-general-depencies *capability*
-                                             *extensible*
-                                             *aeson-options*
-                                             *un-exceptionalio*
-                                             *sr-extra*)
-                     *llvm-hs-extra-deps*
-                     *withdraw*
-                     *graph-visualizer*
-                     *tasty-silver*
-                     *morley-sub-deps*
-                     (make-groups
-                      :comment "For special deps that are similar to Michelson but not quite the same"
-                      :deps (list *base-no-prelude-standard*))
-                     *interaction-net-extra-deps*
-                     *morley-arithmetic-circuit-deps-plonk*
-                     *sub-morley-arithmetic-circuit-deps*)
+   :extra-deps (big-dep-list :plonk t)
    :extra "allow-newer: true"))
 
 ;; -----------------------------------
@@ -550,4 +577,6 @@ lists are indented by an extra 2 each"
   (generate-yaml-file *translate*        "library/Translate/stack.yaml")
   (generate-yaml-file *Michelson*        "library/Backends/Michelson/stack.yaml")
   (generate-yaml-file *LLVM*             "library/Backends/LLVM/stack.yaml")
-  (generate-yaml-file *plonk*            "library/Backends/Plonk/stack.yaml"))
+  (generate-yaml-file *plonk*            "library/Backends/Plonk/stack.yaml")
+  (generate-yaml-file *easy-pipeline*    "library/EasyPipeline/stack.yaml")
+  (generate-yaml-file *Pipeline*         "library/Pipeline/stack.yaml"))
