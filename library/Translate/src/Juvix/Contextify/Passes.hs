@@ -10,7 +10,6 @@ import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import qualified StmContainers.Map as STM
-import Prelude (error)
 
 resolveModule ::
   ExpressionIO m => Env.SexpContext -> m Env.SexpContext

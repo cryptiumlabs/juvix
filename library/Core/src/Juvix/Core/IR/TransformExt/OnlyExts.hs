@@ -2,13 +2,13 @@
 -- keeps the extensions.
 module Juvix.Core.IR.TransformExt.OnlyExts where
 
-import Extensible
+import Extensible hiding (Type)
 import Juvix.Core.IR.TransformExt
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Library
 
-data T (ext :: *)
+data T (ext :: Type)
 
 do
   ext' <- newName "ext"

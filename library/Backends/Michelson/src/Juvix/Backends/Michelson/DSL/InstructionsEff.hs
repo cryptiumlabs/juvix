@@ -407,7 +407,6 @@ type OnTerm1Gen m input result =
   OnTermGen m (input -> m result)
 
 type OnTerm m f =
-  Env.Reduction m =>
   -- Instruction to be the operatio
   Instr.ExpandedOp ->
   OnTermGen m f

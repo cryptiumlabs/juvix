@@ -23,8 +23,6 @@ import Juvix.Library hiding (Datatype)
 typeCheckDeclaration ::
   ( Eq primTy,
     Eq primVal,
-    Param.CanApply primTy,
-    Param.CanApply primVal,
     Eval.CanEval extT IR.NoExt primTy primVal,
     Eval.EvalPatSubst IR.NoExt primTy primVal,
     Eval.EvalPatSubst IR.NoExt primTy (TypedPrim primTy primVal),
@@ -32,7 +30,6 @@ typeCheckDeclaration ::
     Eval.NoExtensions extT primTy primVal,
     CanTC' extT primTy primVal m,
     Param.CanApply (TypedPrim primTy primVal),
-    HasThrow "typecheckError" (TypecheckError' IR.NoExt extT primTy primVal) m,
     HasReader "globals" (GlobalsT' IR.NoExt extT primTy primVal) m
   ) =>
   -- | Telescope containing a list of

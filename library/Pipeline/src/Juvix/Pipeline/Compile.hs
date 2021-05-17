@@ -36,8 +36,8 @@ unsafeEvalGlobal ::
   IR.Global primTy primVal
 unsafeEvalGlobal globals g =
   case g of
-    RawGDatatype (RawDatatype n pos a l cons) -> undefined
-    RawGDataCon (RawDataCon n t d) -> undefined
+    RawGDatatype _ -> undefined
+    RawGDataCon _ -> undefined
     RawGFunction (RawFunction n u t cs) ->
       GFunction $
         Function n u (unsafeEval globals t) (map (funClauseEval globals) cs)
@@ -50,8 +50,8 @@ convGlobal ::
   IR.RawGlobal ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val)
 convGlobal ty g =
   case g of
-    RawGDatatype (RawDatatype n pos a l cons) -> undefined
-    RawGDataCon (RawDataCon n t d) -> undefined
+    RawGDatatype _ -> undefined
+    RawGDataCon _ -> undefined
     RawGFunction (RawFunction n u t cs) ->
       RawGFunction (RawFunction n u (baseToReturn ty t) (funClauseReturn ty <$> cs))
     RawGAbstract (RawAbstract n u t) ->
@@ -70,7 +70,7 @@ funClauseEval ::
   IR.RawGlobals primTy primVal ->
   IR.RawFunClause primTy primVal ->
   IR.FunClause primTy primVal
-funClauseEval globals (RawFunClause _tel patts rhs _catchall) =
+funClauseEval _globals (RawFunClause _tel patts rhs _catchall) =
   FunClause undefined patts rhs undefined undefined undefined --TODO
 
 pattEval ::

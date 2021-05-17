@@ -272,7 +272,6 @@ isVarArg p@(name Sexp.:> _rest)
     throwFF $ PatternUnimplemented p
 isVarArg p =
   isVarPat p
-isVarArg _ = error "malformed arg"
 
 isVarPat ::
   HasThrowFF primTy primVal m =>
@@ -294,9 +293,7 @@ toElim _ (HR.Elim e) = pure e
 toElim e _ = throwFF $ NotAnElim e
 
 getValSig ::
-  ( Show primTy,
-    Show primVal,
-    HasCoreSigs primTy primVal m,
+  ( HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
   NameSymbol.Mod ->
@@ -305,9 +302,7 @@ getValSig ::
 getValSig q = getSig' q \case ValSig π ty -> Just (π, ty); _ -> Nothing
 
 getConSig ::
-  ( Show primTy,
-    Show primVal,
-    HasCoreSigs primTy primVal m,
+  ( HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
   NameSymbol.Mod ->
@@ -318,9 +313,7 @@ getConSig q = getSig' q \case
   _ -> Nothing
 
 getDataSig ::
-  ( Show primTy,
-    Show primVal,
-    HasCoreSigs primTy primVal m,
+  ( HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
   NameSymbol.Mod ->
@@ -333,9 +326,7 @@ getDataSig q = getSig' q \case
 -- TODO: Module to backtrace the datatype to its constructors so that we can generate the signature (conType)
 
 getSig' ::
-  ( Show primTy,
-    Show primVal,
-    HasCoreSigs primTy primVal m,
+  ( HasCoreSigs primTy primVal m,
     HasThrowFF primTy primVal m
   ) =>
   NameSymbol.Mod ->
@@ -359,9 +350,7 @@ conDefName :: NameSymbol.T -> NameSymbol.T
 conDefName = NameSymbol.applyBase (<> "$def")
 
 transformType ::
-  ( Show primTy,
-    Show primVal,
-    HasPatVars m,
+  ( HasPatVars m,
     HasNextPatVar m,
     ReduceEff primTy primVal m,
     Show primTy,
@@ -533,10 +522,10 @@ extractDataConstructorSigs (typeCons Sexp.:> _ Sexp.:> dataCons)
     fmap
       (\n -> Sexp.cdr n Sexp.:> Sexp.car typeCons)
       dataConsL
-extractDataConstructorSigs t = []
+extractDataConstructorSigs _ = []
 
 transformNormalSig ::
-  (ReduceEff primTy primVal m, HasPatVars m, HasParam primTy primVal m, Show primTy, Show primVal) =>
+  (ReduceEff primTy primVal m, HasPatVars m, Show primTy, Show primVal) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
   Ctx.Definition Sexp.T Sexp.T Sexp.T ->
@@ -677,7 +666,7 @@ getSpecial q x = do
 -- Transform Type signatures
 ------------------------------------------------------------
 transformTypeSig ::
-  (ReduceEff primTy primVal m, HasPatVars m, HasParam primTy primVal m, Show primTy, Show primVal) =>
+  (ReduceEff primTy primVal m, HasPatVars m, Show primTy, Show primVal) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
   Sexp.T ->
@@ -705,7 +694,7 @@ transformTypeSig q name (nameAndData Sexp.:> args Sexp.:> typeForm)
 transformTypeSig _ _ _ = error "malformed type"
 
 transformConSigs ::
-  (ReduceEff primTy primVal m, HasPatVars m, HasParam primTy primVal m, Show primTy, Show primVal) =>
+  (ReduceEff primTy primVal m, HasPatVars m, Show primTy, Show primVal) =>
   -- | namespace containing declaration
   NameSymbol.Mod ->
   -- | datatype head
@@ -810,24 +799,22 @@ transformClause q (Sexp.List [args', body])
 transformClause _ _ = error "malformed tansformClause"
 
 transformConSig ::
-  (ReduceEff primTy primVal m, HasPatVars m, Show primTy, Show primVal) =>
+  (ReduceEff primTy primVal m, Show primTy, Show primVal) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
   -- | datatype head
   Maybe (HR.Term primTy primVal) ->
   Sexp.T ->
   m (HR.Term primTy primVal)
-transformConSig q name mHd r@((t Sexp.:> ts) Sexp.:> _)
+transformConSig q _name mHd r@((t Sexp.:> ts) Sexp.:> _)
   | named ":record-d" = do
     throwFF $ RecordUnimplemented r
   | named ":arrow" = transformTermHR q ts
   | isNothing mHd = do
     transformTermHR q ts
   where
-    -- throwFF $ InvalidConstructor name r
-
     named = Sexp.isAtomNamed t
-transformConSig q name mHd r@(t Sexp.:> ts)
+transformConSig q name mHd r
   | isNothing mHd = do
     throwFF $ InvalidConstructor name r
   | Just hd <- mHd,
@@ -837,10 +824,7 @@ transformConSig q name mHd r@(t Sexp.:> ts)
         names = makeFieldName <$> [0 ..]
         makeFieldName i = NameSymbol.fromText $ "$field" <> show (i :: Int)
      in foldrM makeArr hd $ zip names xs
-  where
-    named = Sexp.isAtomNamed t
-transformConSig _ _ _ r = do
-  error "malformed transformConSig"
+  | otherwise = error "malformed transformConSig"
 
 transformPat ::
   ( HasNextPatVar m,

@@ -241,7 +241,6 @@ searchAndClosure ctx a as cont
   | otherwise = searchAndClosureNoCtx a as cont
   where
     named = Sexp.isAtomNamed (Sexp.Atom a)
-searchAndClosure _ _ _ _ = error "imporper closure call"
 
 ------------------------------------------------------------
 -- Environment functionality
