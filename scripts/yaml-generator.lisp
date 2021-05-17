@@ -9,7 +9,7 @@
 
 ;; Section in the code
 
-;; Dependencies look like
+;; Library code looks like
 
 '(defparameter *interaction-net-IR*
   ;; make a stack.yaml configuration
@@ -22,6 +22,9 @@
    ;; if you want to rely on another juvix package!
    :packages   (list *standard-library* *core*)
    ;; This is where all the extra stack-yaml libs come from
+
+   ;; This is what the library is designed to abstract from, namely
+   ;; many common dependencies are here, you may have to jump around.
    :extra-deps (list (make-general-depencies *capability* *extensible*)
                 *eac-solver*)
    ;; This gives the path to the other projects, if you are in the
@@ -34,10 +37,68 @@
    :extra "allow-newer: true"))
 
 
+;; Raw package dependencies we might see in haskell come in the following forms
+
+;; ①
+;; - git: https://gitlab.com/morley-framework/morley.git
+;; commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
+;; subdirs:
+;;   - code/morley
+;;   - code/morley-prelude
+
+;; ②
+;; - constraints-extras-0.3.0.2@sha256:bf6884be65958e9188ae3c9e5547abfd6d201df021bff8a4704c2c4fe1e1ae5b,1784
+
+;; ③
+;; - cryptonite-0.27
+
+;; ④
+;; - github: phile314/tasty-silver
+;; commit: f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b
+
+;; These correspond to
+
+;; ①
+
+;; Defparamter is given to show how we define the variables
+'(defparameter *morley-deps-testing*
+  (make-dependency-git :name "https://gitlab.com/morley-framework/morley.git"
+                       :commit "53961f48d0d3fb61051fceaa6c9ed6becb7511e5"
+                       :subdirs (list "code/morley" "code/morley-prelude")))
+
+;; ②
+
+'(string->dep-sha
+  "constraints-extras-0.3.0.2@sha256:bf6884be65958e9188ae3c9e5547abfd6d201df021bff8a4704c2c4fe1e1ae5b,1784")
+
+;; ③
+'(make-dependency-bare :name "cryptonite-0.27")
+
+;; ④
+
+'(make-dependency-github
+  :name "phile314/tasty-silver"
+  :commit "f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b")
+
+
+;; We tend to bunch of similar dependecies into a group
+
+'(defparameter *morley-deps*
+  ;; Make the dependcy group
+  (make-groups
+   ;; Write a header section on the dependcy
+   :comment "Morley Specific dependencies"
+   ;; Now list all dependencies
+   :deps (list
+          *tezos-bake-monitor*
+          *tezos-morley*)))
+
 
 ;; If you to bump the default resolver for the projects please edit
 ;; *default-resolver* with the new number.
 
+
+;; With all that said, Happy hacking!
 
 ;; -----------------------------------
 ;; Configuration variables
