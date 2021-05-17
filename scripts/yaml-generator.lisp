@@ -487,8 +487,7 @@ lists are indented by an extra 2 each"
                      *llvm-hs-deps*
                      *llvm-hs-extra-deps*
                      *eac-solver*
-                     *interaction-net-extra-deps*
-                     *morley-sub-deps*)
+                     *interaction-net-extra-deps*)
    :extra "allow-newer: true"))
 
 
