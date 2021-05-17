@@ -37,6 +37,12 @@
    :extra "allow-newer: true"))
 
 
+;; I tend to test what these look like by calling
+;; (print-yaml *interaction-net-IR*)
+;; to see what it generates
+
+;; Note if you make a new one, update MAIN with the proper path to the library
+
 ;; Raw package dependencies we might see in haskell come in the following forms
 
 ;; ①
