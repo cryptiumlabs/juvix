@@ -1,3 +1,44 @@
+;; Hello, Welcome to the Juvix Stack.yaml generator.
+
+;; This code was designed in a single file, so no extra build tools
+;; were needed. To make a change jump to the
+
+;; -----------------------------------
+;; stack-yaml for the YAML generation
+;; -----------------------------------
+
+;; Section in the code
+
+;; Dependencies look like
+
+'(defparameter *interaction-net-IR*
+  ;; make a stack.yaml configuration
+  (make-stack-yaml
+   ;; give it a name for other packages, this corresponds to the path name
+   :name       "InteractionNetIR"
+   ;; this resolver number states we aren't using the default *default-resolver*
+   :resolver   17.9
+   ;; packages are local packages we rely on in our repo, update this
+   ;; if you want to rely on another juvix package!
+   :packages   (list *standard-library* *core*)
+   ;; This is where all the extra stack-yaml libs come from
+   :extra-deps (list (make-general-depencies *capability* *extensible*)
+                *eac-solver*)
+   ;; This gives the path to the other projects, if you are in the
+   ;; library folder then no need to change it from this default. If
+   ;; you are in a nested folder then you'll need to give an extra set
+   ;; of dots!
+   :path-to-other "../"
+   ;; This gives the extra bit of information for if we need any extra
+   ;; text that stack allows
+   :extra "allow-newer: true"))
+
+
+
+;; If you to bump the default resolver for the projects please edit
+;; *default-resolver* with the new number.
+
+
 ;; -----------------------------------
 ;; Configuration variables
 ;; -----------------------------------
@@ -423,7 +464,7 @@ lists are indented by an extra 2 each"
           (string->dep-sha "fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995"))))
 
 ;; -----------------------------------
-;; stack-yaml for the YAML generation
+;; stack-yaml for the YAML helpers
 ;; -----------------------------------
 
 (defun make-general-depencies (&rest deps)
@@ -451,6 +492,10 @@ common ones to include"
             *morley-arithmetic-circuit-deps-plonk*
             *morley-arithmetic-circuit-deps*)
         *sub-morley-arithmetic-circuit-deps*))
+
+;; -----------------------------------
+;; stack-yaml for the YAML generation
+;; -----------------------------------
 
 (defparameter *standard-library*
   (make-stack-yaml
