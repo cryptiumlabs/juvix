@@ -1,4 +1,3 @@
-
 ;; -----------------------------------
 ;; Configuration variables
 ;; -----------------------------------
@@ -223,12 +222,22 @@ lists are indented by an extra 2 each"
           (format-extra-deps (stack-yaml-extra-deps yaml-config))
           (format-extra (stack-yaml-extra yaml-config))))
 
+(defun merge-group (g1 g2)
+  "merges 2 groups, taking the comment from the first"
+  (make-groups :comment (groups-comment g1)
+               :deps (append (groups-deps g1) (groups-deps g2))))
+
 ;; -----------------------------------
 ;; Dependencies for YAML generation
 ;; -----------------------------------
 (defparameter *galois-field*
   (make-dependency-git :name   "https://github.com/serokell/galois-field.git"
                        :commit "576ba98ec947370835a1f308895037c7aa7f8b71"))
+
+(defparameter *galois-field-plonk*
+  (make-dependency-github :name "adjoint-io/galois-field"
+                          :commit "3b13705fe26ea1dc03e1a6d7dac4089085c5362d")
+  "Plonk uses a special version of this library")
 
 (defparameter *elliptic-curve*
   (make-dependency-git :name   "https://github.com/serokell/elliptic-curve.git"
@@ -259,6 +268,32 @@ lists are indented by an extra 2 each"
 (defparameter *tasty*
   (string->dep-sha "tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638"))
 
+(defparameter *fmt*
+  (string->dep-sha
+   "fmt-0.6.1.2@sha256:405a1bfc0ba0fd99f6eb1ee71f100045223f79204f961593012f28fd99cd1237,5319"))
+
+(defparameter *aeson-options*
+  (string->dep-sha
+   "aeson-options-0.1.0@sha256:2d0c25afbb2d038bd5b57de8d042e319ea1a5ec7d7b92810d8a0cf0777882b6a,1244"))
+
+(defparameter *un-exceptionalio*
+  (string->dep-sha
+   "unexceptionalio-0.5.0@sha256:ad0b2d4d1f62a3e24cdb80360eea42ab3f0a0559af42aba19b5cf373378913ce,1682"))
+
+(defparameter *base-no-prelude-standard*
+  (string->dep-sha
+   "base-noprelude-4.13.0.0@sha256:3cccbfda38e1422ca5cc436d58858ba51ff9114d2ed87915a6569be11e4e5a90,6842")
+  "this is the standard version of base no prelude")
+
+(defparameter *base-no-prelude-special*
+  (make-dependency-git :name "https://github.com/serokell/base-noprelude.git"
+                       :commit "87df0899801dcdffd08ef7c3efd3c63e67e623c2")
+  "this is a special version of base no prelude we have to use with Michelson backend")
+
+(defparameter *sr-extra*
+  (make-dependency-github :name "seereason/sr-extra"
+                          :commit "d5435dcb2ae5da5f9e0fb8e5a3c40f99937a046f"))
+
 ;; -----------------------------------
 ;; Groups for YAML generation
 ;; -----------------------------------
@@ -278,15 +313,18 @@ lists are indented by an extra 2 each"
                        :commit "f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b")
                       *tasty*)))
 
-(defparameter *fmt-withdraw*
-  (make-groups :comment "Fmt witherable"
+
+(defparameter *withdraw*
+  (make-groups :comment "Witherable"
                :deps (list
-                      (string->dep-sha
-                       "fmt-0.6.1.2@sha256:405a1bfc0ba0fd99f6eb1ee71f100045223f79204f961593012f28fd99cd1237,5319")
                       (string->dep-sha
                        "witherable-0.3.5@sha256:6590a15735b50ac14dcc138d4265ff1585d5f3e9d3047d5ebc5abf4cd5f50084,1476")
                       (string->dep-sha
                        "witherable-class-0@sha256:91f05518f9f4af5b02424f13ee7dcdab5d6618e01346aa2f388a72ff93e2e501,775"))))
+
+(defparameter *fmt-withdraw*
+  (merge-group (make-groups :comment "Fmt witherable" :deps (list *fmt*))
+               *withdraw*))
 
 (defparameter *morley-deps*
   (make-groups :comment "Morley Specific dependencies"
@@ -299,19 +337,25 @@ lists are indented by an extra 2 each"
    :comment "Git depdencies caused by Morley specific dependencies"
    :deps (list
           (make-dependency-bare :name "base58-bytestring-0.1.0")
-          (make-dependency-git :name "https://github.com/serokell/base-noprelude.git"
-                               :commit "87df0899801dcdffd08ef7c3efd3c63e67e623c2")
           (make-dependency-bare :name "hex-text-0.1.0.0")
           (make-dependency-bare :name "show-type-0.1.1")
-          (make-dependency-git :name "https://github.com/int-index/caps.git"
-                               :commit "c5d61837eb358989b581ed82b1e79158c4823b1b")
           (string->dep-sha
            "named-0.3.0.1@sha256:2975d50c9c5d88095026ffc1303d2d9be52e5f588a8f8bcb7003a04b79f10a06,2312")
           (make-dependency-bare :name "cryptonite-0.27")
           (make-dependency-bare :name "uncaught-exception-0.1.0")
           (make-dependency-bare :name "tasty-hunit-compat-0.2.0.1")
           (string->dep-sha
-           "with-utf8-1.0.2.2@sha256:42eed140390b3e93d9482b084d1d0150e8774667f39c33bd47e84815751fad09,3057"))))
+           "with-utf8-1.0.2.2@sha256:42eed140390b3e93d9482b084d1d0150e8774667f39c33bd47e84815751fad09,3057")))
+  "this is generic, and used in a few places")
+
+(defparameter *morley-sub-deps-extra*
+  (make-groups
+   :comment "Git depdencies caused by Morley specific dependencies that are speicific to Michelson"
+   :deps (list
+          (make-dependency-git :name "https://github.com/int-index/caps.git"
+                               :commit "c5d61837eb358989b581ed82b1e79158c4823b1b")
+          *base-no-prelude-special*))
+  "like *morley-sub-deps* but is an extra layer of dependency that is not used elsewhere")
 
 (defparameter *morley-arithmetic-circuit-deps*
   (make-groups :comment "Shared Deps Between Arithmetic Circuits and Morley"
@@ -319,6 +363,13 @@ lists are indented by an extra 2 each"
                       *elliptic-curve*
                       *pairing*
                       *galois-field*)))
+
+(defparameter *morley-arithmetic-circuit-deps-plonk*
+  (make-groups :comment "Shared Deps Between Arithmetic Circuits and Morley For Plonk"
+               :deps (list
+                      *elliptic-curve*
+                      *pairing*
+                      *galois-field-plonk*)))
 
 (defparameter *sub-morley-arithmetic-circuit-deps*
   (make-groups
@@ -354,12 +405,17 @@ lists are indented by an extra 2 each"
 
 
 (defparameter *interaction-net-extra-deps*
-  (make-groups :comment "For Interaction Nets"
+  (make-groups :comment "For Interaction Nets json-schema"
                :deps (list
                       (make-dependency-github
                        :name "cryptiumlabs/jsonschema-gen"
                        :commit "0639cd166ec59a04d07a3a7d49bdf343e567000e"))))
 
+(defparameter *graph-visualizer*
+  (make-groups
+   :comment "Visualizing graphs"
+   :deps (list
+          (string->dep-sha "fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995"))))
 
 ;; -----------------------------------
 ;; stack-yaml for the YAML generation
@@ -414,7 +470,8 @@ lists are indented by an extra 2 each"
                         *eac-solver*
                         *morley-arithmetic-circuit-deps*
                         *morley-deps*
-                        *morley-sub-deps*)))
+                        *morley-sub-deps*
+                        *morley-sub-deps-extra*)))
 
 (defparameter *interaction-net*
   (make-stack-yaml
@@ -430,9 +487,38 @@ lists are indented by an extra 2 each"
                      *llvm-hs-deps*
                      *llvm-hs-extra-deps*
                      *eac-solver*
-                     *interaction-net-extra-deps*)
+                     *interaction-net-extra-deps*
+                     *morley-sub-deps*)
    :extra "allow-newer: true"))
 
+
+(defparameter *plonk*
+  (make-stack-yaml
+   :name "Backends/Plonk"
+   :path-to-other "../../"
+   :packages (list *standard-library*
+                   *frontend*
+                   *core*
+                   *pipeline*
+                   *translate*
+                   *michelson*)
+   :extra-deps (list (make-general-depencies *capability*
+                                             *extensible*
+                                             *aeson-options*
+                                             *un-exceptionalio*
+                                             *sr-extra*)
+                     *llvm-hs-extra-deps*
+                     *withdraw*
+                     *graph-visualizer*
+                     *tasty-silver*
+                     *morley-sub-deps*
+                     (make-groups
+                      :comment "For special deps that are similar to Michelson but not quite the same"
+                      :deps (list *base-no-prelude-standard*))
+                     *interaction-net-extra-deps*
+                     *morley-arithmetic-circuit-deps-plonk*
+                     *sub-morley-arithmetic-circuit-deps*)
+   :extra "allow-newer: true"))
 
 ;; -----------------------------------
 ;; Ouptut for YAML generation
@@ -464,4 +550,5 @@ lists are indented by an extra 2 each"
   (generate-yaml-file *core*             "library/Core/stack.yaml")
   (generate-yaml-file *translate*        "library/Translate/stack.yaml")
   (generate-yaml-file *Michelson*        "library/Backends/Michelson/stack.yaml")
-  (generate-yaml-file *LLVM*             "library/Backends/LLVM/stack.yaml"))
+  (generate-yaml-file *LLVM*             "library/Backends/LLVM/stack.yaml")
+  (generate-yaml-file *plonk*            "library/Backends/Plonk/stack.yaml"))
