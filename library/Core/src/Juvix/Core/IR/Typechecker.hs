@@ -65,11 +65,6 @@ typeCheckDeclaration tel rtel param dts fns =
         -- when successful, return the datatype and the datacons
         -- to the list of globals
         return $ IR.RawGDatatype hdd : rest <> checkedCons
-    _ -> do
+    [] -> do
+      -- TODO functions, etc
       return []
-
--- TODO add to sig once typechecked? Keeping track of all globals may be
--- enough?
--- TODO type checking function declarations
--- typeCheckDeclaration tel rtel param _ (IR.RawFunction name usage ty cls : tlf) =
---   undefined

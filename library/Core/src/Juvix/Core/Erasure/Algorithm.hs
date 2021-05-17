@@ -80,7 +80,6 @@ eraseFunction ::
 eraseFunction (IR.Function name usage ty clauses) = do
   let (tys, ret) = piTypeToList (IR.quote ty)
   clauses <- flip mapM clauses $ \(IR.FunClause _tel patts _term _rhsTy _catchAll _unreachable) -> do
-    -- let ty_ret = listToPiType (drop (length patts) tys, ret)
     (patts, _ty) <- erasePatterns (patts, (tys, ret))
     patts <- mapM erasePattern patts
     -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
@@ -88,17 +87,6 @@ eraseFunction (IR.Function name usage ty clauses) = do
     pure (Erasure.FunClause patts undefined)
   ty <- eraseType ty
   pure (Erasure.Function name usage ty clauses)
-
-eraseFunClause ::
-  ErasureM primTy1 primTy2 primVal1 primVal2 m =>
-  IR.FunClause primTy1 primVal1 ->
-  m b
-eraseFunClause (IR.FunClause _tel patts _term _rhsTy _catchAll _unreachable) = do
-  patts <- mapM erasePattern patts
-  -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
-  -- term <- eraseTerm term
-  _ <- pure (Erasure.FunClause patts undefined)
-  undefined
 
 erasePattern ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
@@ -151,12 +139,6 @@ piTypeToList ty =
     IR.Pi usage arg ret ->
       let (rest, res) = piTypeToList ret in ((usage, arg) : rest, res)
     _ -> ([], ty)
-
--- listToPiType ::
---   ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal) ->
---   IR.Term primTy primVal
--- listToPiType ([], ret) = ret
--- listToPiType ((u, x) : xs, ret) = IR.Pi u x (listToPiType (xs, ret))
 
 eraseTerm ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
