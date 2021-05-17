@@ -426,6 +426,9 @@ lists are indented by an extra 2 each"
 ;; stack-yaml for the YAML generation
 ;; -----------------------------------
 
+(defun make-general-depencies (&rest deps)
+  (make-groups :comment "General Dependencies" :deps deps))
+
 (defun big-dep-list (&key (plonk nil))
   "For the packages with lots of dependecies, these tend to be the
 common ones to include"
@@ -448,9 +451,6 @@ common ones to include"
             *morley-arithmetic-circuit-deps-plonk*
             *morley-arithmetic-circuit-deps*)
         *sub-morley-arithmetic-circuit-deps*))
-
-(defun make-general-depencies (&rest deps)
-  (make-groups :comment "General Dependencies" :deps deps))
 
 (defparameter *standard-library*
   (make-stack-yaml
@@ -479,20 +479,6 @@ common ones to include"
    :extra-deps (list (make-general-depencies *capability* *extensible*)
                      *tasty-silver*
                      *eac-solver*)))
-
-(defparameter *Michelson*
-  (make-stack-yaml
-   ;; hack name, for sub dirs
-   :name "Backends/Michelson"
-   :path-to-other "../../"
-   :packages      (list *standard-library* *core* *pipeline*)
-   :extra-deps    (list (make-general-depencies *capability* *extensible*)
-                        *fmt-withdraw*
-                        *eac-solver*
-                        *morley-arithmetic-circuit-deps*
-                        *morley-deps*
-                        *morley-sub-deps*
-                        *morley-sub-deps-extra*)))
 
 (defparameter *interaction-net*
   (make-stack-yaml
@@ -526,6 +512,14 @@ common ones to include"
                      *interaction-net-extra-deps*)
    :extra "allow-newer: true"))
 
+;; Define these before pipeline due to mutual recursion
+(defparameter *Michelson*
+  (make-stack-yaml
+   :name "Backends/Michelson"))
+
+(defparameter *plonk*
+  (make-stack-yaml :name "Backends/Plonk"))
+
 (defparameter *Pipeline*
   (make-stack-yaml
    :packages (list *standard-library*
@@ -539,19 +533,19 @@ common ones to include"
    :extra-deps (big-dep-list)
    :extra "allow-newer: true"))
 
-(defparameter *Easy-Pipeline*
+(defparameter *Michelson*
   (make-stack-yaml
-   :packages (list *standard-library*
-                   *frontend*
-                   *core*
-                   *translate*
-                   *michelson*
-                   *pipeline*)
    ;; hack name, for sub dirs
-   :name "EasyPipeline"
-   :extra-deps (big-dep-list)
-   :extra "allow-newer: true"))
-
+   :name "Backends/Michelson"
+   :path-to-other "../../"
+   :packages      (list *standard-library* *core* *pipeline*)
+   :extra-deps    (list (make-general-depencies *capability* *extensible*)
+                        *fmt-withdraw*
+                        *eac-solver*
+                        *morley-arithmetic-circuit-deps*
+                        *morley-deps*
+                        *morley-sub-deps*
+                        *morley-sub-deps-extra*)))
 
 (defparameter *plonk*
   (make-stack-yaml
@@ -564,6 +558,19 @@ common ones to include"
                    *translate*
                    *michelson*)
    :extra-deps (big-dep-list :plonk t)
+   :extra "allow-newer: true"))
+
+(defparameter *Easy-Pipeline*
+  (make-stack-yaml
+   :packages (list *standard-library*
+                   *frontend*
+                   *core*
+                   *translate*
+                   *michelson*
+                   *pipeline*)
+   ;; hack name, for sub dirs
+   :name "EasyPipeline"
+   :extra-deps (big-dep-list)
    :extra "allow-newer: true"))
 
 (defparameter *juvix*
