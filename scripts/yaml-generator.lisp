@@ -26,7 +26,7 @@
    ;; This is what the library is designed to abstract from, namely
    ;; many common dependencies are here, you may have to jump around.
    :extra-deps (list (make-general-depencies *capability* *extensible*)
-                *eac-solver*)
+                     *eac-solver*)
    ;; This gives the path to the other projects, if you are in the
    ;; library folder then no need to change it from this default. If
    ;; you are in a nested folder then you'll need to give an extra set
