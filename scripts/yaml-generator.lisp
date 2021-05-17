@@ -546,6 +546,21 @@ common ones to include"
    :extra-deps (big-dep-list :plonk t)
    :extra "allow-newer: true"))
 
+(defparameter *juvix*
+  (make-stack-yaml
+   :name "Juvix"
+   :packages (list *standard-library*
+                   *frontend*
+                   *core*
+                   *pipeline*
+                   *translate*
+                   *michelson*
+                   *easy-pipeline*
+                   *plonk*)
+   :path-to-other "./library/"
+   :extra-deps (big-dep-list)
+   :extra "allow-newer: true"))
+
 ;; -----------------------------------
 ;; Ouptut for YAML generation
 ;; -----------------------------------
@@ -579,4 +594,5 @@ common ones to include"
   (generate-yaml-file *LLVM*             "library/Backends/LLVM/stack.yaml")
   (generate-yaml-file *plonk*            "library/Backends/Plonk/stack.yaml")
   (generate-yaml-file *easy-pipeline*    "library/EasyPipeline/stack.yaml")
-  (generate-yaml-file *Pipeline*         "library/Pipeline/stack.yaml"))
+  (generate-yaml-file *Pipeline*         "library/Pipeline/stack.yaml")
+  (generate-yaml-file *juvix*            "stack.yaml"))
