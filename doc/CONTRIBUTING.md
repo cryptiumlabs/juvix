@@ -44,16 +44,26 @@ Pushing minor changes (typo fixes) to another person's branch is fine. Ask befor
 
 The format for the changelog follows the PVP format below.
 
-V A.B.C.D
+A.B.C.D
 
-A and B are both major versions. C is the Minor version, and D is the patch, in other words it looks like
+A and B are both major versions. C is the Minor version, and D is the
+patch, in other words it looks like
 
-V Major.Major.Minor.Patch
+Major.Major.Minor.Patch
+
+Major version bumps typically refer to major releases or breaking
+changes we are including. Smaller milestones typically bump the Minor
+version. Patchs are more minor "patches" that incremently improve the
+system without being significant enough to be a new minor version.
+
+Individual pull requests will typically bump the patch number, however
+upon massive changes or breaking changes can change the Minor and or
+Major versions.
 
 Major release will bump the major version, milestones bump the minor
 version, and pull requests bump the patch number.
 
-Every patch should thus update the Changelog file in the root
+Every pull request should thus update the Changelog file in the root
 directory with what is changed.
 
 ## Reviews & merging
