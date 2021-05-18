@@ -89,21 +89,24 @@ recGroups ctx@(Context.T {topLevelMap}) =
       edges = map (\(n, gs) -> (gs, n, get n)) $ HashMap.toList groups
       (g, fromV', _) = Graph.graphFromEdges edges
       fromV v = let (gs, _, _) = fromV' v in gs
-   in Graph.topSort g |> reverse |> concatMap fromV  |> sortBy orderDatatypes |> groupCons
+   in Graph.topSort g |> reverse |> concatMap fromV |> sortBy orderDatatypes |> groupCons
 
 -- | Join type and data constructors in a single group
 groupCons :: (Foldable t, Eq ty, Eq term, Eq sumRep) => t (NonEmpty (Entry term ty sumRep)) -> [Group term ty sumRep]
-groupCons = Map.elems . foldl' f Map.empty
+groupCons = fmap snd . foldr f mempty
   where
-    f acc entry@(a NonEmpty.:| _as)
-      | Context.SumCon Context.Sum {sumTName} <- def a 
+    f entry@(a NonEmpty.:| _as) acc
+      | Context.SumCon Context.Sum {sumTName} <- def a,
+        -- sumTName `elem` (fst <$> acc)
+        Just _ <- find (elem sumTName) (fst <$> acc)
         -- Find if type declar of a data constructor exists
-        = case find (\e -> sumTName `elem` e) (Map.keys acc) of 
-            Just v -> Map.update g v acc
-              where
-                g x = Just $ x `NonEmpty.union` entry
-            Nothing -> Map.insert (name a) entry acc
-      | otherwise = Map.insert (name a) entry acc
+          = foldr (g sumTName) mempty acc
+      | otherwise = (name a, entry) : acc
+            where
+            g sumTName (k, v) a
+              = if sumTName `elem` k 
+                then (k, v `NonEmpty.union` entry) : a
+                else (k, v) : a
                 
 
 -- | Make data type come before data constructor
