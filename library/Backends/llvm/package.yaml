@@ -27,6 +27,7 @@ dependencies:
 default-extensions:
 - TypeSynonymInstances
 - FlexibleInstances
+- NoImplicitPrelude
 
 library:
   source-dirs: src
