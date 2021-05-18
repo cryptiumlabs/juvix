@@ -1,13 +1,7 @@
 module Juvix.ToCore.FromFrontend.Transform.TypeSig where
 
-import qualified Data.HashMap.Strict as HM
-import qualified Data.List.NonEmpty as NonEmpty
 import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
-import qualified Juvix.Core.Common.Context as Ctx
 import qualified Juvix.Core.HR as HR
-import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.Parameterisation as P
-import Juvix.Core.Translate (hrToIR)
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
@@ -15,32 +9,16 @@ import qualified Juvix.Library.Usage as Usage
 import Juvix.ToCore.FromFrontend.Transform.HR
 import Juvix.ToCore.FromFrontend.Transform.Helpers
   ( ReduceEff,
-    conDefName,
     eleToSymbol,
-    getConSig,
-    getDataSig,
-    getParamConstant,
-    getSpecialSig,
-    getValSig,
-    isOmega,
-    lookupSig,
-    lookupSigWithSymbol,
-    parseVarArg,
-    parseVarPat,
-    splitDataType,
-    toElim,
   )
 import Juvix.ToCore.Types
-  ( CoreDef (..),
-    CoreSig (..),
+  ( CoreSig (..),
     CoreSigHR,
     Error (..),
     HasCoreSigs,
-    HasNextPatVar,
     HasParam,
     HasPatVars,
     HasThrowFF,
-    Special (..),
     throwFF,
   )
 import Prelude (error)
@@ -66,10 +44,10 @@ transformTypeSig q name (typeCon Sexp.:> args Sexp.:> typeForm)
     let dataSig = DataSig {dataType, dataCons}
     pure $ dataSig : conSigs
   where
-    ff k (x Sexp.:> xs)
-      | k == x = Just xs
-      | otherwise = ff k xs
-    ff _ _ = Nothing
+    -- ff k (x Sexp.:> xs)
+    --   | k == x = Just xs
+    --   | otherwise = ff k xs
+    -- ff _ _ = Nothing
     -- transformIndices typeArgs (_ Sexp.:> grouped)
     --   | Just dataArrow <- ff (Sexp.atom ":type") grouped = do
 

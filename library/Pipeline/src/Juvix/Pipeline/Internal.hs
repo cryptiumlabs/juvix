@@ -88,23 +88,24 @@ contextToCore ctx param =
     newCtx <- Context.mapWithContext' ctx updateCtx
 
     let ordered = Context.recGroups newCtx
-    traceM "Ordered"
     pTraceShowM ordered
+
     for_ ordered \grp -> do
       traverse_ addSig grp
+
+    for_ ordered \grp -> do
       traverse_ addDef grp
+
     defs <- get @"core"
     pure $ FF.CoreDefs {defs, order = fmap Context.name <$> ordered}
   where
     updateCtx def typeCons dataCons s@Context.Sum {sumTDef} c =
       case sumTDef of
         Just v -> pure $ Just v
-        Nothing ->
+        Nothing -> do
           let dataConsSexp = Sexp.atom $ NameSymbol.fromSymbol dataCons
               typeConsSexp = Sexp.atom $ NameSymbol.fromSymbol typeCons
-           in case mkDef typeConsSexp dataConsSexp s c of
-                Nothing -> pure notImplemented
-                Just x -> pure $ Just x
+          pure $ mkDef typeConsSexp dataConsSexp s c 
 
 addSig ::
   ( Show primTy,
@@ -118,7 +119,6 @@ addSig ::
   m ()
 addSig (Context.Entry x feDef) = do
   sigs <- FF.transformSig x feDef
-  traceShowM ("Add Sig!", x)
   pTraceShowM (x, feDef, sigs)
   for_ sigs $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
 
@@ -137,7 +137,7 @@ addDef ::
 addDef (Context.Entry x feDef) = do
   defs <- FF.transformDef x feDef
   for_ defs \def -> do
-    pTraceShowM ("Add Def", def)
+    pTraceShowM ("Added Def", def)
     modify @"core" $ HM.insert (defName def) def
 
 defName :: FF.CoreDef primTy primVal -> NameSymbol.T
