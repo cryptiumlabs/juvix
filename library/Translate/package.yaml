@@ -23,6 +23,7 @@ dependencies:
 - syb
 - megaparsec
 - pretty-simple
+- extra
 
 default-extensions:
   - NoImplicitPrelude

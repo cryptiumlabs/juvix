@@ -97,7 +97,6 @@ groupCons = fmap snd . foldr f mempty
   where
     f entry@(a NonEmpty.:| _as) acc
       | Context.SumCon Context.Sum {sumTName} <- def a,
-        -- sumTName `elem` (fst <$> acc)
         Just _ <- find (elem sumTName) (fst <$> acc)
         -- Find if type declar of a data constructor exists
           = foldr (g sumTName) mempty acc
