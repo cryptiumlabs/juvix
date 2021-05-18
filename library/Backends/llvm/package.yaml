@@ -24,5 +24,9 @@ dependencies:
 - core
 - standard-library
 
+default-extensions:
+- TypeSynonymInstances
+- FlexibleInstances
+
 library:
   source-dirs: src
