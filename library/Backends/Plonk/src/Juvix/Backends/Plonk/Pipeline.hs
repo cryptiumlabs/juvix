@@ -18,6 +18,7 @@ import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
+import Debug.Pretty.Simple (pTraceShowM)
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
     TypedPrim,
@@ -98,16 +99,18 @@ instance
           [IR.RawGFunction f]
             | IR.RawFunction _name usage ty (clause :| []) <- f,
               IR.RawFunClause _ [] term _ <- clause -> do
+              pTraceShowM ("Term", term)
               let convGlobals = map (Pipeline.convGlobal Types.PField) globalDefs
                   newGlobals = HM.map (Pipeline.unsafeEvalGlobal convGlobals) convGlobals
                   lookupGlobal = IR.rawLookupFun' globalDefs
                   inlinedTerm = IR.inlineAllGlobals term lookupGlobal
+              pTraceShowM ("Inline Term", inlinedTerm)
               (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @(Types.PrimTy f) @(Types.PrimVal f) @Types.CompilationError inlinedTerm (IR.globalToUsage usage) ty) (Parameterization.param @f) newGlobals
               case res of
                 Right r -> do
                   pure r
                 Left err -> do
-                  print term
+                  pTraceShowM ("Error", err)
                   Feedback.fail $ show err
           somethingElse -> Feedback.fail $ show somethingElse
       Left err -> Feedback.fail $ "failed at ctxToCore\n" ++ show err
