@@ -21,6 +21,13 @@ import qualified Prelude as P
 
 type Pipeline = Feedback.FeedbackT [] P.String IO
 
+type Debug primTy primVal = (Show primTy,
+    Show primVal,
+    Show (Parameterisation.ApplyErrorExtra primTy),
+    Show (Parameterisation.ApplyErrorExtra primVal),
+    Show (Parameterisation.Arg primTy),
+    Show (Parameterisation.Arg primVal))
+
 toCoreDef ::
   Alternative f =>
   CoreDef primTy primVal ->
@@ -34,12 +41,7 @@ isMain _ = False
 
 unsafeEvalGlobal ::
   ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
-    Show primTy,
-    Show primVal,
-    Show (Parameterisation.ApplyErrorExtra primTy),
-    Show (Parameterisation.ApplyErrorExtra primVal),
-    Show (Parameterisation.Arg primTy),
-    Show (Parameterisation.Arg primVal)
+    Debug primTy primVal
   ) =>
   IR.RawGlobals primTy primVal ->
   IR.RawGlobal primTy primVal ->
@@ -81,12 +83,7 @@ argReturn ty arg@RawDataArg {rawArgType} =
 
 argEval ::
   ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
-    Show primTy,
-    Show primVal,
-    Show (Parameterisation.ApplyErrorExtra primTy),
-    Show (Parameterisation.ApplyErrorExtra primVal),
-    Show (Parameterisation.Arg primTy),
-    Show (Parameterisation.Arg primVal)
+    Debug primTy primVal
   ) =>
   IR.RawGlobals primTy primVal ->
   IR.RawDataArg primTy primVal ->
@@ -103,12 +100,7 @@ conReturn ty con@RawDataCon {rawConType, rawConDef} =
 
 conEval ::
   ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
-    Show primTy,
-    Show primVal,
-    Show (Parameterisation.ApplyErrorExtra primTy),
-    Show (Parameterisation.ApplyErrorExtra primVal),
-    Show (Parameterisation.Arg primTy),
-    Show (Parameterisation.Arg primVal)
+    Debug primTy primVal
   ) =>
   IR.RawGlobals primTy primVal ->
   IR.RawDataCon primTy primVal ->
@@ -125,12 +117,7 @@ funReturn ty (RawFunction name usage term clauses) =
 
 funEval ::
   ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
-    Show primTy,
-    Show primVal,
-    Show (Parameterisation.ApplyErrorExtra primTy),
-    Show (Parameterisation.ApplyErrorExtra primVal),
-    Show (Parameterisation.Arg primTy),
-    Show (Parameterisation.Arg primVal)
+    Debug primTy primVal
   ) =>
   IR.RawGlobals primTy primVal ->
   IR.RawFunction primTy primVal ->
@@ -147,12 +134,7 @@ funClauseReturn ty (RawFunClause tel patts term catchall) =
 
 funClauseEval ::
   ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
-    Show primTy,
-    Show primVal,
-    Show (Parameterisation.ApplyErrorExtra primTy),
-    Show (Parameterisation.ApplyErrorExtra primVal),
-    Show (Parameterisation.Arg primTy),
-    Show (Parameterisation.Arg primVal)
+    Debug primTy primVal
   ) =>
   IR.RawGlobals primTy primVal ->
   IR.RawFunClause primTy primVal ->
@@ -176,12 +158,7 @@ telescopeReturn ty = fmap f
 
 telescopeEval ::
   ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
-    Show primTy,
-    Show primVal,
-    Show (Parameterisation.ApplyErrorExtra primTy),
-    Show (Parameterisation.ApplyErrorExtra primVal),
-    Show (Parameterisation.Arg primTy),
-    Show (Parameterisation.Arg primVal)
+    Debug primTy primVal
   ) =>
   IR.RawGlobals primTy primVal ->
   RawTelescope IR.NoExt primTy primVal ->
@@ -241,12 +218,7 @@ elimToReturn ty e =
 
 unsafeEval ::
   ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
-    Show (Parameterisation.Arg primTy),
-    Show (Parameterisation.ApplyErrorExtra primTy),
-    Show (Parameterisation.ApplyErrorExtra primVal),
-    Show (Parameterisation.Arg primVal),
-    Show primTy,
-    Show primVal
+    Debug primTy primVal
   ) =>
   IR.RawGlobals primTy primVal ->
   IR.Term primTy primVal ->

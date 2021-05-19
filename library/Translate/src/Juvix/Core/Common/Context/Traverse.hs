@@ -26,11 +26,15 @@ import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
+type Shows a b c = (Show a, Show b, Show c)
+type Eqs a b c = (Eq a, Eq b, Eq c)
+type Datas a b c = (Data a, Data b, Data c)
+
 -- | Traverses a whole context by performing an action on each recursive group.
 -- The groups are passed in dependency order but the order of elements within
 -- each group is arbitrary.
 traverseContext ::
-  (Show a, Show b, Show c, Applicative f, Monoid t, Data a, Data b, Data c, Eq a, Eq b, Eq c) =>
+  (Shows a b c, Applicative f, Monoid t, Datas a b c, Eqs a b c) =>
   -- | process one recursive group
   (Group a b c -> f t) ->
   Context.T a b c ->
@@ -39,7 +43,7 @@ traverseContext f = foldMapA f . recGroups
 
 -- | As 'traverseContext' but ignoring the return value.
 traverseContext_ ::
-  (Show a, Show b, Show c, Applicative f, Data a, Data b, Data c, Eq a, Eq b, Eq c) =>
+  (Shows a b c, Applicative f, Datas a b c, Eqs a b c) =>
   -- | process one recursive group
   (Group a b c -> f z) ->
   Context.T a b c ->
@@ -49,7 +53,7 @@ traverseContext_ f = traverse_ f . recGroups
 -- | Same as 'traverseContext', but the groups are split up into single
 -- definitions.
 traverseContext1 ::
-  (Show a, Show b, Show c, Monoid t, Applicative f, Data a, Data b, Data c, Eq a, Eq b, Eq c) =>
+  (Shows a b c, Applicative f, Monoid t, Datas a b c, Eqs a b c) =>
   -- | process one definition
   (NameSymbol.T -> Context.Definition a b c -> f t) ->
   Context.T a b c ->
@@ -58,7 +62,7 @@ traverseContext1 = traverseContext . foldMapA . onEntry
 
 -- | Same as 'traverseContext1', but ignoring the return value.
 traverseContext1_ ::
-  (Show a, Show b, Show c, Applicative f, Data a, Data b, Data c, Eq a, Eq b, Eq c) =>
+  (Shows a b c, Applicative f, Datas a b c, Eqs a b c) =>
   -- | process one definition
   (NameSymbol.T -> Context.Definition a b c -> f z) ->
   Context.T a b c ->
@@ -76,7 +80,7 @@ onEntry f Entry {name, def} = f name def
 -- elements of previous groups. The first element of each pair is its
 -- fully-qualified name.
 recGroups ::
-  (Show ty, Show term, Show sumRep, Data term, Data ty, Data sumRep, Eq ty, Eq term, Eq sumRep) =>
+  (Shows ty term sumRep, Datas ty term sumRep, Eqs ty term sumRep) =>
   Context.T term ty sumRep ->
   [Group term ty sumRep]
 recGroups ctx@Context.T {topLevelMap} =
@@ -89,7 +93,7 @@ recGroups ctx@Context.T {topLevelMap} =
    in Graph.topSort g |> reverse |> concatMap fromV |> sortBy orderDatatypes |> groupCons
 
 -- | Join type and data constructors in a single group
-groupCons :: (Foldable t, Eq ty, Eq term, Eq sumRep) => t (NonEmpty (Entry term ty sumRep)) -> [Group term ty sumRep]
+groupCons :: (Foldable t, Eqs ty term sumRep) => t (NonEmpty (Entry term ty sumRep)) -> [Group term ty sumRep]
 groupCons = fmap snd . foldr f mempty
   where
     f entry@(a NonEmpty.:| _as) acc
@@ -99,10 +103,9 @@ groupCons = fmap snd . foldr f mempty
         foldr (g sumTName) mempty acc
       | otherwise = (name a, entry) : acc
       where
-        g sumTName (k, v) a =
-          if sumTName `elem` k
-            then (k, v `NonEmpty.union` entry) : a
-            else (k, v) : a
+        g sumTName (k, v) a
+          | sumTName `elem` k = (k, v `NonEmpty.union` entry) : a
+          | otherwise = (k, v) : a
 
 -- | Make data type come before data constructor
 orderDatatypes ::
