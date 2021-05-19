@@ -1911,7 +1911,6 @@ _TODO_
   + [[ToCore/Types]]
 ******* HR <<Transform/HR>>
 - _Relies on_
-  + [[Core/Common/Context]]
   + [[Core/HR]]
   + [[Core/Parameterisation]]
   + [[Library]]
@@ -1935,8 +1934,6 @@ _TODO_
 ******* Sig
 - _Relies on_
   + [[Core/Common/Context]]
-  + [[Core/HR]]
-  + [[Core/Parameterisation]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]

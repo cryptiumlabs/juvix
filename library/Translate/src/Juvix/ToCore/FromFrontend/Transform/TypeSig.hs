@@ -132,7 +132,7 @@ transformConSig q name mHd typeCon r@((t Sexp.:> ts) Sexp.:> _)
     arrow = Sexp.atom "TopLevel.Prelude.->"
     removeFieldNames fields
       | Just l <- Sexp.toList (Sexp.groupBy2 fields) = Sexp.cdr <$> l
-      | otherwise = notImplemented 
+      | otherwise = notImplemented
 
     -- g (Sexp.List [s, e]) = e
     named = Sexp.isAtomNamed t

@@ -15,6 +15,8 @@ where
 
 import qualified Data.Graph as Graph
 import qualified Data.HashSet as HashSet
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.List.NonEmpty.Extra as NonEmpty
 import qualified Generics.SYB as SYB
 import qualified Juvix.Core.Common.Context as Context
 import Juvix.Core.Common.Context.Traverse.Types
@@ -23,9 +25,6 @@ import qualified Juvix.FreeVars as FV
 import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Data.List.NonEmpty as NonEmpty
-import qualified Data.List.NonEmpty.Extra as NonEmpty
-
 
 -- | Traverses a whole context by performing an action on each recursive group.
 -- The groups are passed in dependency order but the order of elements within
@@ -95,27 +94,27 @@ groupCons = fmap snd . foldr f mempty
   where
     f entry@(a NonEmpty.:| _as) acc
       | Context.SumCon Context.Sum {sumTName} <- def a,
-        Just _ <- find (elem sumTName) (fst <$> acc)
+        Just _ <- find (elem sumTName) (fst <$> acc) =
         -- Find if type declar of a data constructor exists
-          = foldr (g sumTName) mempty acc
+        foldr (g sumTName) mempty acc
       | otherwise = (name a, entry) : acc
-            where
-            g sumTName (k, v) a
-              = if sumTName `elem` k
-                then (k, v `NonEmpty.union` entry) : a
-                else (k, v) : a
-
+      where
+        g sumTName (k, v) a =
+          if sumTName `elem` k
+            then (k, v `NonEmpty.union` entry) : a
+            else (k, v) : a
 
 -- | Make data type come before data constructor
-orderDatatypes
-  :: Group term ty sumRep
-  -> Group term ty sumRep -> Ordering
+orderDatatypes ::
+  Group term ty sumRep ->
+  Group term ty sumRep ->
+  Ordering
 orderDatatypes (a NonEmpty.:| _as) (b NonEmpty.:| _bs) = case (def a, def b) of
   (Context.SumCon Context.Sum {sumTName}, Context.TypeDeclar _)
     | sumTName `elem` name b -> GT
   (Context.TypeDeclar _, Context.SumCon Context.Sum {sumTName})
     | sumTName `elem` name a -> LT
-  (_ , _) ->  EQ
+  (_, _) -> EQ
 
 injectTopLevel :: (Semigroup a, IsString a) => a -> a
 injectTopLevel name = Context.topLevelName <> "." <> name
