@@ -13,7 +13,6 @@ module Juvix.Pipeline.Internal
 where
 
 import qualified Data.HashMap.Strict as HM
-import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core as Core
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.Context.Traverse as Context
@@ -56,7 +55,6 @@ mkDef ::
 mkDef typeCons dataConstructor s@Context.Sum {sumTDef, sumTName} c = do
   t <- extractTypeDeclar . Context.extractValue =<< Context.lookup (NameSymbol.fromSymbol sumTName) c
   declaration <- Sexp.findKey Sexp.car dataConstructor t
-  pTraceShowM ("Declaratione", typeCons, declaration, generateSumConsSexp typeCons declaration)
   Just $
     Context.D
       { defUsage = Just Usage.Omega,
@@ -88,7 +86,6 @@ contextToCore ctx param =
     newCtx <- Context.mapWithContext' ctx updateCtx
 
     let ordered = Context.recGroups newCtx
-    pTraceShowM ordered
 
     for_ ordered \grp -> do
       traverse_ addSig grp
@@ -105,7 +102,7 @@ contextToCore ctx param =
         Nothing -> do
           let dataConsSexp = Sexp.atom $ NameSymbol.fromSymbol dataCons
               typeConsSexp = Sexp.atom $ NameSymbol.fromSymbol typeCons
-          pure $ mkDef typeConsSexp dataConsSexp s c
+          pure $ mkDef typeConsSexp dataConsSexp s c 
 
 addSig ::
   ( Show primTy,
@@ -119,7 +116,6 @@ addSig ::
   m ()
 addSig (Context.Entry x feDef) = do
   sigs <- FF.transformSig x feDef
-  pTraceShowM (x, feDef, sigs)
   for_ sigs $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
 
 addDef ::
@@ -137,7 +133,6 @@ addDef ::
 addDef (Context.Entry x feDef) = do
   defs <- FF.transformDef x feDef
   for_ defs \def -> do
-    pTraceShowM ("Added Def", def)
     modify @"core" $ HM.insert (defName def) def
 
 defName :: FF.CoreDef primTy primVal -> NameSymbol.T
