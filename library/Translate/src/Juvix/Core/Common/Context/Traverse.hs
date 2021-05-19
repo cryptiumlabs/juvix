@@ -27,7 +27,9 @@ import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
 type Shows a b c = (Show a, Show b, Show c)
+
 type Eqs a b c = (Eq a, Eq b, Eq c)
+
 type Datas a b c = (Data a, Data b, Data c)
 
 -- | Traverses a whole context by performing an action on each recursive group.

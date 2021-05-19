@@ -21,12 +21,14 @@ import qualified Prelude as P
 
 type Pipeline = Feedback.FeedbackT [] P.String IO
 
-type Debug primTy primVal = (Show primTy,
+type Debug primTy primVal =
+  ( Show primTy,
     Show primVal,
     Show (Parameterisation.ApplyErrorExtra primTy),
     Show (Parameterisation.ApplyErrorExtra primVal),
     Show (Parameterisation.Arg primTy),
-    Show (Parameterisation.Arg primVal))
+    Show (Parameterisation.Arg primVal)
+  )
 
 toCoreDef ::
   Alternative f =>
