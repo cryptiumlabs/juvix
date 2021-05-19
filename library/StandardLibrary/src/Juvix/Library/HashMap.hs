@@ -8,13 +8,10 @@ module Juvix.Library.HashMap
   ( module Data.HashMap.Strict,
     Map,
     T,
-    (!?),
   )
 where
 
 import Data.HashMap.Strict
-import Data.Hashable (Hashable)
-import Protolude (Eq, Maybe)
 
 type Map = HashMap
 

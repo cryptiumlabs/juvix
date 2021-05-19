@@ -7,9 +7,6 @@ where
 
 import Juvix.Core.IR.CheckTerm
 import qualified Juvix.Core.IR.Evaluator as Eval
--- import SPos ( sposConstructor )
-
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import Juvix.Core.IR.Types (NoExt, pattern VStar)
 import Juvix.Core.IR.Types.Base as IR
 import Juvix.Core.IR.Types.Globals as IR
@@ -22,8 +19,6 @@ typeCheckAllCons ::
     Eq primTy,
     Eq primVal,
     CanTC' extT primTy primVal m,
-    Param.CanApply primTy,
-    Param.CanApply primVal,
     Param.CanApply (TypedPrim primTy primVal),
     Eval.NoExtensions extT primTy (TypedPrim primTy primVal),
     Eval.NoExtensions extT primTy primVal,
@@ -52,8 +47,6 @@ typeCheckConstructor ::
     Eq primTy,
     Eq primVal,
     CanTC' extT primTy primVal m,
-    Param.CanApply primTy,
-    Param.CanApply primVal,
     Param.CanApply (TypedPrim primTy primVal),
     Eval.NoExtensions extT primTy (TypedPrim primTy primVal),
     Eval.NoExtensions extT primTy primVal,
@@ -126,18 +119,13 @@ typeToTele (n, t) = ttt (n, t) []
 -- | checkDataType checks the datatype by checking all arguments.
 -- The data constructors are checked by another function.
 checkDataType ::
-  ( Param.CanApply primTy,
-    Param.CanApply primVal,
-    Eval.CanEval NoExt extT primTy primVal,
-    Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primTy,
-    Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primVal,
+  ( Eval.CanEval NoExt extT primTy primVal,
     Eq primTy,
     Eq primVal,
     IR.ValueAll Eq NoExt primTy primVal,
     IR.NeutralAll Eq NoExt primTy primVal,
     CanTC' extT primTy primVal m,
-    Param.CanApply (TypedPrim primTy primVal),
-    HasThrow "typecheckError" (TypecheckError' NoExt extT primTy primVal) m
+    Param.CanApply (TypedPrim primTy primVal)
   ) =>
   -- | an env that contains the parameters of the datatype
   Telescope NoExt extT primTy primVal ->
@@ -152,18 +140,13 @@ checkDataType tel dtName param =
 
 -- | checkDataTypeArg checks an argument of the datatype
 checkDataTypeArg ::
-  ( Param.CanApply primTy,
-    Param.CanApply primVal,
-    Eval.CanEval NoExt extT primTy primVal,
-    Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primTy,
-    Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primVal,
+  ( Eval.CanEval NoExt extT primTy primVal,
     Eq primTy,
     Eq primVal,
     IR.ValueAll Eq NoExt primTy primVal,
     IR.NeutralAll Eq NoExt primTy primVal,
     CanTC' extT primTy primVal m,
-    Param.CanApply (TypedPrim primTy primVal),
-    HasThrow "typecheckError" (TypecheckError' NoExt extT primTy primVal) m
+    Param.CanApply (TypedPrim primTy primVal)
   ) =>
   -- | an env that contains the parameters of the datatype
   Telescope NoExt extT primTy primVal ->
@@ -183,18 +166,13 @@ checkDataTypeArg _ _ _ arg = throwTC $ DatatypeError arg
 
 -- | type check a constructor
 checkConType ::
-  ( Param.CanApply primTy,
-    Param.CanApply primVal,
-    Eval.CanEval NoExt extT primTy primVal,
-    Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primTy,
-    Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primVal,
+  ( Eval.CanEval NoExt extT primTy primVal,
     Eq primTy,
     Eq primVal,
     IR.ValueAll Eq NoExt primTy primVal,
     IR.NeutralAll Eq NoExt primTy primVal,
     CanTC' extT primTy primVal m,
-    Param.CanApply (TypedPrim primTy primVal),
-    HasThrow "typecheckError" (TypecheckError' NoExt extT primTy primVal) m
+    Param.CanApply (TypedPrim primTy primVal)
   ) =>
   -- | an env that contains the parameters of the datatype
   Telescope NoExt extT primTy primVal ->

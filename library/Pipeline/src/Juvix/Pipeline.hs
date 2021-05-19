@@ -28,11 +28,9 @@ class HasBackend b where
   type Val b = val | val -> b
 
   stdlibs :: b -> [FilePath]
-  default stdlibs :: b -> [FilePath]
   stdlibs _ = []
 
   parse :: b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
-  default parse :: b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
   parse b code = do
     core <- liftIO $ toCore_wrap code
     case core of
@@ -54,7 +52,7 @@ writeout :: FilePath -> Text -> Pipeline ()
 writeout fout code = liftIO $ T.writeFile fout code
 
 parseExplicit :: b -> Text -> [FilePath] -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
-parseExplicit b code libs = do
+parseExplicit _b code libs = do
   core <- liftIO $ toCore_wrap code
   case core of
     Right ctx -> return ctx

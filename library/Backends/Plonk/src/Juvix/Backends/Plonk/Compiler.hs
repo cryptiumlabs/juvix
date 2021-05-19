@@ -35,9 +35,9 @@ compileBinOp m op args = do
     BExp -> do
       let (Ann.Ann _ _ (Ann.Prim (PConst exponent))) = e2
       tmp1 <- mulToImm (Right e1Out) (Right e1Out)
-      Left <$> foldrM f tmp1 (replicate (fromIntegral $ exponent - 2) 0)
+      Left <$> foldrM f tmp1 (replicate (fromIntegral $ exponent - 2) (0 :: Int))
       where
-        f n tmp = mulToImm (Left tmp) (Right e1Out)
+        f _n tmp = mulToImm (Left tmp) (Right e1Out)
     -- SUB(x, y) = x + (-y)
     BSub -> pure . Right $ Add e1Out (ScalarMul (-1) e2Out)
     BAnd -> do
@@ -90,7 +90,7 @@ compileTerm _term@(Ann.Ann _ _ t) m a =
     Ann.Var symbol -> case Map.lookup symbol m of
       Just v -> pure . Left $ v
       Nothing -> panic $ "Unable to find variable " <> show symbol
-    Ann.AppM fun@(Ann.Ann _ _ v) args -> compileTerm fun m args
+    Ann.AppM fun@(Ann.Ann {}) args -> compileTerm fun m args
     Ann.LamM _ args b -> do
       m' <- do
         pairs <-

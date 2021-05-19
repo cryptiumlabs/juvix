@@ -204,7 +204,6 @@ execInner ::
 execInner (InnerTC m) = evalStateT m
 
 execInner' ::
-  Monad m =>
   InnerTCT ext primTy primVal m a ->
   InnerState' ext primTy primVal ->
   m (a, InnerState' ext primTy primVal)

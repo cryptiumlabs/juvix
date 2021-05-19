@@ -683,7 +683,6 @@ temporary lexical bindings as our code encounters binders.
 - _Relies on_
   + [[Erased/Types/Base]]
   + [[Typechecker/Types]]
-  + [[IR/Types/Base]]
   + [[Globals]]
   + [[Library]]
 ******* Base <<Erased/Types/Base>>
@@ -736,7 +735,6 @@ temporary lexical bindings as our code encounters binders.
   + [[Erasure/Types]]
   + [[Core/IR]]
   + [[Typechecker/Types]]
-  + [[IR/Types/Base]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
@@ -805,7 +803,6 @@ Datatype declarations are typechecked here. Usages are passed along.
 - _Relies on_
   + [[CheckTerm]]
   + [[IR/Evaluator]]
-  + [[OnlyExts]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Globals]]
@@ -841,7 +838,6 @@ the substitution functions (substTerm and substElim).
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
-  + [[Usage]]
 ******* PatSubst
 - _Relies on_
   + [[Application]]
