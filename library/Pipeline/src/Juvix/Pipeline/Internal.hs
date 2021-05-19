@@ -102,7 +102,7 @@ contextToCore ctx param =
         Nothing -> do
           let dataConsSexp = Sexp.atom $ NameSymbol.fromSymbol dataCons
               typeConsSexp = Sexp.atom $ NameSymbol.fromSymbol typeCons
-          pure $ mkDef typeConsSexp dataConsSexp s c 
+          pure $ mkDef typeConsSexp dataConsSexp s c
 
 addSig ::
   ( Show primTy,
