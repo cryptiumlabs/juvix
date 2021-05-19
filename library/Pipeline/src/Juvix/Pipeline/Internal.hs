@@ -71,8 +71,7 @@ generateSumConsSexp typeCons (Sexp.cdr -> declaration) = do
       | Sexp.isAtomNamed x ":record-d" = Sexp.list $ removeFieldNames fields
     sanitizeRecord xs = xs
     removeFieldNames fields
-      | Just l <- Sexp.toList (Sexp.groupBy2 fields) = g <$> l
-    g (Sexp.List [s, e]) = e
+      | Just l <- Sexp.toList (Sexp.groupBy2 fields) = Sexp.cdr <$> l
     f n acc = Sexp.list [arrow, n, acc]
     arrow = Sexp.atom "TopLevel.Prelude.->"
 
