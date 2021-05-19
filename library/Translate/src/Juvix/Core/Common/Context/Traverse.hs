@@ -70,7 +70,7 @@ onEntry ::
   (NameSymbol.T -> Context.Definition term ty sumRep -> t) ->
   Entry term ty sumRep ->
   t
-onEntry f (Entry {name, def}) = f name def
+onEntry f Entry {name, def} = f name def
 
 -- | Sorts a context by dependency order. Each element of the output is
 -- a mutually-recursive group, whose elements depend only on each other and
@@ -80,7 +80,7 @@ recGroups ::
   (Show ty, Show term, Show sumRep, Data term, Data ty, Data sumRep, Eq ty, Eq term, Eq sumRep) =>
   Context.T term ty sumRep ->
   [Group term ty sumRep]
-recGroups ctx@(Context.T {topLevelMap}) =
+recGroups ctx@Context.T {topLevelMap} =
   let top = topLevelMap
       (groups, deps) = run_ ctx $ recGroups' injectTopLevel $ toNameSpace top
       get n = maybe [] toList $ HashMap.lookup n deps
@@ -101,13 +101,13 @@ groupCons = fmap snd . foldr f mempty
       | otherwise = (name a, entry) : acc
             where
             g sumTName (k, v) a
-              = if sumTName `elem` k 
+              = if sumTName `elem` k
                 then (k, v `NonEmpty.union` entry) : a
                 else (k, v) : a
-                
+
 
 -- | Make data type come before data constructor
-orderDatatypes 
+orderDatatypes
   :: Group term ty sumRep
   -> Group term ty sumRep -> Ordering
 orderDatatypes (a NonEmpty.:| _as) (b NonEmpty.:| _bs) = case (def a, def b) of
@@ -115,7 +115,7 @@ orderDatatypes (a NonEmpty.:| _as) (b NonEmpty.:| _bs) = case (def a, def b) of
     | sumTName `elem` name b -> GT
   (Context.TypeDeclar _, Context.SumCon Context.Sum {sumTName})
     | sumTName `elem` name a -> LT
-  (_ , _) ->  EQ 
+  (_ , _) ->  EQ
 
 injectTopLevel :: (Semigroup a, IsString a) => a -> a
 injectTopLevel name = Context.topLevelName <> "." <> name
