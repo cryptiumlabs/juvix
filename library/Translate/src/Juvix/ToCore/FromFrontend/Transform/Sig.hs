@@ -1,10 +1,6 @@
 module Juvix.ToCore.FromFrontend.Transform.Sig (transformSig) where
 
-import qualified Data.HashMap.Strict as HM
-import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.Common.Context as Ctx
-import qualified Juvix.Core.HR as HR
-import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
@@ -73,27 +69,15 @@ transformNormalSig _ _ (Ctx.Record record) =
   panic $ "Record not implemented" <> show record
 -- pure [] -- TODO
 transformNormalSig q x (Ctx.TypeDeclar typ) = do
-  traceM "Type declaration!"
-  pTraceShowM (x, typ)
-  traceM "Extracted data constructor sig!"
-  pTraceShowM $ extractDataConstructorSigs typ
   transformTypeSig q x typ
 transformNormalSig _ _ (Ctx.Unknown sig) =
   throwFF $ UnknownUnsupported (sig >>= eleToSymbol)
 transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
   -- TODO: Lookup constructor signature from the context (consig)
   -- Use that type to check sumTDef
-  traceM "SumCon!"
-  pTraceShowM (x, sumTDef)
   let x' = conDefName x
   defSigs <- traverse (transformNormalSig q x' . Ctx.Def) sumTDef
-  traceM "DefSigs!"
-  pTraceShowM (defSigs)
-
   conSig <- conSigM
-  traceM "ConSig!"
-  pTraceShowM conSig
-
   pure $ conSig : fromMaybe [] defSigs
   where
     conSigM = case sumTDef of

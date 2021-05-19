@@ -19,7 +19,6 @@ module Juvix.ToCore.FromFrontend.Transform.Helpers
 where
 
 import qualified Data.HashMap.Strict as HM
-import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.Common.Context as Ctx
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
@@ -117,7 +116,7 @@ getSpecialSig q x
       case sig of
         Just (SpecialSig s) -> pure $ Just s
         Just _ -> pure Nothing
-        Nothing -> pTraceShow ("getSpecial", q, x) throwFF $ WrongSigType x Nothing
+        Nothing -> throwFF $ WrongSigType x Nothing
 getSpecialSig _ _ = pure Nothing
 
 -- | Check whether the S-expression form is a non-implicit string atom
@@ -204,8 +203,8 @@ getSig ::
 getSig q f x = do
   msig <- lookupSig (Just q) x
   case msig of
-    Just sig | Just ty <- f sig -> pTraceShow ("lookupSig Success", q, x, msig, ty) $ pure ty
-    _ -> pTraceShow ("lookupSig Failure", q, x, msig) $ throwFF $ WrongSigType x msig
+    Just sig | Just ty <- f sig -> pure ty
+    _ -> throwFF $ WrongSigType x msig
 
 splitDataType ::
   (Show primTy, Show primVal, HasThrowFF primTy primVal m) =>
@@ -214,7 +213,7 @@ splitDataType ::
   m ([IR.RawDataArg primTy primVal], IR.Universe)
 splitDataType x ty0 = go ty0
   where
-    go (HR.Pi π x s t) = pTraceShow ("splitDataType", t, s, x) $ first (arg :) <$> splitDataType x t
+    go (HR.Pi π x s t) = first (arg :) <$> splitDataType x t
       where
         arg =
           IR.RawDataArg

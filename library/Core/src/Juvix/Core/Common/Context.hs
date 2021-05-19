@@ -12,7 +12,6 @@ module Juvix.Core.Common.Context
 where
 
 import Control.Lens hiding ((|>))
-import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import Juvix.Core.Common.Context.Precedence
 import Juvix.Core.Common.Context.Types
 import qualified Juvix.Core.Common.NameSpace as NameSpace
@@ -319,6 +318,7 @@ mapWithContext t@T {topLevelMap, currentName} f = do
       let Just t = inNameSpace name ctx
        in mapCurrentContext f t
 
+-- TODO: Refactor
 mapWithContext' ::
   (Monad m, Show term, Show ty) =>
   T term ty sumRep ->
@@ -379,10 +379,7 @@ mapCurrentContext' f ctx@T {currentNameSpace, currentName} =
           pure finalCtx
         Unknown u -> pure ctx
         SumCon s@(Sum def name') -> do
-          traceM "SumCon mapCurrentContext"
-          pTraceShowM (def, name, name')
           newDef <- f def name' (NameSpace.extractValue name) s ctx
-          pTraceShowM (newDef)
           pure $ add name (SumCon (Sum newDef name')) ctx
         TypeDeclar t -> pure ctx
         CurrentNameSpace -> pure ctx

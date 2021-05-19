@@ -2,14 +2,12 @@ module Juvix.ToCore.FromFrontend.Transform.HR (transformTermHR) where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NonEmpty
-import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
-import qualified Juvix.Core.Common.Context as Ctx
 
 import Juvix.ToCore.FromFrontend.Transform.Helpers
   ( ReduceEff,
@@ -40,7 +38,6 @@ transformTermHR _ (Sexp.Atom a@Sexp.N {}) =
   HR.Prim <$> getParamConstant a
 transformTermHR q (Sexp.Atom Sexp.A {atomName}) = do
   term <- lookupSigWithSymbol (Just q) atomName
-  pTraceShowM ("Transform Term Atom", atomName, term, toName term)
   pure $ toName term
   where
     toName = HR.Elim . HR.Var . maybe atomName fst
@@ -59,8 +56,6 @@ transformTermHR q p@(name Sexp.:> form)
   | named ":let-type" = throwFF $ ExprUnimplemented p
   | named ":list" = throwFF $ ListUnimplemented p
   | named "case" = do
-    traceM "Is it CASE?"
-    pTraceShowM (p)
     --   throwFF $ ExprUnimplemented p
     transformApplication q p
   | named ":u" = throwFF $ UniversesUnimplemented p
@@ -141,7 +136,6 @@ transformApplication ::
 transformApplication q a@(f Sexp.:> args)
   | Just xs <- Sexp.toList args = do
     mSig <- getSpecialSig q f
-    pTraceShowM ("TransformApplication!", a, f, args, mSig, xs)
     go mSig xs
   where
     go Nothing xs = do

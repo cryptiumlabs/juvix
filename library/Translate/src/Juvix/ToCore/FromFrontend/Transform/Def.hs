@@ -2,7 +2,6 @@ module Juvix.ToCore.FromFrontend.Transform.Def (transformDef) where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NonEmpty
-import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.Common.Context as Ctx
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Translate (hrToIR)
@@ -12,7 +11,6 @@ import qualified Juvix.Library.Sexp as Sexp
 import Juvix.ToCore.FromFrontend.Transform.HR (transformTermHR)
 import Juvix.ToCore.FromFrontend.Transform.Helpers
   ( ReduceEff,
-    conDefName,
     eleToSymbol,
     getConSig,
     getDataSig,
@@ -43,8 +41,6 @@ transformDef ::
   m [CoreDef primTy primVal]
 transformDef x def = do
   sig <- lookupSig Nothing x
-  traceM "Transform Def"
-  pTraceShowM (x, sig)
   case sig of
     Just (SpecialSig s) -> pure [SpecialDef x s]
     _ -> map CoreDef <$> transformNormalDef q x def
@@ -52,11 +48,9 @@ transformDef x def = do
     q = NameSymbol.mod x
 
     transformNormalDef q x (Ctx.TypeDeclar dec) =
-      pTraceShow ("transformNormalDef", x, dec) transformType x dec
+      transformType x dec
       where
-        transformCon x ty def = do
-          traceM "TransformCon"
-          pTraceShowM (x, conDefName x, def, ty, hrToIR ty)
+        transformCon x ty _def = do
           -- def <- traverse (transformFunction q (conDefName x)) def
           pure $
             IR.RawDataCon
@@ -66,12 +60,8 @@ transformDef x def = do
               }
         transformType name _ = do
           (ty, conNames) <- getDataSig q name
-          traceM "ConNames"
-          pTraceShowM (ty, conNames)
           let getConSig' x = do ty <- getConSig q x; pure (x, ty, def)
           conSigs <- traverse getConSig' conNames
-          traceM "ConSigs"
-          pTraceShowM conSigs
           cons <- traverse (uncurry3 transformCon) conSigs
           (args, ℓ) <- splitDataType name ty
           let dat' =
@@ -95,8 +85,6 @@ transformDef x def = do
 
     transformFunction q x (Ctx.D _ _ (_lambdaCase Sexp.:> defs) _)
       | Just xs <- Sexp.toList defs >>= NonEmpty.nonEmpty = do
-        traceM "Get Val Sig"
-        pTraceShowM (x, defs)
         (π, typ) <- getValSig q x
         clauses <- traverse (transformClause q) xs
         pure $

@@ -8,7 +8,6 @@ where
 import qualified Data.Aeson as A
 import Data.Field.Galois (GaloisField)
 import qualified Data.HashMap.Strict as HM
-import Debug.Pretty.Simple (pTraceShowM)
 import qualified Juvix.Backends.Plonk.Builder as Builder
 import qualified Juvix.Backends.Plonk.Circuit as Circuit
 import qualified Juvix.Backends.Plonk.Compiler as Compiler
@@ -93,14 +92,12 @@ instance
     let res = Pipeline.contextToCore ctx (Parameterization.param @f)
     case res of
       Right (FF.CoreDefs _order globals) -> do
-        pTraceShowM ("Globals", globals)
         let globalDefs = HM.mapMaybe Pipeline.toCoreDef globals
         case HM.elems $ HM.filter Pipeline.isMain globalDefs of
           [] -> Feedback.fail "No main function found"
           [IR.RawGFunction f]
             | IR.RawFunction _name usage ty (clause :| []) <- f,
               IR.RawFunClause _ [] term _ <- clause -> do
-              pTraceShowM ("GlobalDefs", globalDefs)
               let convGlobals = map (Pipeline.convGlobal Types.PField) globalDefs
                   newGlobals = HM.map (Pipeline.unsafeEvalGlobal convGlobals) convGlobals
                   lookupGlobal = IR.rawLookupFun' globalDefs

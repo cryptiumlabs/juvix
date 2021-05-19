@@ -1,6 +1,5 @@
 module Juvix.ToCore.FromFrontend.Transform.TypeSig where
 
-import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.HR as HR
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -29,18 +28,11 @@ transformTypeSig ::
   NameSymbol.T ->
   Sexp.T ->
   m [CoreSigHR primTy primVal]
-transformTypeSig q name (typeCon Sexp.:> args Sexp.:> typeForm)
+transformTypeSig q _name (typeCon Sexp.:> args Sexp.:> typeForm)
   | Just typeArgs <- Sexp.toList args >>= traverse eleToSymbol = do
     (baseTy, hd) <- transformIndices typeArgs typeCon
-    traceM "transformTypeSig"
-    pTraceShowM (typeCon, baseTy, typeArgs)
     let dataType = foldr makeTPi baseTy typeArgs
-    traceM "Datatype"
-    pTraceShowM (dataType, typeForm)
     (dataCons, conSigs) <- unzip <$> transformConSigs q hd typeCon typeForm
-    traceM "DataCons"
-    pTraceShowM (dataCons, conSigs)
-
     let dataSig = DataSig {dataType, dataCons}
     pure $ dataSig : conSigs
   where
@@ -51,8 +43,6 @@ transformTypeSig q name (typeCon Sexp.:> args Sexp.:> typeForm)
     -- transformIndices typeArgs (_ Sexp.:> grouped)
     --   | Just dataArrow <- ff (Sexp.atom ":type") grouped = do
 
-    --     traceM "DataArrow"
-    --     pTraceShowM (dataArrow, grouped, Sexp.findKey Sexp.car (Sexp.atom ":type") grouped)
     --     typ <- transformTermHR q dataArrow
     --     let hd0 = HR.Var name
     --     let args = HR.Elim . HR.Var . NameSymbol.fromSymbol <$> typeArgs
@@ -61,7 +51,6 @@ transformTypeSig q name (typeCon Sexp.:> args Sexp.:> typeForm)
       pure (HR.Star 0, Just $ HR.Star 0) -- TODO metavar for universe
     makeTPi name res =
       -- TODO metavars for the named args instead of defaulting to types
-      -- thin metavars for the named args instead of defaulting to types
       HR.Pi mempty (NameSymbol.fromSymbol name) (HR.Star 0) res
 transformTypeSig _ _ _ = error "malformed type"
 
@@ -87,8 +76,6 @@ transformConSigs pfx hd typeCon =
         --   ":record-d",
         --   ["Datatypes"],
         --   Nothing)
-        traceM "ToProducts Record"
-        pTraceShowM (r)
         throwFF $ RecordUnimplemented r
     -- we can't have another standalone product here, so just send to
     -- sum
@@ -120,7 +107,7 @@ transformProduct q hd typeCon (x, prod) =
   (NameSymbol.qualify1 q x,) . makeSig
     <$> transformConSig q (NameSymbol.fromSymbol x) hd typeCon prod
   where
-    makeSig ty = pTraceShow ("makeSig", ty) ConSig {conType = Just ty}
+    makeSig ty = ConSig {conType = Just ty}
 
 transformConSig ::
   (ReduceEff primTy primVal m, HasPatVars m, Show primTy, Show primVal) =>
@@ -134,9 +121,6 @@ transformConSig ::
   m (HR.Term primTy primVal)
 transformConSig q name mHd typeCon r@((t Sexp.:> ts) Sexp.:> _)
   | named ":record-d" = do
-    traceM "Transform Con Sig Record"
-    pTraceShowM (r, name, mHd, typeCon)
-    pTraceShowM (Sexp.list [arrow, Sexp.list $ removeFieldNames ts, Sexp.car typeCon])
     let convertedSexp = Sexp.list [arrow, Sexp.list $ removeFieldNames ts, Sexp.car typeCon]
     transformConSig q name mHd typeCon convertedSexp
   -- throwFF $ RecordUnimplemented r
@@ -147,9 +131,10 @@ transformConSig q name mHd typeCon r@((t Sexp.:> ts) Sexp.:> _)
   where
     arrow = Sexp.atom "TopLevel.Prelude.->"
     removeFieldNames fields
-      | Just l <- Sexp.toList (Sexp.groupBy2 fields) = g <$> l
+      | Just l <- Sexp.toList (Sexp.groupBy2 fields) = Sexp.cdr <$> l
+      | otherwise = notImplemented 
 
-    g (Sexp.List [s, e]) = e
+    -- g (Sexp.List [s, e]) = e
     named = Sexp.isAtomNamed t
 transformConSig q name mHd _ r@(t Sexp.:> ts)
   -- TODO: Should check if there any data constructor with a signature (See GADT)

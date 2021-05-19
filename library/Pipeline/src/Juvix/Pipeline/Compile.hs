@@ -9,7 +9,6 @@ module Juvix.Pipeline.Compile
   )
 where
 
-import Debug.Pretty.Simple (pTraceShow, pTraceShowM)
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.IR.Types.Base (Elim', Term', XPi)
@@ -46,7 +45,7 @@ unsafeEvalGlobal ::
   IR.RawGlobal primTy primVal ->
   IR.Global primTy primVal
 unsafeEvalGlobal globals g =
-  case pTraceShow ("unsafeEvalGlobal", g) g of
+  case g of
     RawGDatatype (RawDatatype n pos a l cons) ->
       GDatatype (Datatype n pos (argEval globals <$> a) l (conEval globals <$> cons))
     RawGDataCon (RawDataCon n t d) ->
@@ -252,6 +251,6 @@ unsafeEval ::
   IR.RawGlobals primTy primVal ->
   IR.Term primTy primVal ->
   IR.Value primTy primVal
-unsafeEval globals t = case pTraceShow ("unsafeEval", t) IR.evalTerm (IR.rawLookupFun' globals) t of
-  Right v -> pTraceShow ("Can eval!", v, globals) v
-  Left v -> pTraceShow ("Can't eval", v) panic "Failed to eval term"
+unsafeEval globals t = case IR.evalTerm (IR.rawLookupFun' globals) t of
+  Right v -> v
+  Left v -> panic "Failed to eval term"
