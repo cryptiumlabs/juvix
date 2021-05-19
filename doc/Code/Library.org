@@ -1911,13 +1911,13 @@ _TODO_
   + [[ToCore/Types]]
 ******* HR <<Transform/HR>>
 - _Relies on_
+  + [[Core/Common/Context]]
   + [[Core/HR]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
   + [[Library/Usage]]
-  + [[Core/Common/Context]]
   + [[Transform/Helpers]]
   + [[Transform/Usage]]
   + [[ToCore/Types]]
