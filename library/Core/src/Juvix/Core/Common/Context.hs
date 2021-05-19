@@ -318,6 +318,73 @@ mapWithContext t@T {topLevelMap, currentName} f = do
       let Just t = inNameSpace name ctx
        in mapCurrentContext f t
 
+-- TODO: Refactor
+mapWithContext' ::
+  (Monad m, Show term, Show ty) =>
+  T term ty sumRep ->
+  ( Maybe (Def term ty) ->
+    Symbol ->
+    Symbol ->
+    SumT term ty ->
+    T term ty sumRep ->
+    m (Maybe (Def term ty))
+  ) ->
+  m (T term ty sumRep)
+mapWithContext' t@T {topLevelMap, currentName} f = do
+  ctx <- foldM switchAndUpdate t tops
+  let Just finalCtx = inNameSpace (addTopName currentName) ctx
+  pure finalCtx
+  where
+    tops = fmap (addTopNameToSngle . pure) (HashMap.keys topLevelMap)
+    switchAndUpdate ctx name =
+      let Just t = inNameSpace name ctx
+       in mapCurrentContext' f t
+
+-- | @mapCurrentContext@ maps f over the entire context, this function
+-- calls the function handed to it over the context. The function runs
+-- over the current form and the context, so any dependencies may be
+-- resolved and proper stored away.
+-- mapCurrentContext' ::
+-- Monad m => ContextForms m term ty sumRep -> T term ty sumRep -> m (T term ty sumRep)
+mapCurrentContext' ::
+  (Monad m, Show term, Show ty) =>
+  ( Maybe (Def term ty) ->
+    Symbol ->
+    Symbol ->
+    SumT term ty ->
+    T term ty sumRep ->
+    m (Maybe (Def term ty))
+  ) ->
+  T term ty sumRep ->
+  m (T term ty sumRep)
+mapCurrentContext' f ctx@T {currentNameSpace, currentName} =
+  foldM dispatch ctx names
+  where
+    names =
+      NameSpace.toList1FSymb (currentNameSpace ^. contents)
+    dispatch ctx (name, form) = do
+      case form of
+        Def d -> pure ctx
+        Record r -> do
+          -- Do the signature call in the module above and re-insert it
+          -- into the current module
+          let newTy = recordMTy r
+          -- now we should siwtch modules, note we are going to do a
+          -- direct insertion, so no need to reconstruct
+          let Just newCtx = inNameSpace (pure (NameSpace.extractValue name)) ctx
+          ctx' <- mapCurrentContext' f newCtx
+          let ctx'' = set (_currentNameSpace . mTy) newTy ctx'
+          -- just switch back to where we need to be
+          let Just finalCtx = inNameSpace (addTopName currentName) ctx''
+          pure finalCtx
+        Unknown u -> pure ctx
+        SumCon s@(Sum def name') -> do
+          newDef <- f def name' (NameSpace.extractValue name) s ctx
+          pure $ add name (SumCon (Sum newDef name')) ctx
+        TypeDeclar t -> pure ctx
+        CurrentNameSpace -> pure ctx
+        Information _ -> pure ctx
+
 -- | @mapCurrentContext@ maps f over the entire context, this function
 -- calls the function handed to it over the context. The function runs
 -- over the current form and the context, so any dependencies may be

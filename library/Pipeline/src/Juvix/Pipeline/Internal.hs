@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Juvix.Pipeline.Internal
   ( Error (..),
     toCore,
@@ -21,6 +23,7 @@ import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Parser (ParserError)
 import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.ToCore.FromFrontend as FF
 
 data Error
@@ -39,19 +42,66 @@ toCore paths = do
         Left errr -> pure $ Left (PipelineErr errr)
         Right con -> pure $ Right con
 
+extractTypeDeclar :: Context.Definition term ty a -> Maybe a
+extractTypeDeclar (Context.TypeDeclar t) = Just t
+extractTypeDeclar _ = Nothing
+
+mkDef ::
+  Sexp.T ->
+  Sexp.T ->
+  Context.SumT term1 ty1 ->
+  Context.T term2 ty2 Sexp.T ->
+  Maybe (Context.Def Sexp.T Sexp.T)
+mkDef typeCons dataConstructor s@Context.Sum {sumTDef, sumTName} c = do
+  t <- extractTypeDeclar . Context.extractValue =<< Context.lookup (NameSymbol.fromSymbol sumTName) c
+  declaration <- Sexp.findKey Sexp.car dataConstructor t
+  Just $
+    Context.D
+      { defUsage = Just Usage.Omega,
+        defMTy = generateSumConsSexp typeCons declaration,
+        defTerm = Sexp.list [Sexp.atom ":primitive", Sexp.atom "Builtin.Constructor"],
+        defPrecedence = Context.default'
+      }
+
+generateSumConsSexp :: Sexp.T -> Sexp.T -> Maybe Sexp.T
+generateSumConsSexp typeCons (Sexp.cdr -> declaration) = do
+  pure . sanitizeRecord $ Sexp.foldr f typeCons declaration
+  where
+    sanitizeRecord (x Sexp.:> fields)
+      | Sexp.isAtomNamed x ":record-d" = Sexp.list $ removeFieldNames fields
+    sanitizeRecord xs = xs
+    removeFieldNames fields
+      | Just l <- Sexp.toList (Sexp.groupBy2 fields) = Sexp.cdr <$> l
+    f n acc = Sexp.list [arrow, n, acc]
+    arrow = Sexp.atom "TopLevel.Prelude.->"
+
 contextToCore ::
   (Show primTy, Show primVal) =>
   Context.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
   Either (FF.Error primTy primVal) (FF.CoreDefs primTy primVal)
-contextToCore ctx param = do
+contextToCore ctx param =
   FF.execEnv ctx param do
-    let ordered = Context.recGroups ctx
+    newCtx <- Context.mapWithContext' ctx updateCtx
+
+    let ordered = Context.recGroups newCtx
+
     for_ ordered \grp -> do
       traverse_ addSig grp
+
+    for_ ordered \grp -> do
       traverse_ addDef grp
+
     defs <- get @"core"
     pure $ FF.CoreDefs {defs, order = fmap Context.name <$> ordered}
+  where
+    updateCtx def typeCons dataCons s@Context.Sum {sumTDef} c =
+      case sumTDef of
+        Just v -> pure $ Just v
+        Nothing -> do
+          let dataConsSexp = Sexp.atom $ NameSymbol.fromSymbol dataCons
+              typeConsSexp = Sexp.atom $ NameSymbol.fromSymbol typeCons
+          pure $ mkDef typeConsSexp dataConsSexp s c
 
 addSig ::
   ( Show primTy,
@@ -64,8 +114,8 @@ addSig ::
   Context.Entry Sexp.T Sexp.T Sexp.T ->
   m ()
 addSig (Context.Entry x feDef) = do
-  msig <- FF.transformSig x feDef
-  for_ msig $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
+  sigs <- FF.transformSig x feDef
+  for_ sigs $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
 
 addDef ::
   ( Show primTy,
@@ -81,13 +131,13 @@ addDef ::
   m ()
 addDef (Context.Entry x feDef) = do
   defs <- FF.transformDef x feDef
-  for_ defs \def ->
+  for_ defs \def -> do
     modify @"core" $ HM.insert (defName def) def
 
 defName :: FF.CoreDef primTy primVal -> NameSymbol.T
 defName = \case
-  FF.CoreDef (IR.RawGDatatype (IR.RawDatatype {rawDataName = x})) -> x
-  FF.CoreDef (IR.RawGDataCon (IR.RawDataCon {rawConName = x})) -> x
-  FF.CoreDef (IR.RawGFunction (IR.RawFunction {rawFunName = x})) -> x
-  FF.CoreDef (IR.RawGAbstract (IR.RawAbstract {rawAbsName = x})) -> x
+  FF.CoreDef (IR.RawGDatatype IR.RawDatatype {rawDataName = x}) -> x
+  FF.CoreDef (IR.RawGDataCon IR.RawDataCon {rawConName = x}) -> x
+  FF.CoreDef (IR.RawGFunction IR.RawFunction {rawFunName = x}) -> x
+  FF.CoreDef (IR.RawGAbstract IR.RawAbstract {rawAbsName = x}) -> x
   FF.SpecialDef x _ -> x
