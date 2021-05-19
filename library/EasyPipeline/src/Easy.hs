@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+
 -- |
 -- The easy module serves as the stop shop for getting anywhere in the
 -- code-base fast.

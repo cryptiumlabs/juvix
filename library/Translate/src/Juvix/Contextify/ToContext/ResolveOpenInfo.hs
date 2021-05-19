@@ -106,7 +106,7 @@ run ctx qualifieds = do
 --------------------------------------------------------------------------------
 
 createReverseOpenMap ::
-  (HasThrow "left" Error m, MonadIO m) => OpenMap -> Context.T a b c -> m Context.ReverseLookup
+  (HasThrow "left" Error m) => OpenMap -> Context.T a b c -> m Context.ReverseLookup
 createReverseOpenMap open ctx = do
   foldM (resolveReverseOpen ctx) mempty (HashMap.toList open)
 
@@ -157,7 +157,7 @@ populateOpen ctx (explicitModule, opens) = do
     pureHashMap inScopeNames = foldM (f inScopeNames) mempty opens
 
 resolveReverseOpen ::
-  (HasThrow "left" Error m, MonadIO m) =>
+  (HasThrow "left" Error m) =>
   Context.T a b c ->
   Context.ReverseLookup ->
   (NameSymbol.T, [Open NameSymbol.T]) ->

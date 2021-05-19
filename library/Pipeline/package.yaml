@@ -105,6 +105,7 @@ default-extensions:
   - DisambiguateRecordFields
   - TupleSections
   - BlockArguments
+  - RecordWildCards
 
 when:
   condition: flag(incomplete-error)

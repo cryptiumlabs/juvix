@@ -9,7 +9,7 @@ import Juvix.Library hiding (Pos)
 import Juvix.Library.HashMap (HashMap)
 import Juvix.Library.Usage (Usage)
 
-type RawGlobalAll (c :: * -> Constraint) ext primTy primVal =
+type RawGlobalAll (c :: Type -> Constraint) ext primTy primVal =
   ( c primTy,
     c primVal,
     TermAll c ext primTy primVal,
@@ -17,14 +17,14 @@ type RawGlobalAll (c :: * -> Constraint) ext primTy primVal =
     PatternAll c ext primTy primVal
   )
 
-type GlobalAllV (c :: * -> Constraint) ext primTy primVal =
+type GlobalAllV (c :: Type -> Constraint) ext primTy primVal =
   ( c primTy,
     c primVal,
     ValueAll c ext primTy primVal,
     NeutralAll c ext primTy primVal
   )
 
-type GlobalAll (c :: * -> Constraint) extV extT primTy primVal =
+type GlobalAll (c :: Type -> Constraint) extV extT primTy primVal =
   ( c primTy,
     c primVal,
     TermAll c extT primTy primVal,

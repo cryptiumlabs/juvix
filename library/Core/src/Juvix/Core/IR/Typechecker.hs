@@ -23,8 +23,6 @@ import Juvix.Library hiding (Datatype)
 typeCheckDeclaration ::
   ( Eq primTy,
     Eq primVal,
-    Param.CanApply primTy,
-    Param.CanApply primVal,
     Eval.CanEval extT IR.NoExt primTy primVal,
     Eval.EvalPatSubst IR.NoExt primTy primVal,
     Eval.EvalPatSubst IR.NoExt primTy (TypedPrim primTy primVal),
@@ -32,7 +30,6 @@ typeCheckDeclaration ::
     Eval.NoExtensions extT primTy primVal,
     CanTC' extT primTy primVal m,
     Param.CanApply (TypedPrim primTy primVal),
-    HasThrow "typecheckError" (TypecheckError' IR.NoExt extT primTy primVal) m,
     HasReader "globals" (GlobalsT' IR.NoExt extT primTy primVal) m
   ) =>
   -- | Telescope containing a list of
@@ -65,10 +62,6 @@ typeCheckDeclaration tel rtel param dts fns =
         -- when successful, return the datatype and the datacons
         -- to the list of globals
         return $ IR.RawGDatatype hdd : rest <> checkedCons
-    _ -> do
+    [] -> do
+      -- TODO functions, etc
       return []
--- TODO add to sig once typechecked? Keeping track of all globals may be
--- enough?
--- type checking function declarations
-typeCheckDeclaration tel rtel param _ (IR.RawFunction name usage ty cls : tlf) =
-  undefined -- TODO run typeCheckFuns
