@@ -7,6 +7,7 @@ where
 import Juvix.Backends.LLVM.Primitive
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.Parameterisation as Param
+import Juvix.Library
 
 instance Param.CanApply (PrimVal ext) where
   arity val = case val of
