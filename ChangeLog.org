@@ -1,9 +1,9 @@
 * Changelog for Juvix
 ** 0.1.0.2
-- Switched over the =stack.yaml= depdency files to a generator to
+- Switches over the =stack.yaml= depdency files to a generator to
   reduce the repeat code
-- Also changed some dependencies for the 3 big yaml files as they
-  weren't building properly due to the cyclic dependencies
+- Changes some dependencies for the 3 big yaml files as they weren't
+  building properly due to cyclic dependencies
 ** 0.1.0.1
 - Compile sum and product types
 - `main` can be of any type
