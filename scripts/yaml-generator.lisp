@@ -67,7 +67,7 @@
 ;; ①
 
 ;; Defparamter is given to show how we define the variables
-'(defparameter *morley-deps-testing*
+'(defparameter *tezos-morley*
   (make-dependency-git :name "https://gitlab.com/morley-framework/morley.git"
                        :commit "53961f48d0d3fb61051fceaa6c9ed6becb7511e5"
                        :subdirs (list "code/morley" "code/morley-prelude")))
@@ -373,10 +373,21 @@ lists are indented by an extra 2 each"
                        :commit "9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174"
                        :subdirs (list "tezos-bake-monitor-lib")))
 
+;; Why do we use such a specific version again
 (defparameter *tezos-morley*
   (make-dependency-git :name "https://gitlab.com/morley-framework/morley.git"
                        :commit "53961f48d0d3fb61051fceaa6c9ed6becb7511e5"
                        :subdirs (list "code/morley" "code/morley-prelude")))
+
+;; It seems we were directed to grab these when the system failed to load
+(defparameter *morley*
+  (string->dep-sha
+   "morley-1.14.0@sha256:70a9fc646bae3a85967224c7c42b2e49155461d6124c487bbcc1d825111a189d,9682"))
+
+(defparameter *morley-prelude*
+  (string->dep-sha
+   "morley-prelude-0.4.0@sha256:7234db1acac9a5554d01bdbf22d63b598c69b9fefaeace0fb6f765bf7bf738d4,2176"))
+
 
 (defparameter *base-no-prelude-standard*
   (string->dep-sha
@@ -429,13 +440,14 @@ lists are indented by an extra 2 each"
 (defparameter *morley-deps*
   (make-groups :comment "Morley Specific dependencies"
                :deps (list
-                      *tezos-bake-monitor*
-                      *tezos-morley*)))
+                      *tezos-bake-monitor*)))
 
 (defparameter *morley-sub-deps*
   (make-groups
    :comment "Git depdencies caused by Morley specific dependencies"
    :deps (list
+          *morley*
+          *morley-prelude*
           (make-dependency-bare :name "base58-bytestring-0.1.0")
           (make-dependency-bare :name "hex-text-0.1.0.0")
           (make-dependency-bare :name "show-type-0.1.1")
@@ -687,14 +699,19 @@ common ones to include"
    ;; hack name, for sub dirs
    :name "Backends/Michelson"
    :path-to-other "../../"
-   :packages      (list *standard-library* *core* *pipeline*)
+   :packages      (list *standard-library* *core* *pipeline*
+                        ;; this is needed due to pipeline additions
+                        ;; have left it unable to build. I think due to cyclic dependencies
+                        *translate*
+                        *frontend*)
    :extra-deps    (list (make-general-depencies *capability* *extensible*)
                         *fmt-withdraw*
                         *eac-solver*
                         *morley-arithmetic-circuit-deps*
                         *morley-deps*
                         *morley-sub-deps*
-                        *morley-sub-deps-extra*)))
+                        *morley-sub-deps-extra*
+                        *graph-visualizer*)))
 
 (defparameter *plonk*
   (make-stack-yaml
@@ -735,9 +752,7 @@ common ones to include"
                    *plonk*)
    :path-to-other "./library/"
    :extra-deps
-   (append (big-dep-list)
-           (list (make-groups :comment "Michelson Morely Testing library"
-                              :deps (list *morley-deps-testing*))))
+   (big-dep-list)
    :extra "allow-newer: true"))
 
 ;;; ----------------------------------------------------------------------

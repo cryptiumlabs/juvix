@@ -51,6 +51,8 @@ extra-deps:
 #########################################################
 # Git depdencies caused by Morley specific dependencies #
 #########################################################
+- morley-1.14.0@sha256:70a9fc646bae3a85967224c7c42b2e49155461d6124c487bbcc1d825111a189d,9682
+- morley-prelude-0.4.0@sha256:7234db1acac9a5554d01bdbf22d63b598c69b9fefaeace0fb6f765bf7bf738d4,2176
 - base58-bytestring-0.1.0
 - hex-text-0.1.0.0
 - show-type-0.1.1
@@ -89,15 +91,6 @@ extra-deps:
 - dependent-sum-template-0.1.0.3@sha256:0bbbacdfbd3abf2a15aaf0cf2c27e5bdd159b519441fec39e1e6f2f54424adde,1682
 - hashing-0.1.0.1@sha256:98861f16791946cdf28e3c7a6ee9ac8b72d546d6e33c569c7087ef18253294e7,2816
 - monoidal-containers-0.6.0.1@sha256:7d776942659eb4d70d8b8da5d734396374a6eda8b4622df9e61e26b24e9c8e40,2501
-
-####################################
-# Michelson Morely Testing library #
-####################################
-- git: https://gitlab.com/morley-framework/morley.git
-  commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
-  subdirs:
-    - code/morley
-    - code/morley-prelude
 
 
 allow-newer: true

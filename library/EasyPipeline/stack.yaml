@@ -6,6 +6,7 @@ packages:
 - ../Frontend
 - ../Core
 - ../Translate
+- ../Backends/Michelson
 - ../Pipeline
 
 extra-deps:
@@ -48,6 +49,8 @@ extra-deps:
 #########################################################
 # Git depdencies caused by Morley specific dependencies #
 #########################################################
+- morley-1.14.0@sha256:70a9fc646bae3a85967224c7c42b2e49155461d6124c487bbcc1d825111a189d,9682
+- morley-prelude-0.4.0@sha256:7234db1acac9a5554d01bdbf22d63b598c69b9fefaeace0fb6f765bf7bf738d4,2176
 - base58-bytestring-0.1.0
 - hex-text-0.1.0.0
 - show-type-0.1.1
