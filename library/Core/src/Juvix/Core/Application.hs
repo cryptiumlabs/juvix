@@ -11,7 +11,7 @@ module Juvix.Core.Application
     pattern BoundArg,
     pattern FreeArg,
     Take (..),
-    argToTake,
+    argToReturn,
     takeToReturn,
   )
 where
@@ -93,7 +93,7 @@ data Arg' ext ty term
   = -- | A variable to a term.
     VarArg (ParamVar ext)
   | -- | A fully evaluated term.
-    TermArg (Take ty term)
+    TermArg (Return' ext ty term)
   deriving (Generic, Functor, Foldable, Traversable)
 
 -- | Simplification for 'Arg'' without any extensions.
@@ -148,11 +148,11 @@ instance Bifoldable Take where
 instance Bitraversable Take where
   bitraverse f g (Take π a s) = Take π <$> f a <*> g s
 
--- | Translate an 'Arg'' to a 'Take'. Only fully evaluated arguments are
+-- | Translate an 'Arg'' to a 'Return''. Only fully evaluated arguments are
 -- returned, all others will result in an @empty@.
-argToTake :: Alternative f => Arg' ext ty term -> f (Take ty term)
-argToTake (TermArg t) = pure t
-argToTake _ = empty
+argToReturn :: Alternative f => Arg' ext ty term -> f (Return' ext ty term)
+argToReturn (TermArg t) = pure t
+argToReturn _ = empty
 
 -- | Translate a 'Take' into a 'Return''.
 takeToReturn :: Take ty term -> Return' ext ty term
