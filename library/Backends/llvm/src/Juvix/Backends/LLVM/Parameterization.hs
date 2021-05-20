@@ -26,7 +26,7 @@ llvm =
       Param.builtinTypes = builtinTypes,
       Param.builtinValues = builtinValues,
       Param.stringVal = undefined,
-      Param.intVal = undefined,
+      Param.intVal = integerToRawPrimVal,
       Param.floatVal = undefined
     }
   where
@@ -45,5 +45,13 @@ llvm =
     builtinValues :: Param.Builtins RawPrimVal
     builtinValues =
       [ ("LLVM.add", Add),
-        ("LLVM.sub", Sub)
+        ("LLVM.sub", Sub),
+        ("LLVM.litint", LitInt 0) -- TODO: what to do with the 0?
       ]
+
+    -- Translate an integer into a RawPrimVal.
+    -- TODO: should we take type information into account? As of now, there is
+    -- no way to do achieve this due to a lack of information available to the
+    -- function.
+    integerToRawPrimVal :: Integer -> Maybe RawPrimVal
+    integerToRawPrimVal = Just . LitInt

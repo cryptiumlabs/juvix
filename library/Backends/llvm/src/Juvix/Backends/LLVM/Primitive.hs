@@ -19,6 +19,7 @@ type PrimTy = LLVM.Type
 data RawPrimVal
   = Add
   | Sub
+  | LitInt Integer
 
 -- | The primitive values as exposed to users of Juvix, wrapping inside a
 -- return or a continuation.
