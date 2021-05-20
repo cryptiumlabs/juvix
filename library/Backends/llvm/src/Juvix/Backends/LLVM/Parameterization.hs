@@ -27,7 +27,7 @@ llvm =
       Param.builtinValues = builtinValues,
       Param.stringVal = Nothing,
       Param.intVal = integerToRawPrimVal,
-      Param.floatVal = undefined
+      Param.floatVal = Nothing
     }
   where
     -- Typechecking of primitive values.
