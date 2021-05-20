@@ -25,7 +25,7 @@ llvm =
     { Param.hasType = hasType,
       Param.builtinTypes = builtinTypes,
       Param.builtinValues = builtinValues,
-      Param.stringVal = undefined,
+      Param.stringVal = Nothing,
       Param.intVal = integerToRawPrimVal,
       Param.floatVal = undefined
     }
