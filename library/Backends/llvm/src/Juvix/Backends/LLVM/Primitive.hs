@@ -10,9 +10,10 @@ where
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
+import qualified LLVM.AST.Type as LLVM
 
--- | TODO: Just a placeholder for now.
-data PrimTy
+-- | TODO: Rely on the LLVM-defined types for now.
+type PrimTy = LLVM.Type
 
 -- | Raw representation of some primitives of LLVM.
 data RawPrimVal

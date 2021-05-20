@@ -22,6 +22,7 @@ description:         LLVM backend for the Juvix programming language.
 dependencies:
 - base >= 4.7 && < 5
 - core
+- llvm-hs-pure >= 9.0 && < 9.1
 - standard-library
 
 default-extensions:
