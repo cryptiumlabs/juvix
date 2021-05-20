@@ -22,7 +22,7 @@ instance Param.CanApply (PrimVal ext) where
 llvm :: Param.Parameterisation PrimTy RawPrimVal
 llvm =
   Param.Parameterisation
-    { Param.hasType = undefined,
+    { Param.hasType = hasType,
       Param.builtinTypes = builtinTypes,
       Param.builtinValues = builtinValues,
       Param.stringVal = undefined,
@@ -30,6 +30,12 @@ llvm =
       Param.floatVal = undefined
     }
   where
+    -- Typechecking of primitive values.
+    hasType :: RawPrimVal -> Param.PrimType PrimTy -> Bool
+    hasType t ty = case t of
+      Add -> Param.check3Equal ty
+      Sub -> Param.check3Equal ty
+
     -- The primitive LLVM types available to Juvix users.
     builtinTypes :: Param.Builtins PrimTy
     builtinTypes =
