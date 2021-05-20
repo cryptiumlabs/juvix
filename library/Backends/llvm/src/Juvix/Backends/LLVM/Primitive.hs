@@ -1,6 +1,7 @@
 -- | Representation of LLVM primitives in Juvix.
 module Juvix.Backends.LLVM.Primitive
-  ( RawPrimVal (..),
+  ( PrimTy,
+    RawPrimVal (..),
     PrimVal,
     arityRaw,
   )
