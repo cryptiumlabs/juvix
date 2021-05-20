@@ -254,11 +254,13 @@ instance
 
 instance
   ( HasWeak ty,
+    HasWeak (App.ParamVar ext),
     HasSubstTerm ext primTy primVal term
   ) =>
-  HasSubstTerm ext primTy primVal (App.Take ty term)
+  HasSubstTerm ext primTy primVal (App.Return' ext ty term)
   where
-  substTermWith b i e (App.Take {term}) = substTermWith b i e term
+  substTermWith b i e (App.Return {retTerm}) = substTermWith b i e retTerm
+  substTermWith b i e (App.Cont {}) = notImplemented
 
 instance
   ( HasSubstTerm ext primTy primVal (App.ParamVar ext),

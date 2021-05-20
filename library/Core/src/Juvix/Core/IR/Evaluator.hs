@@ -28,6 +28,7 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
+import qualified Juvix.Library.Usage as Usage
 
 type NoExtensions ext primTy primVal =
   ( IR.TermX ext primTy primVal ~ Void,
@@ -163,14 +164,14 @@ evalTerm ::
   LookupFun extG primTy primVal ->
   IR.Term' extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
-evalTerm g t = evalTermWith g rejectExts $ OnlyExts.onlyExtsT t
+evalTerm lookup term = evalTermWith lookup rejectExts $ OnlyExts.onlyExtsT term
 
 evalElim ::
   CanEval extT extG primTy primVal =>
   LookupFun extG primTy primVal ->
   IR.Elim' extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
-evalElim g e = evalElimWith g rejectExts $ OnlyExts.onlyExtsE e
+evalElim lookup e = evalElimWith lookup rejectExts $ OnlyExts.onlyExtsE e
 
 -- TODO generalise the @IR.NoExt@s
 toLambda' ::

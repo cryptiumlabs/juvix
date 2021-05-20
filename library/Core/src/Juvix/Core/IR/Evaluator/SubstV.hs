@@ -333,6 +333,17 @@ instance
   substValueWith b i e (App.Take {term}) = substValueWith b i e term
 
 instance
+  ( HasWeak ty,
+    HasWeak (App.ParamVar ext),
+    HasSubstValue ext primTy primVal term
+  ) =>
+  HasSubstValue ext primTy primVal (App.Return' ext ty term)
+  where
+  substValueWith b i e (App.Return {retTerm}) = substValueWith b i e retTerm
+  -- TODO: Handle App.Cont
+
+
+instance
   ( HasSubstValue ext primTy primVal (App.ParamVar ext),
     HasSubstValue ext primTy primVal ty,
     HasSubstValue ext primTy primVal term
@@ -373,9 +384,10 @@ instance
   where
   substValueWith b i e (App.Cont {fun, args}) = do
     let app f x = vapp f x ()
-    let fun' = IR.VPrim (App.takeToReturn fun)
-    args' <- traverse (substValueWith b i e . argToValue) args
-    foldlM app fun' args'
+    let fun' = notImplemented -- IR.VPrim (App.takeToReturn fun)
+    -- args' <- traverse (substValueWith b i e . argToValue) args
+    -- foldlM app fun' args'
+    notImplemented 
   substValueWith _ _ _ ret@(App.Return {}) =
     pure $ IR.VPrim ret
 
@@ -383,7 +395,8 @@ argToValue ::
   App.Arg (Param.PrimType primTy) primVal ->
   IR.Value primTy (Param.TypedPrim primTy primVal)
 argToValue = \case
-  App.TermArg (App.Take {type', term}) ->
-    IR.VPrim $ App.Return {retType = type', retTerm = term}
+  App.TermArg r@(App.Return {}) ->
+    IR.VPrim r
+  -- TODO: Handle TermArg with App.Con
   App.BoundArg i -> IR.VBound i
   App.FreeArg x -> IR.VFree $ IR.Global x
