@@ -1,12 +1,12 @@
 * Changelog for Juvix
 ** 0.1.0.2
 - _Changes to =Library/Sexp.hs=_
-  + Added documentation to all functions
-  + Changed =Sexp.flatten= to be a full flatten
-  + Fixed a small bug in =Sexp.foldr1= where it behaves poorly with
+  + Adds documentation to all functions
+  + Changes =Sexp.flatten= to be a full flatten
+  + Fixes a small bug in =Sexp.foldr1= where it behaves poorly with
     dotted lists
-    * Also created a test to accommodate for this new change
-  + Added dotted list syntax to the show.
+    * creates a test to accommodate for the new change
+  + Addes dotted list syntax to the show.
     #+begin_src haskell
       λ> (Cons (atom "hi") (atom "hi"))
       ("hi" . "hi")
