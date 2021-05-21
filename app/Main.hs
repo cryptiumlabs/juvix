@@ -8,6 +8,7 @@ import Data.Curve.Weierstrass.BLS12381 (Fr)
 import Data.Field.Galois (Prime, fromP, toP)
 import qualified Data.Scientific as S
 import Development.GitRev
+import qualified Juvix.Backends.LLVM as LLVM
 import qualified Juvix.Backends.Michelson as Michelson
 import qualified Juvix.Backends.Plonk as Plonk
 import Juvix.Library
@@ -124,12 +125,14 @@ run ctx opt = do
       case cmd of
         Parse fin backend -> runCmd fin backend Pipeline.parse
         Typecheck fin backend -> case backend of
+          LLVM b -> g b
           Michelson b -> g b
           Plonk b -> g b
           where
             g :: forall b. (Show (Pipeline.Ty b), Show (Pipeline.Val b), Pipeline.HasBackend b) => b -> Pipeline.Pipeline ()
             g b = runCmd' fin b (\b -> Pipeline.parse b >=> Pipeline.typecheck @b)
         Compile fin fout backend -> case backend of
+          LLVM b -> g b
           Michelson b -> g b
           Plonk b -> g b
           where
@@ -145,6 +148,7 @@ runCmd ::
   (forall b. Pipeline.HasBackend b => b -> Text -> Pipeline.Pipeline a) ->
   Pipeline.Pipeline ()
 runCmd fin backend f = case backend of
+  LLVM b -> runCmd' fin b f
   Michelson b -> runCmd' fin b f
   Plonk b -> runCmd' fin b f
 

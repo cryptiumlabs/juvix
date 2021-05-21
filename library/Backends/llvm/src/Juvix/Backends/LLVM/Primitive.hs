@@ -20,6 +20,7 @@ data RawPrimVal
   = Add
   | Sub
   | LitInt Integer
+  deriving (Show)
 
 -- | The primitive values as exposed to users of Juvix, wrapping inside a
 -- return or a continuation.

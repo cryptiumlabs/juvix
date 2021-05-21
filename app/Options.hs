@@ -11,6 +11,7 @@ where
 
 import Data.Curve.Weierstrass.BLS12381 (Fr)
 import Data.Data
+import qualified Juvix.Backends.LLVM as LLVM
 import qualified Juvix.Backends.Michelson as Michelson
 import qualified Juvix.Backends.Plonk as Plonk
 import Juvix.Library hiding (option)
@@ -30,6 +31,7 @@ data Options = Options
 data Backend
   = Plonk (Plonk.BPlonk Fr)
   | Michelson Michelson.BMichelson
+  | LLVM LLVM.BLLVM
   deriving (Eq, Show)
 
 data Command
@@ -100,6 +102,7 @@ backendOptions =
         ( \case
             "plonk" -> pure $ Plonk Plonk.BPlonk
             "michelson" -> pure $ Michelson Michelson.BMichelson
+            "llvm" -> pure $ LLVM LLVM.BLLVM
             _ -> Nothing
         )
     )
