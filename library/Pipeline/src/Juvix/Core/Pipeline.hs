@@ -149,6 +149,13 @@ toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
     primToRaw (App.Return {retTerm}) = ErasedAnn.Prim retTerm
     primToRaw (App.Cont {fun, args}) =
       ErasedAnn.AppM (takeToTerm fun) (argsToTerms (App.type' fun) args)
+    returnToTerm (App.Return {retTerm, retType}) =
+      ErasedAnn.Ann
+        -- TODO: Maybe not hard code omega
+        { usage = Usage.Omega,
+          type' = Prim.fromPrimType retType,
+          term = ErasedAnn.Prim retTerm 
+        }
     takeToTerm (App.Take {usage, type', term}) =
       ErasedAnn.Ann
         { usage,
@@ -158,8 +165,8 @@ toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
     argsToTerms ts xs = go (toList ts) xs
       where
         go _ [] = []
-        go (_ : ts) (App.TermArg a : as) =
-          takeToTerm a : go ts as
+        go (_ : ts) (App.TermArg a : as) = -- notImplemented 
+          returnToTerm a : go ts as
         go (t : ts) (App.VarArg x : as) =
           varTerm t x : go ts as
         go [] (_ : _) =

@@ -340,6 +340,7 @@ instance
 --   HasSubstValue ext primTy primVal (App.Return' ext ty term)
 --   where
 --   substValueWith b i e (App.Return {retTerm}) = substValueWith b i e retTerm
+  -- TODO: Handle App.Cont
 
 
 instance
@@ -350,7 +351,7 @@ instance
   HasSubstValue ext primTy primVal (App.Arg' ext ty term)
   where
   substValueWith b i e (App.VarArg x) = substValueWith b i e x
-  substValueWith b i e (App.TermArg t) = substValueWith b i e t
+  substValueWith b i e (App.TermArg t) = notImplemented --substValueWith b i e t
 
 instance
   ( HasSubstValue ext primTy primVal a,
