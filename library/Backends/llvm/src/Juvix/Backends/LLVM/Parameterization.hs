@@ -25,9 +25,9 @@ llvm =
     { Param.hasType = hasType,
       Param.builtinTypes = builtinTypes,
       Param.builtinValues = builtinValues,
-      Param.stringVal = Nothing,
+      Param.stringVal = const Nothing,
       Param.intVal = integerToRawPrimVal,
-      Param.floatVal = Nothing
+      Param.floatVal = const Nothing
     }
   where
     -- Typechecking of primitive values.
