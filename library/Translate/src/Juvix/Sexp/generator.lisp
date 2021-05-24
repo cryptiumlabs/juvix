@@ -311,3 +311,9 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 (generate-haskell "Infix" (repeat 3 "sexp") ":infix")
 
 (generate-haskell "OpenIn" (repeat 2 "sexp") ":open-in")
+
+(generate-haskell "Open" '("sexp") "open")
+
+(generate-haskell "Declare" '("sexp") "declare")
+
+(generate-haskell "Declaim" (repeat 2 "sexp") ":declaim")

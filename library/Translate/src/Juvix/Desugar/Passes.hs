@@ -395,22 +395,22 @@ moduleLetTransform xs = Sexp.foldPred xs (== ":let-mod") moduleToRecord
 -- | @combine@ - is the helper for transforming top level statements
 -- into expressions
 combine :: Sexp.T -> Sexp.T -> Sexp.T
-combine (form Sexp.:> name Sexp.:> args Sexp.:> body Sexp.:> Sexp.Nil) expression
-  | Sexp.isAtomNamed form ":defun" =
-    -- we crunch the xs in a list
-    Sexp.list [Sexp.atom "let", name, args, body, expression]
+combine form expression
+  | Just defun <- Structure.toDefun form =
+    Structure.Let (defun ^. name) (defun ^. args) (defun ^. body) expression
+      |> Structure.fromLet
+  | Just open <- Structure.toOpen form =
+    Structure.OpenIn (open ^. name) expression
+      |> Structure.fromOpenIn
+  | Just declare <- Structure.toDeclare form =
+    Structure.Declaim (declare ^. claim) expression
+      |> Structure.fromDeclaim
 combine (form Sexp.:> name Sexp.:> xs) expression
   | Sexp.isAtomNamed form "type" =
     Sexp.list [Sexp.atom ":let-type", name, xs, expression]
 combine (form Sexp.:> name Sexp.:> xs Sexp.:> Sexp.Nil) expression
   | Sexp.isAtomNamed form ":defsig" =
     Sexp.list [Sexp.atom ":let-sig", name, xs, expression]
-combine (form Sexp.:> declaration) expression
-  | Sexp.isAtomNamed form "declare" =
-    Sexp.list [Sexp.atom ":declaim", declaration, expression]
-combine (Sexp.List [form, open]) expression
-  | Sexp.isAtomNamed form "open" =
-    Sexp.list [Sexp.atom ":open-in", open, expression]
 combine (form Sexp.:> name Sexp.:> args Sexp.:> xs) expression
   | Sexp.isAtomNamed form ":defmodule" =
     -- Turn this into a let-module

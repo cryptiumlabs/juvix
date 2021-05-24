@@ -181,9 +181,25 @@ data Infix = Infix
   }
   deriving (Show)
 
+newtype Open = Open
+  { openName :: Sexp.T
+  }
+  deriving (Show)
+
 data OpenIn = OpenIn
   { openInName :: Sexp.T,
     openInBody :: Sexp.T
+  }
+  deriving (Show)
+
+newtype Declare = Declare
+  { declareClaim :: Sexp.T
+  }
+  deriving (Show)
+
+data Declaim = Declaim
+  { declaimClaim :: Sexp.T,
+    declaimBody :: Sexp.T
   }
   deriving (Show)
 
@@ -768,3 +784,81 @@ toOpenIn form
 fromOpenIn :: OpenIn -> Sexp.T
 fromOpenIn (OpenIn sexp1 sexp2) =
   Sexp.list [Sexp.atom nameOpenIn, sexp1, sexp2]
+
+----------------------------------------
+-- Open
+----------------------------------------
+
+nameOpen :: NameSymbol.T
+nameOpen = "open"
+
+isOpen :: Sexp.T -> Bool
+isOpen (Sexp.Cons form _) = Sexp.isAtomNamed form nameOpen
+isOpen _ = False
+
+toOpen :: Sexp.T -> Maybe Open
+toOpen form
+  | isOpen form =
+    case form of
+      _Open Sexp.:> sexp1 Sexp.:> Sexp.Nil ->
+        Open sexp1 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromOpen :: Open -> Sexp.T
+fromOpen (Open sexp1) =
+  Sexp.list [Sexp.atom nameOpen, sexp1]
+
+----------------------------------------
+-- Declare
+----------------------------------------
+
+nameDeclare :: NameSymbol.T
+nameDeclare = "declare"
+
+isDeclare :: Sexp.T -> Bool
+isDeclare (Sexp.Cons form _) = Sexp.isAtomNamed form nameDeclare
+isDeclare _ = False
+
+toDeclare :: Sexp.T -> Maybe Declare
+toDeclare form
+  | isDeclare form =
+    case form of
+      _Declare Sexp.:> sexp1 Sexp.:> Sexp.Nil ->
+        Declare sexp1 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromDeclare :: Declare -> Sexp.T
+fromDeclare (Declare sexp1) =
+  Sexp.list [Sexp.atom nameDeclare, sexp1]
+
+----------------------------------------
+-- Declaim
+----------------------------------------
+
+nameDeclaim :: NameSymbol.T
+nameDeclaim = ":declaim"
+
+isDeclaim :: Sexp.T -> Bool
+isDeclaim (Sexp.Cons form _) = Sexp.isAtomNamed form nameDeclaim
+isDeclaim _ = False
+
+toDeclaim :: Sexp.T -> Maybe Declaim
+toDeclaim form
+  | isDeclaim form =
+    case form of
+      _Declaim Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+        Declaim sexp1 sexp2 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromDeclaim :: Declaim -> Sexp.T
+fromDeclaim (Declaim sexp1 sexp2) =
+  Sexp.list [Sexp.atom nameDeclaim, sexp1, sexp2]

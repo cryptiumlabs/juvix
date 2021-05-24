@@ -29,3 +29,6 @@ Lens.makeLensesWith Lens.camelCaseFields ''NotPunned
 Lens.makeLensesWith Lens.camelCaseFields ''RecordNoPunned
 Lens.makeLensesWith Lens.camelCaseFields ''Infix
 Lens.makeLensesWith Lens.camelCaseFields ''OpenIn
+Lens.makeLensesWith Lens.camelCaseFields ''Open
+Lens.makeLensesWith Lens.camelCaseFields ''Declare
+Lens.makeLensesWith Lens.camelCaseFields ''Declaim
