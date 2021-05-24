@@ -307,3 +307,7 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 (generate-haskell "RecordNoPunned" '("notPunnedGroup") ":record-no-pun"
                   :list-star t
                   :un-grouped t)
+
+(generate-haskell "Infix" (repeat 3 "sexp") ":infix")
+
+(generate-haskell "OpenIn" (repeat 2 "sexp") ":open-in")

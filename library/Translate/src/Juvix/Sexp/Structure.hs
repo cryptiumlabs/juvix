@@ -173,6 +173,20 @@ newtype RecordNoPunned = RecordNoPunned
   }
   deriving (Show)
 
+-- | @Infix@ represents an infix function
+data Infix = Infix
+  { infixOp :: Sexp.T,
+    infixLeft :: Sexp.T,
+    infixRight :: Sexp.T
+  }
+  deriving (Show)
+
+data OpenIn = OpenIn
+  { openInName :: Sexp.T,
+    openInBody :: Sexp.T
+  }
+  deriving (Show)
+
 --------------------------------------------------------------------------------
 -- Converter functions
 -- The format for these are
@@ -702,3 +716,55 @@ toRecordNoPunned form
 fromRecordNoPunned :: RecordNoPunned -> Sexp.T
 fromRecordNoPunned (RecordNoPunned notPunnedGroup1) =
   Sexp.listStar [Sexp.atom nameRecordNoPunned, fromNotPunnedGroup notPunnedGroup1]
+
+----------------------------------------
+-- Infix
+----------------------------------------
+
+nameInfix :: NameSymbol.T
+nameInfix = ":infix"
+
+isInfix :: Sexp.T -> Bool
+isInfix (Sexp.Cons form _) = Sexp.isAtomNamed form nameInfix
+isInfix _ = False
+
+toInfix :: Sexp.T -> Maybe Infix
+toInfix form
+  | isInfix form =
+    case form of
+      _Infix Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> Sexp.Nil ->
+        Infix sexp1 sexp2 sexp3 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromInfix :: Infix -> Sexp.T
+fromInfix (Infix sexp1 sexp2 sexp3) =
+  Sexp.list [Sexp.atom nameInfix, sexp1, sexp2, sexp3]
+
+----------------------------------------
+-- OpenIn
+----------------------------------------
+
+nameOpenIn :: NameSymbol.T
+nameOpenIn = ":open-in"
+
+isOpenIn :: Sexp.T -> Bool
+isOpenIn (Sexp.Cons form _) = Sexp.isAtomNamed form nameOpenIn
+isOpenIn _ = False
+
+toOpenIn :: Sexp.T -> Maybe OpenIn
+toOpenIn form
+  | isOpenIn form =
+    case form of
+      _OpenIn Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+        OpenIn sexp1 sexp2 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromOpenIn :: OpenIn -> Sexp.T
+fromOpenIn (OpenIn sexp1 sexp2) =
+  Sexp.list [Sexp.atom nameOpenIn, sexp1, sexp2]

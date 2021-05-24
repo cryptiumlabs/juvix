@@ -27,3 +27,5 @@ Lens.makeLensesWith Lens.camelCaseFields ''Record
 Lens.makeLensesWith Lens.camelCaseFields ''Punned
 Lens.makeLensesWith Lens.camelCaseFields ''NotPunned
 Lens.makeLensesWith Lens.camelCaseFields ''RecordNoPunned
+Lens.makeLensesWith Lens.camelCaseFields ''Infix
+Lens.makeLensesWith Lens.camelCaseFields ''OpenIn

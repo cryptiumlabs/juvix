@@ -1,6 +1,6 @@
 module Juvix.Contextify.Passes (resolveModule, inifixSoloPass) where
 
-import Control.Lens hiding ((|>))
+import Control.Lens hiding (op, (|>))
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Contextify.Environment as Env
 import qualified Juvix.Contextify.InfixPrecedence.ShuntYard as Shunt
@@ -9,17 +9,19 @@ import qualified Juvix.Core.Common.Context as Context
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp.Structure as Structure
+import Juvix.Sexp.Structure.Lens
 import qualified StmContainers.Map as STM
 
 resolveModule ::
   ExpressionIO m => Env.SexpContext -> m Env.SexpContext
 resolveModule context =
-  Env.passContextSingle context (\x -> x == ":atom" || x == ":open-in") openResolution
+  Env.passContextSingle context (\x -> x == ":atom" || x == Structure.nameOpenIn) openResolution
 
 inifixSoloPass ::
   Expression m => Env.SexpContext -> m Env.SexpContext
 inifixSoloPass context =
-  Env.passContextSingle context (== ":infix") infixConversion
+  Env.passContextSingle context (== Structure.nameInfix) infixConversion
 
 type ExpressionIO m = (Env.ErrS m, Env.HasClosure m, MonadIO m)
 
@@ -27,10 +29,11 @@ type Expression m = (Env.ErrS m, Env.HasClosure m)
 
 openResolution ::
   ExpressionIO m => Context.T term ty sumRep -> Sexp.Atom -> Sexp.T -> m Sexp.T
-openResolution _ctx a (Sexp.List [_open, body])
-  | Sexp.isAtomNamed (Sexp.Atom a) ":open-in" =
-    pure body
-openResolution ctx a xs = atomResolution ctx a xs
+openResolution ctx a cdr
+  | Just open <- Structure.toOpenIn (Sexp.Cons (Sexp.Atom a) cdr) =
+    pure (open ^. body)
+  | otherwise =
+    atomResolution ctx a cdr
 
 atomResolution ::
   ExpressionIO m => Context.T term ty sumRep -> Sexp.Atom -> Sexp.T -> m Sexp.T
@@ -72,20 +75,21 @@ groupInfix ::
   Context.T t y s ->
   Sexp.T ->
   m (NonEmpty (Shunt.PredOrEle Sexp.T Sexp.T))
-groupInfix context (Sexp.List [name, op, l, r])
-  | Sexp.isAtomNamed name ":infix",
-    Just Sexp.A {atomName = opSym} <- Sexp.atomFromT op = do
+groupInfix context xs
+  | Just inf <- Structure.toInfix xs,
+    Just Sexp.A {atomName = opSym} <- Sexp.atomFromT (inf ^. op) = do
     prec <- Env.lookupPrecedence opSym context
-    moreInfixs <- groupInfix context r
-    precedenceConversion op prec
+    moreInfixs <- groupInfix context (inf ^. right)
+    precedenceConversion (inf ^. op) prec
       |> Shunt.Precedence
       |> flip NonEmpty.cons moreInfixs
       -- we cons l and not r, as "3 + 4 + 5 * 6"
       -- parses as "3 + (4 + (5 * 6))"
       -- thus the left is always an element
-      |> NonEmpty.cons (Shunt.Ele l)
+      |> NonEmpty.cons (Shunt.Ele (inf ^. left))
       |> pure
-groupInfix _context a = pure (Shunt.Ele a :| [])
+  | otherwise =
+    pure (Shunt.Ele xs :| [])
 
 precedenceConversion ::
   Sexp.T -> Context.Precedence -> Shunt.Precedence Sexp.T
