@@ -5,8 +5,8 @@
   + Changes =Sexp.flatten= to be a full flatten
   + Fixes a small bug in =Sexp.foldr1= where it behaves poorly with
     dotted lists
-    * creates a test to accommodate for the new change
-  + Addes dotted list syntax to the show.
+    * Tests the new behavior
+  + Adds dotted list syntax to the show.
     #+begin_src haskell
       λ> (Cons (atom "hi") (atom "hi"))
       ("hi" . "hi")
