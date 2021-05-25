@@ -219,7 +219,7 @@ modulesWorkAsExpected =
 
     formComplicated =
       Sexp.parse
-      "(:defmodule f ()\
+        "(:defmodule f ()\
         \    (:defmodule b ()\
         \       (:defun a () 2))\
         \    (type bazzz () (Foo (:record-d a int b int)) (Snash))\
