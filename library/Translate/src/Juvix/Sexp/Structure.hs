@@ -332,7 +332,7 @@ fromType (Type sexp1 sexp2 sexp3) =
 ----------------------------------------
 
 nameLetType :: NameSymbol.T
-nameLetType = "let-type"
+nameLetType = ":let-type"
 
 isLetType :: Sexp.T -> Bool
 isLetType (Sexp.Cons form _) = Sexp.isAtomNamed form nameLetType

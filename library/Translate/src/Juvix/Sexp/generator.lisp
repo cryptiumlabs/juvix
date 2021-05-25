@@ -267,7 +267,7 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 
 (generate-haskell "Type" (repeat 3 "sexp") "type" :list-star t)
 
-(generate-haskell "LetType" (repeat 4 "sexp") "let-type")
+(generate-haskell "LetType" (repeat 4 "sexp") ":let-type")
 
 (generate-haskell "Defun" '("sexp" "sexp" "sexp") ":defun")
 
