@@ -453,7 +453,7 @@ grabNames (form Sexp.:> name Sexp.:> _) acc
       || Sexp.isAtomNamed form ":defsig",
     Just name <- Sexp.atomFromT name =
     name : acc
-  | Sexp.isAtomNamed (Sexp.car name) "type",
+  | Sexp.isAtomNamed form "type",
     Just name <- Sexp.atomFromT (Sexp.car name) =
     name : acc
 grabNames _ acc = acc

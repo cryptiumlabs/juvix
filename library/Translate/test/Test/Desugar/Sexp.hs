@@ -195,7 +195,10 @@ modulesWorkAsExpected =
     "module desugar tests"
     [ T.testCase
         "basic expnasion expansion work"
-        (expected T.@=? fmap Desugar.moduleTransform form)
+        (expected T.@=? fmap Desugar.moduleTransform form),
+      T.testCase
+        "Type expansion works"
+        (expectedComplicated T.@=? fmap Desugar.moduleTransform formComplicated)
     ]
   where
     form =
@@ -213,6 +216,25 @@ modulesWorkAsExpected =
         \                           (Snash))\
         \         (let fi () 3\
         \            (:record (b) (bazzz) (fi))))))"
+
+    formComplicated =
+      Sexp.parse
+      "(:defmodule f ()\
+        \    (:defmodule b ()\
+        \       (:defun a () 2))\
+        \    (type bazzz () (Foo (:record-d a int b int)) (Snash))\
+        \    (type (foo :type (:infix -> typ (:infix -> typ typ))) (x y z)\
+        \       (Foo a b c))\
+        \    (:defun fi () 3))"
+    expectedComplicated =
+      Sexp.parse
+        "(:defun f ()\
+        \   (:let-mod b () ((:defun a () 2))\
+        \      (:let-type bazzz (() (Foo (:record-d a int b int))\
+        \                           (Snash))\
+        \ (:let-type (foo :type (:infix -> typ (:infix -> typ typ))) \
+        \            ((x y z) (Foo a b c))\
+        \    (let fi () 3 (:record (b) (bazzz) (fi) (foo)))))))"
 
 modLetWorkAsExpected :: T.TestTree
 modLetWorkAsExpected =

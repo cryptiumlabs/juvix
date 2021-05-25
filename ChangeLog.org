@@ -1,5 +1,9 @@
 * Changelog for Juvix
 ** 0.1.0.3
+- Fix: A small bug where modules would drop types with an explicit
+  signature
+  + Test: Creates a test in =Test.Desugar.Sexp= under the
+    =moduleWorksAsExpected= group
 - Changes over =Juvix.Contextify.Passes= structure to use the
   S-expression generator instead of matching on the syntax directly
 ** 0.1.0.2
