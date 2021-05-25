@@ -363,13 +363,11 @@ removePunnedRecords xs = Sexp.foldPred xs (== Structure.nameRecord) removePunned
 moduleTransform :: Sexp.T -> Sexp.T
 moduleTransform xs = Sexp.foldPred xs (== ":defmodule") moduleToRecord
   where
+    combineIntoRecord body =
+      Sexp.foldr combine (generatedRecord body) body
     moduleToRecord atom (name Sexp.:> args Sexp.:> body) =
-      Sexp.list
-        [ Sexp.atom ":defun",
-          name,
-          args,
-          ignoreCond body (\b -> Sexp.foldr combine (generatedRecord b) b)
-        ]
+      Structure.Defun name args (ignoreCond body combineIntoRecord)
+        |> Structure.fromDefun
         |> Sexp.addMetaToCar atom
     moduleToRecord _ _ = error "malformed defmodule"
 
@@ -377,14 +375,11 @@ moduleTransform xs = Sexp.foldPred xs (== ":defmodule") moduleToRecord
 moduleLetTransform :: Sexp.T -> Sexp.T
 moduleLetTransform xs = Sexp.foldPred xs (== ":let-mod") moduleToRecord
   where
+    combineIntoRecord body =
+      Sexp.foldr combine (generatedRecord body) body
     moduleToRecord atom (name Sexp.:> args Sexp.:> body Sexp.:> rest) =
-      Sexp.list
-        [ Sexp.atom "let",
-          name,
-          args,
-          ignoreCond body (\b -> Sexp.foldr combine (generatedRecord b) b),
-          rest
-        ]
+      Structure.Let name args (ignoreCond body combineIntoRecord) rest
+        |> Structure.fromLet
         |> Sexp.addMetaToCar atom
     moduleToRecord _ _ = error "malformed let-mod"
 
@@ -405,12 +400,12 @@ combine form expression
   | Just declare <- Structure.toDeclare form =
     Structure.Declaim (declare ^. claim) expression
       |> Structure.fromDeclaim
-combine (form Sexp.:> name Sexp.:> xs) expression
-  | Sexp.isAtomNamed form "type" =
-    Sexp.list [Sexp.atom ":let-type", name, xs, expression]
-combine (form Sexp.:> name Sexp.:> xs Sexp.:> Sexp.Nil) expression
-  | Sexp.isAtomNamed form ":defsig" =
-    Sexp.list [Sexp.atom ":let-sig", name, xs, expression]
+  | Just typ <- Structure.toType form =
+    Structure.LetType (typ ^. nameAndSig) (typ ^. args) (typ ^. body) expression
+      |> Structure.fromLetType
+  | Just signature <- Structure.toSignature form =
+    Structure.LetSignature (signature ^. name) (signature ^. sig) expression
+      |> Structure.fromLetSignature
 combine (form Sexp.:> name Sexp.:> args Sexp.:> xs) expression
   | Sexp.isAtomNamed form ":defmodule" =
     -- Turn this into a let-module
@@ -425,7 +420,7 @@ combine _ expression = expression
 -- | @ignoreCond@ gets past the annoying cond cells for modules
 ignoreCond :: Sexp.T -> (Sexp.T -> Sexp.T) -> Sexp.T
 ignoreCond ((form Sexp.:> xs) Sexp.:> Sexp.Nil) trans
-  | Sexp.isAtomNamed form ":cond" =
+  | Sexp.isAtomNamed form Structure.nameCond =
     Sexp.listStar [form, Sexp.foldr comb Sexp.Nil xs]
   where
     comb (pred Sexp.:> body) acc =
@@ -435,9 +430,9 @@ ignoreCond xs trans = trans xs
 
 -- | @generatedRecord@ - record generation
 generatedRecord :: Sexp.T -> Sexp.T
-generatedRecord b =
-  Sexp.list
-    (Sexp.atom ":record" : fmap (\x -> Sexp.list [Sexp.Atom x]) (names b))
+generatedRecord body =
+  Structure.Record (fmap (Structure.Pun . Structure.Punned . Sexp.Atom) (names body))
+    |> Structure.fromRecord
 
 -- | @names@ - folding @grabNames@ that uniquifyies the result to
 -- achieve an unique list
@@ -447,13 +442,13 @@ names body = Sexp.foldr grabNames [] body |> Set.fromList |> Set.toList
 -- | @grabNames@ - responsible for grabbing the names out of top levels
 grabNames :: Sexp.T -> [Sexp.Atom] -> [Sexp.Atom]
 grabNames (form Sexp.:> name Sexp.:> _) acc
-  | Sexp.isAtomNamed form ":defun"
-      || Sexp.isAtomNamed form "type"
+  | Sexp.isAtomNamed form Structure.nameDefun
+      || Sexp.isAtomNamed form Structure.nameType
       || Sexp.isAtomNamed form ":defmodule"
-      || Sexp.isAtomNamed form ":defsig",
+      || Sexp.isAtomNamed form Structure.nameSignature,
     Just name <- Sexp.atomFromT name =
     name : acc
-  | Sexp.isAtomNamed form "type",
+  | Sexp.isAtomNamed form Structure.nameType,
     Just name <- Sexp.atomFromT (Sexp.car name) =
     name : acc
 grabNames _ acc = acc

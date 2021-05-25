@@ -265,6 +265,10 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 
 (generate-haskell "ArgBody" '("sexp" "sexp") nil)
 
+(generate-haskell "Type" (repeat 3 "sexp") "type" :list-star t)
+
+(generate-haskell "LetType" (repeat 4 "sexp") "let-type")
+
 (generate-haskell "Defun" '("sexp" "sexp" "sexp") ":defun")
 
 (generate-haskell "DefunMatch" '("sexp" "argBody") ":defun-match" :list-star t)
@@ -272,6 +276,8 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 (generate-haskell "DefunSigMatch" '("sexp" "sexp" "argBody") ":defsig-match" :list-star t)
 
 (generate-haskell "Signature" '("sexp" "sexp") ":defsig")
+
+(generate-haskell "LetSignature" (repeat 3 "sexp") ":let-sig")
 
 (generate-haskell "Let" (repeat 4 "sexp") "let")
 

@@ -29,7 +29,7 @@
 --        can automatically fill in this meta data
 module Juvix.Sexp.Structure where
 
-import Juvix.Library
+import Juvix.Library hiding (Type)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import Juvix.Sexp.Structure.Helpers
@@ -47,6 +47,19 @@ data Defun = Defun
 data DefunMatch = DefunMatch
   { defunMatchName :: Sexp.T,
     defunMatchArgs :: [ArgBody]
+  }
+  deriving (Show)
+
+-- | @Type@ is the type declaration structure
+data Type = Type
+  { -- TODO ∷ we should really have a field the signature currently we
+    -- don't really support that without doing it by hand. Maybe our
+    -- generator should help here, or we should have a way of talking
+    -- about named arguments somehow, and unfolding the slots in a
+    -- way....
+    typeNameAndSig :: Sexp.T,
+    typeArgs :: Sexp.T,
+    typeBody :: Sexp.T
   }
   deriving (Show)
 
@@ -95,6 +108,22 @@ data DefunSigMatch = DefunSigMatch
 data Signature = Signature
   { signatureName :: Sexp.T,
     signatureSig :: Sexp.T
+  }
+  deriving (Show)
+
+data LetSignature = LetSignature
+  { letSignatureName :: Sexp.T,
+    letSignatureSig :: Sexp.T,
+    letSignatureRest :: Sexp.T
+  }
+  deriving (Show)
+
+-- | @LetType@ is the let-type form of the language
+data LetType = LetType
+  { letTypeNameAndSig :: Sexp.T,
+    letTypeArgs :: Sexp.T,
+    letTypeBody :: Sexp.T,
+    letTypeRest :: Sexp.T
   }
   deriving (Show)
 
@@ -273,6 +302,58 @@ fromArgBody (ArgBody sexp1 sexp2) =
   Sexp.list [sexp1, sexp2]
 
 ----------------------------------------
+-- Type
+----------------------------------------
+
+nameType :: NameSymbol.T
+nameType = "type"
+
+isType :: Sexp.T -> Bool
+isType (Sexp.Cons form _) = Sexp.isAtomNamed form nameType
+isType _ = False
+
+toType :: Sexp.T -> Maybe Type
+toType form
+  | isType form =
+    case form of
+      _Type Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 ->
+        Type sexp1 sexp2 sexp3 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromType :: Type -> Sexp.T
+fromType (Type sexp1 sexp2 sexp3) =
+  Sexp.listStar [Sexp.atom nameType, sexp1, sexp2, sexp3]
+
+----------------------------------------
+-- LetType
+----------------------------------------
+
+nameLetType :: NameSymbol.T
+nameLetType = "let-type"
+
+isLetType :: Sexp.T -> Bool
+isLetType (Sexp.Cons form _) = Sexp.isAtomNamed form nameLetType
+isLetType _ = False
+
+toLetType :: Sexp.T -> Maybe LetType
+toLetType form
+  | isLetType form =
+    case form of
+      _LetType Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> sexp4 Sexp.:> Sexp.Nil ->
+        LetType sexp1 sexp2 sexp3 sexp4 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromLetType :: LetType -> Sexp.T
+fromLetType (LetType sexp1 sexp2 sexp3 sexp4) =
+  Sexp.list [Sexp.atom nameLetType, sexp1, sexp2, sexp3, sexp4]
+
+----------------------------------------
 -- Defun
 ----------------------------------------
 
@@ -377,6 +458,32 @@ toSignature form
 fromSignature :: Signature -> Sexp.T
 fromSignature (Signature sexp1 sexp2) =
   Sexp.list [Sexp.atom nameSignature, sexp1, sexp2]
+
+----------------------------------------
+-- LetSignature
+----------------------------------------
+
+nameLetSignature :: NameSymbol.T
+nameLetSignature = ":let-sig"
+
+isLetSignature :: Sexp.T -> Bool
+isLetSignature (Sexp.Cons form _) = Sexp.isAtomNamed form nameLetSignature
+isLetSignature _ = False
+
+toLetSignature :: Sexp.T -> Maybe LetSignature
+toLetSignature form
+  | isLetSignature form =
+    case form of
+      _LetSignature Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> Sexp.Nil ->
+        LetSignature sexp1 sexp2 sexp3 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromLetSignature :: LetSignature -> Sexp.T
+fromLetSignature (LetSignature sexp1 sexp2 sexp3) =
+  Sexp.list [Sexp.atom nameLetSignature, sexp1, sexp2, sexp3]
 
 ----------------------------------------
 -- Let

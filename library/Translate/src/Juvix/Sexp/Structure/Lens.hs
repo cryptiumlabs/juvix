@@ -32,3 +32,6 @@ Lens.makeLensesWith Lens.camelCaseFields ''OpenIn
 Lens.makeLensesWith Lens.camelCaseFields ''Open
 Lens.makeLensesWith Lens.camelCaseFields ''Declare
 Lens.makeLensesWith Lens.camelCaseFields ''Declaim
+Lens.makeLensesWith Lens.camelCaseFields ''Type
+Lens.makeLensesWith Lens.camelCaseFields ''LetType
+Lens.makeLensesWith Lens.camelCaseFields ''LetSignature
