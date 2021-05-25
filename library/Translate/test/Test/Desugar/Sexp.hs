@@ -212,7 +212,7 @@ modulesWorkAsExpected =
       Sexp.parse
         "(:defun f ()\
         \   (:let-mod b () ((:defun a () 2))\
-        \      (:let-type bazzz (() (Foo (:record-d a int b int))\
+        \      (:let-type bazzz () ((Foo (:record-d a int b int))\
         \                           (Snash))\
         \         (let fi () 3\
         \            (:record (b) (bazzz) (fi))))))"
@@ -230,10 +230,10 @@ modulesWorkAsExpected =
       Sexp.parse
         "(:defun f ()\
         \   (:let-mod b () ((:defun a () 2))\
-        \      (:let-type bazzz (() (Foo (:record-d a int b int))\
+        \      (:let-type bazzz () ((Foo (:record-d a int b int))\
         \                           (Snash))\
         \ (:let-type (foo :type (:infix -> typ (:infix -> typ typ))) \
-        \            ((x y z) (Foo a b c))\
+        \            (x y z) ((Foo a b c))\
         \    (let fi () 3 (:record (b) (bazzz) (fi) (foo)))))))"
 
 modLetWorkAsExpected :: T.TestTree
@@ -256,6 +256,6 @@ modLetWorkAsExpected =
         "(:defun foo ()\
         \   (let foo ()\
         \         (let bar () 3 \
-        \            (:let-type foo (() (XTZ))\
+        \            (:let-type foo () ((XTZ))\
         \               (:record (bar) (foo))))\
         \     (foo)))"
