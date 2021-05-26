@@ -326,4 +326,4 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 
 (generate-haskell "DefModule" (repeat 3 "sexp") ":defmodule" :list-star t)
 
-(generate-haskell "DefModule" (repeat 3 "sexp") ":defmodule" :list-star t)
+(generate-haskell "LetModule" (repeat 4 "sexp") ":let-mod")

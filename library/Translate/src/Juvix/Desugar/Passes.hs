@@ -367,21 +367,26 @@ moduleTransform xs = Sexp.foldPred xs (== Structure.nameDefModule) moduleToRecor
       Sexp.foldr combine (generatedRecord body) body
     moduleToRecord atom cdr
       | Just mod <- Structure.toDefModule (Sexp.Atom atom Sexp.:> cdr) =
-      Structure.Defun (mod ^. name) (mod ^. args) (ignoreCond (mod ^. body) intoRecord)
-        |> Structure.fromDefun
-        |> Sexp.addMetaToCar atom
+        Structure.Defun (mod ^. name) (mod ^. args) (ignoreCond (mod ^. body) intoRecord)
+          |> Structure.fromDefun
+          |> Sexp.addMetaToCar atom
       | otherwise = error "malformed defmodule"
 
 -- | @moduleLetTransform@ - See @moduleTransform@'s comment
 moduleLetTransform :: Sexp.T -> Sexp.T
-moduleLetTransform xs = Sexp.foldPred xs (== ":let-mod") moduleToRecord
+moduleLetTransform xs = Sexp.foldPred xs (== Structure.nameLetModule) moduleToRecord
   where
     combineIntoRecord body =
       Sexp.foldr combine (generatedRecord body) body
-    moduleToRecord atom (name Sexp.:> args Sexp.:> body Sexp.:> rest) =
-      Structure.Let name args (ignoreCond body combineIntoRecord) rest
-        |> Structure.fromLet
-        |> Sexp.addMetaToCar atom
+    moduleToRecord atom cdr
+      | Just mod <- Structure.toLetModule (Sexp.Atom atom Sexp.:> cdr) =
+        Structure.Let
+          (mod ^. name)
+          (mod ^. args)
+          (ignoreCond (mod ^. body) combineIntoRecord)
+          (mod ^. body)
+          |> Structure.fromLet
+          |> Sexp.addMetaToCar atom
     moduleToRecord _ _ = error "malformed let-mod"
 
 ----------------------------------------

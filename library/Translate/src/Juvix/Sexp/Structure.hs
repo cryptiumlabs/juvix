@@ -1012,3 +1012,29 @@ toDefModule form
 fromDefModule :: DefModule -> Sexp.T
 fromDefModule (DefModule sexp1 sexp2 sexp3) =
   Sexp.listStar [Sexp.atom nameDefModule, sexp1, sexp2, sexp3]
+
+----------------------------------------
+-- LetModule
+----------------------------------------
+
+nameLetModule :: NameSymbol.T
+nameLetModule = ":let-mod"
+
+isLetModule :: Sexp.T -> Bool
+isLetModule (Sexp.Cons form _) = Sexp.isAtomNamed form nameLetModule
+isLetModule _ = False
+
+toLetModule :: Sexp.T -> Maybe LetModule
+toLetModule form
+  | isLetModule form =
+    case form of
+      _LetModule Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> sexp4 Sexp.:> Sexp.Nil ->
+        LetModule sexp1 sexp2 sexp3 sexp4 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromLetModule :: LetModule -> Sexp.T
+fromLetModule (LetModule sexp1 sexp2 sexp3 sexp4) =
+  Sexp.list [Sexp.atom nameLetModule, sexp1, sexp2, sexp3, sexp4]
