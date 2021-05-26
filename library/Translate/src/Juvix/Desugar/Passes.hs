@@ -409,29 +409,29 @@ combine form expression
   | Just typ <- Structure.toType form =
     Structure.LetType (typ ^. nameAndSig) (typ ^. args) (typ ^. body) expression
       |> Structure.fromLetType
-  | Just signature <- Structure.toSignature form =
-    Structure.LetSignature (signature ^. name) (signature ^. sig) expression
+  | Just signature' <- Structure.toSignature form =
+    Structure.LetSignature (signature' ^. name) (signature' ^. sig) expression
       |> Structure.fromLetSignature
-combine (form Sexp.:> name Sexp.:> args Sexp.:> xs) expression
-  | Sexp.isAtomNamed form ":defmodule" =
-    -- Turn this into a let-module
-    if
-        | Sexp.isAtomNamed (Sexp.car xs) ":cond" ->
-          Sexp.list [Sexp.atom ":let-mod", name, args, Sexp.car xs, expression]
-        | otherwise ->
-          Sexp.list [Sexp.atom ":let-mod", name, args, xs, expression]
+  -- TODO ∷ cleanup this generation, a bit
+  | Just mod <- Structure.toDefModule form =
+    let cond = Sexp.car (mod ^. body)
+        newBody
+          | Sexp.isAtomNamed cond Structure.nameCond = cond
+          | otherwise = mod ^. body
+     in Structure.LetModule (mod ^. name) (mod ^. args) newBody expression
+          |> Structure.fromLetModule
 -- ignore other forms
 combine _ expression = expression
 
 -- | @ignoreCond@ gets past the annoying cond cells for modules
 ignoreCond :: Sexp.T -> (Sexp.T -> Sexp.T) -> Sexp.T
-ignoreCond ((form Sexp.:> xs) Sexp.:> Sexp.Nil) trans
-  | Sexp.isAtomNamed form Structure.nameCond =
-    Sexp.listStar [form, Sexp.foldr comb Sexp.Nil xs]
+ignoreCond (form Sexp.:> Sexp.Nil) trans
+  | Just cond <- Structure.toCond form =
+    Sexp.listStar [form, foldr comb Sexp.Nil (cond ^. entailments)]
   where
-    comb (pred Sexp.:> body) acc =
-      Sexp.listStar [Sexp.list [pred, trans body], acc]
-    comb _ acc = acc
+    comb predAns acc =
+      Sexp.listStar
+        [Sexp.list [predAns ^. predicate, trans (predAns ^. answer)], acc]
 ignoreCond xs trans = trans xs
 
 -- | @generatedRecord@ - record generation
@@ -450,7 +450,7 @@ grabNames :: Sexp.T -> [Sexp.Atom] -> [Sexp.Atom]
 grabNames (form Sexp.:> name Sexp.:> _) acc
   | Sexp.isAtomNamed form Structure.nameDefun
       || Sexp.isAtomNamed form Structure.nameType
-      || Sexp.isAtomNamed form ":defmodule"
+      || Sexp.isAtomNamed form Structure.nameDefModule
       || Sexp.isAtomNamed form Structure.nameSignature,
     Just name <- Sexp.atomFromT name =
     name : acc
