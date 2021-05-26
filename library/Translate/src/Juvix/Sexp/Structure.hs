@@ -317,6 +317,7 @@ toArgBody form =
 fromArgBody :: ArgBody -> Sexp.T
 fromArgBody (ArgBody sexp1 sexp2) =
   Sexp.list [sexp1, sexp2]
+
 ----------------------------------------
 -- Type
 ----------------------------------------
@@ -342,6 +343,7 @@ toType form
 fromType :: Type -> Sexp.T
 fromType (Type sexp1 sexp2 sexp3) =
   Sexp.listStar [Sexp.atom nameType, sexp1, sexp2, sexp3]
+
 ----------------------------------------
 -- LetType
 ----------------------------------------
@@ -367,6 +369,7 @@ toLetType form
 fromLetType :: LetType -> Sexp.T
 fromLetType (LetType sexp1 sexp2 sexp3 sexp4) =
   Sexp.list [Sexp.atom nameLetType, sexp1, sexp2, sexp3, sexp4]
+
 ----------------------------------------
 -- Defun
 ----------------------------------------
@@ -392,6 +395,7 @@ toDefun form
 fromDefun :: Defun -> Sexp.T
 fromDefun (Defun sexp1 sexp2 sexp3) =
   Sexp.list [Sexp.atom nameDefun, sexp1, sexp2, sexp3]
+
 ----------------------------------------
 -- DefunMatch
 ----------------------------------------
@@ -418,6 +422,7 @@ toDefunMatch form
 fromDefunMatch :: DefunMatch -> Sexp.T
 fromDefunMatch (DefunMatch sexp1 argBody2) =
   Sexp.listStar [Sexp.atom nameDefunMatch, sexp1, fromArgBody `toStarList` argBody2]
+
 ----------------------------------------
 -- DefunSigMatch
 ----------------------------------------
@@ -444,6 +449,7 @@ toDefunSigMatch form
 fromDefunSigMatch :: DefunSigMatch -> Sexp.T
 fromDefunSigMatch (DefunSigMatch sexp1 sexp2 argBody3) =
   Sexp.listStar [Sexp.atom nameDefunSigMatch, sexp1, sexp2, fromArgBody `toStarList` argBody3]
+
 ----------------------------------------
 -- Signature
 ----------------------------------------
@@ -469,6 +475,7 @@ toSignature form
 fromSignature :: Signature -> Sexp.T
 fromSignature (Signature sexp1 sexp2) =
   Sexp.list [Sexp.atom nameSignature, sexp1, sexp2]
+
 ----------------------------------------
 -- LetSignature
 ----------------------------------------
@@ -494,6 +501,7 @@ toLetSignature form
 fromLetSignature :: LetSignature -> Sexp.T
 fromLetSignature (LetSignature sexp1 sexp2 sexp3) =
   Sexp.list [Sexp.atom nameLetSignature, sexp1, sexp2, sexp3]
+
 ----------------------------------------
 -- Let
 ----------------------------------------
@@ -519,6 +527,7 @@ toLet form
 fromLet :: Let -> Sexp.T
 fromLet (Let sexp1 sexp2 sexp3 sexp4) =
   Sexp.list [Sexp.atom nameLet, sexp1, sexp2, sexp3, sexp4]
+
 ----------------------------------------
 -- LetMatch
 ----------------------------------------
@@ -545,6 +554,7 @@ toLetMatch form
 fromLetMatch :: LetMatch -> Sexp.T
 fromLetMatch (LetMatch sexp1 argBodys2 sexp3) =
   Sexp.list [Sexp.atom nameLetMatch, sexp1, fromArgBodys argBodys2, sexp3]
+
 ----------------------------------------
 -- PredAns
 ----------------------------------------
@@ -560,6 +570,7 @@ toPredAns form =
 fromPredAns :: PredAns -> Sexp.T
 fromPredAns (PredAns sexp1 sexp2) =
   Sexp.list [sexp1, sexp2]
+
 ----------------------------------------
 -- Cond
 ----------------------------------------
@@ -586,6 +597,7 @@ toCond form
 fromCond :: Cond -> Sexp.T
 fromCond (Cond predAns1) =
   Sexp.listStar [Sexp.atom nameCond, fromPredAns `toStarList` predAns1]
+
 ----------------------------------------
 -- If
 ----------------------------------------
@@ -611,6 +623,7 @@ toIf form
 fromIf :: If -> Sexp.T
 fromIf (If sexp1 sexp2 sexp3) =
   Sexp.list [Sexp.atom nameIf, sexp1, sexp2, sexp3]
+
 ----------------------------------------
 -- IfNoElse
 ----------------------------------------
@@ -636,6 +649,7 @@ toIfNoElse form
 fromIfNoElse :: IfNoElse -> Sexp.T
 fromIfNoElse (IfNoElse sexp1 sexp2) =
   Sexp.list [Sexp.atom nameIfNoElse, sexp1, sexp2]
+
 ----------------------------------------
 -- DeconBody
 ----------------------------------------
@@ -651,6 +665,7 @@ toDeconBody form =
 fromDeconBody :: DeconBody -> Sexp.T
 fromDeconBody (DeconBody sexp1 sexp2) =
   Sexp.list [sexp1, sexp2]
+
 ----------------------------------------
 -- Case
 ----------------------------------------
@@ -677,6 +692,7 @@ toCase form
 fromCase :: Case -> Sexp.T
 fromCase (Case sexp1 deconBody2) =
   Sexp.listStar [Sexp.atom nameCase, sexp1, fromDeconBody `toStarList` deconBody2]
+
 ----------------------------------------
 -- Do
 ----------------------------------------
@@ -702,6 +718,7 @@ toDo form
 fromDo :: Do -> Sexp.T
 fromDo (Do sexp1) =
   Sexp.listStar [Sexp.atom nameDo, sexp1]
+
 ----------------------------------------
 -- Arrow
 ----------------------------------------
@@ -727,6 +744,7 @@ toArrow form
 fromArrow :: Arrow -> Sexp.T
 fromArrow (Arrow sexp1 sexp2) =
   Sexp.list [Sexp.atom nameArrow, sexp1, sexp2]
+
 ----------------------------------------
 -- Lambda
 ----------------------------------------
@@ -752,6 +770,7 @@ toLambda form
 fromLambda :: Lambda -> Sexp.T
 fromLambda (Lambda sexp1 sexp2) =
   Sexp.list [Sexp.atom nameLambda, sexp1, sexp2]
+
 ----------------------------------------
 -- Punned
 ----------------------------------------
@@ -767,6 +786,7 @@ toPunned form =
 fromPunned :: Punned -> Sexp.T
 fromPunned (Punned sexp1) =
   Sexp.list [sexp1]
+
 ----------------------------------------
 -- NotPunned
 ----------------------------------------
@@ -782,6 +802,7 @@ toNotPunned form =
 fromNotPunned :: NotPunned -> Sexp.T
 fromNotPunned (NotPunned sexp1 sexp2) =
   Sexp.list [sexp1, sexp2]
+
 ----------------------------------------
 -- Record
 ----------------------------------------
@@ -808,6 +829,7 @@ toRecord form
 fromRecord :: Record -> Sexp.T
 fromRecord (Record nameBind1) =
   Sexp.listStar [Sexp.atom nameRecord, fromNameBind `toStarList` nameBind1]
+
 ----------------------------------------
 -- RecordNoPunned
 ----------------------------------------
@@ -834,6 +856,7 @@ toRecordNoPunned form
 fromRecordNoPunned :: RecordNoPunned -> Sexp.T
 fromRecordNoPunned (RecordNoPunned notPunnedGroup1) =
   Sexp.listStar [Sexp.atom nameRecordNoPunned, fromNotPunnedGroup notPunnedGroup1]
+
 ----------------------------------------
 -- Infix
 ----------------------------------------
@@ -859,6 +882,7 @@ toInfix form
 fromInfix :: Infix -> Sexp.T
 fromInfix (Infix sexp1 sexp2 sexp3) =
   Sexp.list [Sexp.atom nameInfix, sexp1, sexp2, sexp3]
+
 ----------------------------------------
 -- OpenIn
 ----------------------------------------
@@ -884,6 +908,7 @@ toOpenIn form
 fromOpenIn :: OpenIn -> Sexp.T
 fromOpenIn (OpenIn sexp1 sexp2) =
   Sexp.list [Sexp.atom nameOpenIn, sexp1, sexp2]
+
 ----------------------------------------
 -- Open
 ----------------------------------------
@@ -909,6 +934,7 @@ toOpen form
 fromOpen :: Open -> Sexp.T
 fromOpen (Open sexp1) =
   Sexp.list [Sexp.atom nameOpen, sexp1]
+
 ----------------------------------------
 -- Declare
 ----------------------------------------
@@ -934,6 +960,7 @@ toDeclare form
 fromDeclare :: Declare -> Sexp.T
 fromDeclare (Declare sexp1) =
   Sexp.list [Sexp.atom nameDeclare, sexp1]
+
 ----------------------------------------
 -- Declaim
 ----------------------------------------
@@ -959,6 +986,7 @@ toDeclaim form
 fromDeclaim :: Declaim -> Sexp.T
 fromDeclaim (Declaim sexp1 sexp2) =
   Sexp.list [Sexp.atom nameDeclaim, sexp1, sexp2]
+
 ----------------------------------------
 -- DefModule
 ----------------------------------------
@@ -984,6 +1012,7 @@ toDefModule form
 fromDefModule :: DefModule -> Sexp.T
 fromDefModule (DefModule sexp1 sexp2 sexp3) =
   Sexp.listStar [Sexp.atom nameDefModule, sexp1, sexp2, sexp3]
+
 ----------------------------------------
 -- LetModule
 ----------------------------------------
