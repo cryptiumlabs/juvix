@@ -384,7 +384,7 @@ moduleLetTransform xs = Sexp.foldPred xs (== Structure.nameLetModule) moduleToRe
           (mod ^. name)
           (mod ^. args)
           (ignoreCond (mod ^. body) combineIntoRecord)
-          (mod ^. body)
+          (mod ^. rest)
           |> Structure.fromLet
           |> Sexp.addMetaToCar atom
     moduleToRecord _ _ = error "malformed let-mod"

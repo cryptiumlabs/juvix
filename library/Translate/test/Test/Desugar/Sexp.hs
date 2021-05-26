@@ -258,4 +258,4 @@ modLetWorkAsExpected =
         \         (let bar () 3 \
         \            (:let-type foo () ((XTZ))\
         \               (:record (bar) (foo))))\
-        \     (foo)))"
+        \     foo))"
