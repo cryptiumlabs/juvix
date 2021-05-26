@@ -232,6 +232,23 @@ data Declaim = Declaim
   }
   deriving (Show)
 
+-- | @DefModule@ - Stands in for a module declaration
+data DefModule = DefModule
+  { defModuleName :: Sexp.T,
+    defModuleArgs :: Sexp.T,
+    defModuleBody :: Sexp.T
+  }
+  deriving (Show)
+
+-- | @LefModule@ - Stands in for a module let declaration
+data LetModule = LetModule
+  { letModuleName :: Sexp.T,
+    letModuleArgs :: Sexp.T,
+    letModuleBody :: Sexp.T,
+    letModuleRest :: Sexp.T
+  }
+  deriving (Show)
+
 --------------------------------------------------------------------------------
 -- Converter functions
 -- The format for these are
@@ -969,3 +986,29 @@ toDeclaim form
 fromDeclaim :: Declaim -> Sexp.T
 fromDeclaim (Declaim sexp1 sexp2) =
   Sexp.list [Sexp.atom nameDeclaim, sexp1, sexp2]
+
+----------------------------------------
+-- DefModule
+----------------------------------------
+
+nameDefModule :: NameSymbol.T
+nameDefModule = ":defmodule"
+
+isDefModule :: Sexp.T -> Bool
+isDefModule (Sexp.Cons form _) = Sexp.isAtomNamed form nameDefModule
+isDefModule _ = False
+
+toDefModule :: Sexp.T -> Maybe DefModule
+toDefModule form
+  | isDefModule form =
+    case form of
+      _DefModule Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 ->
+        DefModule sexp1 sexp2 sexp3 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromDefModule :: DefModule -> Sexp.T
+fromDefModule (DefModule sexp1 sexp2 sexp3) =
+  Sexp.listStar [Sexp.atom nameDefModule, sexp1, sexp2, sexp3]

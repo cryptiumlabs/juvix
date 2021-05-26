@@ -361,15 +361,16 @@ removePunnedRecords xs = Sexp.foldPred xs (== Structure.nameRecord) removePunned
 -- - Where Expression follows the Top level Transformation, and
 --   <foo-name> is the name of foo
 moduleTransform :: Sexp.T -> Sexp.T
-moduleTransform xs = Sexp.foldPred xs (== ":defmodule") moduleToRecord
+moduleTransform xs = Sexp.foldPred xs (== Structure.nameDefModule) moduleToRecord
   where
-    combineIntoRecord body =
+    intoRecord body =
       Sexp.foldr combine (generatedRecord body) body
-    moduleToRecord atom (name Sexp.:> args Sexp.:> body) =
-      Structure.Defun name args (ignoreCond body combineIntoRecord)
+    moduleToRecord atom cdr
+      | Just mod <- Structure.toDefModule (Sexp.Atom atom Sexp.:> cdr) =
+      Structure.Defun (mod ^. name) (mod ^. args) (ignoreCond (mod ^. body) intoRecord)
         |> Structure.fromDefun
         |> Sexp.addMetaToCar atom
-    moduleToRecord _ _ = error "malformed defmodule"
+      | otherwise = error "malformed defmodule"
 
 -- | @moduleLetTransform@ - See @moduleTransform@'s comment
 moduleLetTransform :: Sexp.T -> Sexp.T

@@ -323,3 +323,7 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
 (generate-haskell "Declare" '("sexp") "declare")
 
 (generate-haskell "Declaim" (repeat 2 "sexp") ":declaim")
+
+(generate-haskell "DefModule" (repeat 3 "sexp") ":defmodule" :list-star t)
+
+(generate-haskell "DefModule" (repeat 3 "sexp") ":defmodule" :list-star t)
