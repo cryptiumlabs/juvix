@@ -201,7 +201,7 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
                        pat names))
              (match (names)
                (format nil "~{~a~^ Sexp.:> ~}"
-                       (append (when s-name (list (format nil "_~a" con-name)))
+                       (append (when s-name (list (format nil "_name~a" con-name)))
                                names
                                (unless list-star '("Sexp.Nil")))))
              (from-construction (pat names)
