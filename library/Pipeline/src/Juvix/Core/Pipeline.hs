@@ -4,7 +4,7 @@ module Juvix.Core.Pipeline
   ( coreToAnn,
     toRaw,
     Comp,
-    RawTerm,
+    Term,
     CompConstraints,
     CompConstraints',
   )
@@ -22,14 +22,14 @@ import qualified Juvix.Core.Types as Types
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 
-type RawTerm ty val = IR.Term ty val
+type Term ty val = IR.Term ty val
 
 type Comp ty val err res =
   forall m.
   CompConstraints ty val err m =>
-  RawTerm ty val ->
+  Term ty val ->
   Usage.T ->
-  RawTerm ty val ->
+  Term ty val ->
   m res
 
 type CompConstraints' primTy primVal compErr m =

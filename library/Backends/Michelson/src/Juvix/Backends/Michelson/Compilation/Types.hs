@@ -2,15 +2,15 @@
 -- - Types used internally by the Michelson backend.
 module Juvix.Backends.Michelson.Compilation.Types
   ( PrimTy (..),
-    RawPrimVal (..),
+    PrimVal (..),
     Return',
     Take,
     Arg',
     PrimVal',
     PrimValIR,
     PrimValHR,
-    RawTerm,
-    Term,
+    AnnTerm,
+    HRAnnTerm,
     Value,
     Type,
     Op,
@@ -18,12 +18,11 @@ module Juvix.Backends.Michelson.Compilation.Types
     CompilationError (..),
     SomeInstr (..),
     EmptyInstr (..),
-    CoreErased.AnnTerm (..),
   )
 where
 
 import qualified Juvix.Core.Application as App
-import qualified Juvix.Core.ErasedAnn.Types as CoreErased
+import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (Type)
@@ -47,7 +46,7 @@ data PrimTy
   | Application PrimTy (NonEmpty PrimTy)
   deriving (Show, Eq, Generic, Data)
 
-data RawPrimVal
+data PrimVal
   = Constant (M.Value' Op)
   | Inst (Instr.InstrAbstract Op)
   | AddN
@@ -110,23 +109,23 @@ data RawPrimVal
   | MapOp
   deriving (Show, Eq, Generic, Data)
 
-type Return' ext = App.Return' ext (P.PrimType PrimTy) RawPrimVal
+type Return' ext = App.Return' ext (P.PrimType PrimTy) PrimVal
 
-type Take = App.Take (P.PrimType PrimTy) RawPrimVal
+type Take = App.Take (P.PrimType PrimTy) PrimVal
 
-type Arg' ext = App.Arg' ext (P.PrimType PrimTy) RawPrimVal
+type Arg' ext = App.Arg' ext (P.PrimType PrimTy) PrimVal
 
 type PrimVal' ext = Return' ext
 
 type PrimValIR = PrimVal' IR.NoExt
 
-type PrimValHR = PrimVal' CoreErased.T
+type PrimValHR = PrimVal' ErasedAnn.T
 
-type RawTerm = CoreErased.AnnTerm PrimTy RawPrimVal
+type AnnTerm = ErasedAnn.AnnTerm PrimTy PrimVal
 
-type Term = CoreErased.AnnTerm PrimTy PrimValHR
+type HRAnnTerm = ErasedAnn.AnnTerm PrimTy PrimValHR
 
-type Type = CoreErased.Type PrimTy
+type Type = ErasedAnn.Type PrimTy
 
 type Value = M.Value' M.ExpandedOp
 
@@ -149,7 +148,7 @@ data CompilationError
   deriving (Show, Eq, Generic)
 
 data CompilationLog
-  = TermToInstr Term Op
+  = TermToInstr HRAnnTerm Op
   | OptimisedByJuvix Op Op
   | OptimisedByMorley SomeInstr SomeInstr
   deriving (Generic, Show)

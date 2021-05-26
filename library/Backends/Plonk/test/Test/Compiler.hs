@@ -7,7 +7,7 @@ import Data.Curve.Weierstrass.BLS12381 (Fr)
 import Data.Field.Galois (GaloisField, PrimeField (..), toP)
 import qualified Data.Map as Map
 import qualified Data.Scientific as S
-import Juvix.Backends.Plonk (FFAnnTerm, FFType, PrimVal (..))
+import Juvix.Backends.Plonk (AnnTerm, FFType, PrimVal (..))
 import qualified Juvix.Backends.Plonk as P
 import qualified Juvix.Core as Core
 import Juvix.Library (Natural, undefined, ($), (.))
@@ -95,18 +95,18 @@ polynomial1 = T.testCase "\\x y -> x^3 - 2x^2 + 4 = y" (testOutput Example.circu
     inputs = mkInputs [1, 3]
     output = 1 -- true!
 
-compile :: FilePath -> Pipeline.Pipeline (FFAnnTerm Fr)
+compile :: FilePath -> Pipeline.Pipeline (AnnTerm Fr)
 compile fin = do
   t <- liftIO $ readFile fin
   parsed <- Pipeline.parseExplicit (P.BPlonk :: P.BPlonk Fr) t ["../../../stdlib/Prelude.ju", "../../../stdlib/Circuit.ju"]
   s <- Pipeline.typecheck @(P.BPlonk Fr) parsed
   pure $ Core.toRaw s
 
-compileOr :: Pipeline.Pipeline (FFAnnTerm Fr)
+compileOr :: Pipeline.Pipeline (AnnTerm Fr)
 compileOr = compile "test/Test/Example/Juvix/Or.ju"
 
-compileAnd :: Pipeline.Pipeline (FFAnnTerm Fr)
+compileAnd :: Pipeline.Pipeline (AnnTerm Fr)
 compileAnd = compile "test/Test/Example/Juvix/And.ju"
 
-compileXor :: Pipeline.Pipeline (FFAnnTerm Fr)
+compileXor :: Pipeline.Pipeline (AnnTerm Fr)
 compileXor = compile "test/TestExample/Juvix/XOr.ju"

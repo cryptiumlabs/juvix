@@ -4,7 +4,7 @@ module Juvix.Backends.Michelson.Compilation where
 
 import qualified Data.Set as Set
 import qualified Data.Text.Lazy as L
-import Juvix.Backends.Michelson.Compilation.Types
+import Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
@@ -29,20 +29,20 @@ untypedContractToSourceLine :: M.Contract' M.ExpandedOp -> Text
 untypedContractToSourceLine c = L.toStrict (M.printUntypedContract True c)
 
 compileContract ::
-  RawTerm ->
+  Types.AnnTerm ->
   (Either DSL.CompError (M.Contract' M.ExpandedOp, M.SomeContract), [CompilationLog])
 compileContract term =
   let (ret, env) = DSL.execMichelson (compileToMichelsonContract term)
    in (ret, DSL.compilationLog env)
 
-compileExpr :: RawTerm -> (Either DSL.CompError EmptyInstr, [CompilationLog])
+compileExpr :: Types.AnnTerm -> (Either DSL.CompError EmptyInstr, [CompilationLog])
 compileExpr term =
   let (ret, env) = DSL.execMichelson (compileToMichelsonExpr term)
    in (ret, DSL.compilationLog env)
 
 compileToMichelsonContract ::
   DSL.Reduction m =>
-  RawTerm ->
+  Types.AnnTerm ->
   m (M.Contract' M.ExpandedOp, M.SomeContract)
 compileToMichelsonContract term = do
   let Ann.Ann _ ty _ = term
@@ -91,7 +91,7 @@ compileToMichelsonContract term = do
 
 compileToMichelsonExpr ::
   DSL.Reduction m =>
-  RawTerm ->
+  Types.AnnTerm ->
   m EmptyInstr
 compileToMichelsonExpr term = do
   _ <- DSL.instOuter term
@@ -102,5 +102,5 @@ compileToMichelsonExpr term = do
     Right (_ M.:/ (M.AnyOutInstr _)) -> undefined
     Left err -> throw @"compilationError" (DidNotTypecheck michelsonOp err)
 
-runMichelsonExpr :: DSL.Reduction m => RawTerm -> m M.ExpandedOp
+runMichelsonExpr :: DSL.Reduction m => Types.AnnTerm -> m M.ExpandedOp
 runMichelsonExpr = DSL.instOuter

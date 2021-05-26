@@ -17,14 +17,14 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (String)
 
-type RawMichelson f = f Michelson.PrimTy Michelson.RawPrimVal
+type RawMichelson f = f Michelson.PrimTy Michelson.PrimVal
 
 type RawMichelsonTerm = RawMichelson IR.Term
 
 type RawMichelsonElim = RawMichelson IR.Elim
 
 type MichelsonCompConstraints m =
-  P.CompConstraints' Michelson.PrimTy Michelson.RawPrimVal Michelson.CompilationError m
+  P.CompConstraints' Michelson.PrimTy Michelson.PrimVal Michelson.CompilationError m
 
 type MichelsonComp res =
   forall m.

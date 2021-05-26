@@ -42,7 +42,7 @@ isBool (PrimTy (M.Ty M.TNat _)) = True
 isBool _ = False
 
 -- | Check if the value has the given type.
-hasType :: RawPrimVal -> P.PrimType PrimTy -> Bool
+hasType :: PrimVal -> P.PrimType PrimTy -> Bool
 hasType AddTimeStamp ty = P.check3Equal ty
 hasType AddI ty = P.check3Equal ty
 hasType AddN ty = P.check3Equal ty
@@ -92,7 +92,7 @@ hasType _ ((Application List _) :| []) = True
 hasType x ty = Prelude.error ("unsupported: " <> Juvix.Library.show x <> " :: " <> Juvix.Library.show ty)
 
 -- | Return the arity of a raw Michelson value.
-arityRaw :: RawPrimVal -> Natural
+arityRaw :: PrimVal -> Natural
 arityRaw (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
 arityRaw (Constant _) = 0
 arityRaw prim =
@@ -200,10 +200,10 @@ applyProper fun args =
     -- TODO ∷ do something with the logs!?
     (compd, _log) = Compilation.compileExpr newTerm
 
--- | Translate a 'Take' into a 'RawTerm'.
-takeToTerm :: Take -> RawTerm
-takeToTerm (App.Take {usage, type', term}) =
-  Ann {usage, type' = Prim.fromPrimType type', term = ErasedAnn.Prim term}
+-- | Translate a 'Take' into a 'Term'.
+takeToTerm :: Take -> Types.AnnTerm
+takeToTerm App.Take {usage, type', term} =
+  ErasedAnn.Ann {usage, type' = Prim.fromPrimType type', term = ErasedAnn.Prim term}
 
 -- | Given a type, translate it to a type in the Michelson backend.
 toPrimType :: ErasedAnn.Type PrimTy -> Either ApplyError (P.PrimType PrimTy)
@@ -217,7 +217,7 @@ toPrimType ty = maybe err Right $ go ty
     goPrim _ = Nothing
 
 -- | Translate an 'Integer' to the Michelson backend.
-integerToPrimVal :: Integer -> Maybe RawPrimVal
+integerToPrimVal :: Integer -> Maybe PrimVal
 integerToPrimVal x
   | x >= toInteger (minBound @Int),
     x <= toInteger (maxBound @Int) =
@@ -262,7 +262,7 @@ builtinTypes =
     |> Map.fromList
 
 -- | Michelson-specific low-level values available in Juvix.
-builtinValues :: P.Builtins RawPrimVal
+builtinValues :: P.Builtins PrimVal
 builtinValues =
   [ ("Michelson.add", AddI),
     ("Michelson.sub", SubI),
@@ -321,7 +321,7 @@ builtinValues =
     |> Map.fromList
 
 -- | Parameters for the Michelson backend.
-michelson :: P.Parameterisation PrimTy RawPrimVal
+michelson :: P.Parameterisation PrimTy PrimVal
 michelson =
   P.Parameterisation
     { hasType,
@@ -334,7 +334,7 @@ michelson =
 
 instance Eval.HasWeak PrimTy where weakBy' _ _ t = t
 
-instance Eval.HasWeak RawPrimVal where weakBy' _ _ t = t
+instance Eval.HasWeak PrimVal where weakBy' _ _ t = t
 
 instance
   Monoid (IR.XVPrimTy ext PrimTy primVal) =>
@@ -349,7 +349,7 @@ instance
   patSubstTerm' _ _ t = pure $ IR.PrimTy' t mempty
 
 instance
-  Monoid (IR.XPrim ext primTy RawPrimVal) =>
-  Eval.HasPatSubstTerm ext primTy RawPrimVal RawPrimVal
+  Monoid (IR.XPrim ext primTy PrimVal) =>
+  Eval.HasPatSubstTerm ext primTy PrimVal PrimVal
   where
   patSubstTerm' _ _ t = pure $ IR.Prim' t mempty

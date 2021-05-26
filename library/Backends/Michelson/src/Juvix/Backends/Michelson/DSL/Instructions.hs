@@ -16,7 +16,7 @@ import Prelude (error)
 
 -- | 'toNewPrim' removes the implicit Instr.PrimEx from the instruction
 -- and adds Inst over it, making it a new primitive. useful for making tests
-toNewPrimErr :: Instr.ExpandedOp -> Types.RawPrimVal
+toNewPrimErr :: Instr.ExpandedOp -> Types.PrimVal
 toNewPrimErr (Instr.PrimEx x) =
   Types.Inst x
 toNewPrimErr (Instr.SeqEx _) =

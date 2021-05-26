@@ -21,7 +21,7 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 
 -- | Translate case statements to conditionals (nested),
 -- inline lambdas, convert datatypes to some field element representation, etc
-compileBinOp :: (Show f, Integral f) => Map NameSymbol.T Wire -> BinOp f a -> [FFAnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
+compileBinOp :: (Show f, Integral f) => Map NameSymbol.T Wire -> BinOp f a -> [AnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
 compileBinOp m op args = do
   let e1 = args !! 0
   let e2 = args !! 1
@@ -54,7 +54,7 @@ compileBinOp m op args = do
       emit $ MulGate e1Out e2Out tmp1
       pure . Right $ Add (Add e1Out e2Out) (ScalarMul (-2) (Var tmp1))
 
-compileCompOp :: (Integral f, Show f) => Map NameSymbol.T Wire -> CompOp f -> [FFAnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
+compileCompOp :: (Integral f, Show f) => Map NameSymbol.T Wire -> CompOp f -> [AnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
 compileCompOp m op args = do
   let lhs = args !! 0
   let rhs = args !! 1
@@ -69,7 +69,7 @@ compileCompOp m op args = do
       -- neqOutWire instead.
       pure . Right $ Add (ConstGate 1) (ScalarMul (-1) (Var eqOutWire))
 
-compilePrim :: (Integral f, Show f) => PrimVal f -> Map NameSymbol.T Wire -> [FFAnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
+compilePrim :: (Integral f, Show f) => PrimVal f -> Map NameSymbol.T Wire -> [AnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
 compilePrim p m args = case p of
   P.PConst n -> pure . Right $ ConstGate n
   P.PAdd -> compileBinOp m BAdd args
@@ -83,7 +83,7 @@ compilePrim p m args = case p of
   P.PXor -> compileBinOp m BXor args
   n -> panic $ show n
 
-compileTerm :: (Integral f, Show f) => FFAnnTerm f -> Map NameSymbol.T Wire -> [FFAnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
+compileTerm :: (Integral f, Show f) => AnnTerm f -> Map NameSymbol.T Wire -> [AnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
 compileTerm _term@(Ann.Ann _ _ t) m a =
   case t of
     Ann.Prim p -> compilePrim p m a
@@ -105,7 +105,7 @@ compileTerm _term@(Ann.Ann _ _ t) m a =
     p@(Ann.PairM _a1 _a2) -> panic $ show p <> "notImplemented"
     u@Ann.UnitM -> panic $ show u <> "notImplemented"
 
-compileTermWithWire :: (Integral f, Show f) => FFAnnTerm f -> IRM f Wire
+compileTermWithWire :: (Integral f, Show f) => AnnTerm f -> IRM f Wire
 compileTermWithWire term = do
   compileOut <- compileTerm term mempty mempty
   case compileOut of

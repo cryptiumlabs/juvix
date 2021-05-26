@@ -20,8 +20,66 @@ import qualified Juvix.Backends.Michelson.DSL.Environment as Env
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import qualified Juvix.Backends.Michelson.DSL.Utils as Utils
-import qualified Juvix.Core.ErasedAnn.Types as Ann
-import Juvix.Library hiding (abs, and, or, xor)
+import qualified Juvix.Core.ErasedAnn.Types as CoreErased
+import Juvix.Library
+    ( zip,
+      fst,
+      snd,
+      otherwise,
+      ($),
+      fromIntegral,
+      Enum(pred, succ),
+      Eq((==), (/=)),
+      Integral(rem, div),
+      Monad((>>=)),
+      Functor(fmap, (<$)),
+      Num((-), (*), negate, (+)),
+      Ord((>), (<=), (<), (>=), compare),
+      Show,
+      Applicative(pure, (<*), (<*>)),
+      Foldable(length, foldr),
+      Traversable(mapM, traverse),
+      Semigroup((<>)),
+      Monoid(mconcat),
+      Bool(..),
+      Integer,
+      Natural,
+      Maybe(..),
+      Ordering(GT, EQ, LT),
+      Word,
+      (|>),
+      (<$>),
+      (.),
+      NonEmpty(..),
+      all,
+      drop,
+      repeat,
+      reverse,
+      splitAt,
+      take,
+      zipWith,
+      uncurry,
+      (=<<),
+      const,
+      flip,
+      (&&),
+      (||),
+      (>=>),
+      traverse_,
+      when,
+      throw,
+      get,
+      modify,
+      put,
+      show,
+      lastMay,
+      (...),
+      (>>|),
+      undefined,
+      (|<<),
+      HasThrow,
+      HasState,
+      Semiring(one) )
 import qualified Juvix.Library (abs)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
@@ -34,8 +92,8 @@ import Prelude (error)
 -- Main Functionality
 --------------------------------------------------------------------------------
 
-instOuter :: Env.Reduction m => Types.RawTerm -> m Instr.ExpandedOp
-instOuter a@(Types.Ann _ ty _) = do
+instOuter :: Env.Reduction m => Types.AnnTerm -> m Instr.ExpandedOp
+instOuter a@(CoreErased.Ann _ ty _) = do
   inst <- inst a
   ty <- typeToPrimType ty
   expandedToInst ty inst
@@ -53,28 +111,28 @@ expandedToInst ty exp =
     Env.Curr c -> mconcat |<< promoteLambda c
     Env.Nop -> pure (Instr.SeqEx [])
 
-inst :: Env.Reduction m => Types.RawTerm -> m Env.Expanded
-inst (Types.Ann _usage ty t) =
+inst :: Env.Reduction m => Types.AnnTerm -> m Env.Expanded
+inst (CoreErased.Ann _usage ty t) =
   case t of
-    Ann.Var symbol -> var symbol
-    Ann.AppM fun a -> appM fun a
-    Ann.UnitM ->
+    CoreErased.Var symbol -> var symbol
+    CoreErased.AppM fun a -> appM fun a
+    CoreErased.UnitM ->
       let unit = Env.Constant V.ValueUnit
        in unit <$ consVal unit ty
-    Ann.PairM p1 p2 ->
+    CoreErased.PairM p1 p2 ->
       appM
         ( Instructions.toNewPrimErr Instructions.pair
-            |> Ann.Prim
-            |> Ann.Ann
+            |> CoreErased.Prim
+            |> CoreErased.Ann
               one
-              (Ann.Pi one (Ann.type' p1) (Ann.Pi one (Ann.type' p2) ty))
+              (CoreErased.Pi one (CoreErased.type' p1) (CoreErased.Pi one (CoreErased.type' p2) ty))
         )
         [p1, p2]
-    Ann.LamM c a b -> do
+    CoreErased.LamM c a b -> do
       v <- lambda c a b ty
       consVal v ty
       pure v
-    Ann.Prim prim' ->
+    CoreErased.Prim prim' ->
       -- Non Instrs will be converted to an Instr via primToFargs
       -- Constants are not functions and thus need to be
       case prim' of
@@ -84,11 +142,11 @@ inst (Types.Ann _usage ty t) =
         _ ->
           constructPrim prim' ty
 
-applyPrimOnArgs :: Types.RawTerm -> [Types.RawTerm] -> Types.RawTerm
+applyPrimOnArgs :: Types.AnnTerm -> [Types.AnnTerm] -> Types.AnnTerm
 applyPrimOnArgs prim arguments =
-  let newTerm = Ann.AppM prim arguments
-      retType = Utils.piToReturnType (Ann.type' prim)
-   in Ann.Ann one retType newTerm
+  let newTerm = CoreErased.AppM prim arguments
+      retType = CoreErased.piToReturnType (CoreErased.type' prim)
+   in CoreErased.Ann one retType newTerm
 
 add,
   mul,
@@ -111,7 +169,7 @@ add,
   cons,
   contract,
   pair ::
-    Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
+    Env.Reduction m => Types.Type -> [Types.AnnTerm] -> m Env.Expanded
 add = intGen Instructions.add (+)
 mul = intGen Instructions.mul (*)
 sub = intGen Instructions.sub (-)
@@ -146,7 +204,7 @@ isNat =
     (\x -> if x >= 0 then V.ValueSome (V.ValueInt x) else V.ValueNone)
 
 lambda ::
-  Env.Error m => [NameSymbol.T] -> [NameSymbol.T] -> Types.RawTerm -> Types.Type -> m Env.Expanded
+  Env.Error m => [NameSymbol.T] -> [NameSymbol.T] -> Types.AnnTerm -> Types.Type -> m Env.Expanded
 lambda captures arguments body type'
   -- >= as we may return a lambda!
   | length usages >= length arguments =
@@ -164,7 +222,7 @@ lambda captures arguments body type'
     throw @"compilationError" $ Types.InvalidInputType "usages/arguments mismatch"
   where
     usages =
-      Utils.usageFromType type'
+      CoreErased.usageFromType type'
     annotatedArgs =
       zipWith Env.Term arguments usages
 
@@ -203,12 +261,12 @@ var symb = do
 
 -- |
 -- Name calls inst, and then determines how best to name the form in the VStack
-name :: Env.Reduction m => Env.ErasedTerm -> Types.RawTerm -> m Env.Expanded
+name :: Env.Reduction m => Env.ErasedTerm -> Types.AnnTerm -> m Env.Expanded
 name (Env.Term symb usage) f =
   inst f <* modify @"stack" (VStack.nameTop symb usage)
 
-nameSymb :: Env.Reduction m => NameSymbol.T -> Types.RawTerm -> m Env.Expanded
-nameSymb symb f@(Types.Ann usage _ _) =
+nameSymb :: Env.Reduction m => NameSymbol.T -> Types.AnnTerm -> m Env.Expanded
+nameSymb symb f@(CoreErased.Ann usage _ _) =
   inst f <* modify @"stack" (VStack.nameTop symb usage)
 
 unboxSingleTypeErr :: Untyped.T -> Untyped.T
@@ -227,7 +285,7 @@ unboxDoubleTypeErr (MT.Ty (MT.TOr _ _ t1 t2) _) = (t1, t2)
 unboxDoubleTypeErr _ = error "not a type which takes two types"
 
 -- keep this next to primToArgs as they cover the same range!
-isNonFunctionPrim :: Types.RawPrimVal -> Bool
+isNonFunctionPrim :: Types.PrimVal -> Bool
 isNonFunctionPrim Types.Nil = True
 isNonFunctionPrim Types.None = True
 isNonFunctionPrim Types.EmptyS = True
@@ -235,7 +293,7 @@ isNonFunctionPrim Types.EmptyM = True
 isNonFunctionPrim Types.EmptyBM = True
 isNonFunctionPrim _ = False
 
-primToArgs :: (Env.Ops m, Env.Error m) => Types.RawPrimVal -> Types.Type -> m ()
+primToArgs :: (Env.Ops m, Env.Error m) => Types.PrimVal -> Types.Type -> m ()
 primToArgs prim ty =
   let on1 f = f . unboxSingleTypeErr <$> typeToPrimType ty
       on2 f = uncurry f . unboxDoubleTypeErr <$> typeToPrimType ty
@@ -249,9 +307,9 @@ primToArgs prim ty =
         >>= addInstr
 
 type RunInstr =
-  (forall m. Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded)
+  (forall m. Env.Reduction m => Types.Type -> [Types.AnnTerm] -> m Env.Expanded)
 
-primToFargs :: Num b => Types.RawPrimVal -> Types.Type -> Untyped.T -> (Env.Fun, b)
+primToFargs :: Num b => Types.PrimVal -> Types.Type -> Untyped.T -> (Env.Fun, b)
 primToFargs (Types.Constant (V.ValueLambda _lam)) _ty _ =
   (undefined, 1)
 primToFargs (Types.Inst inst) ty _ =
@@ -287,16 +345,16 @@ primToFargs (Types.Inst inst) ty _ =
         Instr.IF_NONE {} -> evalIfNone
         Instr.CONS {} -> cons
         Instr.CONTRACT {} -> contract
--- _ -> error "unspported function in primToFargs"
+        _ -> error "unspported function in primToFargs"
 primToFargs (Types.Constant _) _ _ =
   error "Tried to apply a Michelson Constant"
 primToFargs x ty primTy = primToFargs (newPrimToInstrErr x primTy) ty primTy
 
-newPrimToInstrErr :: Types.RawPrimVal -> Untyped.T -> Types.RawPrimVal
+newPrimToInstrErr :: Types.PrimVal -> Untyped.T -> Types.PrimVal
 newPrimToInstrErr x ty =
   Instructions.toNewPrimErr (instructionOf x ty)
 
-instructionOf :: Types.RawPrimVal -> Untyped.T -> Instr.ExpandedOp
+instructionOf :: Types.PrimVal -> Untyped.T -> Instr.ExpandedOp
 instructionOf x ty =
   case x of
     Types.AddN -> Instructions.add
@@ -346,14 +404,15 @@ instructionOf x ty =
     Types.Contract -> Instructions.contract ty
     Types.Constant _ -> error "tried to convert a to prim"
     Types.Inst _ -> error "tried to convert an inst to an inst!"
+    _ -> error "unspported value in instructionOf"
 
-appM :: Env.Reduction m => Types.RawTerm -> [Types.RawTerm] -> m Env.Expanded
-appM form@(Types.Ann _u ty t) args =
+appM :: Env.Reduction m => Types.AnnTerm -> [Types.AnnTerm] -> m Env.Expanded
+appM form@(CoreErased.Ann _u ty t) args =
   let app = inst form >>= flip applyExpanded args
    in case t of
         -- We could remove this special logic, however it would
         -- result in inefficient Michelson!
-        Ann.Prim p -> do
+        CoreErased.Prim p -> do
           primTy <- typeToPrimType ty
           let (f, lPrim) = primToFargs p ty primTy
            in case length args `compare` lPrim of
@@ -366,7 +425,7 @@ appM form@(Types.Ann _u ty t) args =
         _ -> app
 
 applyExpanded ::
-  Env.Reduction m => Env.Expanded -> [Types.RawTerm] -> m Env.Expanded
+  Env.Reduction m => Env.Expanded -> [Types.AnnTerm] -> m Env.Expanded
 applyExpanded expanded args =
   case expanded of
     Env.Curr c -> do
@@ -396,7 +455,7 @@ type OnTermGen m f =
   -- Type of the instruction
   Types.Type ->
   -- Arguments
-  [Types.RawTerm] ->
+  [Types.AnnTerm] ->
   -- Expanded argument
   m Env.Expanded
 
@@ -464,7 +523,7 @@ onPairGen1 op f =
          in Env.Constant (f (car, cdr))
     )
 
-pushConstant :: Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
+pushConstant :: Env.Reduction m => Types.Type -> [Types.AnnTerm] -> m Env.Expanded
 pushConstant =
   onOneArgGen
     ( \instr1 -> do
@@ -511,7 +570,7 @@ onOneArgGen applyOperation typ arguments = do
     _ -> throw @"compilationError" Types.NotEnoughArguments
 
 -- reverse as we wish to evaluate the last argument first!
-protectPromotion :: Env.Reduction m => [Types.RawTerm] -> m [Protect]
+protectPromotion :: Env.Reduction m => [Types.AnnTerm] -> m [Protect]
 protectPromotion =
   traverse (protect . (inst >=> promoteTopStack)) . reverse
 
@@ -520,12 +579,12 @@ protectPromotion =
 ------------------------------------------------------------
 
 onTwoArgsNoConst ::
-  Env.Reduction m => Instr.ExpandedOp -> Types.Type -> [Types.RawTerm] -> m Env.Expanded
+  Env.Reduction m => Instr.ExpandedOp -> Types.Type -> [Types.AnnTerm] -> m Env.Expanded
 onTwoArgsNoConst op =
   onTwoArgsGen (\x2 x1 -> noConstantCase op [x2, x1])
 
 onOneArgsNoConst ::
-  Env.Reduction m => Instr.ExpandedOp -> Types.Type -> [Types.RawTerm] -> m Env.Expanded
+  Env.Reduction m => Instr.ExpandedOp -> Types.Type -> [Types.AnnTerm] -> m Env.Expanded
 onOneArgsNoConst op =
   onOneArgGen (\x1 -> noConstantCase op [x1])
 
@@ -572,7 +631,7 @@ noConstantCase op instrs = do
   -- return a nop to signal an already added output
   pure Env.Nop
 
-evalIf :: Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
+evalIf :: Env.Reduction m => Types.Type -> [Types.AnnTerm] -> m Env.Expanded
 evalIf typ (bool : thenI : elseI : _) = do
   let eval = inst >=> promoteTopStack
       res = Env.Nop
@@ -584,7 +643,7 @@ evalIf typ (bool : thenI : elseI : _) = do
   pure res
 evalIf _ _ = throw @"compilationError" Types.NotEnoughArguments
 
-evalIfNone :: Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
+evalIfNone :: Env.Reduction m => Types.Type -> [Types.AnnTerm] -> m Env.Expanded
 evalIfNone typ (bool : thenI : elseI : _) = do
   let eval = inst >=> promoteTopStack
       res = Env.Nop
@@ -601,10 +660,10 @@ evalIfNone _ _ = throw @"compilationError" Types.NotEnoughArguments
 -- used in if_none and if_some, if_cons etc etc etc.
 constructApplication ::
   Env.Reduction m =>
-  Ann.AnnTerm Types.PrimTy primVal ->
-  m (Ann.AnnTerm Types.PrimTy primVal)
-constructApplication Ann.Ann {type', term = Ann.LamM {body, arguments}}
-  | length (Utils.piToListTy type') == 1 = do
+  CoreErased.AnnTerm Types.PrimTy primVal ->
+  m (CoreErased.AnnTerm Types.PrimTy primVal)
+constructApplication CoreErased.Ann {type', term = CoreErased.LamM {body, arguments}}
+  | length (CoreErased.piToListTy type') == 1 = do
     -- register the value on the stack
     -- ASSUMES unqiue naming
     consVar arg1 Env.Nop usage bound
@@ -612,7 +671,7 @@ constructApplication Ann.Ann {type', term = Ann.LamM {body, arguments}}
   | otherwise =
     error "unsupported: lambda going through multiple arguments"
   where
-    (usage, bound) : _ = Utils.piToList type'
+    (usage, bound) : _ = CoreErased.piToList type'
     arg1 : _ = arguments
 constructApplication _ = error "unsupported: consturctionApplication on non lambda"
 
@@ -701,7 +760,7 @@ reserveNames i = do
 -- Other things considered:
 -- We don't need to drop the arguments we eval and name, as they should be eaten
 -- by the functions they call with the appropriate usages
-apply :: Env.Reduction m => Env.Curried -> [Types.RawTerm] -> [NameSymbol.T] -> m Env.Expanded
+apply :: Env.Reduction m => Env.Curried -> [Types.AnnTerm] -> [NameSymbol.T] -> m Env.Expanded
 apply closure args remainingArgs = do
   let totalLength = fromIntegral (length args + length remainingArgs)
   case totalLength `compare` Env.left closure of
@@ -717,7 +776,7 @@ apply closure args remainingArgs = do
           -- caputred  ≡ totalLength ≡ | caputreNames | ≡ | tyList |
           (captured, left) = splitAt (fromIntegral totalLength) (Env.argsLeft closure)
           captureNames = fmap Env.name captured
-          tyList = take (length captured) (Utils.piToListTy (Env.ty closure))
+          tyList = take (length captured) (CoreErased.piToListTy (Env.ty closure))
           con =
             Env.C
               { Env.left = remaining,
@@ -790,7 +849,7 @@ apply closure args remainingArgs = do
     -- as this exclusive works on the Curried type
     app =
       Env.ty closure
-        |> Utils.piToListTy
+        |> CoreErased.piToListTy
         -- we do a reversing ritual as we wish to type the
         -- remaining argument after
         |> reverse
@@ -798,7 +857,7 @@ apply closure args remainingArgs = do
         -- Undo our last flip, and put the list in the proper place
         |> reverse
         |> Env.unFun (Env.fun closure)
-    makeVar (Env.Term name usage) ty = Types.Ann usage ty (Ann.Var name)
+    makeVar (Env.Term name usage) ty = CoreErased.Ann usage ty (CoreErased.Var name)
     -- TODO ∷ see if we have to drop the top of the stack? It seems to be handled?
     recur (Env.Curr c) xs =
       apply c [] xs
@@ -865,7 +924,7 @@ valToBool _ = error "called valToBool on a non Michelson Bool"
 --------------------------------------------------------------------------------
 
 constructPrim ::
-  Env.Reduction m => Types.RawPrimVal -> Types.Type -> m Env.Expanded
+  Env.Reduction m => Types.PrimVal -> Types.Type -> m Env.Expanded
 constructPrim prim ty
   -- this one gets Promoted to be on the real stack
   -- TODO ∷ determine if this should be a constant, they should all be in
@@ -951,10 +1010,10 @@ consVarNone (Env.Term symb usage) = consVarGen symb Nothing usage
 typeToPrimType :: forall m. Env.Error m => Types.Type -> m Untyped.T
 typeToPrimType ty =
   case ty of
-    Ann.SymT _ -> throw @"compilationError" $ Types.InvalidInputType "symt cannot be converted to prim type"
-    Ann.Star _ -> throw @"compilationError" $ Types.InvalidInputType "star cannot be converted to prim type"
-    Ann.PrimTy (Types.PrimTy mTy) -> pure mTy
-    Ann.PrimTy (Types.Application arg1 args) -> do
+    CoreErased.SymT _ -> throw @"compilationError" $ Types.InvalidInputType "symt cannot be converted to prim type"
+    CoreErased.Star _ -> throw @"compilationError" $ Types.InvalidInputType "star cannot be converted to prim type"
+    CoreErased.PrimTy (Types.PrimTy mTy) -> pure mTy
+    CoreErased.PrimTy (Types.Application arg1 args) -> do
       case arg1 of
         Types.PrimTy {} -> throw @"compilationError" $ Types.InvalidInputType "cannot apply primty"
         Types.Application _ _ -> throw @"compilationError" $ Types.InvalidInputType "cannot apply application"
@@ -966,17 +1025,17 @@ typeToPrimType ty =
           | otherwise ->
             throw @"compilationError" $ Types.InvalidInputType "length mismatch"
     -- TODO ∷ Integrate usage information into this
-    Ann.Pi _usages argTy retTy -> do
+    CoreErased.Pi _usages argTy retTy -> do
       argTy <- typeToPrimType argTy
       retTy <- typeToPrimType retTy
       pure (Untyped.lambda argTy retTy)
-    Ann.PrimTy _ ->
+    CoreErased.PrimTy _ ->
       throw @"compilationError" $ Types.InvalidInputType "cannot convert to primty"
-    Ann.Sig _usage fst snd ->
+    CoreErased.Sig _usage fst snd ->
       Untyped.pair <$> typeToPrimType fst <*> typeToPrimType snd
-    Ann.UnitTy -> pure Untyped.unit
+    CoreErased.UnitTy -> pure Untyped.unit
   where
-    recurse = traverse (typeToPrimType . Ann.PrimTy)
+    recurse = traverse (typeToPrimType . CoreErased.PrimTy)
     sameLength arg xs =
       lengthType arg == length xs
 
@@ -1003,7 +1062,7 @@ lengthType Types.Application {} = 0
 
 eatType :: Natural -> Types.Type -> Types.Type
 eatType 0 t = t
-eatType x (Ann.Pi _ _ a) = eatType (pred x) a
+eatType x (CoreErased.Pi _ _ a) = eatType (pred x) a
 eatType _ _ = error "Only eat parts of a Pi types, not any other type!"
 
 --------------------------------------------------------------------------------
@@ -1039,7 +1098,7 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
   curr <- get @"stack"
   -- Step 2: Figure out what the stack will be in the body of the function.
   -- Note: these lets are dropping usages the lambda consumes.
-  let listOfArgsType = Utils.piToListTy ty
+  let listOfArgsType = CoreErased.piToListTy ty
       Just returnType = lastMay listOfArgsType
       termList = reverse $ zip listOfArgsType argsLeft
       stackLeft = VStack.take (length captures) curr
@@ -1058,7 +1117,7 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
     -- Step 3: Compile the body of the lambda.
     insts <-
       -- TODO Clean this up with a helper!
-      Env.unFun fun (fmap (\(t, Env.Term sym u) -> Types.Ann u t (Ann.Var sym)) termList)
+      Env.unFun fun (fmap (\(t, Env.Term sym u) -> CoreErased.Ann u t (CoreErased.Var sym)) termList)
     returnTypePrim <- typeToPrimType returnType
     _insts <- expandedToInst returnTypePrim insts
     modify @"ops" (unpackOps :)
@@ -1092,7 +1151,7 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
 
 -- Assume lambdas from storage are curried.
 applyLambdaFromStorage ::
-  Env.Reduction m => NameSymbol.T -> Types.Type -> Types.RawTerm -> m [Instr.ExpandedOp]
+  Env.Reduction m => NameSymbol.T -> Types.Type -> Types.AnnTerm -> m [Instr.ExpandedOp]
 applyLambdaFromStorage sym ty arg = do
   ty' <- typeToPrimType ty
   lam <- expandedToInst ty' =<< var sym
@@ -1103,7 +1162,7 @@ applyLambdaFromStorage sym ty arg = do
   pure [lam, arg, Instructions.exec]
 
 applyLambdaFromStorageNArgs ::
-  Env.Reduction m => NameSymbol.T -> MT.Ty -> [Types.RawTerm] -> m Env.Expanded
+  Env.Reduction m => NameSymbol.T -> MT.Ty -> [Types.AnnTerm] -> m Env.Expanded
 applyLambdaFromStorageNArgs _sym _ty _args =
   Env.Expanded . mconcat |<< do
     undefined

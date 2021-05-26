@@ -1,8 +1,8 @@
 module Juvix.Backends.Plonk.Types
   ( CompilationError (..),
-    FFAnnTerm,
-    FFTerm,
-    FFType,
+    AnnTerm,
+    Term,
+    Type,
     PrimValHR,
     PrimValIR,
     PrimVal',
@@ -15,16 +15,38 @@ module Juvix.Backends.Plonk.Types
     Return',
     PrimTy (..),
     PrimVal (..),
+    isConst,
+    isBinOp,
+    -- isUnOp
   )
 where
 
 import qualified Juvix.Core.Application as App
-import Juvix.Core.ErasedAnn
-import qualified Juvix.Core.ErasedAnn.Types as CoreErased
+import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (Type)
 
+isConst :: PrimVal f -> Bool
+isConst (PConst _) = True
+isConst _ = False
+
+isBinOp :: PrimVal f -> Bool
+isBinOp = \case
+  PAdd -> True 
+  PSub -> True
+  PMul -> True
+  PDiv -> True
+  PExp -> True
+  PMod -> True
+  PAnd -> True
+  POr -> True
+  PXor -> True
+  PGt -> True
+  PGte -> True
+  PLt -> True
+  PLte -> True
+  PEq -> True
 data PrimVal f
   = PConst f
   | -- UnOps
@@ -65,7 +87,7 @@ type Return' ext f = App.Return' ext (P.PrimType (PrimTy f)) (PrimVal f)
 
 type ReturnIR f = Return' IR.NoExt f
 
-type ReturnHR f = Return' CoreErased.T f
+type ReturnHR f = Return' ErasedAnn.T f
 
 type Take f = App.Take (P.PrimType (PrimTy f)) (PrimVal f)
 
@@ -73,19 +95,21 @@ type Arg' ext f = App.Arg' ext (P.PrimType (PrimTy f)) (PrimVal f)
 
 type ArgIR f = Arg' IR.NoExt f
 
-type ArgHR f = Arg' CoreErased.T f
+type ArgHR f = Arg' ErasedAnn.T f
 
 type PrimVal' ext f = Return' ext f
 
 type PrimValIR f = PrimVal' IR.NoExt f
 
-type PrimValHR f = PrimVal' CoreErased.T f
+type PrimValHR f = PrimVal' ErasedAnn.T f
 
-type FFType f = Type (PrimTy f)
+type Type f = ErasedAnn.Type (PrimTy f)
 
-type FFTerm f = Term (PrimTy f) (PrimVal f)
+type Term f = ErasedAnn.Term (PrimTy f) (PrimVal f)
 
-type FFAnnTerm f = AnnTerm (PrimTy f) (PrimVal f)
+type AnnTerm f = ErasedAnn.AnnTerm (PrimTy f) (PrimVal f)
+
+-- type Term = ErasedAnn.AnnTerm PrimTy PrimVal
 
 newtype CompilationError
   = NotYetImplemented Text

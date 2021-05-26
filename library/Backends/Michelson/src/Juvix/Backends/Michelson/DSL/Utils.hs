@@ -2,41 +2,10 @@ module Juvix.Backends.Michelson.DSL.Utils where
 
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
-import qualified Juvix.Core.ErasedAnn.Types as Ann
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Untyped.Instr as Instr
 
--- TODO ∷ make usageFromType Fold!
-
-usageFromType :: Ann.Type primTy -> [Usage.T]
-usageFromType (Ann.Pi usage _x xs) = usage : usageFromType xs
-usageFromType Ann.Sig {} = []
-usageFromType Ann.SymT {} = []
-usageFromType Ann.Star {} = []
-usageFromType Ann.PrimTy {} = []
-usageFromType Ann.UnitTy {} = []
-
-piToReturnType :: Ann.Type primTy -> Ann.Type primTy
-piToReturnType (Ann.Pi _ _ rest) = piToReturnType rest
-piToReturnType last = last
-
-piToList :: Ann.Type primTy -> [(Usage.T, Ann.Type primTy)]
-piToList (Ann.Pi usage aType rest) = (usage, aType) : piToList rest
-piToList Ann.Sig {} = []
-piToList Ann.SymT {} = []
-piToList Ann.Star {} = []
-piToList Ann.PrimTy {} = []
-piToList Ann.UnitTy {} = []
-
-piToListTy :: Ann.Type primTy -> [Ann.Type primTy]
-piToListTy (Ann.Pi _usage ty xs) = ty : piToListTy xs
-piToListTy Ann.Sig {} = []
-piToListTy Ann.SymT {} = []
-piToListTy Ann.Star {} = []
-piToListTy Ann.PrimTy {} = []
-piToListTy Ann.UnitTy {} = []
 
 unpackTuple :: Instr.ExpandedOp
 unpackTuple =

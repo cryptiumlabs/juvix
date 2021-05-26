@@ -95,7 +95,7 @@ data LamPartial = LamPartial
   { ops :: [Types.Op],
     captures :: [NameSymbol.T], -- note: semantically this should be a set :)
     remArgs :: [NameSymbol.T],
-    body :: Types.Term,
+    body :: Types.HRAnnTerm,
     ty :: Types.Type
   }
   deriving (Show, Eq, Generic)

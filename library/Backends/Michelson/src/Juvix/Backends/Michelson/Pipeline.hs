@@ -15,7 +15,7 @@ data BMichelson = BMichelson
 
 instance HasBackend BMichelson where
   type Ty BMichelson = Param.PrimTy
-  type Val BMichelson = Param.RawPrimVal
+  type Val BMichelson = Param.PrimVal
   stdlibs _ = ["stdlib/Michelson.ju", "stdlib/MichelsonAlias.ju"]
 
   typecheck ctx = do
@@ -32,7 +32,7 @@ instance HasBackend BMichelson where
                   newGlobals = HM.map (Pipeline.unsafeEvalGlobal convGlobals) convGlobals
                   lookupGlobal = IR.rawLookupFun' globalDefs
                   inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-              (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @Param.PrimTy @Param.RawPrimVal @Param.CompilationError inlinedTerm (IR.globalToUsage usage) ty) Param.michelson newGlobals
+              (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @Param.PrimTy @Param.PrimVal @Param.CompilationError inlinedTerm (IR.globalToUsage usage) ty) Param.michelson newGlobals
               case res of
                 Right r -> do
                   pure r
