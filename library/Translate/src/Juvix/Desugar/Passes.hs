@@ -367,9 +367,9 @@ moduleTransform xs = Sexp.foldPred xs (== Structure.nameDefModule) moduleToRecor
       Sexp.foldr combine (generatedRecord body) body
     moduleToRecord atom cdr
       | Just mod <- Structure.toDefModule (Sexp.Atom atom Sexp.:> cdr) =
-      Structure.Defun (mod ^. name) (mod ^. args) (ignoreCond (mod ^. body) intoRecord)
-        |> Structure.fromDefun
-        |> Sexp.addMetaToCar atom
+        Structure.Defun (mod ^. name) (mod ^. args) (ignoreCond (mod ^. body) intoRecord)
+          |> Structure.fromDefun
+          |> Sexp.addMetaToCar atom
       | otherwise = error "malformed defmodule"
 
 -- | @moduleLetTransform@ - See @moduleTransform@'s comment
