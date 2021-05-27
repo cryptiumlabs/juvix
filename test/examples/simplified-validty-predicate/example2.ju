@@ -31,7 +31,6 @@ let determine-trust-level "bob"   = Trusted { maximum-funds = 30 }
 let determine-trust-level "maria" = Trusted { maximum-funds = 50 }
 let determine-trust-level _       = NotTrusted
 
-
 sig accept-withdraws-from : storage -> stroage -> bool
 let accept-withdraws-from initial final =
   -- Let abstractions should work
