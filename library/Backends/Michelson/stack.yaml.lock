@@ -61,31 +61,38 @@ packages:
     url: https://github.com/cwgoes/haskell-z3/archive/889597234bcdf5620c5a69d3405ab4d607ba4d71.tar.gz
     size: 66205
 - original:
-    subdir: code/morley
-    git: https://gitlab.com/morley-framework/morley.git
-    commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
+    git: https://github.com/serokell/elliptic-curve.git
+    commit: b8a3d0cf8f7bacfed77dc3b697f5d08bd33396a8
   completed:
     pantry-tree:
-      sha256: f91412e610cc712e0ad4588c26c02ee9ad82d0834e040c64a0510a673fc59c81
-      size: 9641
-    subdir: code/morley
-    version: 1.14.0
-    git: https://gitlab.com/morley-framework/morley.git
-    name: morley
-    commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
+      sha256: f4f032b7ef9a23afbd65a765e3a335ec8cdd219a5dfe6ee276f72e15d644a0fd
+      size: 12030
+    version: 0.3.1
+    git: https://github.com/serokell/elliptic-curve.git
+    name: elliptic-curve
+    commit: b8a3d0cf8f7bacfed77dc3b697f5d08bd33396a8
 - original:
-    subdir: code/morley-prelude
-    git: https://gitlab.com/morley-framework/morley.git
-    commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
+    git: https://github.com/serokell/pairing.git
+    commit: cf86cf1f6b03f478a439703b050c520a9d455353
   completed:
     pantry-tree:
-      sha256: 1b8b8bb3f2528f5f31cc4255227a0c55efc86163ca97f688f1fecd6d7f9f4318
-      size: 445
-    subdir: code/morley-prelude
-    version: 0.4.0
-    git: https://gitlab.com/morley-framework/morley.git
-    name: morley-prelude
-    commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
+      sha256: cc187e182595c780607ec09e1f01e7d85fbb901c2e04d8c6331e65851aa878c7
+      size: 8733
+    version: 1.1.0
+    git: https://github.com/serokell/pairing.git
+    name: pairing
+    commit: cf86cf1f6b03f478a439703b050c520a9d455353
+- original:
+    git: https://github.com/serokell/galois-field.git
+    commit: 576ba98ec947370835a1f308895037c7aa7f8b71
+  completed:
+    pantry-tree:
+      sha256: 1c5f35fa2f128d1341fffb29300ebc09f2ac463220bf76425fe12ffc2d171d48
+      size: 4657
+    version: 1.0.4
+    git: https://github.com/serokell/galois-field.git
+    name: galois-field
+    commit: 576ba98ec947370835a1f308895037c7aa7f8b71
 - original:
     subdir: tezos-bake-monitor-lib
     git: https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git
@@ -100,34 +107,26 @@ packages:
     name: tezos-bake-monitor-lib
     commit: 9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174
 - original:
+    hackage: morley-1.14.0@sha256:70a9fc646bae3a85967224c7c42b2e49155461d6124c487bbcc1d825111a189d,9682
+  completed:
+    pantry-tree:
+      sha256: b10da4c7da93a4caf440f29ec3b66782bb5d480a9be93bfc2fba31e0a7aacff4
+      size: 9369
+    hackage: morley-1.14.0@sha256:70a9fc646bae3a85967224c7c42b2e49155461d6124c487bbcc1d825111a189d,9682
+- original:
+    hackage: morley-prelude-0.4.0@sha256:7234db1acac9a5554d01bdbf22d63b598c69b9fefaeace0fb6f765bf7bf738d4,2176
+  completed:
+    pantry-tree:
+      sha256: 5ef63d068139d79b4bd5832822447ee0a9313da368c70245a79b13e1bc44a2dd
+      size: 269
+    hackage: morley-prelude-0.4.0@sha256:7234db1acac9a5554d01bdbf22d63b598c69b9fefaeace0fb6f765bf7bf738d4,2176
+- original:
     hackage: base58-bytestring-0.1.0
   completed:
     pantry-tree:
       sha256: 053784f8edef6433518c873a7c502dc75348f812e2384e1306f90467ea54f40b
       size: 419
     hackage: base58-bytestring-0.1.0@sha256:a1da72ee89d5450bac1c792d9fcbe95ed7154ab7246f2172b57bd4fd9b5eab79,1913
-- original:
-    git: https://github.com/serokell/base-noprelude.git
-    commit: 87df0899801dcdffd08ef7c3efd3c63e67e623c2
-  completed:
-    pantry-tree:
-      sha256: be322fd116817b527a3a391ba3c24d9252e4f03fd5b1b6abb815ccc78218e50f
-      size: 823
-    version: 4.14.1.0
-    git: https://github.com/serokell/base-noprelude.git
-    name: base-noprelude
-    commit: 87df0899801dcdffd08ef7c3efd3c63e67e623c2
-- original:
-    git: https://github.com/serokell/galois-field.git
-    commit: 576ba98ec947370835a1f308895037c7aa7f8b71
-  completed:
-    pantry-tree:
-      sha256: 1c5f35fa2f128d1341fffb29300ebc09f2ac463220bf76425fe12ffc2d171d48
-      size: 4657
-    version: 1.0.4
-    git: https://github.com/serokell/galois-field.git
-    name: galois-field
-    commit: 576ba98ec947370835a1f308895037c7aa7f8b71
 - original:
     hackage: hex-text-0.1.0.0
   completed:
@@ -142,17 +141,6 @@ packages:
       sha256: c07e39492e0b8da34f87b3f7516f7739d60543013e7f22bc7db0dbe99eb57540
       size: 214
     hackage: show-type-0.1.1@sha256:24f681a3481b3f9630e619d816054804ba1bd6cc05b5978ddd2cece8499ff2fa,1154
-- original:
-    git: https://github.com/int-index/caps.git
-    commit: c5d61837eb358989b581ed82b1e79158c4823b1b
-  completed:
-    pantry-tree:
-      sha256: 3a80cb98282b5cc87b8c9907bfdf4d7185818e89901dc9b17d53caecbf21e607
-      size: 374
-    version: '0'
-    git: https://github.com/int-index/caps.git
-    name: caps
-    commit: c5d61837eb358989b581ed82b1e79158c4823b1b
 - original:
     hackage: named-0.3.0.1@sha256:2975d50c9c5d88095026ffc1303d2d9be52e5f588a8f8bcb7003a04b79f10a06,2312
   completed:
@@ -182,31 +170,38 @@ packages:
       size: 281
     hackage: tasty-hunit-compat-0.2.0.1@sha256:6ef80ddbe71aa24c7215ff4ca07f5b50a3665cdebe55fb93e95190032cd3a5a1,1233
 - original:
-    git: https://github.com/serokell/elliptic-curve.git
-    commit: b8a3d0cf8f7bacfed77dc3b697f5d08bd33396a8
-  completed:
-    pantry-tree:
-      sha256: f4f032b7ef9a23afbd65a765e3a335ec8cdd219a5dfe6ee276f72e15d644a0fd
-      size: 12030
-    version: 0.3.1
-    git: https://github.com/serokell/elliptic-curve.git
-    name: elliptic-curve
-    commit: b8a3d0cf8f7bacfed77dc3b697f5d08bd33396a8
-- original:
-    git: https://github.com/serokell/pairing.git
-    commit: cf86cf1f6b03f478a439703b050c520a9d455353
-  completed:
-    pantry-tree:
-      sha256: cc187e182595c780607ec09e1f01e7d85fbb901c2e04d8c6331e65851aa878c7
-      size: 8733
-    version: 1.1.0
-    git: https://github.com/serokell/pairing.git
-    name: pairing
-    commit: cf86cf1f6b03f478a439703b050c520a9d455353
-- original:
     hackage: with-utf8-1.0.2.2@sha256:42eed140390b3e93d9482b084d1d0150e8774667f39c33bd47e84815751fad09,3057
   completed:
     pantry-tree:
       sha256: 4b06e9ee43909239a813ccd972eeb444e541efd72aeb0d343206449169227286
       size: 1051
     hackage: with-utf8-1.0.2.2@sha256:42eed140390b3e93d9482b084d1d0150e8774667f39c33bd47e84815751fad09,3057
+- original:
+    git: https://github.com/int-index/caps.git
+    commit: c5d61837eb358989b581ed82b1e79158c4823b1b
+  completed:
+    pantry-tree:
+      sha256: 3a80cb98282b5cc87b8c9907bfdf4d7185818e89901dc9b17d53caecbf21e607
+      size: 374
+    version: '0'
+    git: https://github.com/int-index/caps.git
+    name: caps
+    commit: c5d61837eb358989b581ed82b1e79158c4823b1b
+- original:
+    git: https://github.com/serokell/base-noprelude.git
+    commit: 87df0899801dcdffd08ef7c3efd3c63e67e623c2
+  completed:
+    pantry-tree:
+      sha256: be322fd116817b527a3a391ba3c24d9252e4f03fd5b1b6abb815ccc78218e50f
+      size: 823
+    version: 4.14.1.0
+    git: https://github.com/serokell/base-noprelude.git
+    name: base-noprelude
+    commit: 87df0899801dcdffd08ef7c3efd3c63e67e623c2
+- original:
+    hackage: fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995
+  completed:
+    pantry-tree:
+      sha256: 969d6b60ea298ffb81697dd350e76774a2f876103a147117f832400451ad2cc3
+      size: 224
+    hackage: fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995

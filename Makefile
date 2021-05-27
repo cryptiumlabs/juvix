@@ -56,7 +56,7 @@ test-typecheck: build
 
 test-compile: build
 	find test/examples/demo -name "*.ju" | xargs -n 1 -I % basename % .ju | xargs -t -n 1 -I % stack exec juvix -- compile test/examples/demo/%.ju test/examples/demo/%.tz -b "michelson"
-	rm test/examples/demo/*.tz 
+	rm test/examples/demo/*.tz
 
 bench:
 	stack bench --benchmark-arguments="--output ./doc/Code/bench.html"
@@ -72,5 +72,8 @@ clean:
 
 clean-full:
 	stack clean --full
+
+stack-yaml:
+	ros -Q scripts/yaml-generator.lisp
 
 .PHONY: all setup build build-libff build-z3 build-watch build-prod lint format org-gen test test-parser test-typecheck test-compile repl-lib repl-exe clean clean-full bench build-format

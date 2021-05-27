@@ -100,3 +100,16 @@ Please put the following in `.git/hooks/pre-commit` and run `chmod +x .git/hooks
 ./scripts/precommit.sh
 ```
 Ensure that it passes before you submit a pull request.
+
+## New Libraries
+
+Juvix works in a rather modular design, with most loosly coupled
+features being a library in the lanugage. One can start a new library
+with `stack new <Projectname>`. This will generate a lot of cruft that
+you'll want to remove to make it look like the other projects.
+
+Please note that we have a special `stack.yaml` generator because
+there was a lot of repeat code. [See the file itself for how to mock
+(big comment at the top).](https://github.com/heliaxdev/juvix/blob/develop/scripts/yaml-generator.lisp)
+
+To run this after you make your changes simply type `make stack-yaml`
