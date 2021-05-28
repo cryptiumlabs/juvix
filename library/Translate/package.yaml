@@ -75,11 +75,14 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - bytestring
+    - filepath
+    - pretty-simple
+    - strict
     - translate
     - tasty
+    - tasty-golden
     - tasty-hunit
     - tasty-silver
     - tasty-quickcheck
     - text
-    - bytestring
-    - pretty-simple
