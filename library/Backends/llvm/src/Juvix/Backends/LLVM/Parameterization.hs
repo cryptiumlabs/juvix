@@ -39,7 +39,7 @@ llvm =
     -- The primitive LLVM types available to Juvix users.
     builtinTypes :: Param.Builtins PrimTy
     builtinTypes =
-      [("LLVM.int8", LLVM.i8)]
+      [("LLVM.int8", PrimTy LLVM.i8)]
 
     -- The primitive LLVM values available to Juvix users.
     builtinValues :: Param.Builtins RawPrimVal

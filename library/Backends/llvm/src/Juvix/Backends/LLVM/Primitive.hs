@@ -1,6 +1,6 @@
 -- | Representation of LLVM primitives in Juvix.
 module Juvix.Backends.LLVM.Primitive
-  ( PrimTy,
+  ( PrimTy (..),
     RawPrimVal (..),
     PrimVal,
     arityRaw,
@@ -12,8 +12,12 @@ import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified LLVM.AST.Type as LLVM
 
--- | TODO: Rely on the LLVM-defined types for now.
-type PrimTy = LLVM.Type
+-- | Intermediate representation of types.
+data PrimTy
+  = -- | TODO: Rely on the LLVM-defined types for now.
+    PrimTy LLVM.Type
+  | Set
+  deriving (Eq, Show)
 
 -- | Raw representation of some primitives of LLVM.
 data RawPrimVal
