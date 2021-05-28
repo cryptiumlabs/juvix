@@ -3,6 +3,7 @@ module Juvix.Backends.LLVM.Primitive
   ( PrimTy (..),
     RawPrimVal (..),
     PrimVal,
+    CompilationError (..),
     arityRaw,
   )
 where
@@ -29,6 +30,12 @@ data RawPrimVal
 -- | The primitive values as exposed to users of Juvix, wrapping inside a
 -- return or a continuation.
 type PrimVal ext = App.Return' ext (Param.PrimType PrimTy) RawPrimVal
+
+-- | Custom compilation errors.
+data CompilationError
+  = -- | TODO: Just a placeholder for now.
+    PlaceHolderError
+  deriving (Eq, Show)
 
 -- | Arity of `RawPrimVal`.
 arityRaw :: RawPrimVal -> Natural
