@@ -1,6 +1,7 @@
 -- | Representation of LLVM primitives in Juvix.
 module Juvix.Backends.LLVM.Primitive
   ( PrimTy (..),
+    arityTy,
     RawPrimVal (..),
     PrimVal,
     CompilationError (..),
@@ -19,6 +20,10 @@ data PrimTy
     PrimTy LLVM.Type
   | Set
   deriving (Eq, Show)
+
+-- | TODO: A placeholder arity implementation for types.
+arityTy :: PrimTy -> Natural
+arityTy _ = 0
 
 -- | Raw representation of some primitives of LLVM.
 data RawPrimVal
