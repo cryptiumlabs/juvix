@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Parameterization and application of the LLVM backend primitives.
 module Juvix.Backends.LLVM.Parameterization
@@ -9,6 +10,8 @@ where
 
 import Juvix.Backends.LLVM.Primitive
 import qualified Juvix.Core.Application as App
+import qualified Juvix.Core.IR.Evaluator as IR
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified LLVM.AST.Type as LLVM
@@ -55,3 +58,26 @@ llvm =
     -- function.
     integerToRawPrimVal :: Integer -> Maybe RawPrimVal
     integerToRawPrimVal = Just . LitInt
+
+-- | TODO: for now these are just copied over from the Michelson backend.
+instance IR.HasWeak PrimTy where weakBy' _ _ t = t
+
+instance IR.HasWeak RawPrimVal where weakBy' _ _ t = t
+
+instance
+  Monoid (IR.XVPrimTy ext PrimTy primVal) =>
+  IR.HasSubstValue ext PrimTy primVal PrimTy
+  where
+  substValueWith _ _ _ t = pure $ IR.VPrimTy' t mempty
+
+instance
+  Monoid (IR.XPrimTy ext PrimTy primVal) =>
+  IR.HasPatSubstTerm ext PrimTy primVal PrimTy
+  where
+  patSubstTerm' _ _ t = pure $ IR.PrimTy' t mempty
+
+instance
+  Monoid (IR.XPrim ext primTy RawPrimVal) =>
+  IR.HasPatSubstTerm ext primTy RawPrimVal RawPrimVal
+  where
+  patSubstTerm' _ _ t = pure $ IR.Prim' t mempty
