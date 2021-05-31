@@ -16,6 +16,9 @@ import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified LLVM.AST.Type as LLVM
 
+instance Param.CanApply PrimTy where
+  arity = arityTy
+
 instance Param.CanApply (PrimVal ext) where
   arity val = case val of
     App.Cont {} -> App.numLeft val
