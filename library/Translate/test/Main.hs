@@ -6,14 +6,8 @@ import qualified Test.Contextify as Contextify
 import qualified Test.Contextualise.Contextify as Contextualise
 import Test.Contextualise.Infix.ShuntYard (allInfixTests)
 import qualified Test.Desugar.Sexp as Sexp
-import Test.Golden (contractFiles, parseTests)
+import Test.Golden (parseTests)
 import qualified Test.Tasty as T
-
-frontEndTests :: T.TestTree
-frontEndTests =
-  T.testGroup
-    "frontend tests"
-    [contractFiles]
 
 translationPasses :: T.TestTree
 translationPasses =
@@ -25,7 +19,7 @@ allCheckedTests :: T.TestTree
 allCheckedTests =
   T.testGroup
     "All tests that are checked"
-    [ frontEndTests,
+    [ 
       allInfixTests,
       Contextualise.top,
       translationPasses

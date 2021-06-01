@@ -1,4 +1,4 @@
-mod Identity where
+mod Foo where
 
 open Foo-Helper
 open Bah

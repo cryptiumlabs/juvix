@@ -1,0 +1,24 @@
+Right
+    ( NoHeader
+        [ ModuleOpen
+            ( Open
+                ( "Foo" :|
+                    [ "Kazam"
+                    , "Blah"
+                    ]
+                )
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "big-foo"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Name
+                            ( "t" :| [] )
+                        )
+                    }
+                )
+            )
+        ]
+    )
