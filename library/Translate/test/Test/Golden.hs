@@ -30,12 +30,12 @@ parseContractFile :: FilePath -> IO (Either [Char] (Header TopLevel))
 parseContractFile file = do
   Parser.prettyParse  <$> ByteString.readFile file
 
-parsedContract :: FilePath -> IO (Either [Char] (Header TopLevel))
-parsedContract file = do
+parseContract :: FilePath -> IO (Either [Char] (Header TopLevel))
+parseContract file = do
   rawContract <- ByteString.readFile file
   pure $ Parser.prettyParse rawContract 
 
-getGolden :: FilePath -> IO (Maybe (Either [Char] (Header TopLevel)))
+getGolden :: Read a => FilePath -> IO (Maybe a)
 getGolden file = do
   createDirectoryIfMissing True $ FP.takeDirectory file
   maybeBS <- T.readFileMaybe file
@@ -65,27 +65,28 @@ type FileExtension = String
 
 parseTests :: IO TestTree
 parseTests = testGroup "parse" <$> sequence
-    [ discoverGoldenTestsParse "../../test/examples/positive" compareParsedGolden
+    [ discoverGoldenTestsParse "../../test/examples/positive" 
     -- , discoverGoldenTestsJuvix "test/examples/negative" parseTestNegative
     ]
 -- | Discover golden tests for input files with extension @.ju@ and output
 -- files with extension @.parsed@.
 discoverGoldenTestsParse
   :: FilePath                 -- ^ the directory in which to recursively look for golden tests
-  -> (forall a. (Eq a, Show a) => a -> a -> T.GDiff)  -- ^ the IO action to run on the input file which produces the test output
   -> IO TestTree
-discoverGoldenTestsParse = discoverGoldenTests [".ju"] ".parsed" 
+discoverGoldenTestsParse = discoverGoldenTests [".ju"] ".parsed" getGolden parseContract
 
 -- | Discover golden tests.
 discoverGoldenTests
-  :: [FileExtension]                -- ^ the input file extensions
+  :: (Show a, Eq a) 
+  => [FileExtension]                -- ^ the input file extensions
   -> FileExtension                  -- ^ the output file extension
+  -> (FilePath -> IO (Maybe a))  -- ^ get golden
+  -> (FilePath -> IO a)  -- ^ action
   -> FilePath                       -- ^ the directory in which to recursively look for golden tests
-  -> (forall a. (Eq a, Show a) => a -> a -> T.GDiff)        -- ^ the IO action to run on the input file which produces the test output
   -> IO TestTree
-discoverGoldenTests exts_in ext_out path compare =
+discoverGoldenTests exts_in ext_out getGolden action path =
     testGroup path
-    . map (mkGoldenTest compare ext_out)
+    . map (mkGoldenTest getGolden action ext_out)
     <$> T.findByExtension exts_in path
 
 toGolden :: (ConvertText a Text, ConvertText Text c) => a -> c
@@ -93,15 +94,17 @@ toGolden = toS . Text.replace "examples" "examples-golden" .toS
 
 -- | Make a single golden test.
 mkGoldenTest
-  :: (forall a. (Eq a, Show a) => a -> a -> T.GDiff)        -- ^ comparison function
+  :: (Show a, Eq a) 
+  => (FilePath -> IO (Maybe a))  -- ^ get golden
+  -> (FilePath -> IO a)  -- ^ action
   -> FileExtension                  -- ^ the extension of the outfile, e.g. @".parsed"@
   -> FilePath                       -- ^ the file path of the input file
   -> TestTree
-mkGoldenTest compare ext pathToFile = T.goldenTest1
+mkGoldenTest getGolden action ext pathToFile = T.goldenTest1
     outFilename
     (getGolden outfile)
-    (parsedContract pathToFile)
-    compare
+    (action pathToFile)
+    compareParsedGolden
     -- show the golden/actual value
     ( T.ShowText . toS . pShowNoColor )
     createOutput
