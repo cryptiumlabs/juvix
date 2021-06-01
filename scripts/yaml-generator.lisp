@@ -616,7 +616,8 @@ common ones to include"
 (defparameter *standard-library*
   (make-stack-yaml
    :name "StandardLibrary"
-   :extra-deps (list (make-general-depencies *capability*))))
+   :extra-deps (list (make-general-depencies *capability*)
+                     *tasty-silver*)))
 
 (defparameter *frontend*
   (make-stack-yaml
