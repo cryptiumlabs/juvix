@@ -30,6 +30,12 @@ dependencies:
 - word8
 - bytestring
 - mtl
+# Testing
+- directory
+- filepath
+- pretty-simple
+- tasty
+- tasty-silver
 
 default-extensions:
   - NoImplicitPrelude
