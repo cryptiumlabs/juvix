@@ -19,3 +19,10 @@ extra-deps:
 - github: cwgoes/haskell-z3
   commit: 889597234bcdf5620c5a69d3405ab4d607ba4d71
 
+#####################################
+# Standard Library Extra Dependency #
+#####################################
+- github: phile314/tasty-silver
+  commit: f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b
+- tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638
+

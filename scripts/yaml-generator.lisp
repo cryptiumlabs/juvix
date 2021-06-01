@@ -609,6 +609,16 @@ common ones to include"
             *morley-arithmetic-circuit-deps*)
         *sub-morley-arithmetic-circuit-deps*))
 
+;; TODO ∷ deprecate this when we have dependencies imply other
+;; dependencies we should bring in
+(defparameter *standard-library-extra-deps*
+  (merge-group
+   (make-groups
+    :comment "Standard Library Extra Dependency"
+    :deps nil)
+   *tasty-silver*)
+  "extra dependencies for the standard library")
+
 ;;; ----------------------------------------------------------------------
 ;;; stack-yaml for the YAML generation
 ;;; ----------------------------------------------------------------------
@@ -617,7 +627,7 @@ common ones to include"
   (make-stack-yaml
    :name "StandardLibrary"
    :extra-deps (list (make-general-depencies *capability*)
-                     *tasty-silver*)))
+                     *standard-library-extra-deps*)))
 
 (defparameter *frontend*
   (make-stack-yaml
@@ -625,22 +635,24 @@ common ones to include"
    :resolver   17.9
    :name       "Frontend"
    :packages   (list *standard-library*)
-   :extra-deps (list (make-general-depencies *capability*))))
+   :extra-deps (list (make-general-depencies *capability*)
+                     *standard-library-extra-deps*)))
 
 (defparameter *core*
   (make-stack-yaml
    :name       "Core"
    :packages   (list *standard-library*)
    :extra-deps (list (make-general-depencies *capability* *extensible*)
-                     *eac-solver*)))
+                     *eac-solver*
+                     *standard-library-extra-deps*)))
 
 (defparameter *translate*
   (make-stack-yaml
    :name "Translate"
    :packages   (list *core* *frontend* *standard-library*)
    :extra-deps (list (make-general-depencies *capability* *extensible*)
-                     *tasty-silver*
-                     *eac-solver*)))
+                     *eac-solver*
+                     *standard-library-extra-deps*)))
 
 (defparameter *interaction-net*
   (make-stack-yaml
@@ -650,7 +662,8 @@ common ones to include"
    :extra-deps (list (make-general-depencies *capability* *extensible*)
                      *interaction-net-extra-deps*
                      *graph-visualizer*
-                     *eac-solver*)
+                     *eac-solver*
+                     *standard-library-extra-deps*)
    :extra "allow-newer: true"))
 
 (defparameter *interaction-net-IR*
@@ -659,7 +672,8 @@ common ones to include"
    :resolver   17.9
    :packages   (list *standard-library* *core*)
    :extra-deps (list (make-general-depencies *capability* *extensible*)
-                     *eac-solver*)))
+                     *eac-solver*
+                     *standard-library-extra-deps*)))
 
 (defparameter *LLVM*
   (make-stack-yaml
@@ -671,7 +685,8 @@ common ones to include"
                      *llvm-hs-deps*
                      *llvm-hs-extra-deps*
                      *eac-solver*
-                     *interaction-net-extra-deps*)
+                     *interaction-net-extra-deps*
+                     *standard-library-extra-deps*)
    :extra "allow-newer: true"))
 
 ;; Define these before pipeline due to mutual recursion
@@ -712,7 +727,8 @@ common ones to include"
                         *morley-deps*
                         *morley-sub-deps*
                         *morley-sub-deps-extra*
-                        *graph-visualizer*)))
+                        *graph-visualizer*
+                        *standard-library-extra-deps*)))
 
 (defparameter *plonk*
   (make-stack-yaml
