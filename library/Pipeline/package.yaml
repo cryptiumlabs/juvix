@@ -38,7 +38,6 @@ dependencies:
   - galois-field
   # - llvm
   # - interaction-net
-  # - arithmetic-circuit
   # - InteractionNetIR
   ###########################
   # Dependency for OS
@@ -65,6 +64,11 @@ dependencies:
   # Dependency for Morley
   ###########################
   - morley
+
+  ###########################
+  # Debugging
+  ###########################
+  - pretty-simple
 
 default-extensions:
   - NoImplicitPrelude
@@ -101,6 +105,7 @@ default-extensions:
   - DisambiguateRecordFields
   - TupleSections
   - BlockArguments
+  - RecordWildCards
 
 when:
   condition: flag(incomplete-error)

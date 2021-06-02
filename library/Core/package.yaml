@@ -27,6 +27,8 @@ dependencies:
 - lens
 - dlist
 - pretty-compact
+# - pretty-simple
+- mtl
 
 default-extensions:
   - NoImplicitPrelude

@@ -15,6 +15,7 @@ import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Typechecker.Types
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.IR.Types.Globals as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Translate
 import Juvix.Library
@@ -74,6 +75,22 @@ data TypecheckError' extV extT primTy primVal
       }
   | EvalError
       { evalErr :: Eval.Error IR.NoExt T primTy (P.TypedPrim primTy primVal)
+      }
+  | -- | datatype typechecking errors
+    DatatypeError
+      { invalidType :: IR.Term' extT primTy primVal
+      }
+  | ConTypeError
+      { invalidConTy :: IR.Value' extV primTy (P.TypedPrim primTy primVal)
+      }
+  | ParamError
+      { expectedN :: IR.GlobalName,
+        exp :: IR.Term' extT primTy primVal
+      }
+  | DeclError
+      { tg :: IR.Term' extT primTy primVal,
+        name :: IR.GlobalName,
+        tel :: IR.RawTelescope extT primTy primVal
       }
 
 type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
@@ -183,6 +200,33 @@ instance
         ]
     EvalError err ->
       PP.prettyT err
+    DatatypeError ty ->
+      PP.sepIndent'
+        [ (False, "Invalid type for datatype"),
+          (True,  prettyHR ty),
+          (False, "The type of a datatype must be zero or more function"),
+          (False, "types, ending in * i.")
+        ]
+    ConTypeError ty ->
+      PP.sepIndent'
+        [ (False, "Invalid type for data constructor:"),
+          (True,  prettyVal ty),
+          (False, "The type of a datatype must be zero or more function"),
+          (False, "types, ending in the datatype.")
+        ]
+    ParamError n tm ->
+      PP.sepIndent'
+        [ (False, "Invalid value of parameter"),
+          (True,  prettyHR tm),
+          (False, "instead of the name " <> (HR.toPPAnn <$> PP.pretty0 n))
+        ]
+    DeclError tg _name _tel ->
+      PP.sepIndent'
+        [ (False, "Invalid target for data constructor:"),
+          (True,  prettyHR tg),
+          (False, "The type of a datatype must be zero or more function"),
+          (False, "types, ending in the datatype.")
+        ]
     where
       expected what ty =
         PP.sepIndent'

@@ -126,6 +126,7 @@ class CanApply a where
 
   -- | Create a reference to a free variable.
   freeArg :: Proxy a -> GlobalName -> Maybe (Arg a)
+  -- TODO: This may be removed
   freeArg _ _ = Nothing
 
   -- | Create a reference to a bound variable.

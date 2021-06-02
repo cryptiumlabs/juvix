@@ -24,10 +24,6 @@ import qualified Juvix.Library.Usage as Usage
 
 type RawTerm ty val = IR.Term ty val
 
-type RawElim ty val = IR.Elim ty val
-
-type Term ty val = HR.Term ty val
-
 type Comp ty val err res =
   forall m.
   CompConstraints ty val err m =>
@@ -146,7 +142,7 @@ toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
   where
     toRaw1 (ErasedAnn.Var x) = ErasedAnn.Var x
     toRaw1 (ErasedAnn.Prim p) = primToRaw p
-    toRaw1 t@(ErasedAnn.LamM {body}) = t {ErasedAnn.body = toRaw body}
+    toRaw1 (ErasedAnn.LamM {..}) = ErasedAnn.LamM {body = toRaw body, ..}
     toRaw1 (ErasedAnn.PairM l r) = ErasedAnn.PairM (toRaw l) (toRaw r)
     toRaw1 ErasedAnn.UnitM = ErasedAnn.UnitM
     toRaw1 (ErasedAnn.AppM f xs) = ErasedAnn.AppM (toRaw f) (toRaw <$> xs)

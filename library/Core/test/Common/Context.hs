@@ -240,7 +240,7 @@ emptyWorksAsExpectedSingle =
 topLevelDoesNotMessWithInnerRes :: T.TestTree
 topLevelDoesNotMessWithInnerRes =
   T.testCase
-    "TopLevelname does not prohbit inner module change"
+    "TopLevelname does not prohibit inner module change"
     $ do
       let created :: Context.T Int Int Int
           created = unsafeEmpty (pure "Shadows")
