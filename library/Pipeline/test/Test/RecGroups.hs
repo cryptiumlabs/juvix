@@ -49,10 +49,10 @@ pipelineOpen =
         $ do
           Right c <-
             Pipeline.toCore
-              [ "../../test/examples/test/foo.ju",
-                "../../test/examples/test/foo-helper.ju",
-                "../../test/examples/test/foo-helpers.ju",
-                "../../test/examples/test/baz.ju"
+              [ "../../../test/examples/test/foo.ju",
+                "../../../test/examples/test/foo-helper.ju",
+                "../../../test/examples/test/foo-helpers.ju",
+                "../../../test/examples/test/baz.ju"
               ]
           let recd = Traverse.recGroups c
           fmap (\(x :| []) -> Traverse.name x) recd T.@=? correctOrder

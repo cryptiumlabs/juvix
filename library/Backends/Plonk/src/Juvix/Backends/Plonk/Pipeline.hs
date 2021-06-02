@@ -30,7 +30,7 @@ import Juvix.ToCore.FromFrontend as FF (CoreDefs (..))
 import qualified Text.PrettyPrint.Leijen.Text as Pretty
 
 data BPlonk f = BPlonk
-  deriving (Eq, Show)
+  deriving (Eq, Show, Read)
 
 instance
   ( GaloisField f,

@@ -8,5 +8,6 @@ import qualified Test.Tasty as T
 main :: IO ()
 main = do
   compilerTests <- Compiler.top
+  goldenTests <- Golden.top
   T.defaultMain $
-    T.testGroup "Plonk tests" [compilerTests]
+    T.testGroup "Plonk tests" [compilerTests, goldenTests]

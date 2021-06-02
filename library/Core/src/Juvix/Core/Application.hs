@@ -121,6 +121,11 @@ deriving instance
   Show (Arg' ext ty term)
 
 deriving instance
+  (Read (ParamVar ext), Read (Take ty term), Read ty, Read term) =>
+  Read (Arg' ext ty term)
+
+
+deriving instance
   (Eq (ParamVar ext), Eq ty, Eq term) =>
   Eq (Arg' ext ty term)
 
@@ -142,7 +147,7 @@ data Take ty term = Take
     -- | The term itself.
     term :: term
   }
-  deriving (Show, Eq, Generic, Functor, Foldable, Traversable)
+  deriving (Show, Read, Eq, Generic, Functor, Foldable, Traversable)
 
 instance Bifunctor Take where
   bimap = bimapDefault

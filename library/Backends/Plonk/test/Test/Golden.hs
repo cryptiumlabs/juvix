@@ -12,11 +12,15 @@ import Data.Curve.Weierstrass.BLS12381 (Fr)
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Library.Feedback as Feedback
 import Text.Pretty.Simple (pPrint)
+import Test.Orphan
 
 --------------------------------------------------------------------------------
 -- Parse contracts (Golden tests)
 --------------------------------------------------------------------------------
 
+top = testGroup "Plonk golden tests" <$> sequence 
+  [ typecheckTests
+  ]
 
 typecheckTests :: IO TestTree
 typecheckTests = testGroup "Plonk typecheck" <$> sequence
@@ -30,10 +34,9 @@ discoverGoldenTestsTypecheck
   -> IO TestTree
 discoverGoldenTestsTypecheck = discoverGoldenTests [".ju"] ".circuit" getGolden (expectSuccess . typecheck)
   where
-    -- typecheck :: FilePath -> Pipeline (Plonk.FFAnnTerm Fr)
     typecheck file = do
       contract <- liftIO $ readFile file
-      context <- Pipeline.parse (Plonk.BPlonk @(Plonk.BPlonk Fr)) contract
+      context <- Pipeline.parse (Plonk.BPlonk @(Fr)) contract
       Pipeline.typecheck @(Plonk.BPlonk Fr) context
 
     expectSuccess v = do
