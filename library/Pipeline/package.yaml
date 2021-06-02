@@ -136,7 +136,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - Pipeline
-    - michelson
-    - plonk
+    # - michelson
+    # - plonk
     - tasty
     - tasty-hunit

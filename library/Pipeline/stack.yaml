@@ -6,8 +6,6 @@ packages:
 - ../Frontend
 - ../Core
 - ../Translate
-- ../Backends/Michelson
-- ../Backends/Plonk
 
 extra-deps:
 

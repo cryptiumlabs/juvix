@@ -1,4 +1,4 @@
-module VStack where
+module Test.VStack where
 
 import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types

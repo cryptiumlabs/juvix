@@ -7,7 +7,6 @@ packages:
 - ../../Core
 - ../../Pipeline
 - ../../Translate
-- ../../Backends/Michelson
 
 extra-deps:
 

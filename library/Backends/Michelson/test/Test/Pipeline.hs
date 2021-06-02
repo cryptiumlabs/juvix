@@ -1,6 +1,6 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
-module Test.Pipeline where
+module Test.Pipeline (top) where
 
 import qualified Juvix.Backends.Michelson as Michelson
 import qualified Juvix.Backends.Michelson.Compilation as M
@@ -71,6 +71,20 @@ newtype EnvExec primTy primVal compErr a
   deriving
     (HasThrow "error" (Core.PipelineError primTy primVal compErr))
     via MonadError (EnvExecAlias primTy primVal compErr)
+
+top :: T.TestTree
+top =
+  T.testGroup
+    "Pipeline tests"
+    tests
+
+tests :: [T.TestTree]
+tests =
+  [ test_constant,
+    test_erased_function,
+    test_real_function_apply,
+    test_partial_erase
+  ]
 
 coreToMichelson :: MichelsonComp (Either Michelson.CompilationError Michelson.EmptyInstr)
 coreToMichelson term usage ty = do
@@ -150,13 +164,6 @@ toMichelsonContract term usage ty globals = do
         Left err -> Left (show err)
     Left err -> Left (show err)
 
-tests :: [T.TestTree]
-tests =
-  [ test_constant,
-    test_erased_function,
-    test_real_function_apply,
-    test_partial_erase
-  ]
 
 test_constant :: T.TestTree
 test_constant =

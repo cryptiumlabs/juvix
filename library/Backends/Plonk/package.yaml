@@ -92,6 +92,7 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - bytestring
     - directory
     - generic-arbitrary
     - plonk
