@@ -74,6 +74,6 @@ clean-full:
 	stack clean --full
 
 stack-yaml:
-	ros -Q scripts/yaml-generator.lisp
+	ros -Q scripts/yaml-generator/yaml-generator.asd
 
 .PHONY: all setup build build-libff build-z3 build-watch build-prod lint format org-gen test test-parser test-typecheck test-compile repl-lib repl-exe clean clean-full bench build-format

@@ -1,0 +1,116 @@
+* Yaml Generator
+
+Hello, Welcome to the Juvix =Stack.yaml= generator.
+
+This library was designed to generate =Stack.yaml= files. This need
+arises out of having 11 libraries that need to be updated often
+causing delays when adding new dependencies.
+
+The configuration that we use is in =src/config=
+
+
+** Editing Packages
+** Defining your own
+Library definitions look like
+#+begin_src lisp
+  '(defparameter *interaction-net-IR*
+    ;; make a stack.yaml configuration
+    (make-stack-yaml
+     ;; give it a name for other packages, this corresponds to the path name
+     :name       "InteractionNetIR"
+     ;; this resolver number states we aren't using the default *default-resolver*
+     :resolver   17.9
+     ;; packages are local packages we rely on in our repo, update this
+     ;; if you want to rely on another juvix package!
+     :packages   (list *standard-library* *core*)
+     ;; This is where all the extra stack-yaml libs come from
+
+     ;; This is what the library is designed to abstract from, namely
+     ;; many common dependencies are here, you may have to jump around.
+     :extra-deps (list (make-general-depencies *capability* *extensible*)
+                       ,*eac-solver*)
+     ;; This gives the path to the other projects, if you are in the
+     ;; library folder then no need to change it from this default. If
+     ;; you are in a nested folder then you'll need to give an extra set
+     ;; of dots!
+     :path-to-other "../"
+     ;; This gives the extra bit of information for if we need any extra
+     ;; text that stack allows
+     :extra "allow-newer: true"))
+#+end_src
+
+
+
+;; I tend to test what these look like by calling
+;; (print-yaml *interaction-net-IR*)
+;; to see what it generates
+
+;; Note if you make a new one, update MAIN with the proper path to the library
+
+;; Raw package dependencies we might see in haskell come in the following forms
+
+;; ①
+;; - git: https://gitlab.com/morley-framework/morley.git
+;; commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
+;; subdirs:
+;;   - code/morley
+;;   - code/morley-prelude
+
+;; ②
+;; - constraints-extras-0.3.0.2@sha256:bf6884be65958e9188ae3c9e5547abfd6d201df021bff8a4704c2c4fe1e1ae5b,1784
+
+;; ③
+;; - cryptonite-0.27
+
+;; ④
+;; - github: phile314/tasty-silver
+;; commit: f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b
+
+;; These correspond to
+
+;; ①
+
+;; Defparamter is given to show how we define the variables
+'(defparameter *tezos-morley*
+  (make-dependency-git :name "https://gitlab.com/morley-framework/morley.git"
+                       :commit "53961f48d0d3fb61051fceaa6c9ed6becb7511e5"
+                       :subdirs (list "code/morley" "code/morley-prelude")))
+
+;; ②
+
+'(string->dep-sha
+  "constraints-extras-0.3.0.2@sha256:bf6884be65958e9188ae3c9e5547abfd6d201df021bff8a4704c2c4fe1e1ae5b,1784")
+
+;; ③
+'(make-dependency-bare :name "cryptonite-0.27")
+
+;; ④
+
+'(make-dependency-github
+  :name "phile314/tasty-silver"
+  :commit "f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b")
+
+
+;; We tend to bunch of similar dependecies into a group
+
+'(defparameter *morley-deps*
+  ;; Make the dependcy group
+  (make-groups
+   ;; Write a header section on the dependcy
+   :comment "Morley Specific dependencies"
+   ;; Now list all dependencies
+   :deps (list
+          *tezos-bake-monitor*
+          *tezos-morley*)))
+
+
+;; If you to bump the default resolver for the projects please edit
+;; *default-resolver* with the new number.
+
+;; Please note that variables need to be done in dependency order as
+;; they are resolved immediately. So if there are mutually recursive
+;; packages, you'll need to declare them before hand with just their
+;; name so it can be processed as a local package
+
+;; With all that said, Happy hacking!
+
