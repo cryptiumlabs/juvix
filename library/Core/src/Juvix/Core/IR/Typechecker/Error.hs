@@ -203,27 +203,27 @@ instance
     DatatypeError ty ->
       PP.sepIndent'
         [ (False, "Invalid type for datatype"),
-          (True,  prettyHR ty),
+          (True, prettyHR ty),
           (False, "The type of a datatype must be zero or more function"),
           (False, "types, ending in * i.")
         ]
     ConTypeError ty ->
       PP.sepIndent'
         [ (False, "Invalid type for data constructor:"),
-          (True,  prettyVal ty),
+          (True, prettyVal ty),
           (False, "The type of a datatype must be zero or more function"),
           (False, "types, ending in the datatype.")
         ]
     ParamError n tm ->
       PP.sepIndent'
         [ (False, "Invalid value of parameter"),
-          (True,  prettyHR tm),
+          (True, prettyHR tm),
           (False, "instead of the name " <> (HR.toPPAnn <$> PP.pretty0 n))
         ]
     DeclError tg _name _tel ->
       PP.sepIndent'
         [ (False, "Invalid target for data constructor:"),
-          (True,  prettyHR tg),
+          (True, prettyHR tg),
           (False, "The type of a datatype must be zero or more function"),
           (False, "types, ending in the datatype.")
         ]
