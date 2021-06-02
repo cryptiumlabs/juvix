@@ -12,6 +12,17 @@ packages:
   original:
     hackage: capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
 - completed:
+    size: 15444
+    url: https://github.com/metastatedev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
+    name: extensible-data
+    version: 0.1.0
+    sha256: fae24b2dd3fd9c1fc1e3e13220d41ce415065876d10b5849e1a38effd5d66810
+    pantry-tree:
+      size: 1863
+      sha256: ea0eaebc5512c5f88fc4085874f05ca7d9445750efb0729e6dc6fefe48378ab0
+  original:
+    url: https://github.com/metastatedev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
+- completed:
     hackage: aeson-options-0.1.0@sha256:2d0c25afbb2d038bd5b57de8d042e319ea1a5ec7d7b92810d8a0cf0777882b6a,1244
     pantry-tree:
       size: 277
@@ -36,28 +47,6 @@ packages:
       sha256: 13618df6d33cdbbfa75396dcfa7fd5137b7183c440f9c6ceb0a0d3a0fb144d97
   original:
     url: https://github.com/seereason/sr-extra/archive/d5435dcb2ae5da5f9e0fb8e5a3c40f99937a046f.tar.gz
-- completed:
-    size: 15444
-    url: https://github.com/heliaxdev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
-    name: extensible-data
-    version: 0.1.0
-    sha256: fae24b2dd3fd9c1fc1e3e13220d41ce415065876d10b5849e1a38effd5d66810
-    pantry-tree:
-      size: 1863
-      sha256: ea0eaebc5512c5f88fc4085874f05ca7d9445750efb0729e6dc6fefe48378ab0
-  original:
-    url: https://github.com/heliaxdev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
-- completed:
-    size: 359995
-    url: https://github.com/jyp/prettiest/archive/e5ce6cd6b4da71860c3d97da84bed4a827fa00ef.tar.gz
-    name: pretty-compact
-    version: '3.0'
-    sha256: 27a4b2e7ee8f4768b27e7173f758fd0af83b1d8e3c3af9711b5fed2b27ef54ec
-    pantry-tree:
-      size: 2327
-      sha256: c768b2faa4e5d7b791d987679616d8f90f169a73ae3fd38c20f37f08d02d930d
-  original:
-    url: https://github.com/jyp/prettiest/archive/e5ce6cd6b4da71860c3d97da84bed4a827fa00ef.tar.gz
 - completed:
     hackage: derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422
     pantry-tree:
@@ -154,10 +143,10 @@ packages:
   original:
     hackage: named-0.3.0.1@sha256:2975d50c9c5d88095026ffc1303d2d9be52e5f588a8f8bcb7003a04b79f10a06,2312
 - completed:
-    hackage: cryptonite-0.27@sha256:c3a9c8ce11e654a9d5bee827b089d4b50587272828d0c52a85362a58667a916c,18163
+    hackage: cryptonite-0.27@sha256:b75ec07ef0244574aa5374f0a1b349dff8c8f84583cb6c58fd95e565245716d4,18143
     pantry-tree:
       size: 22989
-      sha256: 6eeff10404aecc9028ed21e107d92dd58616dc2d1c4413c04a6dc3ce3fc3ca40
+      sha256: 1a63bb79748aeb2c0312d6a166fe8436a139929b017bf208f002e79073d21966
   original:
     hackage: cryptonite-0.27
 - completed:
@@ -267,6 +256,17 @@ packages:
       sha256: c354e916cb3aa9a0728a60f08440dc589a9e6d8275f047dbe9ab73f168247561
   original:
     hackage: monoidal-containers-0.6.0.1@sha256:7d776942659eb4d70d8b8da5d734396374a6eda8b4622df9e61e26b24e9c8e40,2501
+- completed:
+    size: 359995
+    url: https://github.com/jyp/prettiest/archive/e5ce6cd6b4da71860c3d97da84bed4a827fa00ef.tar.gz
+    name: pretty-compact
+    version: '3.0'
+    sha256: 27a4b2e7ee8f4768b27e7173f758fd0af83b1d8e3c3af9711b5fed2b27ef54ec
+    pantry-tree:
+      size: 2327
+      sha256: c768b2faa4e5d7b791d987679616d8f90f169a73ae3fd38c20f37f08d02d930d
+  original:
+    url: https://github.com/jyp/prettiest/archive/e5ce6cd6b4da71860c3d97da84bed4a827fa00ef.tar.gz
 snapshots:
 - completed:
     size: 563099
