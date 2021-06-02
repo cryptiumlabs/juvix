@@ -47,6 +47,11 @@ deriving instance
   Show (Return' ext ty term)
 
 deriving instance
+  (Read (ParamVar ext), Read (Arg' ext ty term), Read (Take ty term), Read ty, Read term) =>
+  Read (Return' ext ty term)
+
+
+deriving instance
   (Eq (ParamVar ext), Eq ty, Eq term) =>
   Eq (Return' ext ty term)
 

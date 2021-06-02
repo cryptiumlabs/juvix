@@ -9,6 +9,11 @@ extra-deps:
 # General Dependencies #
 ########################
 - capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
-- tasty-silver-3.2.1@sha256:93d753d112f21e10075e10b1156ef16cf09bd6588a8c239cab7ac8afc3556ea3,2364
+
+#####################################
+# Standard Library Extra Dependency #
+#####################################
+- github: phile314/tasty-silver
+  commit: f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b
 - tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638
 

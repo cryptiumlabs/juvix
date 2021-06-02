@@ -104,7 +104,7 @@ Ensure that it passes before you submit a pull request.
 ## New Libraries
 
 Juvix works in a rather modular design, with most loosly coupled
-features being a library in the lanugage. One can start a new library
+features being a library in the language. One can start a new library
 with `stack new <Projectname>`. This will generate a lot of cruft that
 you'll want to remove to make it look like the other projects.
 
