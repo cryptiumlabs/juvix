@@ -118,7 +118,7 @@ To run this after you make your changes simply type `make stack-yaml`
 
 Golden tests allow us to keep track of changes in all phases of the compiler: parsing, desugaring, typechecking, code generation,... 
 
-We aim to test all Juvix files in the examples folder. Some phases of the compiler are backend specific. Some Juvix examples may show a feature that is mean to work, while others may reflect syntax that should not work. The folder `test/examples/` is structured following this:
+We aim to test all Juvix files in the examples folder. Some phases of the compiler are backend specific. Some Juvix examples may show a feature that is expected to work, while others may reflect syntax that should not work. The folder `test/examples/` is structured following this:
 ```
 test
   |- examples
