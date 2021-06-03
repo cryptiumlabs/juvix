@@ -6,6 +6,7 @@
 module Juvix.Core.IR.Typechecker
   ( module Juvix.Core.IR.Typechecker,
     module Typed,
+    module Error,
     module Env,
   )
 where
@@ -13,6 +14,7 @@ where
 import Juvix.Core.IR.CheckDatatype
 import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Typechecker.Env as Env
+import Juvix.Core.IR.Typechecker.Error as Error
 import Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Globals as IR

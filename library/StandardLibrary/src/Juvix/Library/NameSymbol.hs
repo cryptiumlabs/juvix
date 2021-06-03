@@ -9,6 +9,7 @@ import Data.String (IsString (..))
 import qualified Data.Text as Text
 import Juvix.Library
 import qualified Juvix.Library.Parser.Token as Tok
+import qualified Juvix.Library.PrettyPrint as PP
 import qualified Prelude (foldr1)
 
 type T = NonEmpty Symbol
@@ -110,3 +111,10 @@ base = snd . split
 
 applyBase :: (Base -> Base) -> T -> T
 applyBase f n = let (m, b) = split n in qualify1 m (f b)
+
+type instance PP.Ann T = ()
+
+instance PP.PrettySyntax T
+
+instance PP.PrettyText T where
+  prettyT = PP.text . textify . toSymbol
