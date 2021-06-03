@@ -48,4 +48,4 @@ let norm (P x y) = x^2 + y^2
 let norm (Q x y z) = x^2 + y^2 + z^2
 
 sig main : field  -- -> field -> field -> field
-let main = norm (P 3 4)  -- \x y z -> x^2 + y^2 --  + z^2 --
+let main = 3 -- norm (P 3 4)  -- \x y z -> x^2 + y^2 --  + z^2 --

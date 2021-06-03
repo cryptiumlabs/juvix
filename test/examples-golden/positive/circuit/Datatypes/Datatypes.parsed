@@ -460,28 +460,9 @@ Right
                     { functionLikedName = "main"
                     , functionLikeArgs = []
                     , functionLikeBody = Body
-                        ( Application
-                            ( App
-                                { applicationName = Name
-                                    ( "norm" :| [] )
-                                , applicationArgs = Parened
-                                    ( Application
-                                        ( App
-                                            { applicationName = Name
-                                                ( "P" :| [] )
-                                            , applicationArgs = Constant
-                                                ( Number
-                                                    ( Integer' 3 )
-                                                ) :|
-                                                [ Constant
-                                                    ( Number
-                                                        ( Integer' 4 )
-                                                    )
-                                                ]
-                                            }
-                                        )
-                                    ) :| []
-                                }
+                        ( Constant
+                            ( Number
+                                ( Integer' 3 )
                             )
                         )
                     }
