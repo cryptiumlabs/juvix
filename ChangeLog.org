@@ -1,5 +1,8 @@
 * Changelog for Juvix
 
+** 0.1.0.5
+  + Add Golden tests
+
 ** 0.1.0.4
 - _Changes to =Library/Sexp.hs=_
   + Adds documentation to all functions
