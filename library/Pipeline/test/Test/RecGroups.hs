@@ -9,7 +9,7 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
 juvixRootPath :: FilePath 
-juvixRootPath = "../../../"
+juvixRootPath = "../../../../"
 
 withJuvixRootPath :: FilePath -> FilePath
 withJuvixRootPath p = juvixRootPath <> p
@@ -60,7 +60,8 @@ pipelineOpen =
         $ do
           Right c <-
             Pipeline.toCore
-              (withJuvixExamplesPath <$> [ "test/foo.ju",
+              (withJuvixExamplesPath <$> [ 
+                "positive/michelson/test/foo.ju",
                 "positive/michelson/test/foo-helper.ju",
                 "positive/michelson/test/foo-helpers.ju",
                 "positive/michelson/test/baz.ju"
