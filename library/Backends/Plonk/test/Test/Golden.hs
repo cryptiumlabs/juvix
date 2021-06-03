@@ -59,22 +59,18 @@ typecheck file = do
 expectSuccess v = do
   feedback <- Feedback.runFeedbackT v
   case feedback of
-    Feedback.Success msgs r -> do
-      mapM_ pPrint msgs
-      pure r
-    Feedback.Fail msgs -> panic $ "Fail: " <> show msgs-- mapM_ pPrint msgs >> exitFailure
-
+    Feedback.Success msgs r -> pure r
+    Feedback.Fail msgs -> panic $ "Fail: " <> show msgs
 
 
 -- | Discover golden tests for input files with extension @.ju@ and output
--- files with extension @.typecheck@.
+-- files with extension @.circuit@.
 discoverGoldenTestsCompile
   :: FilePath                 -- ^ the directory in which to recursively look for golden tests
   -> IO TestTree
 discoverGoldenTestsCompile (withJuvixRootPath -> p)= discoverGoldenTests [".ju"] ".circuit" getGolden (expectSuccess . compile) p
   where
-    compile file = do
-      Plonk.compileCircuit <$> typecheck file
+    compile file = Plonk.compileCircuit <$> typecheck file
       
 
 

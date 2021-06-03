@@ -11,6 +11,7 @@ import           Test.Tasty
 --------------------------------------------------------------------------------
 -- Parse contracts (Golden tests)
 --------------------------------------------------------------------------------
+
 -- TODO: Add translations as well?
 
 parseContract :: FilePath -> IO (Either [Char] (Header TopLevel))
@@ -21,7 +22,7 @@ parseContract file = do
 parseTests :: IO TestTree
 parseTests = testGroup "parse" <$> sequence
     [ discoverGoldenTestsParse "../../test/examples/positive" 
-    -- TODO discoverGoldenTestsJuvix "test/examples/negative" parseTestNegative
+    , discoverGoldenTestsParse "../../test/examples/negative" 
     ]
 -- | Discover golden tests for input files with extension @.ju@ and output
 -- files with extension @.parsed@.
