@@ -93,8 +93,9 @@ instance
     case res of
       Right (FF.CoreDefs _order globals) -> do
         let globalDefs = HM.mapMaybe Pipeline.toCoreDef globals
+        -- TODO: Fix MAIN
         case HM.elems $ HM.filter Pipeline.isMain globalDefs of
-          [] -> Feedback.fail "No main function found"
+          [] -> Feedback.fail $ "No main function found in " <> show globalDefs
           [IR.RawGFunction f]
             | IR.RawFunction _name usage ty (clause :| []) <- f,
               IR.RawFunClause _ [] term _ <- clause -> do

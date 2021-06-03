@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ViewPatterns #-}
 module Test.Golden where
 
 import qualified Data.ByteString as ByteString (readFile)
@@ -18,13 +19,22 @@ import Test.Orphan
 -- Parse contracts (Golden tests)
 --------------------------------------------------------------------------------
 
-top = testGroup "Plonk golden tests" <$> sequence 
+juvixRootPath :: FilePath 
+juvixRootPath = "../../../"
+
+libs :: IsString a => [a]
+libs = ["stdlib/Prelude.ju", "stdlib/Circuit.ju"]
+
+withJuvixRootPath :: FilePath -> FilePath
+withJuvixRootPath p = juvixRootPath <> p
+
+top = testGroup "Plonk golden tests" <$> sequence
   [ typecheckTests
   ]
 
 typecheckTests :: IO TestTree
 typecheckTests = testGroup "Plonk typecheck" <$> sequence
-    [ discoverGoldenTestsTypecheck "../../../test/examples/positive" 
+    [ discoverGoldenTestsTypecheck "test/examples/positive/circuit"
     -- TODO discoverGoldenTestsJuvix "test/examples/negative" parseTestNegative
     ]
 -- | Discover golden tests for input files with extension @.ju@ and output
@@ -32,11 +42,11 @@ typecheckTests = testGroup "Plonk typecheck" <$> sequence
 discoverGoldenTestsTypecheck
   :: FilePath                 -- ^ the directory in which to recursively look for golden tests
   -> IO TestTree
-discoverGoldenTestsTypecheck = discoverGoldenTests [".ju"] ".circuit" getGolden (expectSuccess . typecheck)
+discoverGoldenTestsTypecheck (withJuvixRootPath -> p)= discoverGoldenTests [".ju"] ".typecheck" getGolden (expectSuccess . typecheck) p
   where
     typecheck file = do
       contract <- liftIO $ readFile file
-      context <- Pipeline.parse (Plonk.BPlonk @(Fr)) contract
+      context <- Pipeline.parseWithLibs (withJuvixRootPath <$> libs) (Plonk.BPlonk @Fr) contract
       Pipeline.typecheck @(Plonk.BPlonk Fr) context
 
     expectSuccess v = do

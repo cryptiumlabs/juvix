@@ -1,6 +1,6 @@
 Right
     ( Header
-        ( "DatatypesMichelson" :| [] )
+        ( "Datatypes" :| [] )
         [ ModuleOpen
             ( Open
                 ( "Prelude" :| [] )

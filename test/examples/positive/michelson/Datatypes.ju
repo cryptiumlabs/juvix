@@ -1,4 +1,4 @@
-mod DatatypesMichelson where
+mod Datatypes where
 
 open Prelude
 open Michelson
