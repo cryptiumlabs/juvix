@@ -16,6 +16,10 @@ instance IsParamVar T where
 
 type TypedPrim ty val = TypedPrim' T ty val
 
+type TermT ty val = Term ty (TypedPrim ty val)
+
+type AnnTermT ty val = AnnTerm ty (TypedPrim ty val)
+
 data Term primTy primVal
   = Var NameSymbol.T
   | Prim primVal

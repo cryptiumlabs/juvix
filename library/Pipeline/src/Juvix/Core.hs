@@ -12,6 +12,7 @@ where
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Core.Common.Context as Context
 import Juvix.Core.Erasure (erase, eraseAnn)
+import qualified Juvix.Core.HR.Pretty as HR
 import Juvix.Core.Pipeline
 import Juvix.Core.Translate
 import Juvix.Core.Types
@@ -19,12 +20,20 @@ import qualified Juvix.Frontend.Types as Initial
 import qualified Juvix.FrontendDesugar as Desugar
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.PrettyPrint as PP
 import qualified Juvix.Library.Sexp as Sexp
 
 data Error
   = ContextErr Contextify.ResolveErr
   | NoInput
   deriving (Show)
+
+type instance PP.Ann Error = ()
+
+instance PP.PrettyText Error where
+  prettyT = \case
+    ContextErr err -> PP.show err -- FIXME
+    NoInput -> PP.text "no input"
 
 -- TODO ∷ update the target when the last pass is finished,
 -- that way we can get the T out

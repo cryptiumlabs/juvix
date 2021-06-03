@@ -14,7 +14,6 @@ import qualified Juvix.Backends.Plonk.Compiler as Compiler
 import qualified Juvix.Backends.Plonk.Dot as Dot
 import qualified Juvix.Backends.Plonk.Parameterization as Parameterization
 import qualified Juvix.Backends.Plonk.Types as Types
-import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
@@ -22,6 +21,7 @@ import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
     TypedPrim,
   )
+import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Pipeline as CorePipeline
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
@@ -36,31 +36,18 @@ instance
   ( GaloisField f,
     Eq f,
     Integral f,
-    CanApply
-      ( CoreApp.Return'
-          IR.NoExt
-          (NonEmpty (Types.PrimTy f))
-          (Types.PrimVal f)
-      ),
+    CanApply (Param.TypedPrim (Types.PrimTy f) (Types.PrimVal f)),
     CanApply (Types.PrimTy f),
     IR.HasPatSubstTerm
       (OnlyExts.T IR.NoExt)
       (Types.PrimTy f)
-      ( CoreApp.Return'
-          IR.NoExt
-          (NonEmpty (Types.PrimTy f))
-          (Types.PrimVal f)
-      )
+      (Param.TypedPrim (Types.PrimTy f) (Types.PrimVal f))
       (Types.PrimTy f),
     IR.HasWeak (Types.PrimVal f),
     IR.HasSubstValue
       IR.NoExt
       (Types.PrimTy f)
-      ( CoreApp.Return'
-          IR.NoExt
-          (NonEmpty (Types.PrimTy f))
-          (Types.PrimVal f)
-      )
+      (Param.TypedPrim (Types.PrimTy f) (Types.PrimVal f))
       (Types.PrimTy f),
     IR.HasPatSubstTerm
       (OnlyExts.T IR.NoExt)

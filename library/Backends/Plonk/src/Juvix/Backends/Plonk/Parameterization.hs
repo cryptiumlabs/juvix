@@ -36,34 +36,37 @@ isBool PBool = True
 isBool _ = False
 
 hasType :: PrimVal f -> Param.PrimType (PrimTy f) -> Bool
-hasType (PConst _v) ty
+hasType tm (Param.PrimType ty) = hasType' tm ty
+
+hasType' :: PrimVal f -> NonEmpty (PrimTy f) -> Bool
+hasType' (PConst _v) ty
   | length ty == 1 = True
   | otherwise = False
 -- BinOps
-hasType PAdd ty = Param.check3Equal ty
-hasType PSub ty = Param.check3Equal ty
-hasType PMul ty = Param.check3Equal ty
-hasType PDiv ty = Param.check3Equal ty
-hasType PExp ty = Param.check3Equal ty
-hasType PMod ty = Param.check3Equal ty
-hasType PAnd ty = Param.check3Equal ty
-hasType POr ty = Param.check3Equal ty
-hasType PXor ty = Param.check3Equal ty
+hasType' PAdd ty = Param.check3Equal ty
+hasType' PSub ty = Param.check3Equal ty
+hasType' PMul ty = Param.check3Equal ty
+hasType' PDiv ty = Param.check3Equal ty
+hasType' PExp ty = Param.check3Equal ty
+hasType' PMod ty = Param.check3Equal ty
+hasType' PAnd ty = Param.check3Equal ty
+hasType' POr ty = Param.check3Equal ty
+hasType' PXor ty = Param.check3Equal ty
 -- UnOps
-hasType PIsZero ty = Param.check2Equal ty
-hasType PNot ty = Param.check2Equal ty
-hasType PShL ty = Param.check2Equal ty
-hasType PShR ty = Param.check2Equal ty
-hasType PRotL ty = Param.check2Equal ty
-hasType PRotR ty = Param.check2Equal ty
-hasType PAssertEq ty = Param.check2Equal ty
-hasType PAssertIt ty = Param.check2Equal ty
+hasType' PIsZero ty = Param.check2Equal ty
+hasType' PNot ty = Param.check2Equal ty
+hasType' PShL ty = Param.check2Equal ty
+hasType' PShR ty = Param.check2Equal ty
+hasType' PRotL ty = Param.check2Equal ty
+hasType' PRotR ty = Param.check2Equal ty
+hasType' PAssertEq ty = Param.check2Equal ty
+hasType' PAssertIt ty = Param.check2Equal ty
 -- CompOps
-hasType PGt ty = Param.checkFirst2AndLast ty isBool
-hasType PGte ty = Param.checkFirst2AndLast ty isBool
-hasType PLt ty = Param.checkFirst2AndLast ty isBool
-hasType PLte ty = Param.checkFirst2AndLast ty isBool
-hasType PEq ty = Param.checkFirst2AndLast ty isBool
+hasType' PGt ty = Param.checkFirst2AndLast ty isBool
+hasType' PGte ty = Param.checkFirst2AndLast ty isBool
+hasType' PLt ty = Param.checkFirst2AndLast ty isBool
+hasType' PLte ty = Param.checkFirst2AndLast ty isBool
+hasType' PEq ty = Param.checkFirst2AndLast ty isBool
 
 builtinTypes :: Param.Builtins (PrimTy f) -- TODO: Revisit this
 builtinTypes =

@@ -44,8 +44,13 @@ class HasBackend b where
         Pipeline.toCore
           (["stdlib/Prelude.ju", fp] ++ stdlibs b)
 
-  typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)))
-  compile :: FilePath -> ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)) -> Pipeline ()
+  typecheck ::
+    Context.T Sexp.T Sexp.T Sexp.T ->
+    Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
+  compile ::
+    FilePath ->
+    ErasedAnn.AnnTermT (Ty b) (Val b) ->
+    Pipeline ()
 
 -- | Write the output code to a given file.
 writeout :: FilePath -> Text -> Pipeline ()

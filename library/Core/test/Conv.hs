@@ -57,11 +57,11 @@ irTohrConversion =
     "Converting Intermediate Readable form to Human Readable form"
     [ shouldConvertIR
         (IR.Lam (IR.Elim (IR.Bound 0)))
-        (HR.Lam "0" (HR.Elim (HR.Var "0"))),
+        (HR.Lam "a" (HR.Elim (HR.Var "a"))),
       shouldConvertIR
         (IR.Lam (IR.Lam (IR.Elim (IR.Bound 1))))
-        (HR.Lam "0" (HR.Lam "1" (HR.Elim (HR.Var "0")))),
+        (HR.Lam "a" (HR.Lam "b" (HR.Elim (HR.Var "a")))),
       shouldConvertIR
         (IR.Lam (IR.Lam (IR.Elim (IR.Bound 0))))
-        (HR.Lam "0" (HR.Lam "1" (HR.Elim (HR.Var "1"))))
+        (HR.Lam "a" (HR.Lam "b" (HR.Elim (HR.Var "b"))))
     ]

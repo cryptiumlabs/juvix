@@ -7,7 +7,7 @@ import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.CheckTerm as TC
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
-import qualified Juvix.Core.IR.Typechecker as TC
+import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Parameterisations.All as All
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
 import qualified Juvix.Core.Parameterisations.Unit as Unit
@@ -928,4 +928,4 @@ unit :: IR.Term primTy Unit.Val
 unit = IR.Prim Unit.Val
 
 unit' :: IR.Term Unit.Ty (TypedPrim Unit.Ty Unit.Val)
-unit' = IR.Prim (TC.Return {retType = [Unit.Ty], retTerm = Unit.Val})
+unit' = IR.Prim (TC.Return {retType = P.PrimType [Unit.Ty], retTerm = Unit.Val})
