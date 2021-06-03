@@ -5,21 +5,25 @@
 module Juvix.Backends.Michelson.Parameterisation
   ( michelson,
     module Types,
+    module Pretty,
   )
 where
 
 import qualified Control.Arrow as Arr
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
+import Juvix.Backends.Michelson.Compilation.Pretty as Pretty
 import Juvix.Backends.Michelson.Compilation.Types as Types
+import qualified Juvix.Backends.Michelson.Compilation.Types as CompTypes
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
 import qualified Juvix.Backends.Michelson.DSL.Untyped as DSLU
 import qualified Juvix.Core.Application as App
+import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
-import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
+import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
@@ -27,6 +31,7 @@ import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.PrettyPrint as PP
 import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Text as M
 import qualified Michelson.Untyped as M
@@ -43,53 +48,56 @@ isBool _ = False
 
 -- | Check if the value has the given type.
 hasType :: RawPrimVal -> P.PrimType PrimTy -> Bool
-hasType AddTimeStamp ty = P.check3Equal ty
-hasType AddI ty = P.check3Equal ty
-hasType AddN ty = P.check3Equal ty
-hasType SubI ty = P.check3Equal ty
-hasType SubN ty = P.check3Equal ty
-hasType SubTimeStamp ty = P.check3Equal ty
-hasType MulI ty = P.check3Equal ty
-hasType MulN ty = P.check3Equal ty
-hasType MulMutez ty = P.check3Equal ty
-hasType ORI ty = P.check3Equal ty
-hasType OrB ty = P.check3Equal ty
-hasType AndI ty = P.check3Equal ty
-hasType AndB ty = P.check3Equal ty
-hasType XorI ty = P.check3Equal ty
-hasType XorB ty = P.check3Equal ty
-hasType NotI ty = P.check2Equal ty
-hasType NotB ty = P.check2Equal ty
-hasType CompareI ty = P.checkFirst2AndLast ty isBool
-hasType CompareS ty = P.checkFirst2AndLast ty isBool
-hasType CompareP ty = P.checkFirst2AndLast ty isBool
-hasType CompareTimeStamp ty = P.checkFirst2AndLast ty isBool
-hasType CompareMutez ty = P.checkFirst2AndLast ty isBool
-hasType CompareHash ty = P.checkFirst2AndLast ty isBool
+hasType tm (P.PrimType ty) = hasType' tm ty
+
+hasType' :: RawPrimVal -> NonEmpty PrimTy -> Bool
+hasType' AddTimeStamp ty = P.check3Equal ty
+hasType' AddI ty = P.check3Equal ty
+hasType' AddN ty = P.check3Equal ty
+hasType' SubI ty = P.check3Equal ty
+hasType' SubN ty = P.check3Equal ty
+hasType' SubTimeStamp ty = P.check3Equal ty
+hasType' MulI ty = P.check3Equal ty
+hasType' MulN ty = P.check3Equal ty
+hasType' MulMutez ty = P.check3Equal ty
+hasType' ORI ty = P.check3Equal ty
+hasType' OrB ty = P.check3Equal ty
+hasType' AndI ty = P.check3Equal ty
+hasType' AndB ty = P.check3Equal ty
+hasType' XorI ty = P.check3Equal ty
+hasType' XorB ty = P.check3Equal ty
+hasType' NotI ty = P.check2Equal ty
+hasType' NotB ty = P.check2Equal ty
+hasType' CompareI ty = P.checkFirst2AndLast ty isBool
+hasType' CompareS ty = P.checkFirst2AndLast ty isBool
+hasType' CompareP ty = P.checkFirst2AndLast ty isBool
+hasType' CompareTimeStamp ty = P.checkFirst2AndLast ty isBool
+hasType' CompareMutez ty = P.checkFirst2AndLast ty isBool
+hasType' CompareHash ty = P.checkFirst2AndLast ty isBool
 -- Hacks make more exact later
-hasType EDivI (x :| [y, _]) = P.check2Equal (x :| [y])
-hasType (Inst M.TRANSFER_TOKENS {}) (_ :| [_, _, _]) = True
-hasType (Inst M.UNIT {}) (_ :| []) = True
-hasType (Inst M.BALANCE {}) (_ :| []) = True
-hasType (Inst (M.IF_CONS _ _)) (bool :| rest)
+hasType' EDivI (x :| [y, _]) = P.check2Equal (x :| [y])
+hasType' (Inst M.TRANSFER_TOKENS {}) (_ :| [_, _, _]) = True
+hasType' (Inst M.UNIT {}) (_ :| []) = True
+hasType' (Inst M.BALANCE {}) (_ :| []) = True
+hasType' (Inst (M.IF_CONS _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && P.check2Equal (NonEmpty.fromList rest)
-hasType (Inst (M.IF _ _)) (bool :| rest)
+hasType' (Inst (M.IF _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && P.check2Equal (NonEmpty.fromList rest)
 -- todo check this properly
-hasType (Inst M.PAIR {}) (_ :| (_ : (_ : []))) = True
+hasType' (Inst M.PAIR {}) (_ :| (_ : (_ : []))) = True
 -- todo check this properly
-hasType (Inst (M.CAR _ _)) (_ :| (_ : [])) = True
-hasType (Inst (M.CDR _ _)) (_ :| (_ : [])) = True
-hasType (Inst M.SENDER {}) (_ :| []) = True
-hasType Contract (_ :| [_]) = True
-hasType (Constant _v) ty
+hasType' (Inst (M.CAR _ _)) (_ :| (_ : [])) = True
+hasType' (Inst (M.CDR _ _)) (_ :| (_ : [])) = True
+hasType' (Inst M.SENDER {}) (_ :| []) = True
+hasType' Contract (_ :| [_]) = True
+hasType' (Constant _v) ty
   | length ty == 1 = True
   | otherwise = False
-hasType _ ((Application List _) :| []) = True
+hasType' _ ((Application List _) :| []) = True
 -- do something nicer here
-hasType x ty = Prelude.error ("unsupported: " <> Juvix.Library.show x <> " :: " <> Juvix.Library.show ty)
+hasType' x ty = Prelude.error ("unsupported: " <> Juvix.Library.show x <> " :: " <> Juvix.Library.show ty)
 
 -- | Return the arity of a raw Michelson value.
 arityRaw :: RawPrimVal -> Natural
@@ -129,6 +137,17 @@ instance Show ApplyError where
   show (CompilationError perr) = Prelude.show perr
   show (ReturnTypeNotPrimitive ty) =
     "not a primitive type:\n\t" <> Prelude.show ty
+
+type instance PP.Ann ApplyError = HR.PPAnn
+
+instance PP.PrettyText ApplyError where
+  prettyT = \case
+    CompilationError e -> HR.toPPAnn <$> PP.prettyT e
+    ReturnTypeNotPrimitive ty ->
+      PP.sepIndent'
+        [ (False, "Not a primitive type:"),
+          (True, PP.pretty0 ty)
+        ]
 
 -- | Instance for types.
 instance Core.CanApply PrimTy where
@@ -207,7 +226,7 @@ takeToTerm (App.Take {usage, type', term}) =
 
 -- | Given a type, translate it to a type in the Michelson backend.
 toPrimType :: ErasedAnn.Type PrimTy -> Either ApplyError (P.PrimType PrimTy)
-toPrimType ty = maybe err Right $ go ty
+toPrimType ty = maybe err (Right . P.PrimType) $ go ty
   where
     err = Left $ ReturnTypeNotPrimitive ty
     go ty = goPi ty <|> (pure <$> goPrim ty)
