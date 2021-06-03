@@ -113,11 +113,8 @@ instance
       in json
 
 compileCircuit :: (Integral f, Show f) =>
-  CoreErased.AnnTerm
-    (Types.PrimTy f)
-    (CoreApp.Return'
-      CoreErased.T
-      (NonEmpty (Types.PrimTy f))
-      (Types.PrimVal f))
-  -> Circuit.ArithCircuit f
+                        CoreErased.AnnTerm
+                          (Types.PrimTy f)
+                          (CoreErased.TypedPrim (Types.PrimTy f) (Types.PrimVal f))
+                        -> Circuit.ArithCircuit f
 compileCircuit term = Builder.execCircuitBuilder . Compiler.compileTermWithWire $ CorePipeline.toRaw term
