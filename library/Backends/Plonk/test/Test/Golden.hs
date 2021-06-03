@@ -30,33 +30,51 @@ withJuvixRootPath p = juvixRootPath <> p
 
 top = testGroup "Plonk golden tests" <$> sequence
   [ typecheckTests
+  , compileTests
   ]
 
+compileTests :: IO TestTree
+compileTests = testGroup "Plonk compile" <$> sequence
+  [  discoverGoldenTestsCompile "test/examples/positive/circuit"
+    , discoverGoldenTestsCompile "test/examples/negative/circuit"
+  ]
 typecheckTests :: IO TestTree
 typecheckTests = testGroup "Plonk typecheck" <$> sequence
     [ discoverGoldenTestsTypecheck "test/examples/positive/circuit"
-    -- TODO discoverGoldenTestsJuvix "test/examples/negative" parseTestNegative
+    , discoverGoldenTestsTypecheck "test/examples/negative/circuit"
     ]
+
 -- | Discover golden tests for input files with extension @.ju@ and output
--- files with extension @.parsed@.
+-- files with extension @.typecheck@.
 discoverGoldenTestsTypecheck
   :: FilePath                 -- ^ the directory in which to recursively look for golden tests
   -> IO TestTree
 discoverGoldenTestsTypecheck (withJuvixRootPath -> p)= discoverGoldenTests [".ju"] ".typecheck" getGolden (expectSuccess . typecheck) p
+
+typecheck file = do
+  contract <- liftIO $ readFile file
+  context <- Pipeline.parseWithLibs (withJuvixRootPath <$> libs) (Plonk.BPlonk @Fr) contract
+  Pipeline.typecheck @(Plonk.BPlonk Fr) context
+
+expectSuccess v = do
+  feedback <- Feedback.runFeedbackT v
+  case feedback of
+    Feedback.Success msgs r -> do
+      mapM_ pPrint msgs
+      pure r
+    Feedback.Fail msgs -> panic $ "Fail: " <> show msgs-- mapM_ pPrint msgs >> exitFailure
+
+
+
+-- | Discover golden tests for input files with extension @.ju@ and output
+-- files with extension @.typecheck@.
+discoverGoldenTestsCompile
+  :: FilePath                 -- ^ the directory in which to recursively look for golden tests
+  -> IO TestTree
+discoverGoldenTestsCompile (withJuvixRootPath -> p)= discoverGoldenTests [".ju"] ".circuit" getGolden (expectSuccess . compile) p
   where
-    typecheck file = do
-      contract <- liftIO $ readFile file
-      context <- Pipeline.parseWithLibs (withJuvixRootPath <$> libs) (Plonk.BPlonk @Fr) contract
-      Pipeline.typecheck @(Plonk.BPlonk Fr) context
-
-    expectSuccess v = do
-      feedback <- Feedback.runFeedbackT v
-      case feedback of
-        Feedback.Success msgs r -> do
-          mapM_ pPrint msgs
-          pure r
-        Feedback.Fail msgs -> panic $ "Fail: " <> show msgs-- mapM_ pPrint msgs >> exitFailure
-
-
+    compile file = do
+      Plonk.compileCircuit <$> typecheck file
+      
 
 

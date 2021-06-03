@@ -83,6 +83,7 @@ compilePrim p m args = case p of
   P.PXor -> compileBinOp m BXor args
   n -> panic $ show n
 
+-- TODO: Make signature handle failure
 compileTerm :: (Integral f, Show f) => FFAnnTerm f -> Map NameSymbol.T Wire -> [FFAnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
 compileTerm _term@(Ann.Ann _ _ t) m a =
   case t of
