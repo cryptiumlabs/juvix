@@ -25,7 +25,7 @@
 
    ;; This is what the library is designed to abstract from, namely
    ;; many common dependencies are here, you may have to jump around.
-   :extra-deps (list (make-general-depencies *capability* *extensible*)
+   :extra-deps (list (make-general-dependencies *capability* *extensible*)
                      *eac-solver*)
    ;; This gives the path to the other projects, if you are in the
    ;; library folder then no need to change it from this default. If
@@ -588,13 +588,13 @@ lists are indented by an extra 2 each"
 ;; stack-yaml for the YAML helpers
 ;; -----------------------------------
 
-(defun make-general-depencies (&rest deps)
+(defun make-general-dependencies (&rest deps)
   (make-groups :comment "General Dependencies" :deps deps))
 
 (defun big-dep-list (&key (plonk nil))
   "For the packages with lots of dependecies, these tend to be the
 common ones to include"
-  (list (make-general-depencies *capability*
+  (list (make-general-dependencies *capability*
                                 *prettiest*
                                 *extensible*
                                 *aeson-options*
@@ -632,7 +632,7 @@ common ones to include"
 (defparameter *standard-library*
   (make-stack-yaml
    :name "StandardLibrary"
-   :extra-deps (list (make-general-depencies *capability* *prettiest*) *standard-library-extra-deps*)))
+   :extra-deps (list (make-general-dependencies *capability* *prettiest*) *standard-library-extra-deps*)))
 
 (defparameter *frontend*
   (make-stack-yaml
@@ -640,13 +640,13 @@ common ones to include"
    :resolver   17.9
    :name       "Frontend"
    :packages   (list *standard-library*)
-   :extra-deps (list (make-general-depencies *capability*) *standard-library-extra-deps*)))
+   :extra-deps (list (make-general-dependencies *capability* *prettiest*) *standard-library-extra-deps*)))
 
 (defparameter *core*
   (make-stack-yaml
    :name       "Core"
    :packages   (list *standard-library*)
-   :extra-deps (list (make-general-depencies *capability* *extensible*)
+   :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                       *standard-library-extra-deps*
                       *eac-solver*)))
 
@@ -654,7 +654,7 @@ common ones to include"
   (make-stack-yaml
    :name "Translate"
    :packages   (list *core* *frontend* *standard-library*)
-   :extra-deps (list (make-general-depencies *capability* *extensible*)
+   :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                      *standard-library-extra-deps*
                      *tasty-silver*
                      *eac-solver*)))
@@ -664,7 +664,7 @@ common ones to include"
    :name       "InteractionNet"
    :resolver   17.9
    :packages   (list *standard-library* *core*)
-   :extra-deps (list (make-general-depencies *capability* *extensible*)
+   :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                      *standard-library-extra-deps*
                      *interaction-net-extra-deps*
                      *graph-visualizer*
@@ -676,7 +676,7 @@ common ones to include"
    :name       "InteractionNetIR"
    :resolver   17.9
    :packages   (list *standard-library* *core*)
-   :extra-deps (list (make-general-depencies *capability* *extensible*)
+   :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                      *eac-solver*)))
 
 (defparameter *LLVM*
@@ -685,7 +685,7 @@ common ones to include"
    :resolver 17.9
    :path-to-other "../../"
    :packages (list *standard-library* *core* *interaction-net*)
-   :extra-deps (list (make-general-depencies *capability* *extensible*)
+   :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                      *llvm-hs-deps*
                      *llvm-hs-extra-deps*
                      *eac-solver*
@@ -715,7 +715,7 @@ common ones to include"
                         ;; have left it unable to build. I think due to cyclic dependencies
                         *translate*
                         *frontend*)
-   :extra-deps    (list (make-general-depencies *capability* *extensible*)
+   :extra-deps    (list (make-general-dependencies *capability* *extensible* *prettiest*)
                         *fmt-withdraw*
                         *eac-solver*
                         *morley-arithmetic-circuit-deps*
