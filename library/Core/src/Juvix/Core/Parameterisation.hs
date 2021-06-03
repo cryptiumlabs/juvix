@@ -39,7 +39,7 @@ import Prelude (String)
 -- | @[A, B, ..., Z]@ represents the type
 -- @π A -> ρ B -> ... -> Z@ for any usages @π@, @ρ@
 newtype PrimType primTy = PrimType {getPrimType :: NonEmpty primTy}
-  deriving (Eq, Ord, Show, Generic, Functor, Foldable, Traversable)
+  deriving (Eq, Ord, Show, Read, Generic, Functor, Foldable, Traversable)
 
 -- | A HashMap of builtins with their name.
 type Builtins p = HashMap NameSymbol.T p

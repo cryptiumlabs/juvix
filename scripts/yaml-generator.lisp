@@ -403,6 +403,11 @@ lists are indented by an extra 2 each"
 ;; Stadnard Library Style Dependencies
 ;; --------------------------------------
 
+(defparameter *prettiest*
+  (make-dependency-github :name "jyp/prettiest"
+                          :commit "e5ce6cd6b4da71860c3d97da84bed4a827fa00ef"))
+
+
 (defparameter *capability*
   (string->dep-sha "capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345"))
 
@@ -590,6 +595,7 @@ lists are indented by an extra 2 each"
   "For the packages with lots of dependecies, these tend to be the
 common ones to include"
   (list (make-general-depencies *capability*
+                                *prettiest*
                                 *extensible*
                                 *aeson-options*
                                 *un-exceptionalio*
@@ -626,7 +632,7 @@ common ones to include"
 (defparameter *standard-library*
   (make-stack-yaml
    :name "StandardLibrary"
-   :extra-deps (list (make-general-depencies *capability*) *standard-library-extra-deps*)))
+   :extra-deps (list (make-general-depencies *capability* *prettiest*) *standard-library-extra-deps*)))
 
 (defparameter *frontend*
   (make-stack-yaml

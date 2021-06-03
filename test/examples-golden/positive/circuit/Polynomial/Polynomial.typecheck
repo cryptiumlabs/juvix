@@ -8,10 +8,12 @@ Ann
                 ( Pi Omega ( PrimTy PField ) ( PrimTy PField ) )
             , term = Prim
                 ( Return
-                    { retType = PField :|
-                        [ PField
-                        , PField
-                        ]
+                    { retType = PrimType
+                        { getPrimType = PField :|
+                            [ PField
+                            , PField
+                            ]
+                        }
                     , retTerm = PAdd
                     }
                 )
@@ -22,7 +24,8 @@ Ann
             , type' = PrimTy PField
             , term = Prim
                 ( Return
-                    { retType = PField :| []
+                    { retType = PrimType
+                        { getPrimType = PField :| [] }
                     , retTerm = PConst
                         ( P
                             ( 2 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
@@ -35,7 +38,8 @@ Ann
             , type' = PrimTy PField
             , term = Prim
                 ( Return
-                    { retType = PField :| []
+                    { retType = PrimType
+                        { getPrimType = PField :| [] }
                     , retTerm = PConst
                         ( P
                             ( 2 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
