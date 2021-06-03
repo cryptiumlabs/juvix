@@ -38,8 +38,8 @@ pipeline =
           Right c <-
             Pipeline.toCore
               (withJuvixExamplesPath <$> [ 
-                "positive/michelson/rec-groups/rec-groups.ju",
-                "positive/michelson/rec-groups/rec-groups-helper.ju"
+                "positive/michelson/rec-groups/Rec-Groups.ju",
+                "positive/michelson/rec-groups/Rec-Groups-Helper.ju"
               ])
           let recd = Traverse.recGroups c
           fmap (\(x :| []) -> Traverse.name x) recd T.@=? correctOrder
@@ -61,10 +61,10 @@ pipelineOpen =
           Right c <-
             Pipeline.toCore
               (withJuvixExamplesPath <$> [ 
-                "positive/michelson/test/foo.ju",
-                "positive/michelson/test/foo-helper.ju",
-                "positive/michelson/test/foo-helpers.ju",
-                "positive/michelson/test/baz.ju"
+                "positive/michelson/test/Foo.ju",
+                "positive/michelson/test/Foo-Helper.ju",
+                "positive/michelson/test/Bah.ju",
+                "positive/michelson/test/Baz.ju"
               ])
           let recd = Traverse.recGroups c
           fmap (\(x :| []) -> Traverse.name x) recd T.@=? correctOrder
