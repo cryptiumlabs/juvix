@@ -19,6 +19,7 @@ import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
+import Debug.Pretty.Simple ( pTraceShowM ) 
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
     TypedPrim,
@@ -87,7 +88,7 @@ instance
           [] -> Feedback.fail $ "No main function found in " <> show globalDefs
           [IR.RawGFunction f]
             | IR.RawFunction _name usage ty (clause :| []) <- f,
-              IR.RawFunClause _ [] term _ <- clause -> do
+              IR.RawFunClause _ _ term _ <- clause -> do
               let convGlobals = map (Pipeline.convGlobal Types.PField) globalDefs
                   newGlobals = HM.map (Pipeline.unsafeEvalGlobal convGlobals) convGlobals
                   lookupGlobal = IR.rawLookupFun' globalDefs
@@ -99,7 +100,9 @@ instance
                 Left err -> do
                   print term
                   Feedback.fail $ show err
-          somethingElse -> Feedback.fail $ show somethingElse
+          somethingElse -> do
+            pTraceShowM somethingElse
+            Feedback.fail $ show somethingElse
       Left err -> Feedback.fail $ "failed at ctxToCore\n" ++ show err
 
   compile out term = do
