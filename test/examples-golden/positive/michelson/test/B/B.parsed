@@ -1,21 +1,13 @@
 Right
     ( Header
-        ( "Foo-Helper" :|
-            [ "Bah"
-            , "Baz"
-            ]
-        )
-        [ ModuleOpen
-            ( Open
-                ( "Foo-Helper" :| [ "Bah" ] )
-            )
-        , Signature
+        ( "B" :| [] )
+        [ Signature
             ( Sig
-                { signatureName = "si"
+                { signatureName = "fi"
                 , signatureUsage = Nothing
                 , signatureArrowType = Constant
                     ( Number
-                        ( Integer' 3 )
+                        ( Integer' 5 )
                     )
                 , signatureConstraints = []
                 }
@@ -23,12 +15,12 @@ Right
         , Function
             ( Func
                 ( Like
-                    { functionLikedName = "si"
+                    { functionLikedName = "fi"
                     , functionLikeArgs = []
                     , functionLikeBody = Body
                         ( Constant
                             ( Number
-                                ( Integer' 3 )
+                                ( Integer' 5 )
                             )
                         )
                     }

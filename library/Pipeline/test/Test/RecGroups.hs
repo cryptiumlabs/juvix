@@ -47,13 +47,11 @@ pipeline =
 pipelineOpen :: T.TestTree
 pipelineOpen =
   let correctOrder =
-        [ "Foo-Helper" :| ["bar"],
-          "Foo-Helper" :| ["Bah", "fi"],
-          -- DUPLICATE!?
-          "Foo-Helper" :| ["Bah", "fi"],
-          "Foo-Helper" :| ["Bah", "Baz", "si"],
-          "Identity" :| ["fi"],
-          "Identity" :| ["main"]
+        [ "A" :| ["bar"],
+          "B" :| ["fi"],
+          "C" :| ["si"],
+          "D" :| ["fi"],
+          "D" :| ["main"]
         ]
    in T.testCase
         "multiple modules have correct ordering"
@@ -61,10 +59,10 @@ pipelineOpen =
           Right c <-
             Pipeline.toCore
               (withJuvixExamplesPath <$> [ 
-                "positive/michelson/test/Foo.ju",
-                "positive/michelson/test/Foo-Helper.ju",
-                "positive/michelson/test/Bah.ju",
-                "positive/michelson/test/Baz.ju"
+                "positive/michelson/test/D.ju",
+                "positive/michelson/test/A.ju",
+                "positive/michelson/test/B.ju",
+                "positive/michelson/test/C.ju"
               ])
           let recd = Traverse.recGroups c
-          fmap (\(x :| []) -> Traverse.name x) recd T.@=? correctOrder
+          correctOrder T.@=? fmap (\(x :| []) -> Traverse.name x) recd 

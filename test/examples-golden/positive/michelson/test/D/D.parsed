@@ -1,13 +1,13 @@
 Right
     ( Header
-        ( "Foo" :| [] )
+        ( "D" :| [] )
         [ ModuleOpen
             ( Open
-                ( "Foo-Helper" :| [] )
+                ( "A" :| [] )
             )
         , ModuleOpen
             ( Open
-                ( "Bah" :| [] )
+                ( "B" :| [] )
             )
         , Signature
             ( Sig
@@ -51,14 +51,8 @@ Right
                     { functionLikedName = "main"
                     , functionLikeArgs = []
                     , functionLikeBody = Body
-                        ( Application
-                            ( App
-                                { applicationName = Name
-                                    ( "fi" :| [] )
-                                , applicationArgs = Name
-                                    ( "bar" :| [] ) :| []
-                                }
-                            )
+                        ( Name
+                            ( "fi" :| [] )
                         )
                     }
                 )

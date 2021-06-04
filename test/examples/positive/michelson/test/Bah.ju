@@ -1,4 +1,0 @@
-mod Foo-Helper.Bah where
-
-sig fi : 5
-let fi = 5

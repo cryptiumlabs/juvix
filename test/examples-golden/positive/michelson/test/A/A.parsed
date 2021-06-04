@@ -1,9 +1,9 @@
 Right
     ( Header
-        ( "Foo-Helper" :| [ "Bah" ] )
+        ( "A" :| [] )
         [ Signature
             ( Sig
-                { signatureName = "fi"
+                { signatureName = "bar"
                 , signatureUsage = Nothing
                 , signatureArrowType = Constant
                     ( Number
@@ -15,7 +15,7 @@ Right
         , Function
             ( Func
                 ( Like
-                    { functionLikedName = "fi"
+                    { functionLikedName = "bar"
                     , functionLikeArgs = []
                     , functionLikeBody = Body
                         ( Constant

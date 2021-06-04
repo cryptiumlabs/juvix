@@ -56,12 +56,6 @@ typecheck file = do
   context <- Pipeline.parseWithLibs (withJuvixRootPath <$> libs) (Plonk.BPlonk @Fr) contract
   Pipeline.typecheck @(Plonk.BPlonk Fr) context
 
-expectSuccess v = do
-  feedback <- Feedback.runFeedbackT v
-  case feedback of
-    Feedback.Success msgs r -> pure r
-    Feedback.Fail msgs -> panic $ "Fail: " <> show msgs
-
 
 -- | Discover golden tests for input files with extension @.ju@ and output
 -- files with extension @.circuit@.

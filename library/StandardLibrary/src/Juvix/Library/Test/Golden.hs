@@ -3,7 +3,10 @@ module Juvix.Library.Test.Golden
     (getGolden
     , compareGolden
     , mkGoldenTest
-    , discoverGoldenTests)
+    , discoverGoldenTests
+    , expectSuccess
+    , expectFailure
+    )
  where
 
 import qualified Data.ByteString as ByteString (writeFile)
@@ -16,6 +19,7 @@ import           Data.String                (String)
 import qualified System.FilePath as FP
 import           Test.Tasty
 import System.Directory (createDirectoryIfMissing)
+import qualified Juvix.Library.Feedback as Feedback
 
 --------------------------------------------------------------------------------
 -- Contracts as a file (Golden tests)
@@ -92,3 +96,18 @@ mkGoldenTest getGolden action ext pathToFile = T.goldenTest1
     outfile = toGolden directory FP.</> goldenBase FP.</> outFilename 
     createOutput = ByteString.writeFile outfile
         . (encodeUtf8 . toS . pShowNoColor)
+
+expectSuccess :: (Monad m, Show (app msg)) => Feedback.FeedbackT app msg m b -> m b
+expectSuccess v = do
+  feedback <- Feedback.runFeedbackT v
+  case feedback of
+    Feedback.Success _msgs r -> pure r
+    Feedback.Fail msgs -> panic $ "Expected success but failed: " <> show msgs
+
+expectFailure :: (Monad m, Show a) => Feedback.FeedbackT app msg m a -> m (app msg)
+expectFailure v = do
+  feedback <- Feedback.runFeedbackT v
+  case feedback of
+    Feedback.Success _msgs r -> panic $ "Expected failure but succeeded with: " <> show r
+    Feedback.Fail msgs -> pure msgs
+
