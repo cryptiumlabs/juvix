@@ -24,6 +24,7 @@ dependencies:
 - core
 - Pipeline
 - translate
+- llvm-hs-pretty
 - llvm-hs-pure >= 9.0 && < 9.1
 - standard-library
 - unordered-containers >= 0.2.13
