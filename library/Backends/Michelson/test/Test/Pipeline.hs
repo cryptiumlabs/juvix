@@ -164,7 +164,6 @@ toMichelsonContract term usage ty globals = do
         Left err -> Left (show err)
     Left err -> Left (show err)
 
-
 test_constant :: T.TestTree
 test_constant =
   shouldCompileTo

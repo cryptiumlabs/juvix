@@ -19,16 +19,17 @@ allCheckedTests :: T.TestTree
 allCheckedTests =
   T.testGroup
     "All tests that are checked"
-    [ 
-      allInfixTests,
+    [ allInfixTests,
       Contextualise.top,
       translationPasses
     ]
 
 main :: IO ()
 main = do
-  p <- parseTests 
-  T.defaultMain $ T.testGroup "All tests"
-    [ p
-    , allCheckedTests
-    ]
+  p <- parseTests
+  T.defaultMain $
+    T.testGroup
+      "All tests"
+      [ p,
+        allCheckedTests
+      ]

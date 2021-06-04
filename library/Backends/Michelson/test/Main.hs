@@ -6,7 +6,6 @@ import qualified Test.Pipeline as Pipeline
 import qualified Test.Tasty as T
 import qualified Test.VStack as VStack
 
-
 allCheckedTests :: T.TestTree
 allCheckedTests =
   T.testGroup

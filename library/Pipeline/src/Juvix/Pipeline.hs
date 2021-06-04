@@ -74,7 +74,6 @@ parseExplicit _b code libs = do
 
 handleCore :: MonadFail m => Either Error a -> m a
 handleCore core = case core of
-      Right ctx -> return ctx
-      Left (Pipeline.ParseErr err) -> Feedback.fail $ P.errorBundlePretty err
-      Left err -> Feedback.fail $ show err
-
+  Right ctx -> return ctx
+  Left (Pipeline.ParseErr err) -> Feedback.fail $ P.errorBundlePretty err
+  Left err -> Feedback.fail $ show err

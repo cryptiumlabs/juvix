@@ -8,7 +8,7 @@ import qualified Juvix.Pipeline as Pipeline
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
-juvixRootPath :: FilePath 
+juvixRootPath :: FilePath
 juvixRootPath = "../../"
 
 withJuvixRootPath :: FilePath -> FilePath
@@ -16,7 +16,6 @@ withJuvixRootPath p = juvixRootPath <> p
 
 withJuvixExamplesPath :: FilePath -> FilePath
 withJuvixExamplesPath p = juvixRootPath <> "test/examples/" <> p
-
 
 top :: T.TestTree
 top =
@@ -37,10 +36,11 @@ pipeline =
         $ do
           Right c <-
             Pipeline.toCore
-              (withJuvixExamplesPath <$> [ 
-                "positive/michelson/rec-groups/Rec-Groups.ju",
-                "positive/michelson/rec-groups/Rec-Groups-Helper.ju"
-              ])
+              ( withJuvixExamplesPath
+                  <$> [ "positive/michelson/rec-groups/Rec-Groups.ju",
+                        "positive/michelson/rec-groups/Rec-Groups-Helper.ju"
+                      ]
+              )
           let recd = Traverse.recGroups c
           fmap (\(x :| []) -> Traverse.name x) recd T.@=? correctOrder
 
@@ -58,11 +58,12 @@ pipelineOpen =
         $ do
           Right c <-
             Pipeline.toCore
-              (withJuvixExamplesPath <$> [ 
-                "positive/michelson/test/D.ju",
-                "positive/michelson/test/A.ju",
-                "positive/michelson/test/B.ju",
-                "positive/michelson/test/C.ju"
-              ])
+              ( withJuvixExamplesPath
+                  <$> [ "positive/michelson/test/D.ju",
+                        "positive/michelson/test/A.ju",
+                        "positive/michelson/test/B.ju",
+                        "positive/michelson/test/C.ju"
+                      ]
+              )
           let recd = Traverse.recGroups c
-          correctOrder T.@=? fmap (\(x :| []) -> Traverse.name x) recd 
+          correctOrder T.@=? fmap (\(x :| []) -> Traverse.name x) recd

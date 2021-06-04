@@ -2,7 +2,7 @@
 
 module Juvix.Backends.Plonk.Pipeline
   ( BPlonk (..),
-    compileCircuit
+    compileCircuit,
   )
 where
 
@@ -15,10 +15,10 @@ import qualified Juvix.Backends.Plonk.Compiler as Compiler
 import qualified Juvix.Backends.Plonk.Dot as Dot
 import qualified Juvix.Backends.Plonk.Parameterization as Parameterization
 import qualified Juvix.Backends.Plonk.Types as Types
+import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
-import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
     TypedPrim,
@@ -105,16 +105,17 @@ instance
   compile out term = do
     let circuit = compileCircuit term
     liftIO $ Dot.dotWriteSVG out (Dot.arithCircuitToDot circuit)
-    writeout (out <> ".pretty") $ 
+    writeout (out <> ".pretty") $
       let pretty = toS . Pretty.displayT . Pretty.renderPretty 1 120 . Pretty.pretty
-      in pretty circuit
+       in pretty circuit
     writeout (out <> ".json") $
       let json = show $ A.encode circuit
-      in json
+       in json
 
-compileCircuit :: (Integral f, Show f) =>
-                        CoreErased.AnnTerm
-                          (Types.PrimTy f)
-                          (CoreErased.TypedPrim (Types.PrimTy f) (Types.PrimVal f))
-                        -> Circuit.ArithCircuit f
+compileCircuit ::
+  (Integral f, Show f) =>
+  CoreErased.AnnTerm
+    (Types.PrimTy f)
+    (CoreErased.TypedPrim (Types.PrimTy f) (Types.PrimVal f)) ->
+  Circuit.ArithCircuit f
 compileCircuit term = Builder.execCircuitBuilder . Compiler.compileTermWithWire $ CorePipeline.toRaw term

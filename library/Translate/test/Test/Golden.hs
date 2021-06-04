@@ -6,7 +6,7 @@ import Juvix.Frontend.Types (TopLevel)
 import Juvix.Frontend.Types.Base (Header)
 import Juvix.Library
 import Juvix.Library.Test.Golden
-import           Test.Tasty
+import Test.Tasty
 
 --------------------------------------------------------------------------------
 -- Parse contracts (Golden tests)
@@ -16,18 +16,20 @@ import           Test.Tasty
 
 parseContract :: FilePath -> IO (Either [Char] (Header TopLevel))
 parseContract file = do
-  Parser.prettyParse  <$> ByteString.readFile file
-
+  Parser.prettyParse <$> ByteString.readFile file
 
 parseTests :: IO TestTree
-parseTests = testGroup "parse" <$> sequence
-    [ discoverGoldenTestsParse "../../test/examples/positive" 
-    , discoverGoldenTestsParse "../../test/examples/negative" 
-    ]
+parseTests =
+  testGroup "parse"
+    <$> sequence
+      [ discoverGoldenTestsParse "../../test/examples/positive",
+        discoverGoldenTestsParse "../../test/examples/negative"
+      ]
+
 -- | Discover golden tests for input files with extension @.ju@ and output
 -- files with extension @.parsed@.
-discoverGoldenTestsParse
-  :: FilePath                 -- ^ the directory in which to recursively look for golden tests
-  -> IO TestTree
+discoverGoldenTestsParse ::
+  -- | the directory in which to recursively look for golden tests
+  FilePath ->
+  IO TestTree
 discoverGoldenTestsParse = discoverGoldenTests [".ju"] ".parsed" getGolden parseContract
-

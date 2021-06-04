@@ -440,7 +440,8 @@ Module that implements the backend parameters for the Michelson backend.
 **** Main <<Michelson/test/Main>>
 - _Relies on_
   + [[Library]]
-**** Michelson <<test/Michelson>>
+**** Test
+***** Michelson <<Test/Michelson>>
 - _Relies on_
   + [[Compilation]]
   + [[Compilation/Types]]
@@ -453,7 +454,16 @@ Module that implements the backend parameters for the Michelson backend.
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Usage]]
-**** VStack
+***** Pipeline <<Test/Pipeline>>
+- _Relies on_
+  + [[Backends/Michelson]]
+  + [[Compilation]]
+  + [[Core/IR]]
+  + [[Core/Pipeline]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[Library/Usage]]
+***** VStack
 - _Relies on_
   + [[Compilation/Types]]
   + [[VirtualStack]]
@@ -531,6 +541,7 @@ Surface language
   + [[Core/IR]]
   + [[OnlyExts]]
   + [[Typechecker/Types]]
+  + [[ErasedAnn/Types]]
   + [[Core/Parameterisation]]
   + [[Core/Parameterisation]]
   + [[Core/Pipeline]]
@@ -572,9 +583,20 @@ Surface language
   + [[Plonk]]
   + [[Core]]
   + [[Library]]
-  + [[Library]]
   + [[Feedback]]
   + [[Juvix/Pipeline]]
+***** Golden <<Plonk/test/Test/Golden>>
+- _Relies on_
+  + [[Library]]
+  + [[Library/Test/Golden]]
+  + [[Juvix/Pipeline]]
+  + [[Juvix/Pipeline]]
+  + [[Plonk]]
+  + [[ErasedAnn]]
+  + [[Feedback]]
+***** Orphan
+- _Relies on_
+  + [[Library]]
 ***** Example
 ****** Polynomial
 - _Relies on_
@@ -1614,15 +1636,6 @@ Can be added to via core translation
   + [[Scott]]
   + [[Encoding/Types]]
   + [[Library]]
-**** Pipeline <<Test/Pipeline>>
-- _Relies on_
-  + [[Backends/Michelson]]
-  + [[Compilation]]
-  + [[Core/IR]]
-  + [[Core/Pipeline]]
-  + [[Core/Types]]
-  + [[Library]]
-  + [[Library/Usage]]
 **** RecGroups
 - _Relies on_
   + [[Traverse]]
@@ -1703,6 +1716,11 @@ sexp type and all the various helper functionality one can need
   + [[Library]]
   + [[LineNum]]
   + [[NameSymbol]]
+***** Test
+****** Golden <<Library/Test/Golden>>
+- _Relies on_
+  + [[Library]]
+  + [[Feedback]]
 ** test
 *** Main <<StandardLibrary/test/Main>>
 - _Relies on_
@@ -2057,13 +2075,13 @@ _TODO_
   + [[Core/Common/Context]]
   + [[Library]]
   + [[Library/Sexp]]
-**** Golden
+**** Golden <<Translate/test/Test/Golden>>
 - _Relies on_
   + [[Frontend/Parser]]
-  + [[Frontend/Sexp]]
   + [[Frontend/Types]]
   + [[Frontend/Types/Base]]
   + [[Library]]
+  + [[Library/Test/Golden]]
 **** Context
 ***** Environment <<Context/Environment>>
 - _Relies on_

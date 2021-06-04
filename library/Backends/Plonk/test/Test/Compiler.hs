@@ -14,9 +14,9 @@ import Juvix.Library hiding (Type, exp)
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Pipeline as Pipeline
 import qualified Test.Example.Polynomial as Example
+import Test.Orphan ()
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import Test.Orphan ()
 
 top :: IO T.TestTree
 top = do
