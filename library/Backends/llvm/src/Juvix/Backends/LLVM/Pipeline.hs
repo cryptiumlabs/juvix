@@ -52,3 +52,8 @@ instance Pipeline.HasBackend BLLVM where
             fail $ show somethingElse
       Left err -> do
         fail $ "failed at ctxToCore\n" ++ show err
+
+  compile out term = do
+    code <- compileProgram $ Core.toRaw term
+    putStrLn code
+    return ()
