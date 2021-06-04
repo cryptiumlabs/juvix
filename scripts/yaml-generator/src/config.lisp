@@ -246,6 +246,17 @@
 ;; stack-yaml for the YAML helpers
 ;; -----------------------------------
 
+;; TODO ∷ deprecate this when we have dependencies imply other
+;; dependencies we should bring in
+(defparameter *standard-library-extra-deps*
+  (merge-group
+   (make-groups
+    :comment "Standard Library Extra Dependency"
+    :deps nil)
+   *tasty-silver*)
+  "Extra dependencies for the standard library")
+
+
 (defun make-general-dependencies (&rest deps)
   (make-groups :comment "General Dependencies" :deps deps))
 
@@ -261,7 +272,7 @@ common ones to include"
         *llvm-hs-extra-deps*
         *withdraw*
         *graph-visualizer*
-        *tasty-silver*
+        *standard-library-extra-deps*
         *morley-sub-deps*
         (make-groups
          :comment "For special deps that are similar to Michelson but not quite the same"
@@ -272,16 +283,6 @@ common ones to include"
             *morley-arithmetic-circuit-deps-plonk*
             *morley-arithmetic-circuit-deps*)
         *sub-morley-arithmetic-circuit-deps*))
-
-;; TODO ∷ deprecate this when we have dependencies imply other
-;; dependencies we should bring in
-(defparameter *standard-library-extra-deps*
-  (merge-group
-   (make-groups
-    :comment "Standard Library Extra Dependency"
-    :deps nil)
-   *tasty-silver*)
-  "Extra dependencies for the standard library")
 
 ;;; ----------------------------------------------------------------------
 ;;; stack-yaml for the YAML generation
@@ -314,7 +315,6 @@ common ones to include"
    :packages   (list *core* *frontend* *standard-library*)
    :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                      *standard-library-extra-deps*
-                     *tasty-silver*
                      *eac-solver*)))
 
 (defparameter *interaction-net*
