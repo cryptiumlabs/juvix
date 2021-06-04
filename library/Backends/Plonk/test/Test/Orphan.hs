@@ -7,8 +7,8 @@ import Data.Curve.Weierstrass.BLS12381 (Fr)
 import qualified Data.Scientific as S
 import Juvix.Library 
 import Data.Field.Galois (GaloisField, PrimeField (..), toP)
-import Text.Read (Read(..))
-
+import Text.Read (Read(..), Lexeme(..), lexP, parens, step, pfail)
+import Text.Read.Lex (numberToInteger)
 deriving instance Bits Fr
 
 instance A.FromJSON Fr where
@@ -20,5 +20,16 @@ instance A.ToJSON Fr where
   toJSON f = A.Number $ S.scientific (fromP f) 0
 
 instance Read Fr where
-    readPrec = toP <$> readPrec
+    readPrec = parens $ do
+        Ident "P" <- step lexP
+        Punc "(" <- step lexP
+        Number n <- step lexP
+        Punc "`" <- step lexP
+        Ident "modulo" <- step lexP
+        Punc "`" <- step lexP
+        Number p <- step lexP
+        Punc ")" <- step lexP
+        case numberToInteger n of
+            Just i -> pure $ toP i
+            Nothing -> pfail 
 

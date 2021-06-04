@@ -26,7 +26,7 @@ import qualified Juvix.Library.Feedback as Feedback
 --------------------------------------------------------------------------------
 type FileExtension = String
 
-getGolden :: Read a => FilePath -> IO (Maybe a)
+getGolden :: (Read a, Show a) => FilePath -> IO (Maybe a)
 getGolden file = do
   createDirectoryIfMissing True $ FP.takeDirectory file
   maybeBS <- T.readFileMaybe file
