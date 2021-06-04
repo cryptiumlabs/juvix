@@ -12,5 +12,5 @@ let nil = %Michelson.nil
 sig add : nat -> nat -> nat
 let add = %Michelson.add
 
-sig main : nat
-let main = add 4 6
+sig main : pair nat nat -> pair (list operation) nat
+let main = \ps -> make-pair nil (add 4 6)

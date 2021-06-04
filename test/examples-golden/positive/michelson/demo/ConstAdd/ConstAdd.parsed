@@ -139,8 +139,41 @@ Right
             ( Sig
                 { signatureName = "main"
                 , signatureUsage = Nothing
-                , signatureArrowType = Name
-                    ( "nat" :| [] )
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Application
+                            ( App
+                                { applicationName = Name
+                                    ( "pair" :| [] )
+                                , applicationArgs = Name
+                                    ( "nat" :| [] ) :|
+                                    [ Name
+                                        ( "nat" :| [] )
+                                    ]
+                                }
+                            )
+                        , infixOp = "->" :| []
+                        , infixRight = Application
+                            ( App
+                                { applicationName = Name
+                                    ( "pair" :| [] )
+                                , applicationArgs = Parened
+                                    ( Application
+                                        ( App
+                                            { applicationName = Name
+                                                ( "list" :| [] )
+                                            , applicationArgs = Name
+                                                ( "operation" :| [] ) :| []
+                                            }
+                                        )
+                                    ) :|
+                                    [ Name
+                                        ( "nat" :| [] )
+                                    ]
+                                }
+                            )
+                        }
+                    )
                 , signatureConstraints = []
                 }
             )
@@ -150,19 +183,38 @@ Right
                     { functionLikedName = "main"
                     , functionLikeArgs = []
                     , functionLikeBody = Body
-                        ( Application
-                            ( App
-                                { applicationName = Name
-                                    ( "add" :| [] )
-                                , applicationArgs = Constant
-                                    ( Number
-                                        ( Integer' 4 )
-                                    ) :|
-                                    [ Constant
-                                        ( Number
-                                            ( Integer' 6 )
-                                        )
-                                    ]
+                        ( Lambda
+                            ( Lamb
+                                { lambdaArgs = MatchLogic
+                                    { matchLogicContents = MatchName "ps"
+                                    , matchLogicNamed = Nothing
+                                    } :| []
+                                , lambdaBody = Application
+                                    ( App
+                                        { applicationName = Name
+                                            ( "make-pair" :| [] )
+                                        , applicationArgs = Name
+                                            ( "nil" :| [] ) :|
+                                            [ Parened
+                                                ( Application
+                                                    ( App
+                                                        { applicationName = Name
+                                                            ( "add" :| [] )
+                                                        , applicationArgs = Constant
+                                                            ( Number
+                                                                ( Integer' 4 )
+                                                            ) :|
+                                                            [ Constant
+                                                                ( Number
+                                                                    ( Integer' 6 )
+                                                                )
+                                                            ]
+                                                        }
+                                                    )
+                                                )
+                                            ]
+                                        }
+                                    )
                                 }
                             )
                         )
