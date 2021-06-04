@@ -1,7 +1,10 @@
 * Changelog for Juvix
 
-** 0.1.0.5
+** 0.1.0.6
   + Add Golden tests
+
+** 0.1.0.5
+- Split the =stack.yeaml= generator into many files
 
 ** 0.1.0.4
 - _Changes to =Library/Sexp.hs=_

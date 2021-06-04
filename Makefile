@@ -74,7 +74,7 @@ clean-full:
 	stack clean --full
 
 stack-yaml:
-	ros -Q scripts/yaml-generator.lisp
+	ros -Q scripts/yaml-generator/yaml-generator.asd
 
 # Overwrite existing golden files
 accept-golden:
