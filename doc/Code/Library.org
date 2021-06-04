@@ -538,10 +538,10 @@ Surface language
   + [[Plonk/Dot]]
   + [[Parameterization]]
   + [[Plonk/Types]]
+  + [[ErasedAnn/Types]]
   + [[Core/IR]]
   + [[OnlyExts]]
   + [[Typechecker/Types]]
-  + [[ErasedAnn/Types]]
   + [[Core/Parameterisation]]
   + [[Core/Parameterisation]]
   + [[Core/Pipeline]]
@@ -587,13 +587,13 @@ Surface language
   + [[Juvix/Pipeline]]
 ***** Golden <<Plonk/test/Test/Golden>>
 - _Relies on_
+  + [[Plonk]]
+  + [[ErasedAnn]]
   + [[Library]]
+  + [[Feedback]]
   + [[Library/Test/Golden]]
   + [[Juvix/Pipeline]]
   + [[Juvix/Pipeline]]
-  + [[Plonk]]
-  + [[ErasedAnn]]
-  + [[Feedback]]
 ***** Orphan
 - _Relies on_
   + [[Library]]
@@ -1804,21 +1804,6 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Desugar]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[Library]]
-  + [[Library/Sexp]]
 **** Contextify <<Juvix/Contextify>>
 - _Relies on_
   + [[Contextify/Environment]]
@@ -1941,6 +1926,21 @@ done with no extra information needed. Thus we export the following passes
   + [[Library/Sexp]]
   + [[Structure]]
   + [[Lens]]
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Desugar]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
+  + [[Library/Sexp]]
 **** Sexp
 ***** Structure
 Hardeing S-expressions into a more readable form. Here we use a
