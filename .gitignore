@@ -38,6 +38,3 @@ tmp/
 
 # liquid
 *.liquid
-
-buildSrc/build/
-buildSrc/.gradle/
