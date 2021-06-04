@@ -41,6 +41,7 @@ llvm =
     hasType t ty = case t of
       Add -> Param.check3Equal ty
       Sub -> Param.check3Equal ty
+      LitInt _ -> length ty == 1
 
     -- The primitive LLVM types available to Juvix users.
     builtinTypes :: Param.Builtins PrimTy
