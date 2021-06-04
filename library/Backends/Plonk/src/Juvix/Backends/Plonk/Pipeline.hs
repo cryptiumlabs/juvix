@@ -89,6 +89,7 @@ instance
           [IR.RawGFunction f]
             | IR.RawFunction _name usage ty (clause :| []) <- f,
               IR.RawFunClause _ _ term _ <- clause -> do
+                -- TODO: Convert main n = ... to main = \n -> ...
               let convGlobals = map (Pipeline.convGlobal Types.PField) globalDefs
                   newGlobals = HM.map (Pipeline.unsafeEvalGlobal convGlobals) convGlobals
                   lookupGlobal = IR.rawLookupFun' globalDefs
