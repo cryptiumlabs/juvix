@@ -6,9 +6,6 @@ fi
 COMMIT_MESSAGE=$(git show -s --format=%B ${DRONE_COMMIT_SHA})
 CHECK="[ci]"
 
-echo $COMMIT_MESSAGE
-
-
 case "$COMMIT_MESSAGE" in 
   *"$CHECK"*)
     echo "Skipping pipeline."

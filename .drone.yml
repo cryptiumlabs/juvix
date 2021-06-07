@@ -9,7 +9,7 @@ steps:
       | sha256sum -c -, echo "d04e32c725b9316805e85d2e8d26d9aaa7010f00e98cd933e4a16c64c0533a6f  scripts/format-and-org-gen.sh"
       | sha256sum -c -, echo "b6ad65e92d1f6f47516586281d55b27794f3bc368d06473781925397f27e7932  scripts/check-formatting.sh"
       | sha256sum -c -, echo "4b2678ee3159c1ee1d4879384163af17d388f0ce1f716bbc6f891e2b32483d3e  scripts/check-org-gen.sh"
-      | sha256sum -c -, echo "71ddfede9d9105e25e98b7384bb30ab844907bde708a9ea7e49b4638f26e9d32  scripts/pre-run.sh"
+      | sha256sum -c -, echo "59e7ec32dc65c1668ca90cb0b825f4d86215cd2b1382babeabaedde8d6d61347  scripts/pre-run.sh"
       | sha256sum -c -, sh scripts/pre-run.sh]
   image: alpine/git:v2.30.1
   name: script-integrity-check
@@ -29,7 +29,7 @@ steps:
     mount: [./.stack-work, ./.stack]
     region: eu-west-1
     restore: true
-- commands: [make test]
+- commands: [make stack-yaml, make test]
   depends_on: [restore-cache]
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
   name: test-suite
@@ -98,7 +98,7 @@ steps:
       | sha256sum -c -, echo "d04e32c725b9316805e85d2e8d26d9aaa7010f00e98cd933e4a16c64c0533a6f  scripts/format-and-org-gen.sh"
       | sha256sum -c -, echo "b6ad65e92d1f6f47516586281d55b27794f3bc368d06473781925397f27e7932  scripts/check-formatting.sh"
       | sha256sum -c -, echo "4b2678ee3159c1ee1d4879384163af17d388f0ce1f716bbc6f891e2b32483d3e  scripts/check-org-gen.sh"
-      | sha256sum -c -, echo "71ddfede9d9105e25e98b7384bb30ab844907bde708a9ea7e49b4638f26e9d32  scripts/pre-run.sh"
+      | sha256sum -c -, echo "59e7ec32dc65c1668ca90cb0b825f4d86215cd2b1382babeabaedde8d6d61347  scripts/pre-run.sh"
       | sha256sum -c -, sh scripts/pre-run.sh]
   image: alpine/git:v2.30.1
   name: script-integrity-check
@@ -178,6 +178,6 @@ type: docker
 workspace: {path: /drone/workspace}
 ---
 kind: signature
-hmac: 173b57dd90b8d556247d96c9de6681e490b1433fd822584b7e0b0a8aa602e4f2
+hmac: e83d02cca03cc50b8b5d375e76be08c4066869a6b208c578aeb880624e3ea833
 
 ...
