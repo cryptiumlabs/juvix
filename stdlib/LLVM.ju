@@ -1,0 +1,12 @@
+mod Prelude.LLVM where
+
+open Prelude
+
+sig int8 : ty
+let int8 = %LLVM.int8
+
+sig (+) : (x : ty) -> x -> x -> x
+let (+) _ = %LLVM.add
+
+sig (-) : (x : ty) -> x -> x -> x
+let (-) _ = %LLVM.sub
