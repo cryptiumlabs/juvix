@@ -178,6 +178,6 @@ type: docker
 workspace: {path: /drone/workspace}
 ---
 kind: signature
-hmac: cf677e6a6ef6438af7473ae616b41dd52d07a695763dcbea0e92fd75edb581e8
+hmac: 173b57dd90b8d556247d96c9de6681e490b1433fd822584b7e0b0a8aa602e4f2
 
 ...
