@@ -51,7 +51,7 @@ instance Pipeline.HasBackend BLLVM where
                   print term
                   fail $ show err
           somethingElse -> do
-            fail $ show somethingElse
+            fail $ "Typechecker Failed: " ++ show somethingElse
       Left err -> do
         fail $ "failed at ctxToCore\n" ++ show err
 
