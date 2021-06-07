@@ -23,6 +23,8 @@ instance Pipeline.HasBackend BLLVM where
   type Ty BLLVM = PrimTy
   type Val BLLVM = RawPrimVal
 
+  stdlibs _ = ["stdlib/LLVM.ju"]
+
   -- Copied over from the Michelson backend, and adapter where necessary.
   typecheck ctx = do
     let res = Pipeline.contextToCore ctx llvm
