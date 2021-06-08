@@ -5,8 +5,8 @@ open Prelude
 sig int8 : ty
 let int8 = %LLVM.int8
 
-sig (+) : (x : ty) -> x -> x -> x
-let (+) _ = %LLVM.add
+sig add : (x : ty) -> x -> x -> x
+let add _ = %LLVM.add
 
-sig (-) : (x : ty) -> x -> x -> x
-let (-) _ = %LLVM.sub
+sig sub : (x : ty) -> x -> x -> x
+let sub _ = %LLVM.sub
