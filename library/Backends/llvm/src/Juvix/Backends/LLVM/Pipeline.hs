@@ -57,5 +57,4 @@ instance Pipeline.HasBackend BLLVM where
 
   compile out term = do
     code <- compileProgram $ Core.toRaw term
-    putStrLn code
-    return ()
+    Pipeline.writeout out code
