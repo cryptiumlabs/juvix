@@ -23,7 +23,8 @@ parseTests =
   testGroup "parse"
     <$> sequence
       [ discoverGoldenTestsParse "../../test/examples/positive",
-        discoverGoldenTestsParse "../../test/examples/negative"
+        discoverGoldenTestsParse "../../test/examples/negative",
+        discoverGoldenTestsParse "../../test/examples/coreify"
       ]
 
 -- | Discover golden tests for input files with extension @.ju@ and output

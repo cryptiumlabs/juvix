@@ -1,0 +1,33 @@
+mod Add where
+
+open Prelude
+
+sig list : ty -> ty
+let list = %Michelson.list
+
+sig pair : ty -> ty -> ty
+let pair = %Michelson.pair-ty
+
+sig nil : list operation
+let nil = %Michelson.nil
+
+sig int : ty
+let int = %Michelson.int
+
+sig operation : ty
+let operation = %Michelson.operation
+
+sig make-pair : list operation -> int -> pair (list operation) int
+let make-pair = %Michelson.pair
+
+sig car : pair int int -> int
+let car = %Michelson.car
+
+sig add : int -> int -> int
+let add = %Michelson.add
+
+sig cdr : pair int int -> int
+let cdr = %Michelson.cdr
+
+sig main : pair int int -> pair (list operation) int
+let main = \ps -> make-pair nil (add (car ps) (cdr ps))

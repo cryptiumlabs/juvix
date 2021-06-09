@@ -1,0 +1,17 @@
+mod Types where
+
+open Prelude
+
+-- let ty_ = %Builtin.Type
+
+-- sig ty : ty_ 1
+-- let ty = ty_ 0
+
+type foo : ty = | Cons | Bar
+
+sig int : ty
+let int = %Michelson.int
+
+sig foo : int -> int
+let foo (Cons (Cons x y) z) = x
+let foo Nil      = 3
