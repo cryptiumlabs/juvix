@@ -258,16 +258,16 @@ data Effect = Effect
 
 data DefHandler = DefHandler
  {
-   symDefHandler :: Sexp.T,
-   opsDefHandler  :: Sexp.T
+   defHandlerName :: Sexp.T,
+   defHandlerOps  :: Sexp.T
  }
  deriving (Show)
 
 data LetHandler = LetHandler
  {
-   symLetHandler :: Sexp.T,
-   opsLetHandler  :: Sexp.T,
-   retLetHandler  :: Sexp.T
+   letHandlername :: Sexp.T,
+   letHandlerOps  :: Sexp.T,
+   letHandlerRet  :: Sexp.T
  }
  deriving (Show)
 

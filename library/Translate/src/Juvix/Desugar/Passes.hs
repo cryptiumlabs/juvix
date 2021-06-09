@@ -15,6 +15,7 @@ module Juvix.Desugar.Passes
     multipleTransLet,
     removePunnedRecords,
     moduleLetTransform,
+    handlerTransform
   )
 where
 
@@ -415,3 +416,25 @@ grabNames (form Sexp.:> name Sexp.:> _) acc
     Just name <- Sexp.atomFromT (Sexp.car name) =
     name : acc
 grabNames _ acc = acc
+
+----------------------------------------
+-- Handler Transform
+----------------------------------------
+handlerTransform :: Sexp.T -> Sexp.T
+handlerTransform xs = Sexp.foldPred xs (== Structure.nameDefHandler) handTrans
+  where
+    handTrans atom cdr
+      | Just mod <- Structure.toDefHandler (Sexp.Atom atom Sexp.:> cdr) =
+        let (ret_, ops_) = filterRet (mod ^. ops)
+        in Structure.LetHandler (mod ^. name) ops_ ret_
+          |> Structure.fromLetHandler
+          |> Sexp.addMetaToCar atom
+    handTrans _ _ = error "malformed defhandler"
+
+filterRet :: Sexp.T -> (Sexp.T, Sexp.T)
+filterRet form = Sexp.foldr removeRet (Sexp.Nil, Sexp.Nil) form
+  where
+    removeRet form@(_ Sexp.:> name Sexp.:> _) (ret, acc)
+      | Sexp.isAtomNamed name "pure" = (form, acc)
+      | otherwise                    = (ret, form Sexp.:> acc)
+    removeRet _ _ = error "can't happen"

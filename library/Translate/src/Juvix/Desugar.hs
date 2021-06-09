@@ -23,3 +23,4 @@ op syn =
     |> Pass.multipleTransDefun
     |> Pass.combineSig
     >>| Pass.removePunnedRecords
+    >>| Pass.handlerTransform
