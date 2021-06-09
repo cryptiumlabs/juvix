@@ -82,7 +82,7 @@ contextToCore ::
   Either (FF.Error primTy primVal) (FF.CoreDefs primTy primVal)
 contextToCore ctx param =
   FF.execEnv ctx param do
-    newCtx <- Context.mapWithContext' ctx updateCtx
+    newCtx <- Context.mapSumWithName ctx updateCtx
 
     let ordered = Context.recGroups newCtx
 
@@ -95,13 +95,15 @@ contextToCore ctx param =
     defs <- get @"core"
     pure $ FF.CoreDefs {defs, order = fmap Context.name <$> ordered}
   where
-    updateCtx def typeCons dataCons s@Context.Sum {sumTDef} c =
+    updateCtx s@Context.Sum {sumTDef, sumTName} dataCons c =
       case sumTDef of
-        Just v -> pure $ Just v
-        Nothing -> do
+        Just __ -> s
+        Nothing ->
           let dataConsSexp = Sexp.atom $ NameSymbol.fromSymbol dataCons
-              typeConsSexp = Sexp.atom $ NameSymbol.fromSymbol typeCons
-          pure $ mkDef typeConsSexp dataConsSexp s c
+              typeConsSexp = Sexp.atom $ NameSymbol.fromSymbol sumTName
+           in s {Context.sumTDef = mkDef typeConsSexp dataConsSexp s c}
+        |> Context.SumCon
+        |> pure
 
 addSig ::
   ( Show primTy,
