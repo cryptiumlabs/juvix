@@ -20,9 +20,12 @@ module Juvix.Desugar.Passes
   )
 where
 
+import Control.Lens hiding ((|>))
 import qualified Data.Set as Set
 import Juvix.Library
 import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp.Structure as Structure
+import Juvix.Sexp.Structure.Lens
 import Prelude (error)
 
 --------------------------------------------------------------------------------
@@ -40,44 +43,58 @@ import Prelude (error)
 -- - BNF output form:
 --   + (if pred-1 result-1 (if pred-2 result-2 (… (if pred-n result-n))))
 condTransform :: Sexp.T -> Sexp.T
-condTransform xs = Sexp.foldPred xs (== ":cond") condToIf
+condTransform xs = Sexp.foldPred xs (== Structure.nameCond) condToIf
   where
-    condToIf atom cdr =
-      let acc =
-            generation (Sexp.last cdr) Sexp.Nil
-              |> Sexp.butLast
-       in Sexp.foldr generation acc (Sexp.butLast cdr)
-            |> Sexp.addMetaToCar atom
+    condToIf atom cdr
+      | Just cond <- Structure.toCond (Sexp.Atom atom Sexp.:> cdr),
+        Just last <- lastMay (cond ^. entailments) =
+        let acc =
+              Structure.IfNoElse (last ^. predicate) (last ^. answer)
+                |> Structure.fromIfNoElse
+         in foldr generation acc (initSafe (cond ^. entailments))
+              |> Sexp.addMetaToCar atom
+      | otherwise = error "malformed cond"
     --
-    generation (Sexp.Cons condition body) acc =
-      Sexp.list [Sexp.atom "if", condition, Sexp.car body, acc]
-    generation _ _ =
-      error "malformed cond"
+    generation predAns acc =
+      Structure.If (predAns ^. predicate) (predAns ^. answer) acc
+        |> Structure.fromIf
 
 -- | @ifTransform@ - transforms a generated if form into a case
 -- - BNF input form:
 --   1. (if pred then else)
 --   2. (if pred then)
 -- - BNF output form:
---   1. (case pred (true then) (false else))
---   2. (case pred (true then))
+--   1. (case pred ((True) then) ((False) else))
+--   2. (case pred ((True) then))
 -- - Note =case=, =then=, and =else= are literals
 ifTransform :: Sexp.T -> Sexp.T
-ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
+ifTransform xs = Sexp.foldPred xs (== Structure.nameIf) ifToCase
   where
     ifToCase atom cdr =
-      case cdr of
-        Sexp.List [pred, then', else'] ->
-          Sexp.list (caseListElse pred then' else')
-        Sexp.List [pred, then'] ->
-          Sexp.list (caseList pred then')
-        _ ->
-          error "malformed if"
-            |> Sexp.addMetaToCar atom
+      ( case Structure.toIfFull (Sexp.Atom atom Sexp.:> cdr) of
+          Just (Structure.Else ifThenElse) ->
+            caseListElse
+              (ifThenElse ^. predicate)
+              (ifThenElse ^. conclusion)
+              (ifThenElse ^. alternative)
+          Just (Structure.NoElse ifThen) ->
+            caseList (ifThen ^. predicate) (ifThen ^. conclusion)
+          Nothing ->
+            error "malformed if"
+      )
+        |> Structure.fromCase
+        |> Sexp.addMetaToCar atom
+    -- Bad these functions should be refactored into using the case transform
     caseList pred then' =
-      [Sexp.atom "case", pred, Sexp.list [Sexp.list [Sexp.atom "True"], then']]
+      Structure.Case
+        pred
+        [createDeconBody "True" then']
     caseListElse pred then' else' =
-      caseList pred then' <> [Sexp.list [Sexp.list [Sexp.atom "False"], else']]
+      Structure.Case
+        pred
+        [createDeconBody "True" then', createDeconBody "False" else']
+    createDeconBody con entailment =
+      Structure.DeconBody (Structure.matchConstructor (Sexp.atom con)) entailment
 
 ------------------------------------------------------------
 -- Defun Transformation
@@ -104,33 +121,45 @@ ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
 --        rest)
 -- - Note the f's are exactly the same name
 multipleTransLet :: Sexp.T -> Sexp.T
-multipleTransLet xs = Sexp.foldPred xs (== "let") letToLetMatch
+multipleTransLet xs = Sexp.foldPred xs (== Structure.nameLet) letToLetMatch
   where
-    letToLetMatch atom (Sexp.List [a@(Sexp.Atom (Sexp.A name _)), bindings, body, rest]) =
-      let (grabbed, notMatched) = grabSimilar name rest
-       in Sexp.list
-            [ Sexp.atom ":let-match",
-              a,
-              putTogetherSplices (Sexp.list [bindings, body] : grabbed),
-              notMatched
-            ]
-            |> Sexp.addMetaToCar atom
-    letToLetMatch _atom _ =
-      error "malformed let"
-    --
-    grabSimilar name (Sexp.List [let1, name1, bindings, body, rest])
-      | Sexp.isAtomNamed let1 "let" && Sexp.isAtomNamed name1 name =
-        grabSimilar name rest
-          |> first (Sexp.list [bindings, body] :)
-    grabSimilar _name xs = ([], xs)
-    --
-    putTogetherSplices =
-      foldr spliceBindingBody Sexp.Nil
-    --
-    spliceBindingBody (Sexp.List [bindings, body]) acc =
-      Sexp.Cons bindings (Sexp.Cons body acc)
-    spliceBindingBody _ _ =
-      error "doesn't happen"
+    letToLetMatch atom cdr =
+      let currentForm = Sexp.Atom atom Sexp.:> cdr
+       in case Structure.toLet currentForm of
+            Just let' ->
+              let (letPatternMatches, notMatched) =
+                    grabSim (let' ^. name) currentForm
+               in Structure.LetMatch (let' ^. name) letPatternMatches notMatched
+                    |> Structure.fromLetMatch
+                    |> Sexp.addMetaToCar atom
+            Nothing -> error "malformed let"
+    grabSim name xs =
+      case grabSimilarBinding name Structure.toLet xs of
+        Just (structure, let') ->
+          grabSim name (let' ^. rest)
+            |> first (structure :)
+        Nothing ->
+          ([], xs)
+
+-- | @grabSimilarBindings@ grabs forms with the same name with a
+-- transformation, and gives back an ArgBody structure and the matched
+-- structure
+grabSimilarBinding ::
+  ( Eq a,
+    HasName s a,
+    HasArgs s Sexp.T,
+    HasBody s Sexp.T
+  ) =>
+  a ->
+  (t -> Maybe s) ->
+  t ->
+  Maybe (Structure.ArgBody, s)
+grabSimilarBinding nameGiven transform form = transform form >>= f
+  where
+    f form
+      | form ^. name == nameGiven =
+        Just (Structure.ArgBody (form ^. args) (form ^. body), form)
+      | otherwise = Nothing
 
 -- This one and sig combining are odd mans out, as they happen on a
 -- list of transforms
@@ -154,29 +183,28 @@ multipleTransLet xs = Sexp.foldPred xs (== "let") letToLetMatch
 multipleTransDefun :: [Sexp.T] -> [Sexp.T]
 multipleTransDefun = search
   where
-    search (defun@(Sexp.List (defun1 : name1@(Sexp.Atom a) : _)) : xs)
-      | Sexp.isAtomNamed defun1 ":defun",
-        Just name <- Sexp.nameFromT name1 =
-        let (sameDefun, toSearch) = grabSimilar name xs
-         in combineMultiple name (defun : sameDefun)
-              |> Sexp.addMetaToCar a
+    search ys@(defun : _)
+      | Just form <- Structure.toDefun defun,
+        -- we do this to get the meta information
+        Just atom <- Sexp.atomFromT (form ^. name) =
+        let (matchBody, toSearch) = grabSim (form ^. name) ys
+         in Structure.DefunMatch (form ^. name) matchBody
+              |> Structure.fromDefunMatch
+              |> Sexp.addMetaToCar atom
               |> (: search toSearch)
     search (x : xs) = x : search xs
     search [] = []
-    combineMultiple name xs =
-      Sexp.list ([Sexp.atom ":defun-match", Sexp.atom name] <> (Sexp.cdr . Sexp.cdr <$> xs))
-    sameName name (Sexp.List (defun1 : name1 : _))
-      | Sexp.isAtomNamed defun1 ":defun" && Sexp.isAtomNamed name1 name =
-        True
-    sameName _ _ =
-      False
-    grabSimilar _nam [] = ([], [])
-    grabSimilar name (defn : xs)
-      | sameName name defn =
-        let (same, rest) = grabSimilar name xs
-         in (defn : same, rest)
-      | otherwise =
-        ([], defn : xs)
+    grabSim name (defn : xs) =
+      case grabSimilarBinding name Structure.toDefun defn of
+        Just (structure, _def') ->
+          grabSim name xs |> first (structure :)
+        Nothing ->
+          ([], defn : xs)
+    grabSim _name [] =
+      ([], [])
+
+-- grabSim name xs =
+--   case Structure.toDefun ${1:T}
 
 -- This pass will also be removed, but is here for comparability
 -- reasons we just drop sigs with no defuns for now ☹. Fix this up when
@@ -203,19 +231,27 @@ multipleTransDefun = search
 --         …
 --         ((arg-n1 … arg-nn) body-n))
 combineSig :: [Sexp.T] -> [Sexp.T]
-combineSig
-  ( (Sexp.Atom (Sexp.A ":defsig" _) Sexp.:> name Sexp.:> sig Sexp.:> Sexp.Nil)
-      : (Sexp.Atom a@(Sexp.A ":defun-match" _) Sexp.:> defName Sexp.:> body)
-      : xs
-    )
-    | defName == name =
-      Sexp.addMetaToCar a (Sexp.listStar [Sexp.atom ":defsig-match", name, sig, body]) :
-      combineSig xs
-combineSig ((Sexp.Atom a@(Sexp.A ":defun-match" _) Sexp.:> defName Sexp.:> body) : xs) =
-  Sexp.addMetaToCar a (Sexp.listStar [Sexp.atom ":defsig-match", defName, Sexp.Nil, body]) :
-  combineSig xs
-combineSig (Sexp.List [Sexp.Atom (Sexp.A ":defsig" _), _, _] : xs) =
-  combineSig xs
+combineSig (a : match : xs)
+  | Just signature' <- Structure.toSignature a,
+    Just m <- Structure.toDefunMatch match,
+    -- we do this to get the meta information
+    Just atom <- Sexp.atomFromT (m ^. name),
+    signature' ^. name == m ^. name =
+    --
+    Structure.DefunSigMatch (m ^. name) (signature' ^. sig) (m ^. args)
+      |> Structure.fromDefunSigMatch
+      |> Sexp.addMetaToCar atom
+      |> (: combineSig xs)
+combineSig (defun : xs)
+  | Just def <- Structure.toDefunMatch defun,
+    Just atom <- Sexp.atomFromT (def ^. name) =
+    Structure.DefunSigMatch (def ^. name) Sexp.Nil (def ^. args)
+      |> Structure.fromDefunSigMatch
+      |> Sexp.addMetaToCar atom
+      |> (: combineSig xs)
+combineSig (sig : xs)
+  | Just _sig <- Structure.toSignature sig =
+    combineSig xs
 combineSig (x : xs) = x : combineSig xs
 combineSig [] = []
 
@@ -239,49 +275,51 @@ combineSig [] = []
 --             (Prelude.>> body-n
 --                (… (Prelude.>>= body-n (lambda (name-n) return)))))))
 translateDo :: Sexp.T -> Sexp.T
-translateDo xs = Sexp.foldPred xs (== ":do") doToBind
+translateDo xs = Sexp.foldPred xs (== Structure.nameDo) doToBind
   where
     doToBind atom sexp =
       Sexp.foldr generation acc (Sexp.butLast sexp)
         |> Sexp.addMetaToCar atom
       where
         acc =
-          case Sexp.last sexp of
-            -- toss away last %<-... we should likely throw a warning for this
-            Sexp.List [Sexp.Atom (Sexp.A "%<-" _), _name, body] -> body
-            xs -> xs
-        generation body acc =
-          case body of
-            Sexp.List [Sexp.Atom (Sexp.A "%<-" _), name, body] ->
+          let last = Sexp.last sexp
+           in case last |> Structure.toArrow of
+                -- toss away last %<-... we should likely throw a warning for this
+                Just arr -> arr ^. body
+                Nothing -> last
+        generation bodyOf acc =
+          case Structure.toArrow bodyOf of
+            Just arr ->
               Sexp.list
                 [ Sexp.atom "Prelude.>>=",
-                  body,
-                  Sexp.list [Sexp.atom "lambda", Sexp.list [name], acc]
+                  arr ^. body,
+                  Structure.Lambda (Sexp.list [arr ^. name]) acc
+                    |> Structure.fromLambda
                 ]
-            notBinding ->
-              Sexp.list [Sexp.atom "Prelude.>>", notBinding, acc]
+            Nothing ->
+              Sexp.list [Sexp.atom "Prelude.>>", bodyOf, acc]
 
 -- | @removePunnedRecords@ - removes the record puns from the syntax to
 -- have an uniform a-list
 -- - BNF input:
 --   + (:record (punned-1) (name-2 body-2) … (punned-n))
 -- - BNF output:
---   + (:record punned-1 punned-1 name-2 body-2 … punned-n punned-n)
+--   + (:record-no-pun punned-1 punned-1 name-2 body-2 … punned-n punned-n)
 removePunnedRecords :: Sexp.T -> Sexp.T
-removePunnedRecords xs = Sexp.foldPred xs (== ":record") removePunned
+removePunnedRecords xs = Sexp.foldPred xs (== Structure.nameRecord) removePunned
   where
-    removePunned atom sexp =
-      Sexp.listStar
-        [ Sexp.atom ":record-no-pun",
-          Sexp.foldr f Sexp.Nil sexp
-        ]
-        |> Sexp.addMetaToCar atom
+    removePunned atom cdr =
+      case Structure.toRecord (Sexp.Atom atom Sexp.:> cdr) of
+        Just record ->
+          fmap f (record ^. value)
+            |> Structure.RecordNoPunned
+            |> Structure.fromRecordNoPunned
+            |> Sexp.addMetaToCar atom
+        Nothing -> error "malformed record"
       where
-        f (Sexp.List [field, bind]) acc =
-          field Sexp.:> bind Sexp.:> acc
-        f (Sexp.List [pun]) acc =
-          pun Sexp.:> pun Sexp.:> acc
-        f _ _ = error "malformed record"
+        f (Structure.Pun punned) =
+          Structure.NotPunned (punned ^. name) (punned ^. name)
+        f (Structure.NotPun notPunned) = notPunned
 
 ------------------------------------------------------------
 -- Module Pass
@@ -333,7 +371,7 @@ moduleTransform xs = Sexp.foldPred xs (== ":defmodule") moduleToRecord
           ignoreCond body (\b -> Sexp.foldr combine (generatedRecord b) b)
         ]
         |> Sexp.addMetaToCar atom
-    moduleToRecord _ _ = error "malformed record"
+    moduleToRecord _ _ = error "malformed defmodule"
 
 -- | @moduleLetTransform@ - See @moduleTransform@'s comment
 moduleLetTransform :: Sexp.T -> Sexp.T
@@ -348,7 +386,7 @@ moduleLetTransform xs = Sexp.foldPred xs (== ":let-mod") moduleToRecord
           rest
         ]
         |> Sexp.addMetaToCar atom
-    moduleToRecord _ _ = error "malformed record"
+    moduleToRecord _ _ = error "malformed let-mod"
 
 ----------------------------------------
 -- Module Helpers

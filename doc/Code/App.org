@@ -3,8 +3,6 @@
   + [[Library]]
 * Main
 - _Relies on_
-  + [[Michelson]]
-  + [[Plonk]]
   + [[Library]]
   + [[Feedback]]
   + [[Pipeline]]
@@ -13,4 +11,3 @@
   + [[Michelson]]
   + [[Plonk]]
   + [[Library]]
-  + [[Pipeline]]

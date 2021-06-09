@@ -15,6 +15,8 @@ where
 
 import qualified Data.Graph as Graph
 import qualified Data.HashSet as HashSet
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.List.NonEmpty.Extra as NonEmpty
 import qualified Generics.SYB as SYB
 import qualified Juvix.Core.Common.Context as Context
 import Juvix.Core.Common.Context.Traverse.Types
@@ -24,11 +26,17 @@ import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
+type Shows a b c = (Show a, Show b, Show c)
+
+type Eqs a b c = (Eq a, Eq b, Eq c)
+
+type Datas a b c = (Data a, Data b, Data c)
+
 -- | Traverses a whole context by performing an action on each recursive group.
 -- The groups are passed in dependency order but the order of elements within
 -- each group is arbitrary.
 traverseContext ::
-  (Applicative f, Monoid t, Data a, Data b, Data c) =>
+  (Shows a b c, Applicative f, Monoid t, Datas a b c, Eqs a b c) =>
   -- | process one recursive group
   (Group a b c -> f t) ->
   Context.T a b c ->
@@ -37,7 +45,7 @@ traverseContext f = foldMapA f . recGroups
 
 -- | As 'traverseContext' but ignoring the return value.
 traverseContext_ ::
-  (Applicative f, Data a, Data b, Data c) =>
+  (Shows a b c, Applicative f, Datas a b c, Eqs a b c) =>
   -- | process one recursive group
   (Group a b c -> f z) ->
   Context.T a b c ->
@@ -47,7 +55,7 @@ traverseContext_ f = traverse_ f . recGroups
 -- | Same as 'traverseContext', but the groups are split up into single
 -- definitions.
 traverseContext1 ::
-  (Monoid t, Applicative f, Data a, Data b, Data c) =>
+  (Shows a b c, Applicative f, Monoid t, Datas a b c, Eqs a b c) =>
   -- | process one definition
   (NameSymbol.T -> Context.Definition a b c -> f t) ->
   Context.T a b c ->
@@ -56,7 +64,7 @@ traverseContext1 = traverseContext . foldMapA . onEntry
 
 -- | Same as 'traverseContext1', but ignoring the return value.
 traverseContext1_ ::
-  (Applicative f, Data a, Data b, Data c) =>
+  (Shows a b c, Applicative f, Datas a b c, Eqs a b c) =>
   -- | process one definition
   (NameSymbol.T -> Context.Definition a b c -> f z) ->
   Context.T a b c ->
@@ -67,24 +75,51 @@ onEntry ::
   (NameSymbol.T -> Context.Definition term ty sumRep -> t) ->
   Entry term ty sumRep ->
   t
-onEntry f (Entry {name, def}) = f name def
+onEntry f Entry {name, def} = f name def
 
 -- | Sorts a context by dependency order. Each element of the output is
 -- a mutually-recursive group, whose elements depend only on each other and
 -- elements of previous groups. The first element of each pair is its
 -- fully-qualified name.
 recGroups ::
-  (Data term, Data ty, Data sumRep) =>
+  (Shows ty term sumRep, Datas ty term sumRep, Eqs ty term sumRep) =>
   Context.T term ty sumRep ->
   [Group term ty sumRep]
-recGroups ctx@(Context.T {topLevelMap}) =
+recGroups ctx@Context.T {topLevelMap} =
   let top = topLevelMap
       (groups, deps) = run_ ctx $ recGroups' injectTopLevel $ toNameSpace top
       get n = maybe [] toList $ HashMap.lookup n deps
       edges = map (\(n, gs) -> (gs, n, get n)) $ HashMap.toList groups
       (g, fromV', _) = Graph.graphFromEdges edges
       fromV v = let (gs, _, _) = fromV' v in gs
-   in Graph.topSort g |> reverse |> concatMap fromV
+   in Graph.topSort g |> reverse |> concatMap fromV |> sortBy orderDatatypes |> groupCons
+
+-- | Join type and data constructors in a single group
+groupCons :: (Foldable t, Eqs ty term sumRep) => t (NonEmpty (Entry term ty sumRep)) -> [Group term ty sumRep]
+groupCons = fmap snd . foldr f mempty
+  where
+    f entry@(a NonEmpty.:| _as) acc
+      | Context.SumCon Context.Sum {sumTName} <- def a,
+        Just _ <- find (elem sumTName) (fst <$> acc) =
+        -- Find if type declar of a data constructor exists
+        foldr (g sumTName) mempty acc
+      | otherwise = (name a, entry) : acc
+      where
+        g sumTName (k, v) a
+          | sumTName `elem` k = (k, v `NonEmpty.union` entry) : a
+          | otherwise = (k, v) : a
+
+-- | Make data type come before data constructor
+orderDatatypes ::
+  Group term ty sumRep ->
+  Group term ty sumRep ->
+  Ordering
+orderDatatypes (a NonEmpty.:| _as) (b NonEmpty.:| _bs) = case (def a, def b) of
+  (Context.SumCon Context.Sum {sumTName}, Context.TypeDeclar _)
+    | sumTName `elem` name b -> GT
+  (Context.TypeDeclar _, Context.SumCon Context.Sum {sumTName})
+    | sumTName `elem` name a -> LT
+  (_, _) -> EQ
 
 injectTopLevel :: (Semigroup a, IsString a) => a -> a
 injectTopLevel name = Context.topLevelName <> "." <> name

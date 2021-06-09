@@ -154,10 +154,6 @@ argToTake :: Alternative f => Arg' ext ty term -> f (Take ty term)
 argToTake (TermArg t) = pure t
 argToTake _ = empty
 
--- | Translate an 'Arg'' to a 'Return''.
-argToReturn :: Alternative f => Arg' ext ty term -> f (Return' ext' ty term)
-argToReturn = fmap takeToReturn . argToTake
-
 -- | Translate a 'Take' into a 'Return''.
 takeToReturn :: Take ty term -> Return' ext ty term
 takeToReturn (Take {type', term}) = Return {retType = type', retTerm = term}

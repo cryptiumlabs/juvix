@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+
 -- |
 -- The easy module serves as the stop shop for getting anywhere in the
 -- code-base fast.
@@ -18,7 +20,6 @@
 -- with any stage of the compiler while modifying the source code.
 module Easy where
 
-import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as ResolveOpen
 import qualified Juvix.Contextify.ToContext.Types as ContextifyT
@@ -64,14 +65,25 @@ def =
       currentContextName = "Juvix-User"
     }
 
--- @defMichelson@ gives us the entire prelude
+-- @defMichelson@ gives us Michelson prelude
 defMichelson :: Options
 defMichelson =
   def
     { prelude =
+        -- TODO: Avoid relative paths
         [ "../../stdlib/Prelude.ju",
           "../../stdlib/Michelson.ju",
           "../../stdlib/MichelsonAlias.ju"
+        ]
+    }
+
+-- @defCircuit@ gives us the circuit prelude
+defCircuit :: Options
+defCircuit =
+  def
+    { prelude =
+        [ "../../stdlib/Prelude.ju",
+          "../../stdlib/Circuit.ju"
         ]
     }
 

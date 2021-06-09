@@ -14,12 +14,6 @@ extra-deps:
 ####################################
 # For testing with Circuit backend
 ####################################
-- github: adjoint-io/pairing
-  commit: 2ef8ba869608432f55e32afc385b7fa75d4d1742
-- github: adjoint-io/elliptic-curve
-  commit: 52b7eba38db0b3aa3619f2916c518f8f3ee63aaf
-- github: adjoint-io/galois-field
-  commit: 95fc86b61c573518ff6a1ab1b9f23301482b257
 - github: phile314/tasty-silver
   commit: f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b
 

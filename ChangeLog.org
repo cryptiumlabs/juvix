@@ -1,0 +1,9 @@
+* Changelog for Juvix
+** 0.1.0.1
+- Compile sum and product types
+- `main` can be of any type
+- Refactor FromFrontend.hs into submodules
+** 0.1.0.0
+- Changelog created.
+- Documentation around how to bump the changelog in the contributors
+  guide.

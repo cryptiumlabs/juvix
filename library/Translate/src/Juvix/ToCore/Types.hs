@@ -16,6 +16,12 @@ import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
 import Text.Show (Show (..))
 
+type ReduceEff primTy primVal m =
+  ( HasThrowFF primTy primVal m,
+    HasParam primTy primVal m,
+    HasCoreSigs primTy primVal m
+  )
+
 data Error primTy primVal
   = -- features not yet implemented
 
@@ -172,20 +178,21 @@ instance (Show primTy, Show primVal) => Show (Error primTy primVal) where
       "Builtin binding\n" <> show def <> "\nshould not have a type signature"
     WrongNumberBuiltinArgs s n args ->
       "Builtin " <> show s <> " should have " <> show n <> " args\n"
-        <> "but has been applied to\n"
+        <> "but has been applied to "
+        <> show (length $ Sexp.toList args)
+        <> "\n"
         <> show args
     UnexpectedOmega ->
       "%Builtin.Omega cannot be used as an arbitrary term, only as\n"
         <> "the first argument of %Builtin.Arrow or %Builtin.Pair"
 
-data CoreSig' ext primTy primVal
+data CoreSig ext primTy primVal
   = DataSig
       { dataType :: !(IR.Term' ext primTy primVal),
         dataCons :: [NameSymbol.T]
       }
   | ConSig
-      { conType :: !(Maybe (IR.Term' ext primTy primVal)),
-        conDef :: !(Maybe (Ctx.Def Sexp.T Sexp.T))
+      { conType :: !(Maybe (IR.Term' ext primTy primVal))
       }
   | ValSig
       { valUsage :: !IR.GlobalUsage,
@@ -198,11 +205,11 @@ data CoreSig' ext primTy primVal
 -- then do so, otherwise return the *first* unchanged
 -- (since @insertWith@ calls it as @mergeSigs new old@).
 mergeSigs ::
-  CoreSig' ext primTy primVal ->
-  CoreSig' ext primTy primVal ->
-  CoreSig' ext primTy primVal
-mergeSigs (ConSig newTy newDef) (ConSig oldTy oldDef) =
-  ConSig (newTy <|> oldTy) (newDef <|> oldDef)
+  CoreSig ext primTy primVal ->
+  CoreSig ext primTy primVal ->
+  CoreSig ext primTy primVal
+mergeSigs (ConSig newTy) (ConSig oldTy) =
+  ConSig (newTy <|> oldTy)
 mergeSigs _ second = second
 
 -- | Bindings that can't be given types, but can be given new names by the user.
@@ -225,7 +232,7 @@ deriving instance
     IR.TermAll Eq ext primTy primVal,
     IR.ElimAll Eq ext primTy primVal
   ) =>
-  Eq (CoreSig' ext primTy primVal)
+  Eq (CoreSig ext primTy primVal)
 
 deriving instance
   ( Show primTy,
@@ -233,7 +240,7 @@ deriving instance
     IR.TermAll Show ext primTy primVal,
     IR.ElimAll Show ext primTy primVal
   ) =>
-  Show (CoreSig' ext primTy primVal)
+  Show (CoreSig ext primTy primVal)
 
 deriving instance Data LineNum.T
 
@@ -248,14 +255,14 @@ deriving instance
     IR.TermAll Data ext primTy primVal,
     IR.ElimAll Data ext primTy primVal
   ) =>
-  Data (CoreSig' ext primTy primVal)
+  Data (CoreSig ext primTy primVal)
 
-type CoreSigIR = CoreSig' IR.NoExt
+type CoreSigIR = CoreSig IR.NoExt
 
-type CoreSigHR = CoreSig' HR.T
+type CoreSigHR = CoreSig HR.T
 
 type CoreSigs' ext primTy primVal =
-  HashMap IR.GlobalName (CoreSig' ext primTy primVal)
+  HashMap IR.GlobalName (CoreSig ext primTy primVal)
 
 type CoreSigsIR primTy primVal = CoreSigs' IR.NoExt primTy primVal
 

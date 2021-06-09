@@ -403,4 +403,4 @@ singleEleErr = fmap (Trans.transTopLevel . head . noHeaderErr)
 
 noHeaderErr :: Types.Header topLevel -> [topLevel]
 noHeaderErr (Types.NoHeader xs) = xs
-noHeaderErr _ = error "imporper form"
+noHeaderErr _ = error "improper form"

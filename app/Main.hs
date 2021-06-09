@@ -5,7 +5,7 @@ where
 
 import qualified Data.Aeson as A
 import Data.Curve.Weierstrass.BLS12381 (Fr)
-import Data.Field.Galois (Prime, fromP, toP)
+import Data.Field.Galois (fromP, toP)
 import qualified Data.Scientific as S
 import Development.GitRev
 import qualified Juvix.Backends.LLVM as LLVM
@@ -23,8 +23,9 @@ import Text.RawString.QQ
 
 instance A.FromJSON Fr where
   parseJSON (A.Number n) = case S.floatingOrInteger n of
-    Left floating -> panic $ "Can't parse floating :" <> show n
-    Right f -> pure . toP $ toInteger f
+    Left d -> panic $ "Can't parse floating:" <> show (d :: Double)
+    Right f -> pure $ toP f
+  parseJSON j = panic $ "Can't parse non-number:" <> show j
 
 instance A.ToJSON Fr where
   toJSON f = A.Number $ S.scientific (fromP f) 0
@@ -136,7 +137,7 @@ run ctx opt = do
           Michelson b -> g b
           Plonk b -> g b
           where
-            g :: forall b. (Show (Pipeline.Ty b), Show (Pipeline.Val b), Pipeline.HasBackend b) => b -> Pipeline.Pipeline ()
+            g :: forall b. Pipeline.HasBackend b => b -> Pipeline.Pipeline ()
             g b = runCmd' fin b (\b -> Pipeline.parse b >=> Pipeline.typecheck @b >=> Pipeline.compile @b fout)
         Version -> liftIO $ putDoc versionDoc
         _ -> Feedback.fail "Not implemented yet."

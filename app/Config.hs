@@ -1,8 +1,7 @@
-module Config (T (..)) where
+module Config (T (..), defaultT, loadT) where
 
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
-import Data.Char (isLower, toLower)
 import qualified Data.Yaml as Y
 import Juvix.Library
 

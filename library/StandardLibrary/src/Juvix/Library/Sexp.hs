@@ -23,6 +23,9 @@ module Juvix.Library.Sexp
     cadr,
     foldSearchPred,
     unGroupBy2,
+    snoc,
+    findKey,
+    flatten,
   )
 where
 
@@ -174,11 +177,7 @@ nameFromT (Atom (A name _)) = Just name
 nameFromT _ = Nothing
 
 assoc :: T -> T -> Maybe T
-assoc t (car' :> cdr')
-  | t == car car' = Just (cadr car')
-  | otherwise = assoc t cdr'
-assoc _ Nil = Nothing
-assoc _ Atom {} = Nothing
+assoc t xs = cadr <$> findKey car t xs
 
 groupBy2 :: T -> T
 groupBy2 (a1 :> a2 :> rest) =
@@ -191,3 +190,19 @@ unGroupBy2 (List [a1, a2] :> rest) =
 unGroupBy2 (a :> rest) =
   a :> unGroupBy2 rest
 unGroupBy2 a = a
+
+snoc :: T -> T -> T
+snoc e (Cons x y) = Cons x (snoc e y)
+snoc e a@(Atom _) = Cons a e
+snoc e Nil = e
+
+findKey :: (T -> T) -> T -> T -> Maybe T
+findKey f k (x :> xs)
+  | f x == k = Just x
+  | otherwise = findKey f k xs
+findKey f k _ = Nothing
+
+flatten :: T -> T
+flatten ((x :> y) :> z) = flatten x :> (flatten y :> z)
+flatten ((Atom a) :> y) = Atom a :> flatten y
+flatten e = e

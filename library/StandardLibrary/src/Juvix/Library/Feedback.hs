@@ -15,7 +15,7 @@ import Juvix.Library
 -- | Keep track of messages during the compilation or REPL.
 -- The implementation is based on
 -- [[https://github.com/UU-ComputerScience/uu-cco/blob/master/uu-cco/src/CCO/Feedback.hs]].
-data Feedback (app :: * -> *) msg a
+data Feedback (app :: Type -> Type) msg a
   = Success (app msg) a -- Indicate success.
   | Fail (app msg) -- Indicate a failure.
 
