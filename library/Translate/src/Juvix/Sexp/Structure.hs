@@ -716,32 +716,6 @@ fromCase (Case sexp1 deconBody2) =
   Sexp.listStar [Sexp.atom nameCase, sexp1, fromDeconBody `toStarList` deconBody2]
 
 ----------------------------------------
--- Do
-----------------------------------------
-
-nameDo :: NameSymbol.T
-nameDo = ":do"
-
-isDo :: Sexp.T -> Bool
-isDo (Sexp.Cons form _) = Sexp.isAtomNamed form nameDo
-isDo _ = False
-
-toDo :: Sexp.T -> Maybe Do
-toDo form
-  | isDo form =
-    case form of
-      _nameDo Sexp.:> sexp1 ->
-        Do sexp1 |> Just
-      _ ->
-        Nothing
-  | otherwise =
-    Nothing
-
-fromDo :: Do -> Sexp.T
-fromDo (Do sexp1) =
-  Sexp.listStar [Sexp.atom nameDo, sexp1]
-
-----------------------------------------
 -- Arrow
 ----------------------------------------
 
