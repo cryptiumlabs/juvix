@@ -967,6 +967,7 @@ Function declarations are typechecked by @typeCheckFuns@ in CheckFunction.hs.
 Typechecked declarations are added to the signature.
 - _Relies on_
   + [[CheckDatatype]]
+  + [[CheckTerm]]
   + [[IR/Evaluator]]
   + [[Typechecker/Env]]
   + [[Error]]

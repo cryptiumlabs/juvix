@@ -12,6 +12,7 @@ module Juvix.Core.IR.Typechecker
 where
 
 import Juvix.Core.IR.CheckDatatype
+import Juvix.Core.IR.CheckTerm (ShowExt)
 import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Typechecker.Env as Env
 import Juvix.Core.IR.Typechecker.Error as Error
@@ -25,6 +26,10 @@ import Juvix.Library hiding (Datatype)
 typeCheckDeclaration ::
   ( Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show extT,
+    ShowExt extT primTy primVal,
     Eval.CanEval extT IR.NoExt primTy primVal,
     Eval.EvalPatSubst IR.NoExt primTy primVal,
     Eval.EvalPatSubst IR.NoExt primTy (TypedPrim primTy primVal),
