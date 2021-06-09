@@ -361,31 +361,32 @@ removePunnedRecords xs = Sexp.foldPred xs (== Structure.nameRecord) removePunned
 -- - Where Expression follows the Top level Transformation, and
 --   <foo-name> is the name of foo
 moduleTransform :: Sexp.T -> Sexp.T
-moduleTransform xs = Sexp.foldPred xs (== ":defmodule") moduleToRecord
+moduleTransform xs = Sexp.foldPred xs (== Structure.nameDefModule) moduleToRecord
   where
-    moduleToRecord atom (name Sexp.:> args Sexp.:> body) =
-      Sexp.list
-        [ Sexp.atom ":defun",
-          name,
-          args,
-          ignoreCond body (\b -> Sexp.foldr combine (generatedRecord b) b)
-        ]
-        |> Sexp.addMetaToCar atom
-    moduleToRecord _ _ = error "malformed defmodule"
+    intoRecord body =
+      Sexp.foldr combine (generatedRecord body) body
+    moduleToRecord atom cdr
+      | Just mod <- Structure.toDefModule (Sexp.Atom atom Sexp.:> cdr) =
+        Structure.Defun (mod ^. name) (mod ^. args) (ignoreCond (mod ^. body) intoRecord)
+          |> Structure.fromDefun
+          |> Sexp.addMetaToCar atom
+      | otherwise = error "malformed defmodule"
 
 -- | @moduleLetTransform@ - See @moduleTransform@'s comment
 moduleLetTransform :: Sexp.T -> Sexp.T
-moduleLetTransform xs = Sexp.foldPred xs (== ":let-mod") moduleToRecord
+moduleLetTransform xs = Sexp.foldPred xs (== Structure.nameLetModule) moduleToRecord
   where
-    moduleToRecord atom (name Sexp.:> args Sexp.:> body Sexp.:> rest) =
-      Sexp.list
-        [ Sexp.atom "let",
-          name,
-          args,
-          ignoreCond body (\b -> Sexp.foldr combine (generatedRecord b) b),
-          rest
-        ]
-        |> Sexp.addMetaToCar atom
+    combineIntoRecord body =
+      Sexp.foldr combine (generatedRecord body) body
+    moduleToRecord atom cdr
+      | Just mod <- Structure.toLetModule (Sexp.Atom atom Sexp.:> cdr) =
+        Structure.Let
+          (mod ^. name)
+          (mod ^. args)
+          (ignoreCond (mod ^. body) combineIntoRecord)
+          (mod ^. rest)
+          |> Structure.fromLet
+          |> Sexp.addMetaToCar atom
     moduleToRecord _ _ = error "malformed let-mod"
 
 ----------------------------------------
@@ -395,49 +396,49 @@ moduleLetTransform xs = Sexp.foldPred xs (== ":let-mod") moduleToRecord
 -- | @combine@ - is the helper for transforming top level statements
 -- into expressions
 combine :: Sexp.T -> Sexp.T -> Sexp.T
-combine (form Sexp.:> name Sexp.:> args Sexp.:> body Sexp.:> Sexp.Nil) expression
-  | Sexp.isAtomNamed form ":defun" =
-    -- we crunch the xs in a list
-    Sexp.list [Sexp.atom "let", name, args, body, expression]
-combine (form Sexp.:> name Sexp.:> xs) expression
-  | Sexp.isAtomNamed form "type" =
-    Sexp.list [Sexp.atom ":let-type", name, xs, expression]
-combine (form Sexp.:> name Sexp.:> xs Sexp.:> Sexp.Nil) expression
-  | Sexp.isAtomNamed form ":defsig" =
-    Sexp.list [Sexp.atom ":let-sig", name, xs, expression]
-combine (form Sexp.:> declaration) expression
-  | Sexp.isAtomNamed form "declare" =
-    Sexp.list [Sexp.atom ":declaim", declaration, expression]
-combine (Sexp.List [form, open]) expression
-  | Sexp.isAtomNamed form "open" =
-    Sexp.list [Sexp.atom ":open-in", open, expression]
-combine (form Sexp.:> name Sexp.:> args Sexp.:> xs) expression
-  | Sexp.isAtomNamed form ":defmodule" =
-    -- Turn this into a let-module
-    if
-        | Sexp.isAtomNamed (Sexp.car xs) ":cond" ->
-          Sexp.list [Sexp.atom ":let-mod", name, args, Sexp.car xs, expression]
-        | otherwise ->
-          Sexp.list [Sexp.atom ":let-mod", name, args, xs, expression]
+combine form expression
+  | Just defun <- Structure.toDefun form =
+    Structure.Let (defun ^. name) (defun ^. args) (defun ^. body) expression
+      |> Structure.fromLet
+  | Just open <- Structure.toOpen form =
+    Structure.OpenIn (open ^. name) expression
+      |> Structure.fromOpenIn
+  | Just declare <- Structure.toDeclare form =
+    Structure.Declaim (declare ^. claim) expression
+      |> Structure.fromDeclaim
+  | Just typ <- Structure.toType form =
+    Structure.LetType (typ ^. nameAndSig) (typ ^. args) (typ ^. body) expression
+      |> Structure.fromLetType
+  | Just signature' <- Structure.toSignature form =
+    Structure.LetSignature (signature' ^. name) (signature' ^. sig) expression
+      |> Structure.fromLetSignature
+  -- TODO ∷ cleanup this generation, a bit
+  | Just mod <- Structure.toDefModule form =
+    let cond = Sexp.car (mod ^. body)
+        newBody
+          | Sexp.isAtomNamed cond Structure.nameCond = cond
+          | otherwise = mod ^. body
+     in Structure.LetModule (mod ^. name) (mod ^. args) newBody expression
+          |> Structure.fromLetModule
 -- ignore other forms
 combine _ expression = expression
 
 -- | @ignoreCond@ gets past the annoying cond cells for modules
 ignoreCond :: Sexp.T -> (Sexp.T -> Sexp.T) -> Sexp.T
-ignoreCond ((form Sexp.:> xs) Sexp.:> Sexp.Nil) trans
-  | Sexp.isAtomNamed form ":cond" =
-    Sexp.listStar [form, Sexp.foldr comb Sexp.Nil xs]
+ignoreCond (form Sexp.:> Sexp.Nil) trans
+  | Just cond <- Structure.toCond form =
+    Sexp.listStar [form, foldr comb Sexp.Nil (cond ^. entailments)]
   where
-    comb (pred Sexp.:> body) acc =
-      Sexp.listStar [Sexp.list [pred, trans body], acc]
-    comb _ acc = acc
+    comb predAns acc =
+      Sexp.listStar
+        [Sexp.list [predAns ^. predicate, trans (predAns ^. answer)], acc]
 ignoreCond xs trans = trans xs
 
 -- | @generatedRecord@ - record generation
 generatedRecord :: Sexp.T -> Sexp.T
-generatedRecord b =
-  Sexp.list
-    (Sexp.atom ":record" : fmap (\x -> Sexp.list [Sexp.Atom x]) (names b))
+generatedRecord body =
+  Structure.Record (fmap (Structure.Pun . Structure.Punned . Sexp.Atom) (names body))
+    |> Structure.fromRecord
 
 -- | @names@ - folding @grabNames@ that uniquifyies the result to
 -- achieve an unique list
@@ -447,13 +448,13 @@ names body = Sexp.foldr grabNames [] body |> Set.fromList |> Set.toList
 -- | @grabNames@ - responsible for grabbing the names out of top levels
 grabNames :: Sexp.T -> [Sexp.Atom] -> [Sexp.Atom]
 grabNames (form Sexp.:> name Sexp.:> _) acc
-  | Sexp.isAtomNamed form ":defun"
-      || Sexp.isAtomNamed form "type"
-      || Sexp.isAtomNamed form ":defmodule"
-      || Sexp.isAtomNamed form ":defsig",
+  | Sexp.isAtomNamed form Structure.nameDefun
+      || Sexp.isAtomNamed form Structure.nameType
+      || Sexp.isAtomNamed form Structure.nameDefModule
+      || Sexp.isAtomNamed form Structure.nameSignature,
     Just name <- Sexp.atomFromT name =
     name : acc
-  | Sexp.isAtomNamed (Sexp.car name) "type",
+  | Sexp.isAtomNamed form Structure.nameType,
     Just name <- Sexp.atomFromT (Sexp.car name) =
     name : acc
 grabNames _ acc = acc

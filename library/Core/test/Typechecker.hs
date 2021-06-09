@@ -7,7 +7,7 @@ import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.CheckTerm as TC
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
-import qualified Juvix.Core.IR.Typechecker as TC
+import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Parameterisations.All as All
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
 import qualified Juvix.Core.Parameterisations.Unit as Unit
@@ -284,12 +284,24 @@ dependentFunctionComp =
         depIdentityCompTy,
       shouldCheck
         All.t
+        depIdentity'
+        depIdentityCompTy,
+      shouldCheck
+        All.t
         depIdentity
         depIdentityCompTyOmega,
       shouldCheck
         All.t
         depK
-        depKCompTy
+        depKCompTy,
+      shouldCheck
+        All.t
+        depIdentityCompTyT
+        (mempty `ann` IR.VStar 1),
+      shouldCheck
+        All.t
+        depKCompTyT
+        (mempty `ann` IR.VStar 1)
     ]
 
 letComp :: T.TestTree
@@ -390,6 +402,17 @@ depIdentity =
             )
         )
     )
+
+-- dependent identity function without ann, \t.\x.x
+depIdentity' :: forall primTy primVal. IR.Term primTy primVal
+depIdentity' = IR.Lam $ IR.Lam $ IR.Elim $ IR.Bound 0
+
+-- computation dependent identity annotation (1, 0 * -> 1 t -> t)
+depIdentityCompTyT :: AllTerm
+depIdentityCompTyT =
+  IR.Pi mempty (IR.Star 0) $
+    IR.Pi one (IR.Elim $ IR.Bound 0) $
+      IR.Elim $ IR.Bound 1
 
 -- computation dependent identity annotation (1, 0 * -> 1 t -> t)
 depIdentityCompTy :: AllAnnotation
@@ -703,6 +726,14 @@ depKCompTy =
           )
       )
 
+depKCompTyT :: AllTerm
+depKCompTyT =
+  IR.Pi mempty (IR.Star 0) $
+    IR.Pi mempty (IR.Star 0) $
+      IR.Pi one (IR.Elim $ IR.Bound 1) $
+        IR.Pi mempty (IR.Elim $ IR.Bound 1) $
+          IR.Elim $ IR.Bound 3
+
 -- S combinator: Sxyz = xz(yz)
 -- Because S returns functions, it's not general because of the annotations.
 -- For example, S KSK = KK (SK) = K:Nat-> Nat-> Nat
@@ -928,4 +959,4 @@ unit :: IR.Term primTy Unit.Val
 unit = IR.Prim Unit.Val
 
 unit' :: IR.Term Unit.Ty (TypedPrim Unit.Ty Unit.Val)
-unit' = IR.Prim (TC.Return {retType = [Unit.Ty], retTerm = Unit.Val})
+unit' = IR.Prim (TC.Return {retType = P.PrimType [Unit.Ty], retTerm = Unit.Val})

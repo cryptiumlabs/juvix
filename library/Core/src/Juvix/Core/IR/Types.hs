@@ -6,6 +6,8 @@ module Juvix.Core.IR.Types
     GlobalUsage (..),
     GlobalName,
     PatternVar,
+    PatternSet,
+    PatternMap,
     BoundVar,
     Universe,
     RawDatatype' (..),

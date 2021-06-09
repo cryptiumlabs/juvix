@@ -8,6 +8,15 @@ import qualified Juvix.Pipeline as Pipeline
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
+juvixRootPath :: FilePath
+juvixRootPath = "../../"
+
+withJuvixRootPath :: FilePath -> FilePath
+withJuvixRootPath p = juvixRootPath <> p
+
+withJuvixExamplesPath :: FilePath -> FilePath
+withJuvixExamplesPath p = juvixRootPath <> "test/examples/" <> p
+
 top :: T.TestTree
 top =
   T.testGroup
@@ -27,32 +36,34 @@ pipeline =
         $ do
           Right c <-
             Pipeline.toCore
-              [ "../../test/examples/rec-groups/rec-groups.ju",
-                "../../test/examples/rec-groups/rec-groups-helper.ju"
-              ]
+              ( withJuvixExamplesPath
+                  <$> [ "positive/michelson/rec-groups/Rec-Groups.ju",
+                        "positive/michelson/rec-groups/Rec-Groups-Helper.ju"
+                      ]
+              )
           let recd = Traverse.recGroups c
           fmap (\(x :| []) -> Traverse.name x) recd T.@=? correctOrder
 
 pipelineOpen :: T.TestTree
 pipelineOpen =
   let correctOrder =
-        [ "Foo-Helper" :| ["bar"],
-          "Foo-Helper" :| ["Bah", "fi"],
-          -- DUPLICATE!?
-          "Foo-Helper" :| ["Bah", "fi"],
-          "Foo-Helper" :| ["Bah", "Baz", "si"],
-          "Identity" :| ["fi"],
-          "Identity" :| ["main"]
+        [ "A" :| ["bar"],
+          "B" :| ["fi"],
+          "C" :| ["si"],
+          "D" :| ["fi"],
+          "D" :| ["main"]
         ]
    in T.testCase
         "multiple modules have correct ordering"
         $ do
           Right c <-
             Pipeline.toCore
-              [ "../../test/examples/test/foo.ju",
-                "../../test/examples/test/foo-helper.ju",
-                "../../test/examples/test/foo-helpers.ju",
-                "../../test/examples/test/baz.ju"
-              ]
+              ( withJuvixExamplesPath
+                  <$> [ "positive/michelson/test/D.ju",
+                        "positive/michelson/test/A.ju",
+                        "positive/michelson/test/B.ju",
+                        "positive/michelson/test/C.ju"
+                      ]
+              )
           let recd = Traverse.recGroups c
-          fmap (\(x :| []) -> Traverse.name x) recd T.@=? correctOrder
+          correctOrder T.@=? fmap (\(x :| []) -> Traverse.name x) recd

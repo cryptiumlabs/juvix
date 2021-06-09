@@ -17,11 +17,10 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-git status
-
 git remote set-url origin $PUSH_URL
 
 git add -A
+git status
 git commit -m "[ci] changes from CI"
 
 git push

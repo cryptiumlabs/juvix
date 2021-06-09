@@ -2,6 +2,7 @@
 
 module Juvix.Backends.Plonk.Pipeline
   ( BPlonk (..),
+    compileCircuit,
   )
 where
 
@@ -14,7 +15,7 @@ import qualified Juvix.Backends.Plonk.Compiler as Compiler
 import qualified Juvix.Backends.Plonk.Dot as Dot
 import qualified Juvix.Backends.Plonk.Parameterization as Parameterization
 import qualified Juvix.Backends.Plonk.Types as Types
-import qualified Juvix.Core.Application as CoreApp
+import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
@@ -22,6 +23,7 @@ import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
     TypedPrim,
   )
+import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Pipeline as CorePipeline
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
@@ -30,37 +32,24 @@ import Juvix.ToCore.FromFrontend as FF (CoreDefs (..))
 import qualified Text.PrettyPrint.Leijen.Text as Pretty
 
 data BPlonk f = BPlonk
-  deriving (Eq, Show)
+  deriving (Eq, Show, Read)
 
 instance
   ( GaloisField f,
     Eq f,
     Integral f,
-    CanApply
-      ( CoreApp.Return'
-          IR.NoExt
-          (NonEmpty (Types.PrimTy f))
-          (Types.PrimVal f)
-      ),
+    CanApply (Param.TypedPrim (Types.PrimTy f) (Types.PrimVal f)),
     CanApply (Types.PrimTy f),
     IR.HasPatSubstTerm
       (OnlyExts.T IR.NoExt)
       (Types.PrimTy f)
-      ( CoreApp.Return'
-          IR.NoExt
-          (NonEmpty (Types.PrimTy f))
-          (Types.PrimVal f)
-      )
+      (Param.TypedPrim (Types.PrimTy f) (Types.PrimVal f))
       (Types.PrimTy f),
     IR.HasWeak (Types.PrimVal f),
     IR.HasSubstValue
       IR.NoExt
       (Types.PrimTy f)
-      ( CoreApp.Return'
-          IR.NoExt
-          (NonEmpty (Types.PrimTy f))
-          (Types.PrimVal f)
-      )
+      (Param.TypedPrim (Types.PrimTy f) (Types.PrimVal f))
       (Types.PrimTy f),
     IR.HasPatSubstTerm
       (OnlyExts.T IR.NoExt)
@@ -93,8 +82,9 @@ instance
     case res of
       Right (FF.CoreDefs _order globals) -> do
         let globalDefs = HM.mapMaybe Pipeline.toCoreDef globals
+        -- TODO: Fix MAIN
         case HM.elems $ HM.filter Pipeline.isMain globalDefs of
-          [] -> Feedback.fail "No main function found"
+          [] -> Feedback.fail $ "No main function found in " <> show globalDefs
           [IR.RawGFunction f]
             | IR.RawFunction _name usage ty (clause :| []) <- f,
               IR.RawFunClause _ [] term _ <- clause -> do
@@ -113,9 +103,19 @@ instance
       Left err -> Feedback.fail $ "failed at ctxToCore\n" ++ show err
 
   compile out term = do
-    let circuit = Builder.execCircuitBuilder . Compiler.compileTermWithWire $ CorePipeline.toRaw term
-    let pretty = toS . Pretty.displayT . Pretty.renderPretty 1 120 . Pretty.pretty
-    let json = show $ A.encode circuit
+    let circuit = compileCircuit term
     liftIO $ Dot.dotWriteSVG out (Dot.arithCircuitToDot circuit)
-    writeout (out <> ".pretty") $ pretty circuit
-    writeout (out <> ".json") json
+    writeout (out <> ".pretty") $
+      let pretty = toS . Pretty.displayT . Pretty.renderPretty 1 120 . Pretty.pretty
+       in pretty circuit
+    writeout (out <> ".json") $
+      let json = show $ A.encode circuit
+       in json
+
+compileCircuit ::
+  (Integral f, Show f) =>
+  CoreErased.AnnTerm
+    (Types.PrimTy f)
+    (CoreErased.TypedPrim (Types.PrimTy f) (Types.PrimVal f)) ->
+  Circuit.ArithCircuit f
+compileCircuit term = Builder.execCircuitBuilder . Compiler.compileTermWithWire $ CorePipeline.toRaw term

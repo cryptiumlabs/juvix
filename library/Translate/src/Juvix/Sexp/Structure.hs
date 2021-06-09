@@ -29,7 +29,7 @@
 --        can automatically fill in this meta data
 module Juvix.Sexp.Structure where
 
-import Juvix.Library
+import Juvix.Library hiding (Type)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import Juvix.Sexp.Structure.Helpers
@@ -47,6 +47,19 @@ data Defun = Defun
 data DefunMatch = DefunMatch
   { defunMatchName :: Sexp.T,
     defunMatchArgs :: [ArgBody]
+  }
+  deriving (Show)
+
+-- | @Type@ is the type declaration structure
+data Type = Type
+  { -- TODO ∷ we should really have a field the signature currently we
+    -- don't really support that without doing it by hand. Maybe our
+    -- generator should help here, or we should have a way of talking
+    -- about named arguments somehow, and unfolding the slots in a
+    -- way....
+    typeNameAndSig :: Sexp.T,
+    typeArgs :: Sexp.T,
+    typeBody :: Sexp.T
   }
   deriving (Show)
 
@@ -95,6 +108,22 @@ data DefunSigMatch = DefunSigMatch
 data Signature = Signature
   { signatureName :: Sexp.T,
     signatureSig :: Sexp.T
+  }
+  deriving (Show)
+
+data LetSignature = LetSignature
+  { letSignatureName :: Sexp.T,
+    letSignatureSig :: Sexp.T,
+    letSignatureRest :: Sexp.T
+  }
+  deriving (Show)
+
+-- | @LetType@ is the let-type form of the language
+data LetType = LetType
+  { letTypeNameAndSig :: Sexp.T,
+    letTypeArgs :: Sexp.T,
+    letTypeBody :: Sexp.T,
+    letTypeRest :: Sexp.T
   }
   deriving (Show)
 
@@ -173,6 +202,53 @@ newtype RecordNoPunned = RecordNoPunned
   }
   deriving (Show)
 
+-- | @Infix@ represents an infix function
+data Infix = Infix
+  { infixOp :: Sexp.T,
+    infixLeft :: Sexp.T,
+    infixRight :: Sexp.T
+  }
+  deriving (Show)
+
+newtype Open = Open
+  { openName :: Sexp.T
+  }
+  deriving (Show)
+
+data OpenIn = OpenIn
+  { openInName :: Sexp.T,
+    openInBody :: Sexp.T
+  }
+  deriving (Show)
+
+newtype Declare = Declare
+  { declareClaim :: Sexp.T
+  }
+  deriving (Show)
+
+data Declaim = Declaim
+  { declaimClaim :: Sexp.T,
+    declaimBody :: Sexp.T
+  }
+  deriving (Show)
+
+-- | @DefModule@ - Stands in for a module declaration
+data DefModule = DefModule
+  { defModuleName :: Sexp.T,
+    defModuleArgs :: Sexp.T,
+    defModuleBody :: Sexp.T
+  }
+  deriving (Show)
+
+-- | @LefModule@ - Stands in for a module let declaration
+data LetModule = LetModule
+  { letModuleName :: Sexp.T,
+    letModuleArgs :: Sexp.T,
+    letModuleBody :: Sexp.T,
+    letModuleRest :: Sexp.T
+  }
+  deriving (Show)
+
 --------------------------------------------------------------------------------
 -- Converter functions
 -- The format for these are
@@ -243,6 +319,58 @@ fromArgBody (ArgBody sexp1 sexp2) =
   Sexp.list [sexp1, sexp2]
 
 ----------------------------------------
+-- Type
+----------------------------------------
+
+nameType :: NameSymbol.T
+nameType = "type"
+
+isType :: Sexp.T -> Bool
+isType (Sexp.Cons form _) = Sexp.isAtomNamed form nameType
+isType _ = False
+
+toType :: Sexp.T -> Maybe Type
+toType form
+  | isType form =
+    case form of
+      _nameType Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 ->
+        Type sexp1 sexp2 sexp3 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromType :: Type -> Sexp.T
+fromType (Type sexp1 sexp2 sexp3) =
+  Sexp.listStar [Sexp.atom nameType, sexp1, sexp2, sexp3]
+
+----------------------------------------
+-- LetType
+----------------------------------------
+
+nameLetType :: NameSymbol.T
+nameLetType = ":let-type"
+
+isLetType :: Sexp.T -> Bool
+isLetType (Sexp.Cons form _) = Sexp.isAtomNamed form nameLetType
+isLetType _ = False
+
+toLetType :: Sexp.T -> Maybe LetType
+toLetType form
+  | isLetType form =
+    case form of
+      _nameLetType Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> sexp4 Sexp.:> Sexp.Nil ->
+        LetType sexp1 sexp2 sexp3 sexp4 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromLetType :: LetType -> Sexp.T
+fromLetType (LetType sexp1 sexp2 sexp3 sexp4) =
+  Sexp.list [Sexp.atom nameLetType, sexp1, sexp2, sexp3, sexp4]
+
+----------------------------------------
 -- Defun
 ----------------------------------------
 
@@ -257,7 +385,7 @@ toDefun :: Sexp.T -> Maybe Defun
 toDefun form
   | isDefun form =
     case form of
-      _Defun Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> Sexp.Nil ->
+      _nameDefun Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> Sexp.Nil ->
         Defun sexp1 sexp2 sexp3 |> Just
       _ ->
         Nothing
@@ -283,7 +411,7 @@ toDefunMatch :: Sexp.T -> Maybe DefunMatch
 toDefunMatch form
   | isDefunMatch form =
     case form of
-      _DefunMatch Sexp.:> sexp1 Sexp.:> argBody2
+      _nameDefunMatch Sexp.:> sexp1 Sexp.:> argBody2
         | Just argBody2 <- toArgBody `fromStarList` argBody2 ->
           DefunMatch sexp1 argBody2 |> Just
       _ ->
@@ -310,7 +438,7 @@ toDefunSigMatch :: Sexp.T -> Maybe DefunSigMatch
 toDefunSigMatch form
   | isDefunSigMatch form =
     case form of
-      _DefunSigMatch Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> argBody3
+      _nameDefunSigMatch Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> argBody3
         | Just argBody3 <- toArgBody `fromStarList` argBody3 ->
           DefunSigMatch sexp1 sexp2 argBody3 |> Just
       _ ->
@@ -337,7 +465,7 @@ toSignature :: Sexp.T -> Maybe Signature
 toSignature form
   | isSignature form =
     case form of
-      _Signature Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+      _nameSignature Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
         Signature sexp1 sexp2 |> Just
       _ ->
         Nothing
@@ -347,6 +475,32 @@ toSignature form
 fromSignature :: Signature -> Sexp.T
 fromSignature (Signature sexp1 sexp2) =
   Sexp.list [Sexp.atom nameSignature, sexp1, sexp2]
+
+----------------------------------------
+-- LetSignature
+----------------------------------------
+
+nameLetSignature :: NameSymbol.T
+nameLetSignature = ":let-sig"
+
+isLetSignature :: Sexp.T -> Bool
+isLetSignature (Sexp.Cons form _) = Sexp.isAtomNamed form nameLetSignature
+isLetSignature _ = False
+
+toLetSignature :: Sexp.T -> Maybe LetSignature
+toLetSignature form
+  | isLetSignature form =
+    case form of
+      _nameLetSignature Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> Sexp.Nil ->
+        LetSignature sexp1 sexp2 sexp3 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromLetSignature :: LetSignature -> Sexp.T
+fromLetSignature (LetSignature sexp1 sexp2 sexp3) =
+  Sexp.list [Sexp.atom nameLetSignature, sexp1, sexp2, sexp3]
 
 ----------------------------------------
 -- Let
@@ -363,7 +517,7 @@ toLet :: Sexp.T -> Maybe Let
 toLet form
   | isLet form =
     case form of
-      _Let Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> sexp4 Sexp.:> Sexp.Nil ->
+      _nameLet Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> sexp4 Sexp.:> Sexp.Nil ->
         Let sexp1 sexp2 sexp3 sexp4 |> Just
       _ ->
         Nothing
@@ -389,7 +543,7 @@ toLetMatch :: Sexp.T -> Maybe LetMatch
 toLetMatch form
   | isLetMatch form =
     case form of
-      _LetMatch Sexp.:> sexp1 Sexp.:> argBodys2 Sexp.:> sexp3 Sexp.:> Sexp.Nil
+      _nameLetMatch Sexp.:> sexp1 Sexp.:> argBodys2 Sexp.:> sexp3 Sexp.:> Sexp.Nil
         | Just argBodys2 <- toArgBodys argBodys2 ->
           LetMatch sexp1 argBodys2 sexp3 |> Just
       _ ->
@@ -432,7 +586,7 @@ toCond :: Sexp.T -> Maybe Cond
 toCond form
   | isCond form =
     case form of
-      _Cond Sexp.:> predAns1
+      _nameCond Sexp.:> predAns1
         | Just predAns1 <- toPredAns `fromStarList` predAns1 ->
           Cond predAns1 |> Just
       _ ->
@@ -459,7 +613,7 @@ toIf :: Sexp.T -> Maybe If
 toIf form
   | isIf form =
     case form of
-      _If Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> Sexp.Nil ->
+      _nameIf Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> Sexp.Nil ->
         If sexp1 sexp2 sexp3 |> Just
       _ ->
         Nothing
@@ -485,7 +639,7 @@ toIfNoElse :: Sexp.T -> Maybe IfNoElse
 toIfNoElse form
   | isIfNoElse form =
     case form of
-      _IfNoElse Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+      _nameIfNoElse Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
         IfNoElse sexp1 sexp2 |> Just
       _ ->
         Nothing
@@ -527,7 +681,7 @@ toCase :: Sexp.T -> Maybe Case
 toCase form
   | isCase form =
     case form of
-      _Case Sexp.:> sexp1 Sexp.:> deconBody2
+      _nameCase Sexp.:> sexp1 Sexp.:> deconBody2
         | Just deconBody2 <- toDeconBody `fromStarList` deconBody2 ->
           Case sexp1 deconBody2 |> Just
       _ ->
@@ -554,7 +708,7 @@ toDo :: Sexp.T -> Maybe Do
 toDo form
   | isDo form =
     case form of
-      _Do Sexp.:> sexp1 ->
+      _nameDo Sexp.:> sexp1 ->
         Do sexp1 |> Just
       _ ->
         Nothing
@@ -580,7 +734,7 @@ toArrow :: Sexp.T -> Maybe Arrow
 toArrow form
   | isArrow form =
     case form of
-      _Arrow Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+      _nameArrow Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
         Arrow sexp1 sexp2 |> Just
       _ ->
         Nothing
@@ -606,7 +760,7 @@ toLambda :: Sexp.T -> Maybe Lambda
 toLambda form
   | isLambda form =
     case form of
-      _Lambda Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+      _nameLambda Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
         Lambda sexp1 sexp2 |> Just
       _ ->
         Nothing
@@ -664,7 +818,7 @@ toRecord :: Sexp.T -> Maybe Record
 toRecord form
   | isRecord form =
     case form of
-      _Record Sexp.:> nameBind1
+      _nameRecord Sexp.:> nameBind1
         | Just nameBind1 <- toNameBind `fromStarList` nameBind1 ->
           Record nameBind1 |> Just
       _ ->
@@ -691,7 +845,7 @@ toRecordNoPunned :: Sexp.T -> Maybe RecordNoPunned
 toRecordNoPunned form
   | isRecordNoPunned form =
     case form of
-      _RecordNoPunned Sexp.:> notPunnedGroup1
+      _nameRecordNoPunned Sexp.:> notPunnedGroup1
         | Just notPunnedGroup1 <- toNotPunnedGroup notPunnedGroup1 ->
           RecordNoPunned notPunnedGroup1 |> Just
       _ ->
@@ -702,3 +856,185 @@ toRecordNoPunned form
 fromRecordNoPunned :: RecordNoPunned -> Sexp.T
 fromRecordNoPunned (RecordNoPunned notPunnedGroup1) =
   Sexp.listStar [Sexp.atom nameRecordNoPunned, fromNotPunnedGroup notPunnedGroup1]
+
+----------------------------------------
+-- Infix
+----------------------------------------
+
+nameInfix :: NameSymbol.T
+nameInfix = ":infix"
+
+isInfix :: Sexp.T -> Bool
+isInfix (Sexp.Cons form _) = Sexp.isAtomNamed form nameInfix
+isInfix _ = False
+
+toInfix :: Sexp.T -> Maybe Infix
+toInfix form
+  | isInfix form =
+    case form of
+      _nameInfix Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> Sexp.Nil ->
+        Infix sexp1 sexp2 sexp3 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromInfix :: Infix -> Sexp.T
+fromInfix (Infix sexp1 sexp2 sexp3) =
+  Sexp.list [Sexp.atom nameInfix, sexp1, sexp2, sexp3]
+
+----------------------------------------
+-- OpenIn
+----------------------------------------
+
+nameOpenIn :: NameSymbol.T
+nameOpenIn = ":open-in"
+
+isOpenIn :: Sexp.T -> Bool
+isOpenIn (Sexp.Cons form _) = Sexp.isAtomNamed form nameOpenIn
+isOpenIn _ = False
+
+toOpenIn :: Sexp.T -> Maybe OpenIn
+toOpenIn form
+  | isOpenIn form =
+    case form of
+      _nameOpenIn Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+        OpenIn sexp1 sexp2 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromOpenIn :: OpenIn -> Sexp.T
+fromOpenIn (OpenIn sexp1 sexp2) =
+  Sexp.list [Sexp.atom nameOpenIn, sexp1, sexp2]
+
+----------------------------------------
+-- Open
+----------------------------------------
+
+nameOpen :: NameSymbol.T
+nameOpen = "open"
+
+isOpen :: Sexp.T -> Bool
+isOpen (Sexp.Cons form _) = Sexp.isAtomNamed form nameOpen
+isOpen _ = False
+
+toOpen :: Sexp.T -> Maybe Open
+toOpen form
+  | isOpen form =
+    case form of
+      _nameOpen Sexp.:> sexp1 Sexp.:> Sexp.Nil ->
+        Open sexp1 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromOpen :: Open -> Sexp.T
+fromOpen (Open sexp1) =
+  Sexp.list [Sexp.atom nameOpen, sexp1]
+
+----------------------------------------
+-- Declare
+----------------------------------------
+
+nameDeclare :: NameSymbol.T
+nameDeclare = "declare"
+
+isDeclare :: Sexp.T -> Bool
+isDeclare (Sexp.Cons form _) = Sexp.isAtomNamed form nameDeclare
+isDeclare _ = False
+
+toDeclare :: Sexp.T -> Maybe Declare
+toDeclare form
+  | isDeclare form =
+    case form of
+      _nameDeclare Sexp.:> sexp1 Sexp.:> Sexp.Nil ->
+        Declare sexp1 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromDeclare :: Declare -> Sexp.T
+fromDeclare (Declare sexp1) =
+  Sexp.list [Sexp.atom nameDeclare, sexp1]
+
+----------------------------------------
+-- Declaim
+----------------------------------------
+
+nameDeclaim :: NameSymbol.T
+nameDeclaim = ":declaim"
+
+isDeclaim :: Sexp.T -> Bool
+isDeclaim (Sexp.Cons form _) = Sexp.isAtomNamed form nameDeclaim
+isDeclaim _ = False
+
+toDeclaim :: Sexp.T -> Maybe Declaim
+toDeclaim form
+  | isDeclaim form =
+    case form of
+      _nameDeclaim Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> Sexp.Nil ->
+        Declaim sexp1 sexp2 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromDeclaim :: Declaim -> Sexp.T
+fromDeclaim (Declaim sexp1 sexp2) =
+  Sexp.list [Sexp.atom nameDeclaim, sexp1, sexp2]
+
+----------------------------------------
+-- DefModule
+----------------------------------------
+
+nameDefModule :: NameSymbol.T
+nameDefModule = ":defmodule"
+
+isDefModule :: Sexp.T -> Bool
+isDefModule (Sexp.Cons form _) = Sexp.isAtomNamed form nameDefModule
+isDefModule _ = False
+
+toDefModule :: Sexp.T -> Maybe DefModule
+toDefModule form
+  | isDefModule form =
+    case form of
+      _nameDefModule Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 ->
+        DefModule sexp1 sexp2 sexp3 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromDefModule :: DefModule -> Sexp.T
+fromDefModule (DefModule sexp1 sexp2 sexp3) =
+  Sexp.listStar [Sexp.atom nameDefModule, sexp1, sexp2, sexp3]
+
+----------------------------------------
+-- LetModule
+----------------------------------------
+
+nameLetModule :: NameSymbol.T
+nameLetModule = ":let-mod"
+
+isLetModule :: Sexp.T -> Bool
+isLetModule (Sexp.Cons form _) = Sexp.isAtomNamed form nameLetModule
+isLetModule _ = False
+
+toLetModule :: Sexp.T -> Maybe LetModule
+toLetModule form
+  | isLetModule form =
+    case form of
+      _nameLetModule Sexp.:> sexp1 Sexp.:> sexp2 Sexp.:> sexp3 Sexp.:> sexp4 Sexp.:> Sexp.Nil ->
+        LetModule sexp1 sexp2 sexp3 sexp4 |> Just
+      _ ->
+        Nothing
+  | otherwise =
+    Nothing
+
+fromLetModule :: LetModule -> Sexp.T
+fromLetModule (LetModule sexp1 sexp2 sexp3 sexp4) =
+  Sexp.list [Sexp.atom nameLetModule, sexp1, sexp2, sexp3, sexp4]

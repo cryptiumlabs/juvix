@@ -1,0 +1,472 @@
+Right
+    ( Header
+        ( "Datatypes" :| [] )
+        [ ModuleOpen
+            ( Open
+                ( "Prelude" :| [] )
+            )
+        , ModuleOpen
+            ( Open
+                ( "Circuit" :| [] )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "field"
+                , signatureUsage = Nothing
+                , signatureArrowType = Name
+                    ( "ty" :| [] )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "field"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive
+                            ( Prim
+                                ( "Circuit" :| [ "field" ] )
+                            )
+                        )
+                    }
+                )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "+"
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "field" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "field" :| [] )
+                                , infixOp = "->" :| []
+                                , infixRight = Name
+                                    ( "field" :| [] )
+                                }
+                            )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "+"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive
+                            ( Prim
+                                ( "Circuit" :| [ "add" ] )
+                            )
+                        )
+                    }
+                )
+            )
+        , Declaration
+            ( Infixivity
+                ( AssocL "+" 5 )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "^"
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "field" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "field" :| [] )
+                                , infixOp = "->" :| []
+                                , infixRight = Name
+                                    ( "field" :| [] )
+                                }
+                            )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "^"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive
+                            ( Prim
+                                ( "Circuit" :| [ "exp" ] )
+                            )
+                        )
+                    }
+                )
+            )
+        , Declaration
+            ( Infixivity
+                ( AssocL "^" 8 )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "*"
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "field" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "field" :| [] )
+                                , infixOp = "->" :| []
+                                , infixRight = Name
+                                    ( "field" :| [] )
+                                }
+                            )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "*"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive
+                            ( Prim
+                                ( "Circuit" :| [ "mul" ] )
+                            )
+                        )
+                    }
+                )
+            )
+        , Declaration
+            ( Infixivity
+                ( AssocL "*" 7 )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "=="
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "field" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "field" :| [] )
+                                , infixOp = "->" :| []
+                                , infixRight = Name
+                                    ( "bool" :| [] )
+                                }
+                            )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "=="
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive
+                            ( Prim
+                                ( "Circuit" :| [ "eq" ] )
+                            )
+                        )
+                    }
+                )
+            )
+        , Declaration
+            ( Infixivity
+                ( AssocL "==" 2 )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "x"
+                , signatureUsage = Nothing
+                , signatureArrowType = Name
+                    ( "field" :| [] )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "x"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Constant
+                            ( Number
+                                ( Integer' 3 )
+                            )
+                        )
+                    }
+                )
+            )
+        , Type
+            ( Typ
+                { typeUsage = Nothing
+                , typeName' = "Bar"
+                , typeArgs = []
+                , typeForm = Arrowed
+                    { dataArrow = Name
+                        ( "ty" :| [] )
+                    , dataAdt' = Sum
+                        ( S
+                            { sumConstructor = "P"
+                            , sumValue = Just
+                                ( ADTLike
+                                    [ Name
+                                        ( "field" :| [] )
+                                    , Name
+                                        ( "field" :| [] )
+                                    ]
+                                )
+                            } :|
+                            [ S
+                                { sumConstructor = "Q"
+                                , sumValue = Just
+                                    ( ADTLike
+                                        [ Name
+                                            ( "field" :| [] )
+                                        , Name
+                                            ( "field" :| [] )
+                                        , Name
+                                            ( "field" :| [] )
+                                        ]
+                                    )
+                                }
+                            ]
+                        )
+                    }
+                }
+            )
+        , Signature
+            ( Sig
+                { signatureName = "t"
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "field" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Name
+                            ( "field" :| [] )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "t"
+                    , functionLikeArgs =
+                        [ ConcreteA
+                            ( MatchLogic
+                                { matchLogicContents = MatchName "x"
+                                , matchLogicNamed = Nothing
+                                }
+                            )
+                        ]
+                    , functionLikeBody = Body
+                        ( Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "x" :| [] )
+                                , infixOp = "+" :| []
+                                , infixRight = Constant
+                                    ( Number
+                                        ( Integer' 5 )
+                                    )
+                                }
+                            )
+                        )
+                    }
+                )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "norm"
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "Bar" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Name
+                            ( "field" :| [] )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "norm"
+                    , functionLikeArgs =
+                        [ ConcreteA
+                            ( MatchLogic
+                                { matchLogicContents = MatchCon
+                                    ( "P" :| [] )
+                                    [ MatchLogic
+                                        { matchLogicContents = MatchName "x"
+                                        , matchLogicNamed = Nothing
+                                        }
+                                    , MatchLogic
+                                        { matchLogicContents = MatchName "y"
+                                        , matchLogicNamed = Nothing
+                                        }
+                                    ]
+                                , matchLogicNamed = Nothing
+                                }
+                            )
+                        ]
+                    , functionLikeBody = Body
+                        ( Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "x" :| [] )
+                                , infixOp = "^" :| []
+                                , infixRight = Infix
+                                    ( Inf
+                                        { infixLeft = Constant
+                                            ( Number
+                                                ( Integer' 2 )
+                                            )
+                                        , infixOp = "+" :| []
+                                        , infixRight = Infix
+                                            ( Inf
+                                                { infixLeft = Name
+                                                    ( "y" :| [] )
+                                                , infixOp = "^" :| []
+                                                , infixRight = Constant
+                                                    ( Number
+                                                        ( Integer' 2 )
+                                                    )
+                                                }
+                                            )
+                                        }
+                                    )
+                                }
+                            )
+                        )
+                    }
+                )
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "norm"
+                    , functionLikeArgs =
+                        [ ConcreteA
+                            ( MatchLogic
+                                { matchLogicContents = MatchCon
+                                    ( "Q" :| [] )
+                                    [ MatchLogic
+                                        { matchLogicContents = MatchName "x"
+                                        , matchLogicNamed = Nothing
+                                        }
+                                    , MatchLogic
+                                        { matchLogicContents = MatchName "y"
+                                        , matchLogicNamed = Nothing
+                                        }
+                                    , MatchLogic
+                                        { matchLogicContents = MatchName "z"
+                                        , matchLogicNamed = Nothing
+                                        }
+                                    ]
+                                , matchLogicNamed = Nothing
+                                }
+                            )
+                        ]
+                    , functionLikeBody = Body
+                        ( Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "x" :| [] )
+                                , infixOp = "^" :| []
+                                , infixRight = Infix
+                                    ( Inf
+                                        { infixLeft = Constant
+                                            ( Number
+                                                ( Integer' 2 )
+                                            )
+                                        , infixOp = "+" :| []
+                                        , infixRight = Infix
+                                            ( Inf
+                                                { infixLeft = Name
+                                                    ( "y" :| [] )
+                                                , infixOp = "^" :| []
+                                                , infixRight = Infix
+                                                    ( Inf
+                                                        { infixLeft = Constant
+                                                            ( Number
+                                                                ( Integer' 2 )
+                                                            )
+                                                        , infixOp = "+" :| []
+                                                        , infixRight = Infix
+                                                            ( Inf
+                                                                { infixLeft = Name
+                                                                    ( "z" :| [] )
+                                                                , infixOp = "^" :| []
+                                                                , infixRight = Constant
+                                                                    ( Number
+                                                                        ( Integer' 2 )
+                                                                    )
+                                                                }
+                                                            )
+                                                        }
+                                                    )
+                                                }
+                                            )
+                                        }
+                                    )
+                                }
+                            )
+                        )
+                    }
+                )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "main"
+                , signatureUsage = Nothing
+                , signatureArrowType = Name
+                    ( "field" :| [] )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "main"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Constant
+                            ( Number
+                                ( Integer' 3 )
+                            )
+                        )
+                    }
+                )
+            )
+        ]
+    )

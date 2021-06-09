@@ -18,8 +18,10 @@ where
 
 import Data.Bifoldable
 import Data.Bitraversable
+import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.IR.Types as IR
 import Juvix.Library
+import qualified Juvix.Library.PrettyPrint as PP
 import qualified Juvix.Library.Usage as Usage
 
 -- | A primitive along with its type, and possibly some arguments.
@@ -45,6 +47,10 @@ data Return' ext ty term
 deriving instance
   (Show (ParamVar ext), Show ty, Show term) =>
   Show (Return' ext ty term)
+
+deriving instance
+  (Read (ParamVar ext), Read (Arg' ext ty term), Read (Take ty term), Read ty, Read term) =>
+  Read (Return' ext ty term)
 
 deriving instance
   (Eq (ParamVar ext), Eq ty, Eq term) =>
@@ -116,6 +122,10 @@ deriving instance
   Show (Arg' ext ty term)
 
 deriving instance
+  (Read (ParamVar ext), Read (Take ty term), Read ty, Read term) =>
+  Read (Arg' ext ty term)
+
+deriving instance
   (Eq (ParamVar ext), Eq ty, Eq term) =>
   Eq (Arg' ext ty term)
 
@@ -137,7 +147,7 @@ data Take ty term = Take
     -- | The term itself.
     term :: term
   }
-  deriving (Show, Eq, Generic, Functor, Foldable, Traversable)
+  deriving (Show, Read, Eq, Generic, Functor, Foldable, Traversable)
 
 instance Bifunctor Take where
   bimap = bimapDefault
@@ -157,3 +167,84 @@ argToTake _ = empty
 -- | Translate a 'Take' into a 'Return''.
 takeToReturn :: Take ty term -> Return' ext ty term
 takeToReturn (Take {type', term}) = Return {retType = type', retTerm = term}
+
+data PPAnn' ty term
+  = APunct
+  | ATyAnn (PP.Ann ty)
+  | ATmAnn (PP.Ann term)
+  | AVar
+
+type PPAnn ty term = Last (PPAnn' ty term)
+
+instance
+  (HR.ToPPAnn (PP.Ann ty), HR.ToPPAnn (PP.Ann term)) =>
+  HR.ToPPAnn (PPAnn ty term)
+  where
+  toPPAnn a =
+    a >>= \case
+      APunct -> pure HR.APunct
+      ATyAnn ann -> HR.toPPAnn ann
+      ATmAnn ann -> HR.toPPAnn ann
+      AVar -> pure HR.AName
+
+type instance PP.Ann (Take ty term) = PPAnn ty term
+
+instance
+  (PP.PrettySyntax ty, PP.PrettySyntax term) =>
+  PP.PrettySyntax (Take ty term)
+  where
+  pretty' (Take {usage, term, type'}) = prettyTyped usage term type'
+
+prettyTyped ::
+  ( PP.PrecReader m,
+    PP.PrettySyntax ty,
+    PP.PrettySyntax term
+  ) =>
+  Usage.T ->
+  term ->
+  ty ->
+  m (PP.Doc (Last (PPAnn' ty term)))
+prettyTyped π tm ty =
+  PP.parens' APunct
+    <$> PP.hangA
+      PP.indentWidth
+      ( PP.hsepA
+          [ PP.noAnn <$> PP.pretty' π,
+            ppunct "|",
+            fmap (Last . Just . ATmAnn) <$> PP.pretty' tm
+          ]
+      )
+      ( PP.hsepA
+          [ ppunct ":",
+            fmap (Last . Just . ATyAnn) <$> PP.pretty' ty
+          ]
+      )
+  where
+    ppunct = pure . PP.annotate' APunct
+
+type instance PP.Ann (Arg' _ ty term) = PPAnn ty term
+
+instance
+  (PP.PrettySyntax ty, PP.PrettySyntax term, PP.PrettySyntax (ParamVar ext)) =>
+  PP.PrettySyntax (Arg' ext ty term)
+  where
+  pretty' = \case
+    VarArg x -> PP.annotate' AVar . PP.noAnn <$> PP.pretty' x
+    TermArg t -> PP.pretty' t
+
+type instance PP.Ann (Return' _ ty term) = PPAnn ty term
+
+instance
+  (PP.PrettySyntax ty, PP.PrettySyntax term, PP.PrettySyntax (ParamVar ext)) =>
+  PP.PrettySyntax (Return' ext ty term)
+  where
+  pretty' = \case
+    Cont {fun, args} -> PP.app' APunct (PP.pretty' fun) (map PP.pretty' args)
+    Return {retTerm, retType} -> prettyTyped Usage.Omega retTerm retType
+
+type instance PP.Ann DeBruijn = ()
+
+instance PP.PrettySyntax DeBruijn where
+  pretty' = \case
+    BoundVar i -> pure $ PP.show i
+    FreeVar x -> PP.pretty' x
