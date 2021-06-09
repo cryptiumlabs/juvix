@@ -9,6 +9,7 @@ import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import Juvix.ToCore.FromFrontend.Transform.HR (transformTermHR)
+import Juvix.ToCore.FromFrontend.Transform.IR (transformTermIR)
 import Juvix.ToCore.FromFrontend.Transform.Helpers
   ( ReduceEff,
     eleToSymbol,
@@ -103,9 +104,6 @@ transformDef x def = do
         patts <- traverse transformArg args
         clauseBody <- transformTermIR q body
         pure $ IR.RawFunClause [] patts clauseBody False
-      where
-        transformTermIR q fe = do
-          hrToIR <$> transformTermHR q fe
     transformClause _ _ = error "malformed tansformClause"
 
     transformArg p@(name Sexp.:> _rest)
