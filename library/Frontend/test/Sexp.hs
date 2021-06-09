@@ -409,11 +409,11 @@ handlerTest =
   where
     basic =
       Parser.parse
-        "handler print where op print x = print x , return x = toString x"
+        "handler print = let print x = print x let pure x = toString x"
         |> singleEleErr
     basicExpected =
       Sexp.parse
-        "(:defhandler print (:ops (:defop print (x) (print x))) (:defop return (x) (toString x)))"
+        "(:defhandler print ((:defop print (x) (print x)) (:defop pure (x) (toString x))))"
 
 effectTest :: T.TestTree
 effectTest =
@@ -424,11 +424,11 @@ effectTest =
   where
     basic =
       Parser.parse
-        "effect Print where op print : string -> unit , return : x -> string"
+        "effect Print = let print : string -> unit let pure : x -> string"
         |> singleEleErr
     basicExpected =
       Sexp.parse
-        "(:defeff Print (:ops (print (:infix -> string unit))) (return (:infix -> x string)))"
+        "(:defeff Print ((print (:infix -> string unit)) (pure (:infix -> x string))))"
 
 --------------------------------------------------------------------------------
 -- Helpers

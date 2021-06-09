@@ -156,8 +156,7 @@ data NameType = NameType'
 
 data Effect = Eff
   { effName :: Symbol,
-    effOps :: [Signature],
-    effRet :: Signature
+    effOps :: [Signature]
   }
   deriving (Show, Read, Eq)
 
@@ -170,7 +169,7 @@ data Operation = Op (FunctionLike Expression)
 -- defined within another function. We CAN fix that, but it requires
 -- us to make some choices, it's wise to have Witch up and running first.
 data Handler
-  = Hand Symbol [Operation] Operation
+  = Hand Symbol [Operation]
   deriving (Show, Read, Generic, Eq)
 
 --------------------------------------------------------------------------------

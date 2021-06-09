@@ -459,42 +459,32 @@ handlerParser :: Parser Types.Handler
 handlerParser = do
   reserved "handler"
   name <- prefixSymbolSN
-  reserved "where"
-  ops <- P.sepEndBy opParser (skipLiner J.comma)
-  ret <- retParser
-  pure $ Types.Hand name ops ret
+  J.skipLiner J.equals
+  ops <- P.many (J.spaceLiner opParser)
+  pure $ Types.Hand name ops
 
 opParser :: Parser Types.Operation
 opParser =
   Types.Op
     <$> functionModStartReserved
-      "op"
+      "let"
       ( \name args -> do
           guard <- guard expression
           pure (Types.Like name args guard)
       )
 
-retParser :: Parser Types.Operation
-retParser =
-  Types.Op <$> do
-    reserved "return"
-    args <- P.many argSN
-    guard <- guard expression
-    pure (Types.Like "return" args guard)
-
 effParser :: Parser Types.Effect
 effParser = do
   reserved "effect"
   name <- prefixSymbolSN
-  reserved "where"
-  ops <- P.sepEndBy (opSig "op") (skipLiner J.comma)
-  ret <- opSig "return"
-  pure $ Types.Eff {effName = name, effOps = ops, effRet = ret}
+  J.skipLiner J.equals
+  ops <- P.many (J.spaceLiner opSig)
+  pure $ Types.Eff {effName = name, effOps = ops}
 
-opSig :: ByteString -> Parser Types.Signature
-opSig res = do
-  reserved res
-  name <- prefixSymbolSN <|> pure "return"
+opSig :: Parser Types.Signature
+opSig = do
+  reserved "let"
+  name <- prefixSymbolSN
   maybeUsage <-
     P.optional (fmap Types.Constant constantSN <|> spaceLiner (J.parens expressionSN))
   skipLiner J.colon
@@ -667,14 +657,19 @@ doubleStringEscape =
   P.between (P.string "\\\"") (P.string "\\\"") (P.takeWhile1P (Just "Not quote") (/= J.doubleQuote))
 
 stringWithoutEscape :: Parser ByteString
-stringWithoutEscape = J.between J.quote (P.takeWhile1P (Just "Not quote") (/= J.quote)) J.quote
+stringWithoutEscape =
+  J.between J.quote (P.takeWhile1P (Just "Not quote") (/= J.quote)) J.quote
 
 doubleStringWithoutEscape :: Parser ByteString
-doubleStringWithoutEscape = J.between J.doubleQuote (P.takeWhile1P (Just "Not quote") (/= J.doubleQuote)) J.doubleQuote
+doubleStringWithoutEscape =
+  J.between J.doubleQuote (P.takeWhile1P (Just "Not quote") (/= J.doubleQuote)) J.doubleQuote
 
 string' :: Parser Types.String'
 string' = do
-  words <- P.try stringEscape <|> P.try doubleStringEscape <|> P.try stringWithoutEscape <|> doubleStringWithoutEscape
+  words <- P.try stringEscape
+    <|> P.try doubleStringEscape
+    <|> P.try stringWithoutEscape
+    <|> doubleStringWithoutEscape
   pure (Types.Sho $ Encoding.decodeUtf8 words)
 
 --------------------------------------------------

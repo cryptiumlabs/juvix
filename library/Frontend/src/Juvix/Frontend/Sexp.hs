@@ -192,21 +192,19 @@ transGuardBody True transs (Types.Guard c) = transCondMultiple transs c
 --------------------------------------------------------------------------------
 
 transHand :: Types.Handler -> Sexp.T
-transHand (Types.Hand name ops ret) =
+transHand (Types.Hand name ops) =
   Sexp.list
     [ Sexp.atom ":defhandler",
       Sexp.atom (NameSymbol.fromSymbol name),
-      Sexp.listStar [Sexp.atom ":ops", Sexp.list (fmap transOperation ops)],
-      transOperation ret
+      Sexp.list (fmap transOperation ops)
     ]
 
 transEffect :: Types.Effect -> Sexp.T
-transEffect Types.Eff {effName, effOps, effRet} =
+transEffect Types.Eff {effName, effOps} =
   Sexp.list
     [ Sexp.atom ":defeff",
       Sexp.atom (NameSymbol.fromSymbol effName),
-      Sexp.listStar [Sexp.atom ":ops", Sexp.list (fmap transSig effOps)],
-      transSig effRet
+      Sexp.list (fmap transSig effOps)
     ]
 
 transOperation :: Types.Operation -> Sexp.T

@@ -348,13 +348,14 @@ effect =
   shouldParseAs
     "effect definition"
     Parser.parse
-    "effect Pure where return : x -> string"
+    "effect Pure = let pure : x -> string"
     $ AST.NoHeader
-      [ AST.Name ("string" :| [])
-        |> AST.Inf (AST.Name ("x" :| [])) ("->" :| [])
-        |> AST.Infix
-        |> flip (AST.Sig "return" Nothing) []
-        |> AST.Eff "Pure" []
+      [ [ AST.Name ("string" :| [])
+          |> AST.Inf (AST.Name ("x" :| [])) ("->" :| [])
+          |> AST.Infix
+          |> flip (AST.Sig "pure" Nothing) []
+        ]
+        |> AST.Eff "Pure"
         |> AST.Effect
       ]
 
@@ -363,17 +364,17 @@ fullEffect =
   shouldParseAs
     "effect full definition"
     Parser.parse
-    "effect Print where op print : string -> unit , return : x -> string"
+    "effect Print = let print : string -> unit let pure : x -> string"
     $ AST.NoHeader
-      [ AST.Name ("string" :| [])
-        |> AST.Inf (AST.Name ("x" :| [])) ("->" :| [])
-        |> AST.Infix
-        |> flip (AST.Sig "return" Nothing) []
-        |> AST.Eff "Print"
+      [ AST.Eff "Print"
           [ AST.Name ("unit" :| [])
             |> AST.Inf (AST.Name ("string" :| [])) ("->" :| [])
             |> AST.Infix
             |> flip (AST.Sig "print" Nothing) []
+          , AST.Name ("string" :| [])
+            |> AST.Inf (AST.Name ("x" :| [])) ("->" :| [])
+            |> AST.Infix
+            |> flip (AST.Sig "pure" Nothing) []
           ]
         |> AST.Effect
       ]
@@ -383,20 +384,21 @@ ret =
   shouldParseAs
     "effect handler of pure effect"
     Parser.parse
-    "handler pureEff where return x = toString x"
+    "handler pureEff = let pure x = toString x"
     $ AST.NoHeader
-      [ AST.Name ("x" :| []) :| []
+      [ [ AST.Name ("x" :| []) :| []
           |> AST.App (AST.Name ("toString" :| []))
           |> AST.Application
           |> AST.Body
           |> AST.Like
-            "return"
+            "pure"
             [ AST.MatchLogic (AST.MatchName "x") Nothing
                 |> AST.ConcreteA
             ]
           |> AST.Op
-          |> AST.Hand "pureEff" []
-          |> AST.Handler
+        ]
+        |> AST.Hand "pureEff"
+        |> AST.Handler
       ]
 
 via_ :: T.TestTree
@@ -419,31 +421,31 @@ handler =
   shouldParseAs
     "effect handler with op"
     Parser.parse
-    "handler print where op print x = print x , return x = toString x"
+    "handler printer = let print x = print x let pure x = toString x"
     $ AST.NoHeader
-      [ AST.Name ("x" :| []) :| []
+      [ [ AST.Name ("x" :| []) :| []
+          |> AST.App ("print" :| [] |> AST.Name)
+          |> AST.Application
+          |> AST.Body
+          |> AST.Like
+            "print"
+            [ AST.MatchLogic (AST.MatchName "x") Nothing
+              |> AST.ConcreteA
+            ]
+          |> AST.Op
+        ,
+          AST.Name ("x" :| []) :| []
           |> AST.App (AST.Name ("toString" :| []))
           |> AST.Application
           |> AST.Body
           |> AST.Like
-            "return"
+            "pure"
             [ AST.MatchLogic (AST.MatchName "x") Nothing
                 |> AST.ConcreteA
             ]
           |> AST.Op
-          |> AST.Hand
-            "print"
-            [ AST.Name ("x" :| []) :| []
-                |> AST.App ("print" :| [] |> AST.Name)
-                |> AST.Application
-                |> AST.Body
-                |> AST.Like
-                  "print"
-                  [ AST.MatchLogic (AST.MatchName "x") Nothing
-                      |> AST.ConcreteA
-                  ]
-                |> AST.Op
-            ]
+        ]
+          |> AST.Hand "printer"
           |> AST.Handler
       ]
 
