@@ -21,6 +21,7 @@ import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.Core.Types as Types
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 type RawTerm ty val = IR.Term ty val
 
@@ -61,17 +62,36 @@ lookupMapPrim ::
     (Types.TypedPrim ty val)
 lookupMapPrim _ (App.Return ty tm) = pure $ App.Return ty tm
 lookupMapPrim ns (App.Cont f xs n) =
-  App.Cont f <$> traverse lookupArg xs <*> pure n
+  App.Cont f <$> traverse (eraseArg ns) xs <*> pure n
+
+eraseArg :: [NameSymbol.T] -> App.Arg' IR.NoExt ty term ->
+             Either (Erasure.Error primTy primVal)
+                    (App.Arg' ErasedAnn.T ty term)
+eraseArg ns (App.BoundArg i) =
+  atMay ns (fromIntegral i)
+    |> maybe (error i) (pure . App.VarArg)
   where
-    lookupArg (App.BoundArg i) =
-      atMay ns (fromIntegral i)
-        |> maybe (error i) (pure . App.VarArg)
-    lookupArg (App.FreeArg x) = pure $ App.VarArg x
-    lookupArg (App.TermArg t) = pure $ App.TermArg t
     error i =
-      Left $
-        Erasure.InternalError $
-          "unknown de Bruijn index " <> show i
+      Left $ Erasure.InternalError $ "unknown de Bruijn index " <> show i
+eraseArg ns (App.FreeArg x) = pure $ App.VarArg x
+eraseArg ns (App.TermArg t) = App.TermArg <$> eraseReturn ns t
+
+eraseReturn ::
+  [NameSymbol.T] ->
+  App.Return' IR.NoExt ty1 term ->
+  Either (Erasure.Error primTy primVal) (App.Return' ErasedAnn.T ty1 term)
+eraseReturn ns (App.Cont {fun, args, numLeft}) =
+  App.Cont <$> eraseTake ns fun
+           <*> traverse (eraseArg ns) args
+           <*> pure numLeft
+eraseReturn _ns (App.Return ty tm) = pure $ App.Return ty tm
+
+eraseTake ::
+  [NameSymbol.T] ->
+  App.Take ty1 term ->
+  Either (Erasure.Error primTy primVal) (App.Take ty1 term)
+eraseTake ns (App.Take {usage, type', term}) = undefined
+
 
 coreToAnn :: Comp ty val err (ErasedAnn.AnnTerm ty (App.Return' ErasedAnn.T (NonEmpty ty) val))
 coreToAnn term usage ty = do
@@ -132,10 +152,12 @@ typecheckErase term usage ty = do
     |> IR.execTC globals
     |> fst of
     Right tyTerm -> do
-      case Erasure.erase constMapPrim lookupMapPrim tyTerm usage of
+      case erase tyTerm usage of
         Right res -> pure res
         Left err -> throw @"error" (Types.ErasureError err)
     Left err -> throw @"error" (Types.TypecheckerError err)
+
+erase = Erasure.erase constMapPrim lookupMapPrim
 
 toRaw :: ErasedAnn.AnnTerm ty (App.Return' ErasedAnn.T (NonEmpty ty) val) -> ErasedAnn.AnnTerm ty val
 toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
@@ -149,17 +171,27 @@ toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
     primToRaw (App.Return {retTerm}) = ErasedAnn.Prim retTerm
     primToRaw (App.Cont {fun, args}) =
       ErasedAnn.AppM (takeToTerm fun) (argsToTerms (App.type' fun) args)
+
     takeToTerm (App.Take {usage, type', term}) =
       ErasedAnn.Ann
         { usage,
           type' = Prim.fromPrimType type',
           term = ErasedAnn.Prim term
         }
+
+    returnToTerm (App.Cont {fun, args}) = undefined
+    returnToTerm (App.Return {retType, retTerm}) =
+      ErasedAnn.Ann
+        { usage = Usage.Omega,
+          type' = Prim.fromPrimType retType,
+          term = ErasedAnn.Prim retTerm
+        }
+
     argsToTerms ts xs = go (toList ts) xs
       where
         go _ [] = []
         go (_ : ts) (App.TermArg a : as) =
-          takeToTerm a : go ts as
+          returnToTerm a : go ts as
         go (t : ts) (App.VarArg x : as) =
           varTerm t x : go ts as
         go [] (_ : _) =

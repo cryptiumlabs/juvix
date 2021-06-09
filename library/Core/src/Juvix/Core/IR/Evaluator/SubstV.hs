@@ -332,22 +332,22 @@ instance
   where
   substValueWith b i e (App.Take {term}) = substValueWith b i e term
 
--- instance
---   ( HasWeak ty,
---     HasWeak (App.ParamVar ext),
---     HasSubstValue ext primTy primVal term
---   ) =>
---   HasSubstValue ext primTy primVal (App.Return' ext ty term)
---   where
---   substValueWith b i e (App.Return {retTerm}) = substValueWith b i e retTerm
+instance
+  ( HasWeak ty,
+    HasWeak (App.ParamVar ext),
+    HasSubstValue ext primTy primVal primVal
+  ) =>
+  HasSubstValue ext primTy primVal (App.Return' ext ty primVal)
+  where
+  substValueWith b i e (App.Return {retTerm}) = substValueWith b i e retTerm
 
 
 instance
   ( HasSubstValue ext primTy primVal (App.ParamVar ext),
-    HasSubstValue ext primTy primVal ty,
-    HasSubstValue ext primTy primVal term
+    HasSubstValue ext primTy primVal primTy,
+    HasSubstValue ext primTy primVal primVal
   ) =>
-  HasSubstValue ext primTy primVal (App.Arg' ext ty term)
+  HasSubstValue ext primTy primVal (App.Arg' ext primTy primVal)
   where
   substValueWith b i e (App.VarArg x) = substValueWith b i e x
   substValueWith b i e (App.TermArg t) = substValueWith b i e t
