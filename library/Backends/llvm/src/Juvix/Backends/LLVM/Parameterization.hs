@@ -38,7 +38,7 @@ llvm =
   where
     -- Typechecking of primitive values.
     hasType :: RawPrimVal -> Param.PrimType PrimTy -> Bool
-    hasType t ty = case t of
+    hasType t (Param.PrimType ty) = case t of
       Add -> Param.check3Equal ty
       Sub -> Param.check3Equal ty
       LitInt _ -> length ty == 1
