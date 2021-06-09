@@ -414,7 +414,6 @@ depIdentityCompTyT =
     IR.Pi one (IR.Elim $ IR.Bound 0) $
       IR.Elim $ IR.Bound 1
 
-
 -- computation dependent identity annotation (1, 0 * -> 1 t -> t)
 depIdentityCompTy :: AllAnnotation
 depIdentityCompTy =
@@ -734,7 +733,6 @@ depKCompTyT =
       IR.Pi one (IR.Elim $ IR.Bound 1) $
         IR.Pi mempty (IR.Elim $ IR.Bound 1) $
           IR.Elim $ IR.Bound 3
-
 
 -- S combinator: Sxyz = xz(yz)
 -- Because S returns functions, it's not general because of the annotations.
