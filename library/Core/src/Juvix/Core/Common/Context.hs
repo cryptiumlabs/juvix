@@ -350,7 +350,6 @@ mapSumWithName ctx f =
       f s (NameSpace.extractValue name) ctx
     fOnSum def _ _ = pure def
 
-
 -- REFACTOR in terms of mapWithCurrentName
 
 -- | @mapCurrentContext@ maps f over the entire context, this function
