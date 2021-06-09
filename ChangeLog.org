@@ -12,7 +12,7 @@
 #+BEGIN_SRC ocaml
 effect Print =
   let print  : string -> unit
-  let return : x -> string
+  let pure : x -> string
 #+END_SRC
 A new effect Print is defined, and its interface signature. All
 effects must have a `return` clause, and hopefully operation
@@ -22,7 +22,7 @@ computation).
 #+BEGIN_SRC ocaml
 handler printer =
   let print  = %IO.print
-  let return x  = toString x
+  let pure x  = toString x
 #+END_SRC
 A handler provides an implementation of at least one effect and
 a return clause, and it can implement as many operations as the
