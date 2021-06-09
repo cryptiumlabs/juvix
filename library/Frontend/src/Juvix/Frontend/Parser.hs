@@ -666,10 +666,11 @@ doubleStringWithoutEscape =
 
 string' :: Parser Types.String'
 string' = do
-  words <- P.try stringEscape
-    <|> P.try doubleStringEscape
-    <|> P.try stringWithoutEscape
-    <|> doubleStringWithoutEscape
+  words <-
+    P.try stringEscape
+      <|> P.try doubleStringEscape
+      <|> P.try stringWithoutEscape
+      <|> doubleStringWithoutEscape
   pure (Types.Sho $ Encoding.decodeUtf8 words)
 
 --------------------------------------------------

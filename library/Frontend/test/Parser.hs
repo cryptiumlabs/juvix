@@ -351,12 +351,12 @@ effect =
     "effect Pure = let pure : x -> string"
     $ AST.NoHeader
       [ [ AST.Name ("string" :| [])
-          |> AST.Inf (AST.Name ("x" :| [])) ("->" :| [])
-          |> AST.Infix
-          |> flip (AST.Sig "pure" Nothing) []
+            |> AST.Inf (AST.Name ("x" :| [])) ("->" :| [])
+            |> AST.Infix
+            |> flip (AST.Sig "pure" Nothing) []
         ]
-        |> AST.Eff "Pure"
-        |> AST.Effect
+          |> AST.Eff "Pure"
+          |> AST.Effect
       ]
 
 fullEffect :: T.TestTree
@@ -366,17 +366,18 @@ fullEffect =
     Parser.parse
     "effect Print = let print : string -> unit let pure : x -> string"
     $ AST.NoHeader
-      [ AST.Eff "Print"
+      [ AST.Eff
+          "Print"
           [ AST.Name ("unit" :| [])
-            |> AST.Inf (AST.Name ("string" :| [])) ("->" :| [])
-            |> AST.Infix
-            |> flip (AST.Sig "print" Nothing) []
-          , AST.Name ("string" :| [])
-            |> AST.Inf (AST.Name ("x" :| [])) ("->" :| [])
-            |> AST.Infix
-            |> flip (AST.Sig "pure" Nothing) []
+              |> AST.Inf (AST.Name ("string" :| [])) ("->" :| [])
+              |> AST.Infix
+              |> flip (AST.Sig "print" Nothing) [],
+            AST.Name ("string" :| [])
+              |> AST.Inf (AST.Name ("x" :| [])) ("->" :| [])
+              |> AST.Infix
+              |> flip (AST.Sig "pure" Nothing) []
           ]
-        |> AST.Effect
+          |> AST.Effect
       ]
 
 ret :: T.TestTree
@@ -387,34 +388,35 @@ ret =
     "handler pureEff = let pure x = toString x"
     $ AST.NoHeader
       [ [ AST.Name ("x" :| []) :| []
-          |> AST.App (AST.Name ("toString" :| []))
-          |> AST.Application
-          |> AST.Body
-          |> AST.Like
-            "pure"
-            [ AST.MatchLogic (AST.MatchName "x") Nothing
-                |> AST.ConcreteA
-            ]
-          |> AST.Op
+            |> AST.App (AST.Name ("toString" :| []))
+            |> AST.Application
+            |> AST.Body
+            |> AST.Like
+              "pure"
+              [ AST.MatchLogic (AST.MatchName "x") Nothing
+                  |> AST.ConcreteA
+              ]
+            |> AST.Op
         ]
-        |> AST.Hand "pureEff"
-        |> AST.Handler
+          |> AST.Hand "pureEff"
+          |> AST.Handler
       ]
 
 via_ :: T.TestTree
-via_ = shouldParseAs
-  "effect application"
-  Parser.parse
-  "let foo = prog via print"
-  $ AST.NoHeader
-    [ AST.Name ("prog" :| []) :| []
-      |> AST.App (AST.Name ("print" :| []))
-      |> AST.Application
-      |> AST.Body
-      |> AST.Like "foo" []
-      |> AST.Func
-      |> AST.Function
-    ]
+via_ =
+  shouldParseAs
+    "effect application"
+    Parser.parse
+    "let foo = prog via print"
+    $ AST.NoHeader
+      [ AST.Name ("prog" :| []) :| []
+          |> AST.App (AST.Name ("print" :| []))
+          |> AST.Application
+          |> AST.Body
+          |> AST.Like "foo" []
+          |> AST.Func
+          |> AST.Function
+      ]
 
 handler :: T.TestTree
 handler =
@@ -424,26 +426,25 @@ handler =
     "handler printer = let print x = print x let pure x = toString x"
     $ AST.NoHeader
       [ [ AST.Name ("x" :| []) :| []
-          |> AST.App ("print" :| [] |> AST.Name)
-          |> AST.Application
-          |> AST.Body
-          |> AST.Like
-            "print"
-            [ AST.MatchLogic (AST.MatchName "x") Nothing
-              |> AST.ConcreteA
-            ]
-          |> AST.Op
-        ,
+            |> AST.App ("print" :| [] |> AST.Name)
+            |> AST.Application
+            |> AST.Body
+            |> AST.Like
+              "print"
+              [ AST.MatchLogic (AST.MatchName "x") Nothing
+                  |> AST.ConcreteA
+              ]
+            |> AST.Op,
           AST.Name ("x" :| []) :| []
-          |> AST.App (AST.Name ("toString" :| []))
-          |> AST.Application
-          |> AST.Body
-          |> AST.Like
-            "pure"
-            [ AST.MatchLogic (AST.MatchName "x") Nothing
-                |> AST.ConcreteA
-            ]
-          |> AST.Op
+            |> AST.App (AST.Name ("toString" :| []))
+            |> AST.Application
+            |> AST.Body
+            |> AST.Like
+              "pure"
+              [ AST.MatchLogic (AST.MatchName "x") Nothing
+                  |> AST.ConcreteA
+              ]
+            |> AST.Op
         ]
           |> AST.Hand "printer"
           |> AST.Handler

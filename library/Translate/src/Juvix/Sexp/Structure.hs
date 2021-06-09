@@ -250,26 +250,23 @@ data LetModule = LetModule
   deriving (Show)
 
 data Effect = Effect
- {
-   nameEffect :: Sexp.T,
-   opsEffect  :: Sexp.T
- }
- deriving (Show)
+  { nameEffect :: Sexp.T,
+    opsEffect :: Sexp.T
+  }
+  deriving (Show)
 
 data DefHandler = DefHandler
- {
-   defHandlerName :: Sexp.T,
-   defHandlerOps  :: Sexp.T
- }
- deriving (Show)
+  { defHandlerName :: Sexp.T,
+    defHandlerOps :: Sexp.T
+  }
+  deriving (Show)
 
 data LetHandler = LetHandler
- {
-   letHandlername :: Sexp.T,
-   letHandlerOps  :: Sexp.T,
-   letHandlerRet  :: Sexp.T
- }
- deriving (Show)
+  { letHandlername :: Sexp.T,
+    letHandlerOps :: Sexp.T,
+    letHandlerRet :: Sexp.T
+  }
+  deriving (Show)
 
 --------------------------------------------------------------------------------
 -- Converter functions
@@ -1090,7 +1087,7 @@ toDefHandler form
     case form of
       _ Sexp.:> symDefHandler Sexp.:> opsDefHandler ->
         DefHandler symDefHandler opsDefHandler
-        |> Just
+          |> Just
       _ -> Nothing
   | otherwise = Nothing
 
@@ -1100,7 +1097,7 @@ toLetHandler form
     case form of
       _ Sexp.:> symDefHandler Sexp.:> opsDefHandler Sexp.:> retLetHandler ->
         LetHandler symDefHandler opsDefHandler retLetHandler
-        |> Just
+          |> Just
       _ -> Nothing
   | otherwise = Nothing
 
@@ -1110,6 +1107,6 @@ toEffect form
     case form of
       _ Sexp.:> symDefHandler Sexp.:> opsDefHandler ->
         Effect symDefHandler opsDefHandler
-        |> Just
+          |> Just
       _ -> Nothing
   | otherwise = Nothing
