@@ -10,9 +10,9 @@
 
 *** Added Syntaxes
 #+BEGIN_SRC ocaml
-effect Print where
-  | op print : string -> ()
-  | return   : x -> string
+effect Print =
+  let print  : string -> unit
+  let return : x -> string
 #+END_SRC
 A new effect Print is defined, and its interface signature. All
 effects must have a `return` clause, and hopefully operation
@@ -20,16 +20,16 @@ signatures as well (an effect without operations is just a pure
 computation).
 
 #+BEGIN_SRC ocaml
-handler print where
-  | op print  = %IO.print
-  | return x  = toString x
+handler printer =
+  let print  = %IO.print
+  let return x  = toString x
 #+END_SRC
 A handler provides an implementation of at least one effect and
 a return clause, and it can implement as many operations as the
 user wants.
 
 #+BEGIN_SRC ocaml
-let main = prog via print
+let main = prog via printer
 #+END_SRC
 Handlers can be applied to programs using the `via` operator,
 which is just a shortcut for function application.
