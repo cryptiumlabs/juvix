@@ -2007,6 +2007,7 @@ _TODO_
   + [[NameSymbol]]
   + [[Library/Sexp]]
   + [[Transform/HR]]
+  + [[Transform/IR]]
   + [[Transform/Helpers]]
   + [[ToCore/Types]]
 ******* HR <<Transform/HR>>
@@ -2030,6 +2031,20 @@ _TODO_
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
+  + [[ToCore/Types]]
+******* IR <<Transform/IR>>
+- _Relies on_
+  + [[Translate]]
+  + [[Transform/HR]]
+  + [[Core/HR]]
+  + [[Core/IR]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
+  + [[Library/Usage]]
+  + [[Transform/Helpers]]
+  + [[Transform/Usage]]
   + [[ToCore/Types]]
 ******* Sig
 - _Relies on_

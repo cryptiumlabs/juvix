@@ -2,17 +2,18 @@
 
 module Juvix.ToCore.FromFrontend.Transform.IR (transformTermIR) where
 
-import Juvix.Core.Translate (hrToIR)
-import Juvix.ToCore.FromFrontend.Transform.HR
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Generics.SYB as SYB
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Parameterisation as P
+import Juvix.Core.Translate (hrToIR)
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
+import Juvix.ToCore.FromFrontend.Transform.HR
 import Juvix.ToCore.FromFrontend.Transform.Helpers
   ( ReduceEff,
     getParamConstant,
@@ -25,17 +26,17 @@ import Juvix.ToCore.FromFrontend.Transform.Helpers
 import Juvix.ToCore.FromFrontend.Transform.Usage
 import Juvix.ToCore.Types
   ( Error (..),
+    HasPatVars,
     Special (..),
     throwFF,
-    HasPatVars,
   )
 import Prelude (error)
-import qualified Generics.SYB as SYB
-
 
 transformTermIR ::
-  ( Show primTy, Show primVal,
-    ReduceEff primTy primVal m, HasPatVars m
+  ( Show primTy,
+    Show primVal,
+    ReduceEff primTy primVal m,
+    HasPatVars m
   ) =>
   NameSymbol.Mod ->
   Sexp.T ->

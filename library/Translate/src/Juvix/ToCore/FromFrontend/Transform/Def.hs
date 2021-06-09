@@ -9,7 +9,6 @@ import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import Juvix.ToCore.FromFrontend.Transform.HR (transformTermHR)
-import Juvix.ToCore.FromFrontend.Transform.IR (transformTermIR)
 import Juvix.ToCore.FromFrontend.Transform.Helpers
   ( ReduceEff,
     eleToSymbol,
@@ -20,6 +19,7 @@ import Juvix.ToCore.FromFrontend.Transform.Helpers
     lookupSig,
     splitDataType,
   )
+import Juvix.ToCore.FromFrontend.Transform.IR (transformTermIR)
 import Juvix.ToCore.Types
   ( CoreDef (..),
     CoreSig (..),
