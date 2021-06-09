@@ -38,6 +38,8 @@ which is just a shortcut for function application.
 The do notation no longer gets translated into `Prelude.»=`,
 it is just another effect construct now, to be translated by
 the ANF pass.
+** 0.1.0.7
+  + Fix checking of Π types
 
 ** 0.1.0.6
   + Add Golden tests
