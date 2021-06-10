@@ -1,4 +1,6 @@
 * Changelog for Juvix
+** 0.1.1.1
+- Adds a minimal llvm backend to the juvix compiler
 ** 0.1.1.0
  - _Summary_:
    + new syntax for effect handlers in Juvix.
