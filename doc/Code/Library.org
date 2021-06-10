@@ -1203,7 +1203,7 @@ with any stage of the compiler while modifying the source code.
   + [[Library/Sexp]]
 ***** Types <<Frontend/Types>>
 - This file defines the main ADT for the Juvix front end language.
-- This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+- This ADT corresponds to the BNF laid out [[https://github.com/heliaxdev/juvix/blob/develop/doc/Frontend/syntax.org][here]].
 - Later a trees that grow version of this will be implemented, so
   infix functions can better transition across syntax
 - Note :: The names for the types in =ArrowData= are stored in the
@@ -1212,7 +1212,7 @@ with any stage of the compiler while modifying the source code.
   + [[Frontend/Types/Base]]
 ****** Base <<Frontend/Types/Base>>
 - This file defines the main ADT for the Juvix front end language.
-- This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+- This ADT corresponds to the bnf laid out [[https://github.com/heliaxdev/juvix/blob/develop/doc/Frontend/syntax.org][here]].
 - Later a trees that grow version of this will be implemented, so
   infix functions can better transition across syntax
 - Note :: The names for the types in =ArrowData= are stored in the
@@ -1936,7 +1936,6 @@ done with no extra information needed. Thus we export the following passes
 - Conds ⟶ If ⟶ Match
 - Combining signatures to functions
 - Removing punned record arguments
-- Remvoing Do syntax
 - _Relies on_
   + [[Library]]
   + [[Library/Sexp]]
