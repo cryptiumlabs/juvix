@@ -301,8 +301,6 @@ mapWithContextPure ::
   T term ty sumRep -> ContextForms Identity term ty sumRep -> T term ty sumRep
 mapWithContextPure t f = runIdentity (mapWithContext t f)
 
--- TODO ∷ express in terms of mapWithName, modifying the f
-
 -- | @overTopLevelMap@ runs a function, @f@ over a Context that is
 -- switching between the namespaces of the @topLevelMap@ before finally
 -- switching back.
