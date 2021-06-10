@@ -372,7 +372,7 @@ common ones to include"
 (defparameter *llvm-new*
   (make-stack-yaml
    :name "Backends/llvm"
-   :resolver 17.9
+   :resolver 17.3
    :path-to-other "../../"
    :packages (list *standard-library* *core* *pipeline* *translate* *frontend*)
    :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
