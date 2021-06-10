@@ -345,6 +345,7 @@ Surface language
 ***** Backends
 ****** LLVM
 - _Relies on_
+  + [[LLVM/Compilation]]
   + [[LLVM/Parameterization]]
   + [[LLVM/Pipeline]]
   + [[Primitive]]
@@ -381,6 +382,21 @@ Representation of LLVM primitives in Juvix.
   + [[Application]]
   + [[Core/Parameterisation]]
   + [[Library]]
+*** test
+**** Main <<llvm/test/Main>>
+- _Relies on_
+  + [[Library]]
+**** Test
+***** Golden <<llvm/test/Test/Golden>>
+- _Relies on_
+  + [[Library]]
+  + [[Library/Test/Golden]]
+  + [[Juvix/Pipeline]]
+  + [[Juvix/Pipeline]]
+  + [[LLVM]]
+  + [[ErasedAnn]]
+  + [[Feedback]]
+  + [[Core/Pipeline]]
 * Core
 ** Setup <<Core/Setup>>
 ** src

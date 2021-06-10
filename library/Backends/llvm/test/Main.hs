@@ -9,5 +9,3 @@ main = do
   goldenTests <- Golden.top
   T.defaultMain $
     T.testGroup "LLVM tests" [goldenTests]
-
-
