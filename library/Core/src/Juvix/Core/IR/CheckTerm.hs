@@ -136,7 +136,8 @@ typeTerm' term ann@(Annotation σ ty) =
       requireZero σ
       void $ requireStar ty
       a' <- typeTerm' a ann
-      b' <- typeTerm' b ann
+      av <- evalTC a'
+      b' <- withLocal (Annotation mempty av) $ typeTerm' b ann
       pure $ Typed.Pi π a' b' ann
     IR.Lam' t _ -> do
       (π, a, b) <- requirePi ty

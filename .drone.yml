@@ -1,265 +1,183 @@
 ---
+environment: {GIT_LFS_SKIP_SMUDGE: '1', STACK_ROOT: /drone/workspace/.stack}
 kind: pipeline
-type: docker
 name: juvix-ci-build-pr
-
-workspace:
-  path: /drone/workspace
-
-environment:
-  STACK_ROOT: /drone/workspace/.stack
-  GIT_LFS_SKIP_SMUDGE: "1"
-
+node: {project: juvix}
 steps:
-  - name: script-integrity-check
-    image: alpine/git:v2.30.1
-    pull: if-not-exists
-    commands:
-      - echo "7d421abede3516e7074a8f9536c4778d0598faa4aea830f99fc344a591c29d73  scripts/pre-run.sh" | sha256sum -c -
-      - sh ./scripts/pre-run.sh
-
-  - name: restore-cache
-    image: meltwater/drone-cache
-    pull: if-not-exists
-    settings:
-      backend: "s3"
-      restore: true
-      bucket: heliax-drone-cache-v2
-      region: eu-west-1
-      cache_key: "{{ checksum \"stack.yaml\" }}"
-      archive_format: "gzip"
-      mount:
-        - ./.stack-work
-        - ./.stack
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: aws_access_key_id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: aws_secret_access_key
-    depends_on:
-      - script-integrity-check
-
-  - name: test-suite
-    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    commands:
-      - make test
-    depends_on:
-      - restore-cache
-
-  - name: rebuild-cache
-    image: meltwater/drone-cache
-    pull: if-not-exists
-    settings:
-      backend: "s3"
-      bucket: heliax-drone-cache-v2
-      region: eu-west-1
-      rebuild: true
-      archive_format: "gzip"
-      override: false
-      cache_key: "{{ checksum \"stack.yaml\" }}"
-      mount:
-        - ./.stack-work
-        - ./.stack
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: aws_access_key_id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: aws_secret_access_key
-    when:
-      status:
-        - success
-        - failure
-    depends_on:
-      - test-suite
-
-  - name: test-parser
-    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - make test-parser
-    depends_on:
-      - test-suite
-
-  - name: test-typecheck
-    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - make test-typecheck
-    depends_on:
-      - test-suite
-
-  - name: test-compile
-    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - make test-compile
-    depends_on:
-      - test-suite
-  
-  - name: org-generation-and-code-formatting
-    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - sh ./scripts/format-and-org-gen.sh   
-    depends_on:
-      - test-typecheck
-      - test-compile
-      - test-parser
-
-  - name: push changes
-    image: openanalytics/alpine-git-lfs-client
-    pull: if-not-exists
-    commands:
-      - sh ./scripts/push-changes.sh
-    environment:
-      GITHUB_TOKEN:
-        from_secret: github_token
-    depends_on:
-      - org-generation-and-code-formatting
-
+- commands: [echo "039b7546c4aebffb820512408b96f78c1c94f0fb034741a819950b569263c4b1  Makefile"
+      | sha256sum -c -, echo "af9f4680265165bc8d80b21defe779f4616558177837f5f3658cd1493d11acbd  scripts/push-changes.sh"
+      | sha256sum -c -, echo "d04e32c725b9316805e85d2e8d26d9aaa7010f00e98cd933e4a16c64c0533a6f  scripts/format-and-org-gen.sh"
+      | sha256sum -c -, echo "b6ad65e92d1f6f47516586281d55b27794f3bc368d06473781925397f27e7932  scripts/check-formatting.sh"
+      | sha256sum -c -, echo "4b2678ee3159c1ee1d4879384163af17d388f0ce1f716bbc6f891e2b32483d3e  scripts/check-org-gen.sh"
+      | sha256sum -c -, echo "59e7ec32dc65c1668ca90cb0b825f4d86215cd2b1382babeabaedde8d6d61347  scripts/pre-run.sh"
+      | sha256sum -c -, sh scripts/pre-run.sh]
+  image: alpine/git:v2.30.1
+  name: script-integrity-check
+  pull: if-not-exists
+- depends_on: [script-integrity-check]
+  environment:
+    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
+    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+  image: meltwater/drone-cache
+  name: restore-cache
+  pull: if-not-exists
+  settings:
+    archive_format: gzip
+    backend: s3
+    bucket: heliax-drone-cache-v2
+    cache_key: '{{ checksum "stack.yaml" }}'
+    mount: [./.stack-work, ./.stack]
+    region: eu-west-1
+    restore: true
+- commands: [make stack-yaml, make test]
+  depends_on: [restore-cache]
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
+  name: test-suite
+  pull: if-not-exists
+- depends_on: [test-suite]
+  environment:
+    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
+    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+  image: meltwater/drone-cache
+  name: rebuild-cache
+  pull: if-not-exists
+  settings:
+    archive_format: gzip
+    backend: s3
+    bucket: heliax-drone-cache-v2
+    cache_key: '{{ checksum "stack.yaml" }}'
+    mount: [./.stack-work, ./.stack]
+    override: false
+    rebuild: true
+    region: eu-west-1
+  when:
+    status: [success, failure]
+- commands: [make test-parser]
+  depends_on: [test-suite]
+  failure: fast
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
+  name: test-parser
+  pull: if-not-exists
+- commands: [make test-typecheck]
+  depends_on: [test-suite]
+  failure: fast
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
+  name: test-typecheck
+  pull: if-not-exists
+- commands: [make test-compile]
+  depends_on: [test-suite]
+  failure: fast
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
+  name: test-compile
+  pull: if-not-exists
+- commands: [sh ./scripts/format-and-org-gen.sh]
+  depends_on: [test-typecheck, test-compile, test-parser]
+  failure: fast
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
+  name: org-generation-and-code-formatting
+  pull: if-not-exists
+- commands: [sh ./scripts/push-changes.sh]
+  depends_on: [org-generation-and-code-formatting]
+  environment:
+    GITHUB_TOKEN: {from_secret: github_token}
+  image: openanalytics/alpine-git-lfs-client
+  name: push changes
+  pull: if-not-exists
 trigger:
-  event:
-    - pull_request
-
-node:
-  project: juvix
-
----
-kind: pipeline
+  event: [pull_request]
 type: docker
+workspace: {path: /drone/workspace}
+---
+environment: {GIT_LFS_SKIP_SMUDGE: '1', STACK_ROOT: /drone/workspace/.stack}
+kind: pipeline
 name: juvix-ci-build-push-develop
-
-workspace:
-  path: /drone/workspace
-
-environment:
-  STACK_ROOT: /drone/workspace/.stack
-  GIT_LFS_SKIP_SMUDGE: "1"
-
+node: {project: juvix}
 steps:
-  - name: script-integrity-check
-    image: alpine/git:v2.30.1
-    pull: if-not-exists
-    commands:
-      - echo "7d421abede3516e7074a8f9536c4778d0598faa4aea830f99fc344a591c29d73  scripts/pre-run.sh" | sha256sum -c -
-      - sh ./scripts/pre-run.sh
-
-  - name: restore-cache
-    image: meltwater/drone-cache
-    pull: if-not-exists
-    settings:
-      backend: "s3"
-      restore: true
-      bucket: heliax-drone-cache-v2
-      region: eu-west-1
-      cache_key: "{{ checksum \"stack.yaml\" }}"
-      archive_format: "gzip"
-      mount:
-        - ./.stack-work
-        - ./.stack
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: aws_access_key_id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: aws_secret_access_key
-    depends_on:
-      - script-integrity-check
-
-  - name: test-suite
-    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    commands:
-      - make test
-    depends_on:
-      - restore-cache
-
-  - name: rebuild-cache
-    image: meltwater/drone-cache
-    pull: if-not-exists
-    settings:
-      backend: "s3"
-      bucket: heliax-drone-cache-v2
-      region: eu-west-1
-      rebuild: true
-      archive_format: "gzip"
-      override: false
-      cache_key: "{{ checksum \"stack.yaml\" }}"
-      mount:
-        - ./.stack-work
-        - ./.stack
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: aws_access_key_id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: aws_secret_access_key
-    when:
-      status:
-        - success
-        - failure
-    depends_on:
-      - test-suite
-
-  - name: check-formatting
-    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - sh ./scripts/check-formatting.sh
-    depends_on:
-      - test-suite
-
-  - name: check-org-gen
-    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - sh ./scripts/check-org-gen.sh
-    depends_on:
-      - test-suite
-
-  - name: test-parser
-    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - make test-parser
-    depends_on:
-      - test-suite
-
-  - name: test-typecheck
-    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - make test-typecheck
-    depends_on:
-      - test-suite
-
-  - name: test-compile
-    image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - make test-compile
-    depends_on:
-      - test-suite
-
+- commands: [echo "039b7546c4aebffb820512408b96f78c1c94f0fb034741a819950b569263c4b1  Makefile"
+      | sha256sum -c -, echo "af9f4680265165bc8d80b21defe779f4616558177837f5f3658cd1493d11acbd  scripts/push-changes.sh"
+      | sha256sum -c -, echo "d04e32c725b9316805e85d2e8d26d9aaa7010f00e98cd933e4a16c64c0533a6f  scripts/format-and-org-gen.sh"
+      | sha256sum -c -, echo "b6ad65e92d1f6f47516586281d55b27794f3bc368d06473781925397f27e7932  scripts/check-formatting.sh"
+      | sha256sum -c -, echo "4b2678ee3159c1ee1d4879384163af17d388f0ce1f716bbc6f891e2b32483d3e  scripts/check-org-gen.sh"
+      | sha256sum -c -, echo "59e7ec32dc65c1668ca90cb0b825f4d86215cd2b1382babeabaedde8d6d61347  scripts/pre-run.sh"
+      | sha256sum -c -, sh scripts/pre-run.sh]
+  image: alpine/git:v2.30.1
+  name: script-integrity-check
+  pull: if-not-exists
+- depends_on: [script-integrity-check]
+  environment:
+    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
+    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+  image: meltwater/drone-cache
+  name: restore-cache
+  pull: if-not-exists
+  settings:
+    archive_format: gzip
+    backend: s3
+    bucket: heliax-drone-cache-v2
+    cache_key: '{{ checksum "stack.yaml" }}'
+    mount: [./.stack-work, ./.stack]
+    region: eu-west-1
+    restore: true
+- commands: [make stack-yaml, make test]
+  depends_on: [restore-cache]
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
+  name: test-suite
+  pull: if-not-exists
+- depends_on: [test-suite]
+  environment:
+    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
+    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+  image: meltwater/drone-cache
+  name: rebuild-cache
+  pull: if-not-exists
+  settings:
+    archive_format: gzip
+    backend: s3
+    bucket: heliax-drone-cache-v2
+    cache_key: '{{ checksum "stack.yaml" }}'
+    mount: [./.stack-work, ./.stack]
+    override: false
+    rebuild: true
+    region: eu-west-1
+  when:
+    status: [success, failure]
+- commands: [sh ./scripts/check-formatting.sh]
+  depends_on: [test-suite]
+  failure: fast
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
+  name: check-formatting
+  pull: if-not-exists
+- commands: [sh ./scripts/check-org-gen.sh]
+  depends_on: [test-suite]
+  failure: fast
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
+  name: check-org-gen
+  pull: if-not-exists
+- commands: [make test-parser]
+  depends_on: [test-suite]
+  failure: fast
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
+  name: test-parser
+  pull: if-not-exists
+- commands: [make test-typecheck]
+  depends_on: [test-suite]
+  failure: fast
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
+  name: test-typecheck
+  pull: if-not-exists
+- commands: [make test-compile]
+  depends_on: [test-suite]
+  failure: fast
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/juvix
+  name: test-compile
+  pull: if-not-exists
 trigger:
-  event:
-    - push
-  branch:
-    - develop
-
-node:
-  project: juvix
-  
+  branch: [develop]
+  event: [push]
+type: docker
+workspace: {path: /drone/workspace}
 ---
 kind: signature
-hmac: a27f59077849f6ab97426bed64fef9e2c7fd37a80cf8ba2b2dd0fc5e478c90b5
+hmac: e83d02cca03cc50b8b5d375e76be08c4066869a6b208c578aeb880624e3ea833
 
 ...
