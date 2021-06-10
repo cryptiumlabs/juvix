@@ -193,7 +193,10 @@ reservedWords =
       "sig",
       "mod",
       "declare",
-      "where"
+      "where",
+      "via",
+      "handler",
+      "effect"
     ]
 
 reservedSymbols :: (Ord a, IsString a) => Set a

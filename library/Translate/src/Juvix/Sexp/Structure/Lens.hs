@@ -37,3 +37,6 @@ Lens.makeLensesWith Lens.camelCaseFields ''LetType
 Lens.makeLensesWith Lens.camelCaseFields ''LetSignature
 Lens.makeLensesWith Lens.camelCaseFields ''DefModule
 Lens.makeLensesWith Lens.camelCaseFields ''LetModule
+Lens.makeLensesWith Lens.camelCaseFields ''DefHandler
+Lens.makeLensesWith Lens.camelCaseFields ''LetHandler
+Lens.makeLensesWith Lens.camelCaseFields ''Effect
