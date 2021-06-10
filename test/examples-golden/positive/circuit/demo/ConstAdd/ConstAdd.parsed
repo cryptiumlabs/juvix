@@ -1,0 +1,96 @@
+Right
+    ( Header
+        ( "ConstAdd" :| [] )
+        [ ModuleOpen
+            ( Open
+                ( "Prelude" :| [] )
+            )
+        , ModuleOpen
+            ( Open
+                ( "Circuit" :| [] )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "add"
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "field" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "field" :| [] )
+                                , infixOp = "->" :| []
+                                , infixRight = Name
+                                    ( "field" :| [] )
+                                }
+                            )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "add"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive
+                            ( Prim
+                                ( "Circuit" :| [ "add" ] )
+                            )
+                        )
+                    }
+                )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "main"
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "field" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Name
+                            ( "field" :| [] )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "main"
+                    , functionLikeArgs =
+                        [ ConcreteA
+                            ( MatchLogic
+                                { matchLogicContents = MatchName "x"
+                                , matchLogicNamed = Nothing
+                                }
+                            )
+                        ]
+                    , functionLikeBody = Body
+                        ( Application
+                            ( App
+                                { applicationName = Name
+                                    ( "add" :| [] )
+                                , applicationArgs = Constant
+                                    ( Number
+                                        ( Integer' 4 )
+                                    ) :|
+                                    [ Name
+                                        ( "x" :| [] )
+                                    ]
+                                }
+                            )
+                        )
+                    }
+                )
+            )
+        ]
+    )

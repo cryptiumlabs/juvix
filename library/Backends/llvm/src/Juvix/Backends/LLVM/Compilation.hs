@@ -9,8 +9,6 @@ import Juvix.Backends.LLVM.Primitive
 import qualified Juvix.Core.ErasedAnn as Core
 import Juvix.Library
 import Juvix.Library.Feedback
--- import qualified Juvix.Library.Usage as Usage
--- import Juvix.Pipeline.Compile
 import qualified LLVM.AST as LLVM (Module, Operand)
 import qualified LLVM.AST.Type as LLVM
 import qualified LLVM.IRBuilder as LLVM

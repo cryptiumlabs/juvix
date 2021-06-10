@@ -17,9 +17,11 @@ import Juvix.Library
 import qualified LLVM.AST.Type as LLVM
 
 instance Param.CanApply PrimTy where
+  -- TODO: Needs to implement apply
   arity = arityTy
 
 instance Param.CanApply (PrimVal ext) where
+  -- TODO: Needs to implement apply
   arity val = case val of
     App.Cont {} -> App.numLeft val
     App.Return {} -> arityRaw $ App.retTerm val

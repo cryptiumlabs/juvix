@@ -1,0 +1,99 @@
+Ann
+    { usage = Omega
+    , type' = PrimTy
+        ( PrimTy
+            ( IntegerType
+                { typeBits = 8 }
+            )
+        )
+    , term = AppM
+        ( Ann
+            { usage = Omega
+            , type' = Pi Omega
+                ( PrimTy
+                    ( PrimTy
+                        ( IntegerType
+                            { typeBits = 8 }
+                        )
+                    )
+                )
+                ( Pi Omega
+                    ( PrimTy
+                        ( PrimTy
+                            ( IntegerType
+                                { typeBits = 8 }
+                            )
+                        )
+                    )
+                    ( PrimTy
+                        ( PrimTy
+                            ( IntegerType
+                                { typeBits = 8 }
+                            )
+                        )
+                    )
+                )
+            , term = Prim
+                ( Return
+                    { retType = PrimType
+                        { getPrimType = PrimTy
+                            ( IntegerType
+                                { typeBits = 8 }
+                            ) :|
+                            [ PrimTy
+                                ( IntegerType
+                                    { typeBits = 8 }
+                                )
+                            , PrimTy
+                                ( IntegerType
+                                    { typeBits = 8 }
+                                )
+                            ]
+                        }
+                    , retTerm = Add
+                    }
+                )
+            }
+        )
+        [ Ann
+            { usage = Omega
+            , type' = PrimTy
+                ( PrimTy
+                    ( IntegerType
+                        { typeBits = 8 }
+                    )
+                )
+            , term = Prim
+                ( Return
+                    { retType = PrimType
+                        { getPrimType = PrimTy
+                            ( IntegerType
+                                { typeBits = 8 }
+                            ) :| []
+                        }
+                    , retTerm = LitInt 4
+                    }
+                )
+            }
+        , Ann
+            { usage = Omega
+            , type' = PrimTy
+                ( PrimTy
+                    ( IntegerType
+                        { typeBits = 8 }
+                    )
+                )
+            , term = Prim
+                ( Return
+                    { retType = PrimType
+                        { getPrimType = PrimTy
+                            ( IntegerType
+                                { typeBits = 8 }
+                            ) :| []
+                        }
+                    , retTerm = LitInt 6
+                    }
+                )
+            }
+        ]
+    }

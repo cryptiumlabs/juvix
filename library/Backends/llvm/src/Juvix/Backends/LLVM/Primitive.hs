@@ -19,7 +19,7 @@ data PrimTy
   = -- | TODO: Rely on the LLVM-defined types for now.
     PrimTy LLVM.Type
   | Set
-  deriving (Eq, Show)
+  deriving (Eq, Show, Read)
 
 -- | TODO: A placeholder arity implementation for types.
 arityTy :: PrimTy -> Natural
@@ -30,7 +30,7 @@ data RawPrimVal
   = Add
   | Sub
   | LitInt Integer
-  deriving (Eq, Show)
+  deriving (Eq, Show, Read)
 
 -- | The primitive values as exposed to users of Juvix, wrapping inside a
 -- return or a continuation.

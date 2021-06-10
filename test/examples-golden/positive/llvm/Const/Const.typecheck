@@ -1,0 +1,20 @@
+Ann
+    { usage = Omega
+    , type' = PrimTy
+        ( PrimTy
+            ( IntegerType
+                { typeBits = 8 }
+            )
+        )
+    , term = Prim
+        ( Return
+            { retType = PrimType
+                { getPrimType = PrimTy
+                    ( IntegerType
+                        { typeBits = 8 }
+                    ) :| []
+                }
+            , retTerm = LitInt 10
+            }
+        )
+    }
