@@ -1,0 +1,9 @@
+-- Simple example to show constants.
+
+mod Const where
+
+open Prelude
+open Prelude.LLVM
+
+sig main : int
+let main = 10

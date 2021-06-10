@@ -10,8 +10,15 @@ packages:
 - ./library/Backends/Michelson
 - ./library/EasyPipeline
 - ./library/Backends/Plonk
+- ./library/Backends/llvm
 
 extra-deps:
+
+################################
+# LLVM-HS Library dependencies #
+################################
+- llvm-hs-pure-9.0.0
+- llvm-hs-pretty-0.9.0.0
 
 ########################
 # General Dependencies #
@@ -25,12 +32,6 @@ extra-deps:
 - unexceptionalio-0.5.0@sha256:ad0b2d4d1f62a3e24cdb80360eea42ab3f0a0559af42aba19b5cf373378913ce,1682
 - github: seereason/sr-extra
   commit: d5435dcb2ae5da5f9e0fb8e5a3c40f99937a046f
-
-######################################
-# LLVM-HS Library Extra dependencies #
-######################################
-- derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422
-- derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817
 
 ##############
 # Witherable #

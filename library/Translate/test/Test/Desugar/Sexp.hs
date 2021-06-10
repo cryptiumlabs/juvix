@@ -15,7 +15,6 @@ top =
       letWorksAsExpected,
       defunWorksAsExpcted,
       sigWorksAsExpcted,
-      doWorksAsExpected,
       recordsWorkAsExpected,
       modulesWorkAsExpected,
       modLetWorkAsExpected
@@ -156,22 +155,6 @@ sigWorksAsExpcted =
       traverse
         Sexp.parse
         ["(:defsig-match foo () ((i) (:infix + i 1)))"]
-
-doWorksAsExpected :: T.TestTree
-doWorksAsExpected =
-  T.testGroup
-    "do desugar tests"
-    [ T.testCase
-        "do expansion work"
-        (expected T.@=? fmap Desugar.translateDo form)
-    ]
-  where
-    form =
-      Sexp.parse
-        "(:defun foo (a b) (:do a (%<- c b) (pure c)))"
-    expected =
-      Sexp.parse
-        "(:defun foo (a b) (Prelude.>> a (Prelude.>>= b (lambda (c) (pure c)))))"
 
 recordsWorkAsExpected :: T.TestTree
 recordsWorkAsExpected =

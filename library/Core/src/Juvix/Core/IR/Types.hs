@@ -35,7 +35,7 @@ import Juvix.Library hiding (show)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 
-data NoExt deriving (Data)
+data NoExt deriving (Data, Show)
 
 extendTerm "Term" [] [t|NoExt|] $ \_ _ -> defaultExtTerm
 

@@ -3,11 +3,15 @@
   + [[Library]]
 * Main
 - _Relies on_
+  + [[LLVM]]
+  + [[Michelson]]
+  + [[Plonk]]
   + [[Library]]
   + [[Feedback]]
   + [[Pipeline]]
 * Options
 - _Relies on_
+  + [[LLVM]]
   + [[Michelson]]
   + [[Plonk]]
   + [[Library]]

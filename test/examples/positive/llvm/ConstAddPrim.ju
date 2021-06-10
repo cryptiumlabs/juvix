@@ -1,0 +1,13 @@
+-- Version of ConstAdd without relying on the polymorphic add as defined in
+-- Prelude.LLVM. This makes it a bit more basic compared to the prior.
+
+mod ConstAddPrim where
+
+open Prelude
+open Prelude.LLVM
+
+sig addint : int -> int -> int
+let addint = %LLVM.add
+
+sig main : int
+let main = addint 4 6

@@ -1,0 +1,16 @@
+mod Prelude.LLVM where
+
+open Prelude
+
+sig int8 : ty
+let int8 = %LLVM.int8
+
+-- Alias for int8 to be more compitable with the Michelson backend.
+sig int : ty
+let int = int8
+
+sig add : (x : ty) -> x -> x -> x
+let add _ = %LLVM.add
+
+sig sub : (x : ty) -> x -> x -> x
+let sub _ = %LLVM.sub

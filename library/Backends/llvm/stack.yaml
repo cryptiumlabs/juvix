@@ -1,0 +1,73 @@
+resolver: lts-17.3
+
+packages:
+- .
+- ../../StandardLibrary
+- ../../Core
+- ../../Pipeline
+- ../../Translate
+- ../../Frontend
+
+extra-deps:
+
+########################
+# General Dependencies #
+########################
+- capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
+- github: metastatedev/extensible-data
+  commit: d11dee6006169cb537e95af28c3541a24194dea8
+- github: jyp/prettiest
+  commit: e5ce6cd6b4da71860c3d97da84bed4a827fa00ef
+
+################################
+# LLVM-HS Library dependencies #
+################################
+- llvm-hs-pure-9.0.0
+- llvm-hs-pretty-0.9.0.0
+
+######################
+# Visualizing graphs #
+######################
+- fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995
+
+#########################################################
+# Git depdencies caused by Morley specific dependencies #
+#########################################################
+- morley-1.14.0@sha256:70a9fc646bae3a85967224c7c42b2e49155461d6124c487bbcc1d825111a189d,9682
+- morley-prelude-0.4.0@sha256:7234db1acac9a5554d01bdbf22d63b598c69b9fefaeace0fb6f765bf7bf738d4,2176
+- base58-bytestring-0.1.0
+- hex-text-0.1.0.0
+- show-type-0.1.1
+- named-0.3.0.1@sha256:2975d50c9c5d88095026ffc1303d2d9be52e5f588a8f8bcb7003a04b79f10a06,2312
+- cryptonite-0.27
+- uncaught-exception-0.1.0
+- tasty-hunit-compat-0.2.0.1
+- with-utf8-1.0.2.2@sha256:42eed140390b3e93d9482b084d1d0150e8774667f39c33bd47e84815751fad09,3057
+
+#########################################################################################
+# Git depdencies caused by Morley specific dependencies that are speicific to Michelson #
+#########################################################################################
+- git: https://github.com/int-index/caps.git
+  commit: c5d61837eb358989b581ed82b1e79158c4823b1b
+- git: https://github.com/serokell/base-noprelude.git
+  commit: 87df0899801dcdffd08ef7c3efd3c63e67e623c2
+
+######################################################
+# Shared Deps Between Arithmetic Circuits and Morley #
+######################################################
+- git: https://github.com/serokell/elliptic-curve.git
+  commit: b8a3d0cf8f7bacfed77dc3b697f5d08bd33396a8
+- git: https://github.com/serokell/pairing.git
+  commit: cf86cf1f6b03f478a439703b050c520a9d455353
+- git: https://github.com/serokell/galois-field.git
+  commit: 576ba98ec947370835a1f308895037c7aa7f8b71
+
+#####################################
+# Standard Library Extra Dependency #
+#####################################
+- github: phile314/tasty-silver
+  commit: f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b
+- tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638
+
+
+allow-newer: true

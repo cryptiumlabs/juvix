@@ -1,0 +1,12 @@
+-- Version of Identity that uses a monomorphic id function.
+
+mod MonoIdentity where
+
+open Prelude
+open Prelude.LLVM
+
+sig mono-id : int -> int
+let mono-id x = x
+
+sig main : int
+let main = mono-id 10

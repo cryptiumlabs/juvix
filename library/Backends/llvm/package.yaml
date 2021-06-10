@@ -1,0 +1,63 @@
+name:                llvm
+version:             0.1.0.0
+github:              "heliaxdev/juvix"
+license:             GPL-3
+author:              "Heliax AG <hello@heliax.dev>"
+maintainer:          "Heliax AG <hello@heliax.dev>"
+copyright:           "2021 Heliax AG"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         LLVM backend for the Juvix programming language.
+
+dependencies:
+- base >= 4.7 && < 5
+- core
+- Pipeline
+- translate
+- llvm-hs-pretty
+- llvm-hs-pure >= 9.0 && < 9.1
+- standard-library
+- unordered-containers >= 0.2.13
+
+default-extensions:
+- TypeSynonymInstances
+- FlexibleInstances
+- NoImplicitPrelude
+- TypeFamilies
+- TypeApplications
+- MultiParamTypeClasses
+
+library:
+  source-dirs: src
+
+tests:
+  llvm-test:
+    main:                Main.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - bytestring
+    - directory
+    - generic-arbitrary
+    - llvm
+    - QuickCheck
+    - tasty
+    - tasty-golden
+    - tasty-hunit
+    - tasty-quickcheck
+    - tasty-silver
+    - unordered-containers
+

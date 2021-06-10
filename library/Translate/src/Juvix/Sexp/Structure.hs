@@ -249,6 +249,25 @@ data LetModule = LetModule
   }
   deriving (Show)
 
+data Effect = Effect
+  { nameEffect :: Sexp.T,
+    opsEffect :: Sexp.T
+  }
+  deriving (Show)
+
+data DefHandler = DefHandler
+  { defHandlerName :: Sexp.T,
+    defHandlerOps :: Sexp.T
+  }
+  deriving (Show)
+
+data LetHandler = LetHandler
+  { letHandlername :: Sexp.T,
+    letHandlerOps :: Sexp.T,
+    letHandlerRet :: Sexp.T
+  }
+  deriving (Show)
+
 --------------------------------------------------------------------------------
 -- Converter functions
 -- The format for these are
@@ -694,32 +713,6 @@ fromCase (Case sexp1 deconBody2) =
   Sexp.listStar [Sexp.atom nameCase, sexp1, fromDeconBody `toStarList` deconBody2]
 
 ----------------------------------------
--- Do
-----------------------------------------
-
-nameDo :: NameSymbol.T
-nameDo = ":do"
-
-isDo :: Sexp.T -> Bool
-isDo (Sexp.Cons form _) = Sexp.isAtomNamed form nameDo
-isDo _ = False
-
-toDo :: Sexp.T -> Maybe Do
-toDo form
-  | isDo form =
-    case form of
-      _nameDo Sexp.:> sexp1 ->
-        Do sexp1 |> Just
-      _ ->
-        Nothing
-  | otherwise =
-    Nothing
-
-fromDo :: Do -> Sexp.T
-fromDo (Do sexp1) =
-  Sexp.listStar [Sexp.atom nameDo, sexp1]
-
-----------------------------------------
 -- Arrow
 ----------------------------------------
 
@@ -1038,3 +1031,82 @@ toLetModule form
 fromLetModule :: LetModule -> Sexp.T
 fromLetModule (LetModule sexp1 sexp2 sexp3 sexp4) =
   Sexp.list [Sexp.atom nameLetModule, sexp1, sexp2, sexp3, sexp4]
+
+----------------------------------------
+-- Effect-related structures
+----------------------------------------
+nameDefHandler :: NameSymbol.T
+nameDefHandler = ":defhandler"
+
+nameLetHandler :: NameSymbol.T
+nameLetHandler = "let-handler"
+
+nameOps :: NameSymbol.T
+nameOps = ":ops"
+
+nameDefOp :: NameSymbol.T
+nameDefOp = ":defop"
+
+nameDefEff :: NameSymbol.T
+nameDefEff = ":defeff"
+
+isName :: NameSymbol.T -> Sexp.T -> Bool
+isName name (Sexp.Cons form _) = Sexp.isAtomNamed form name
+isName _ _ = False
+
+isDefHandler :: Sexp.T -> Bool
+isDefHandler = isName nameDefHandler
+
+isLetHandler :: Sexp.T -> Bool
+isLetHandler = isName nameLetHandler
+
+isOps :: Sexp.T -> Bool
+isOps = isName nameOps
+
+isDefOp :: Sexp.T -> Bool
+isDefOp = isName nameDefOp
+
+isDefEff :: Sexp.T -> Bool
+isDefEff = isName nameDefEff
+
+fromDefHandler :: DefHandler -> Sexp.T
+fromDefHandler (DefHandler symDefHandler opsDefHandler) =
+  Sexp.list [Sexp.atom nameDefHandler, symDefHandler, opsDefHandler]
+
+fromLetHandler :: LetHandler -> Sexp.T
+fromLetHandler (LetHandler symLetHandler opsLetHandler retLetHandler) =
+  Sexp.list [Sexp.atom nameLetHandler, symLetHandler, opsLetHandler, retLetHandler]
+
+fromEffect :: Effect -> Sexp.T
+fromEffect (Effect nameEffect opsEffect) =
+  Sexp.list [Sexp.atom nameDefEff, nameEffect, opsEffect]
+
+toDefHandler :: Sexp.T -> Maybe DefHandler
+toDefHandler form
+  | isDefHandler form =
+    case form of
+      _ Sexp.:> symDefHandler Sexp.:> opsDefHandler ->
+        DefHandler symDefHandler opsDefHandler
+          |> Just
+      _ -> Nothing
+  | otherwise = Nothing
+
+toLetHandler :: Sexp.T -> Maybe LetHandler
+toLetHandler form
+  | isLetHandler form =
+    case form of
+      _ Sexp.:> symDefHandler Sexp.:> opsDefHandler Sexp.:> retLetHandler ->
+        LetHandler symDefHandler opsDefHandler retLetHandler
+          |> Just
+      _ -> Nothing
+  | otherwise = Nothing
+
+toEffect :: Sexp.T -> Maybe Effect
+toEffect form
+  | isDefHandler form =
+    case form of
+      _ Sexp.:> symDefHandler Sexp.:> opsDefHandler ->
+        Effect symDefHandler opsDefHandler
+          |> Just
+      _ -> Nothing
+  | otherwise = Nothing
