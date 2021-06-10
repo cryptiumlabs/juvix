@@ -41,7 +41,7 @@ library:
   source-dirs: src
 
 tests:
-  plonk-test:
+  llvm-test:
     main:                Main.hs
     source-dirs:         test
     ghc-options:
