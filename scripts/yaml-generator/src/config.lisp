@@ -175,7 +175,7 @@
 ;; LLVM Extra Depenecy groups
 ;; --------------------------------------
 
-(defparameter *llvm-hs-deps-new*
+(defparameter *llvm-hs-deps*
   (make-groups :comment "LLVM-HS Library dependencies"
                :deps (list
                       (make-dependency-bare :name "llvm-hs-pure-9.0.0")
@@ -337,14 +337,14 @@ common ones to include"
    :extra-deps (big-dep-list)
    :extra "allow-newer: true"))
 
-(defparameter *llvm-new*
+(defparameter *llvm*
   (make-stack-yaml
    :name "Backends/llvm"
    :resolver 17.3
    :path-to-other "../../"
    :packages (list *standard-library* *core* *pipeline* *translate* *frontend*)
    :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
-                     *llvm-hs-deps-new*
+                     *llvm-hs-deps*
 
                      ;; for pipeline
                      *graph-visualizer*
@@ -413,9 +413,9 @@ common ones to include"
                    *michelson*
                    *easy-pipeline*
                    *plonk*
-                   *llvm-new*)
+                   *llvm*)
    :path-to-other "./library/"
    :extra-deps
-   (cons *llvm-hs-deps-new* (big-dep-list))
+   (cons *llvm-hs-deps* (big-dep-list))
    :extra "allow-newer: true"))
 
