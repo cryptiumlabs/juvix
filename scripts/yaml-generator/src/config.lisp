@@ -191,6 +191,11 @@
                       (string->dep-sha
                        "derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817"))))
 
+(defparameter *llvm-hs-deps-new*
+  (make-groups :comment "LLVM-HS Library dependencies"
+               :deps (list
+                      (make-dependency-bare :name "llvm-hs-pure-9.0.0")
+                      (make-dependency-bare :name "llvm-hs-pretty-0.9.0.0"))))
 
 ;; --------------------------------------
 ;; Interaction Net Groups Depencenies
@@ -337,6 +342,7 @@ common ones to include"
    :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                      *eac-solver*)))
 
+;; The old and deprecated LLVM backend, will be removed.
 (defparameter *LLVM*
   (make-stack-yaml
    :name "Backends/LLVM"
@@ -361,6 +367,26 @@ common ones to include"
    ;; hack name, for sub dirs
    :name "Pipeline"
    :extra-deps (big-dep-list)
+   :extra "allow-newer: true"))
+
+(defparameter *llvm-new*
+  (make-stack-yaml
+   :name "Backends/llvm"
+   :resolver 17.9
+   :path-to-other "../../"
+   :packages (list *standard-library* *core* *pipeline* *translate* *frontend*)
+   :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
+                     *llvm-hs-deps-new*
+
+                     ;; for pipeline
+                     *graph-visualizer*
+                     *morley-sub-deps*
+                     *morley-sub-deps-extra*
+                     *morley-arithmetic-circuit-deps*
+
+                     ;; for standard-library
+                     *standard-library-extra-deps*
+                     )
    :extra "allow-newer: true"))
 
 (defparameter *Michelson*
@@ -418,9 +444,10 @@ common ones to include"
                    *translate*
                    *michelson*
                    *easy-pipeline*
-                   *plonk*)
+                   *plonk*
+                   *llvm-new*)
    :path-to-other "./library/"
    :extra-deps
-   (big-dep-list)
+   (cons *llvm-hs-deps-new* (big-dep-list))
    :extra "allow-newer: true"))
 
