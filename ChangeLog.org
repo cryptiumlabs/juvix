@@ -37,6 +37,8 @@ which is just a shortcut for function application.
 The do notation no longer gets translated into `Prelude.»=`,
 it is just another effect construct now, to be translated by
 the ANF pass.
+** 0.1.0.9
+- Add validity predicate examples in the don't work test directories
 ** 0.1.0.8
 - Add =Show= instances for extended =Term= and =Elim= types
 

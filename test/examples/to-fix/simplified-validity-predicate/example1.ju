@@ -1,0 +1,29 @@
+mod Example where
+
+open Prelude
+open Michelson
+
+-- What we want supported
+
+-- Basic record declaration
+type account = {
+  balance : nat
+}
+
+-- Even records with 2 elements in them!
+type transaction-type = {
+  account-from : account,
+  account-to   : account
+}
+
+type storage = {
+  transaction : transaction-type,
+}
+
+sig accept-withdraws-from : key -> storage -> storage -> bool
+let accept-withdraws-from key {transaction = initial} {transaction = final}
+    -- Want . syntax working with records, they currently don't
+  | key == final.account-to =
+    let difference = initial.account-from.balance - final.account-from.balance in
+    difference < 10
+  | else = false
