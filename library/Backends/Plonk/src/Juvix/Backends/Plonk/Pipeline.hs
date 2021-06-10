@@ -93,7 +93,7 @@ instance
           -- TODO: Convert main n = ... to main = \n -> ...
           [IR.RawGFunction f]
             | IR.RawFunction _name usage ty (clause :| []) <- f,
-              IR.RawFunClause _ [] term _ <- clause -> do
+              IR.RawFunClause _ _ term _ <- clause -> do
               let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
               (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @(Types.PrimTy f) @(Types.PrimVal f) @Types.CompilationError inlinedTerm (IR.globalToUsage usage) ty) (Parameterization.param @f) newGlobals
               case res of
@@ -102,12 +102,23 @@ instance
                 Left err -> do
                   print term
                   Feedback.fail $ show err
-          [f@(IR.RawGFunction _)] -> do
+
+          -- main x y = ...
+          [f@(IR.RawGFunction _)]  ->
             case IR.toLambdaR f of
               Nothing -> do
                 Feedback.fail "Unable to convert main to lambda" 
-              Just elim -> do
-                notImplemented 
+              Just elim 
+                | IR.Ann usage term ty _ <- elim -> do
+                  -- forgetter
+                  let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
+                  (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @(Types.PrimTy f) @(Types.PrimVal f) @Types.CompilationError inlinedTerm (IR.globalToUsage usage) ty) (Parameterization.param @f) newGlobals
+                  case res of
+                    Right r -> do
+                      pure r
+                    Left err -> do
+                      print term
+                      Feedback.fail $ show err 
           somethingElse -> do
             pTraceShowM somethingElse
             Feedback.fail $ show somethingElse
