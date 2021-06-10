@@ -13,6 +13,22 @@ import Juvix.ToCore.FromFrontend as FF (CoreDefs (..))
 data BMichelson = BMichelson
   deriving (Eq, Show)
 
+typecheckOne lookupGlobal globals term =
+  case term of
+    IR.RawGFunction f
+      | IR.RawFunction _name usage ty (clause :| []) <- f,
+        IR.RawFunClause _ [] term _ <- clause -> do
+        let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
+        (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @Param.PrimTy @Param.RawPrimVal @Param.CompilationError inlinedTerm (IR.globalToUsage usage) ty) Param.michelson globals
+        case res of
+          Right r -> do
+            pure r
+          Left err -> do
+            print term
+            Feedback.fail $ show err
+    somethingElse -> do
+      Feedback.fail $ show somethingElse
+
 instance HasBackend BMichelson where
   type Ty BMichelson = Param.PrimTy
   type Val BMichelson = Param.RawPrimVal
@@ -23,24 +39,15 @@ instance HasBackend BMichelson where
     case res of
       Right (FF.CoreDefs _order globals) -> do
         let globalDefs = HM.mapMaybe Pipeline.toCoreDef globals
+        let convGlobals = map (Pipeline.convGlobal Param.Set) globalDefs
+            newGlobals = HM.map (Pipeline.unsafeEvalGlobal convGlobals) convGlobals
+            lookupGlobal = IR.rawLookupFun' globalDefs
+        checkedTerms <- mapM (typecheckOne lookupGlobal newGlobals) (HM.elems globalDefs)
         case HM.elems $ HM.filter Pipeline.isMain globalDefs of
           [] -> Feedback.fail "No main function found"
-          [IR.RawGFunction f]
-            | IR.RawFunction _name usage ty (clause :| []) <- f,
-              IR.RawFunClause _ [] term _ <- clause -> do
-              let convGlobals = map (Pipeline.convGlobal Param.Set) globalDefs
-                  newGlobals = HM.map (Pipeline.unsafeEvalGlobal convGlobals) convGlobals
-                  lookupGlobal = IR.rawLookupFun' globalDefs
-                  inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-              (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @Param.PrimTy @Param.RawPrimVal @Param.CompilationError inlinedTerm (IR.globalToUsage usage) ty) Param.michelson newGlobals
-              case res of
-                Right r -> do
-                  pure r
-                Left err -> do
-                  print term
-                  Feedback.fail $ show err
-          somethingElse -> do
-            Feedback.fail $ show somethingElse
+          [mainFunction] -> typecheckOne lookupGlobal newGlobals mainFunction
+          multipleMains -> do
+            Feedback.fail $ show multipleMains
       Left err -> do
         Feedback.fail $ "failed at ctxToCore\n" ++ show err
 
