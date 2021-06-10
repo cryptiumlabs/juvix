@@ -303,14 +303,12 @@ mapWithContextPure t f = runIdentity (mapWithContext t f)
 
 -- TODO ∷ express in terms of mapWithName, modifying the f
 
--- | @mapWithContext@ starts at the top of the context and applies the
--- given function f to all part of the data type it can. Note that
--- records are treated as if they are part of the module above it if
--- there is a signature!  See @mapCurrentContext@ for more information
--- about specifics, as we just dispatch to that for the real changes
-mapWithContext ::
-  Monad m => T term ty sumRep -> ContextForms m term ty sumRep -> m (T term ty sumRep)
-mapWithContext t@T {topLevelMap, currentName} f = do
+-- | @overTopLevelMap@ runs a function, @f@ over a Context that is
+-- switching between the namespaces of the @topLevelMap@ before finally
+-- switching back.
+overTopLevelMap ::
+  Monad m => T term ty sum -> (T term ty sum -> m (T term ty sum)) -> m (T term ty sum)
+overTopLevelMap t@T {topLevelMap, currentName} f = do
   ctx <- foldM switchAndUpdate t tops
   let Just finalCtx = inNameSpace (addTopName currentName) ctx
   pure finalCtx
@@ -318,7 +316,19 @@ mapWithContext t@T {topLevelMap, currentName} f = do
     tops = fmap (addTopNameToSngle . pure) (HashMap.keys topLevelMap)
     switchAndUpdate ctx name =
       let Just t = inNameSpace name ctx
-       in mapCurrentContext f t
+       in f t
+
+-- | @mapWithContext@ starts at the top of the context and applies the
+-- given function f to all part of the data type it can. Note that
+-- records are treated as if they are part of the module above it if
+-- there is a signature!  See @mapCurrentContext@ for more information
+-- about specifics, as we just dispatch to that for the real changes
+mapWithContext ::
+  Monad m => T term ty sumRep -> ContextForms m term ty sumRep -> m (T term ty sumRep)
+mapWithContext t f =
+  -- If we map over every current module in the top level map, we map
+  -- across the entire context!
+  overTopLevelMap t (mapCurrentContext f)
 
 -- | @mapWithName@ maps through the context definitions, supplying the
 -- current name of the item given
@@ -327,15 +337,7 @@ mapWithName ::
   T tm ty sum ->
   (Definition tm ty sum -> NameSpace.From Symbol -> T tm ty sum -> m (Definition tm ty sum)) ->
   m (T tm ty sum)
-mapWithName t@T {topLevelMap, currentName} f = do
-  ctx <- foldM switchAndUpdate t tops
-  let Just finalCtx = inNameSpace (addTopName currentName) ctx
-  pure finalCtx
-  where
-    tops = fmap (addTopNameToSngle . pure) (HashMap.keys topLevelMap)
-    switchAndUpdate ctx name =
-      let Just t = inNameSpace name ctx
-       in mapWithCurrentName f t
+mapWithName t f = overTopLevelMap t (mapWithCurrentName f)
 
 -- | @mapSumWithName@ maps a function over the sum constructors of the context
 mapSumWithName ::
@@ -350,56 +352,41 @@ mapSumWithName ctx f =
       f s (NameSpace.extractValue name) ctx
     fOnSum def _ _ = pure def
 
-
--- REFACTOR in terms of mapWithCurrentName
-
 -- | @mapCurrentContext@ maps f over the entire context, this function
 -- calls the function handed to it over the context. The function runs
 -- over the current form and the context, so any dependencies may be
 -- resolved and proper stored away.
 mapCurrentContext ::
   Monad m => ContextForms m term ty sumRep -> T term ty sumRep -> m (T term ty sumRep)
-mapCurrentContext f ctx@T {currentNameSpace, currentName} =
-  foldM dispatch ctx names
+mapCurrentContext f ctx =
+  mapWithCurrentName dispatch ctx
   where
-    names =
-      NameSpace.toList1FSymb (currentNameSpace ^. contents)
-    dispatch ctx (name, form) = do
+    -- we don't actually use the name of the current item at all
+    -- so just ignore it
+    dispatch form _name ctx =
       -- Used for the def and sumcon case
       -- Just run over the two parts that change
-      let defCase d@D {defTerm, defMTy} = do
+      let callTyF typ =
+            tyF f typ ctx
+          defCase d@D {defTerm, defMTy} = do
             newTerm <- termF f defTerm ctx
-            newTy <- traverse (\x -> tyF f x ctx) defMTy
+            newTy <- traverse callTyF defMTy
             pure $ d {defTerm = newTerm, defMTy = newTy}
-      case form of
-        Def d -> do
-          newDef <- defCase d
-          ctx
-            |> add name (Def newDef)
-            |> pure
-        Record r -> do
-          -- Do the signature call in the module above and re-insert it
-          -- into the current module
-          newTy <- traverse (\x -> tyF f x ctx) (recordMTy r)
-          -- now we should siwtch modules, note we are going to do a
-          -- direct insertion, so no need to reconstruct
-          let Just newCtx = inNameSpace (pure (NameSpace.extractValue name)) ctx
-          ctx' <- mapCurrentContext f newCtx
-          let ctx'' = set (_currentNameSpace . mTy) newTy ctx'
-          -- just switch back to where we need to be
-          let Just finalCtx = inNameSpace (addTopName currentName) ctx''
-          pure finalCtx
-        Unknown u -> do
-          t <- traverse (\x -> tyF f x ctx) u
-          pure $ add name (Unknown t) ctx
-        SumCon (Sum def name') -> do
-          newDef <- traverse defCase def
-          pure $ add name (SumCon (Sum newDef name')) ctx
-        TypeDeclar t -> do
-          newT <- sumF f t ctx
-          pure $ add name (TypeDeclar newT) ctx
-        CurrentNameSpace -> pure ctx
-        Information _ -> pure ctx
+       in case form of
+            Record r -> do
+              -- call the signature change
+              newTy <- traverse callTyF (recordMTy r)
+              -- setup the record where we recurse down it
+              let recordToRecurseOn = r {recordMTy = newTy}
+              pure (Record recordToRecurseOn)
+            SumCon (Sum def name') -> do
+              newDef <- traverse defCase def
+              pure (SumCon (Sum newDef name'))
+            Def definition -> defCase definition >>| Def
+            TypeDeclar typ -> sumF f typ ctx >>| TypeDeclar
+            Unknown mUnknown -> traverse callTyF mUnknown >>| Unknown
+            Information info -> pure (Information info)
+            CurrentNameSpace -> pure CurrentNameSpace
 
 mapWithCurrentName ::
   Monad m =>
@@ -411,6 +398,8 @@ mapWithCurrentName f ctx@T {currentNameSpace, currentName} =
   where
     names =
       NameSpace.toList1FSymb (currentNameSpace ^. contents)
+    isRecord (Record _) = True
+    isRecord _ = False
     dispatch ctx (name, form) = do
       -- we want to recurse on records handed back
       let recurseOnName ctx =
@@ -421,10 +410,13 @@ mapWithCurrentName f ctx@T {currentNameSpace, currentName} =
                 pure finalCtx
               Nothing ->
                 pure ctx
-      updatedCtx <- do
+      -- tuple return is so we don't have to repeat work in recurseOnName
+      (updatedCtx, defMaybeRecord) <- do
         newDef <- f form name ctx
-        pure $ add name newDef ctx
-      recurseOnName updatedCtx
+        pure (add name newDef ctx, newDef)
+      if
+          | isRecord defMaybeRecord -> recurseOnName updatedCtx
+          | otherwise -> pure updatedCtx
 
 ------------------------------------------------------------
 -- Helpers for switching the global NameSpace
