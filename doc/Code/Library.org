@@ -389,14 +389,14 @@ Representation of LLVM primitives in Juvix.
 **** Test
 ***** Golden <<llvm/test/Test/Golden>>
 - _Relies on_
+  + [[LLVM]]
+  + [[ErasedAnn]]
+  + [[Core/Pipeline]]
   + [[Library]]
+  + [[Feedback]]
   + [[Library/Test/Golden]]
   + [[Juvix/Pipeline]]
   + [[Juvix/Pipeline]]
-  + [[LLVM]]
-  + [[ErasedAnn]]
-  + [[Feedback]]
-  + [[Core/Pipeline]]
 * Core
 ** Setup <<Core/Setup>>
 ** src
