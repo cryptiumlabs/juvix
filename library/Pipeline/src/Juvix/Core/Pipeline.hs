@@ -43,6 +43,8 @@ type CompConstraints primTy primVal compErr m =
   ( CompConstraints' primTy primVal compErr m,
     Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
     Types.CanApply primTy,
     Types.CanApply (Types.TypedPrim primTy primVal),
     TC.PrimSubstValue primTy primVal,
