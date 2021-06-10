@@ -1,0 +1,4 @@
+mod B where
+
+sig fi : 5
+let fi = 5

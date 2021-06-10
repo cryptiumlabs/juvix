@@ -52,14 +52,14 @@ data PrimVal f
   | PLt
   | PLte
   | PEq
-  deriving (Show, Eq, Generic, Data)
+  deriving (Show, Read, Eq, Generic, Data)
 
 data PrimTy f
   = PField
   | PInt
   | PBool
   | PApplication (PrimTy f) (NonEmpty (PrimTy f))
-  deriving (Show, Eq, Generic)
+  deriving (Show, Read, Eq, Generic)
 
 type Return' ext f = App.Return' ext (P.PrimType (PrimTy f)) (PrimVal f)
 

@@ -1,4 +1,43 @@
 * Changelog for Juvix
+
+** 0.1.0.7
+  + Fix checking of Π types
+
+** 0.1.0.6
+  + Add Golden tests
+
+** 0.1.0.5
+- Split the =stack.yeaml= generator into many files
+
+** 0.1.0.4
+- _Changes to =Library/Sexp.hs=_
+  + Adds documentation to all functions
+  + Changes =Sexp.flatten= to be a full flatten
+  + Fixes a small bug in =Sexp.foldr1= where it behaves poorly with
+    dotted lists
+    * Tests the new behavior
+  + Adds dotted list syntax to the show.
+    #+begin_src haskell
+      λ> (Cons (atom "hi") (atom "hi"))
+      ("hi" . "hi")
+    #+end_src
+** 0.1.0.3
+- Change: over =Juvix.Contextify.Passes= structure to use the
+  S-expression generator instead of matching on the syntax directly
+- Fix: A small bug where modules would drop types with an explicit
+  signature
+  + Test: Creates a test in =Test.Desugar.Sexp= under the
+    =moduleWorksAsExpected= group
+- Change: =let-type's= internal representation to more accurately
+  reflect the structure
+
+  =(:let-type name args (sum₁ sum₂ … sumₙ) rest)= instead of
+  =(:let-type name (args sum₁ sum₂ … sumₙ) rest)=
+** 0.1.0.2
+- Switches over the =stack.yaml= depdency files to a generator to
+  reduce the repeat code
+- Changes some dependencies for the 3 big yaml files as they weren't
+  building properly due to cyclic dependencies
 ** 0.1.0.1
 - Compile sum and product types
 - `main` can be of any type

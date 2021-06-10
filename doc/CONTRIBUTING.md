@@ -100,3 +100,38 @@ Please put the following in `.git/hooks/pre-commit` and run `chmod +x .git/hooks
 ./scripts/precommit.sh
 ```
 Ensure that it passes before you submit a pull request.
+
+## New Libraries
+
+Juvix works in a rather modular design, with most loosly coupled
+features being a library in the language. One can start a new library
+with `stack new <Projectname>`. This will generate a lot of cruft that
+you'll want to remove to make it look like the other projects.
+
+Please note that we have a special `stack.yaml` generator because
+there was a lot of repeat code. [See the file itself for how to mock
+(big comment at the top).](https://github.com/heliaxdev/juvix/blob/develop/scripts/yaml-generator.lisp)
+
+To run this after you make your changes simply type `make stack-yaml`
+
+## Golden tests
+
+Golden tests allow us to keep track of changes in all phases of the compiler: parsing, desugaring, typechecking, code generation,... 
+
+We aim to test all Juvix files in the examples folder. Some phases of the compiler are backend specific. Some Juvix examples may show a feature that is expected to work, while others may reflect syntax that should not work. The folder `test/examples/` is structured following this:
+```
+test
+  |- examples
+    |- positive
+      |- backendA
+      |- backendB
+    |- negative
+      |- backendA
+      |- backendB
+```
+
+If a change in the compiler is implemented and the output of a certain phase of the compiler is modified but correct, the following command will overwrite the existing golden output:
+```
+stack test --test-arguments "--accept"
+```
+Golden files are tracked with version control.

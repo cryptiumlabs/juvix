@@ -348,7 +348,7 @@ type Globals' extV extT primTy primVal =
   HashMap GlobalName (Global' extV extT primTy primVal)
 
 data RawTeleEle' ext primTy primVal = RawTeleEle
-  { rawName :: Name,
+  { rawName :: GlobalName,
     rawUsage :: Usage,
     rawTy :: Term' ext primTy primVal,
     rawExtension :: XPi ext primTy primVal
@@ -375,7 +375,7 @@ type RawTelescope ext primTy primVal =
   [RawTeleEle' ext primTy primVal]
 
 data TeleEle' extV extT primTy primVal = TeleEle
-  { name :: Name,
+  { name :: GlobalName,
     usage :: Usage,
     ty :: Value' extV primTy primVal,
     extension :: XPi extT primTy primVal

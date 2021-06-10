@@ -93,7 +93,7 @@ eraseTake ::
 eraseTake ns (App.Take {usage, type', term}) = undefined
 
 
-coreToAnn :: Comp ty val err (ErasedAnn.AnnTerm ty (App.Return' ErasedAnn.T (NonEmpty ty) val))
+coreToAnn :: Comp ty val err (ErasedAnn.AnnTerm ty (ErasedAnn.TypedPrim ty val))
 coreToAnn term usage ty = do
   -- FIXME: allow any universe!
   (term, _) <- typecheckErase' term usage ty
@@ -159,7 +159,8 @@ typecheckErase term usage ty = do
 
 erase = Erasure.erase constMapPrim lookupMapPrim
 
-toRaw :: ErasedAnn.AnnTerm ty (App.Return' ErasedAnn.T (NonEmpty ty) val) -> ErasedAnn.AnnTerm ty val
+-- toRaw :: ErasedAnn.AnnTerm ty (App.Return' ErasedAnn.T (NonEmpty ty) val) -> ErasedAnn.AnnTerm ty val
+toRaw :: ErasedAnn.AnnTerm ty (ErasedAnn.TypedPrim ty val) -> ErasedAnn.AnnTerm ty val
 toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
   where
     toRaw1 (ErasedAnn.Var x) = ErasedAnn.Var x

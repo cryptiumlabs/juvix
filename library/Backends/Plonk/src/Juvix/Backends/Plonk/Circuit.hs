@@ -97,7 +97,7 @@ data Wire
   = InputWire Int
   | IntermediateWire Int
   | OutputWire Int
-  deriving stock (Ord, Eq, Show, Generic)
+  deriving stock (Ord, Eq, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
 instance Pretty Wire where
@@ -106,7 +106,7 @@ instance Pretty Wire where
   pretty (OutputWire v) = text "output_" <> pretty v
 
 newtype ArithCircuit f = ArithCircuit [Gate Wire f]
-  deriving stock (Eq, Show, Generic)
+  deriving stock (Eq, Show, Read, Generic)
   deriving newtype (FromJSON, ToJSON)
 
 instance Show f => Pretty (ArithCircuit f) where
@@ -145,7 +145,7 @@ data Gate i f
         eqM :: i,
         eqO :: i
       }
-  deriving stock (Eq, Show, Generic)
+  deriving stock (Eq, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
 instance (Pretty i, Show i, Show f) => Pretty (Gate i f) where
