@@ -1,271 +1,4 @@
 * Backends
-** LLVM
-*** Setup <<LLVM/Setup>>
-*** src
-**** Juvix
-***** Backends
-****** LLVM <<LLVM/src/Juvix/Backends/LLVM>>
-- Serves as the LLVM backend compiler to Juvix.
-- This is an alternative to the interpreter provided.
-******* DSL
-Serves as a mini DSL layer above LLVM
-- _Relies on_
-  + [[Codegen]]
-  + [[Library]]
-******** What is included?
-1. _Relink_
-   - gives a declarative way to do a bunch of links and relinks
-******* Translation <<LLVM/Translation>>
-Translates erased core terms (must be EAC-typable) to native interaction nets in LLVM, evaluates it, and reads-back the resulting term.
-TODO: Separate out the common logic from the interpreter & this file into a shared module.
-- _Relies on_
-  + [[JIT]]
-  + [[MonadEnvironment]]
-  + [[Net/Environment]]
-  + [[Erased/Types]]
-  + [[Core/Types]]
-  + [[INetIR/Types]]
-  + [[InteractionNet]]
-  + [[Backends/Graph]]
-  + [[Interface]]
-  + [[InteractionNet/Nets/Default]]
-  + [[Library]]
-******* Codegen
-- _Relies on_
-  + [[Block]]
-  + [[Constants]]
-  + [[Codegen/Graph]]
-  + [[Codegen/Shared]]
-  + [[Codegen/Types]]
-******** Block
-- Has the code necessary to generate LLVM Code
-- _Relies on_
-  + [[Codegen/Shared]]
-  + [[Codegen/Types]]
-  + [[Library]]
-  + [[HashMap]]
-******** Constants
-Module for predefined constants
-- _Relies on_
-  + [[Library]]
-******** Default <<Codegen/Default>>
-This module provides the default environment to run LLVM code in
-******** Shared <<Codegen/Shared>>
-Shared between Types and Sum
-- _Relies on_
-  + [[Library]]
-  + [[HashMap]]
-******** Sum
-Provides a mechanism for defining Sum types
-- Has the code to encode a sum type via what is defined by the user or
-  what is defined to create the interaction net system.
-- _Relies on_
-  + [[Constants]]
-  + [[Codegen/Shared]]
-  + [[Library]]
-  + [[HashMap]]
-******** Types <<Codegen/Types>>
-- _Relies on_
-  + [[Codegen/Shared]]
-  + [[Sum]]
-  + [[Library]]
-  + [[HashMap]]
-******** Graph <<Codegen/Graph>>
-Serves as a front end for the Graph folder
-- _Relies on_
-  + [[Graph/Debug]]
-  + [[Definitions]]
-  + [[Operations]]
-********* Debug <<Graph/Debug>>
-Serves as a module for various debugging functions
-- _Relies on_
-  + [[Block]]
-  + [[Operations]]
-  + [[Codegen/Types]]
-  + [[Library]]
-********* Definitions
-Operations necessary to update nodes
-- =mainPort=, =auxiliary1= \dots =auxiliary4= allocation
-  | Part       | Alloca Or Malloc |
-  |------------+------------------|
-  | MainPort   | Malloc top level |
-  | Auxiliary1 | Malloc top level |
-  | Auxiliary2 | Malloc top level |
-  | Auxiliary3 | Malloc top level |
-  | Auxiliary4 | Malloc top level |
-- =mallocNodeH= Allocation
-  + layout :
-    Node[portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]
-  | Part         | Alloca Or Malloc                   |
-  |--------------+------------------------------------|
-  | Node         | Malloc                             |
-  | portSize     | Stored on Node malloc              |
-  | PortArray    | Malloc                             |
-  | DataArray    | Malloc Maybe                       |
-  | PortLocation | (Null) Allocad from PortArray Call |
-  | NodePtr      | (Null) Allocad from PortArray Call |
-  | Data         | (Null) Allocad from DataArray Call |
-  + _Sub allocation functions used_
-    * =mallocNode=
-      | node | Malloc |
-    * =allocaNumPortNum=
-      | portsSize | Alloca |
-    * =mallocPortsH=
-      | portArray | Malloc |
-    * =mallocDataH=
-      | dataArray | Malloc |
-  + the values that are null will be set from outside when the node
-    is instantiated.
-    * Data will be **Allocad**
-    * Port Location is shown to be **malloc** above by =mainPort=
-      \dots =Auxiliary4=. However in the future we may **alloca** a value
-      to store here
-    * NodePtr is **mallocd** in the same way this node is, and thus
-      is external
-- Notably PortLocation, NodePtr, and Data are not allocated here,
-  but are instead sent in.
-- Currently =defineMainPort=, =defineAuxiliary1= \dots
-  =defineAuxiliary4= malloc the first four ports, and this is what
-  link sets for the nodes.
-  + This has some trade offs, namely we don't have to alloca more
-    ports, however this will lead to waste if say =auxiliary4= is
-    never used.
-  + In the future this should turn to an alloca, and thus to
-    dealloc a node, we need not iterate over i.
-- For deallocation, just deallocate the node pointer itself
-  + Currently, node pointers are allocated when nodes are made, and
-    so are not the responsibility of a node to deallocate all the
-    pointers.
-    * this however is up to the Net representation themselves, and
-      thus should modify the default deallocate node functionality
-- _Relies on_
-  + [[Block]]
-  + [[Graph/Debug]]
-  + [[Operations]]
-  + [[Codegen/Types]]
-  + [[Library]]
-********* Operations
-Functions that help with more complex Graph operations
-- _Relies on_
-  + [[Block]]
-  + [[Codegen/Types]]
-  + [[Library]]
-******* JIT
-- _Relies on_
-  + [[Execution]]
-  + [[JIT/Types]]
-  + [[Library]]
-******** Execution
-- _Relies on_
-  + [[JIT/Types]]
-  + [[Library]]
-******** Types <<JIT/Types>>
-- _Relies on_
-  + [[INetIR/Types]]
-  + [[Library]]
-******* Net
-******** API
-- _Relies on_
-  + [[Codegen]]
-  + [[Net/EAC]]
-  + [[Net/EAC/Types]]
-  + [[Library]]
-******** Environment <<Net/Environment>>
-- Serves as the default environment for executing EAC code
-- _Relies on_
-  + [[Codegen]]
-  + [[API]]
-  + [[Net/EAC]]
-  + [[Defs]]
-  + [[MonadEnvironment]]
-  + [[Net/EAC/Types]]
-  + [[Library]]
-  + [[HashMap]]
-******** EAC <<Net/EAC>>
-- =EAC= serves as the place where the interaction net rules for the
-  EAC layer gets run
-- The form given to =EAC= is not the base EAC AST, but instead a
-  pre processed =EAC= graph that the initial graph will be made on
-- _Allocation_
-  + layout :
-    eac{tag | NodePtr*[portSize | PortArray[portLocation | NodePtr]* | DataArray[Data]*]}
-    * Similar to the one in Graph, however it also has the eac tag
-   | Part         | Alloca Or Malloc                   |
-   |--------------+------------------------------------|
-   | eac          | Malloc                             |
-   | tag          | Stored on Eac Malloc               |
-   | NodePtr*     | Malloc from =mallocNode=           |
-   | portSize     | Stored on Node Malloc              |
-   | PortArray    | Malloc                             |
-   | DataArray    | Malloc Maybe                       |
-   | PortLocation | (Null) Allocad from PortArray Call |
-   | NodePtr      | (Null) Allocad from PortArray Call |
-   | Data         | (Null) Allocad from DataArray Call |
-- Node Pointers are allocated at node creation time, so not the
-  responsibility of the node to de-allocate, but instead uses the
-  default strategy laid out in [[Codegen/Graph]]
-- _Relies on_
-  + [[Codegen]]
-  + [[DSL]]
-  + [[EAC/Debug]]
-  + [[Defs]]
-  + [[MonadEnvironment]]
-  + [[Net/EAC/Types]]
-  + [[Library]]
-  + [[HashMap]]
-********* Debug <<EAC/Debug>>
-Serves as a module for various debugging functions
-- _Relies on_
-  + [[Codegen]]
-********* Defs
-- Specializes the functions in Graph to fit [[Net/EAC/Types]]
-  + Later in the DSL Layer!
-- Generates the =find_edge= and =isBothPrimary= function with the =eal= type.
-- Also generates the proper types associated with them
-- Also has some miscellaneous debug information
-- _Relies on_
-  + [[Codegen]]
-  + [[DSL]]
-  + [[Net/EAC/Types]]
-  + [[Library]]
-********* MonadEnvironment
-- This serves as the monad in which all operations are run
-- This is an extension of EACState
-  + Sadly we can't extend types easily in Haskell, hence the
-    boilerplate in this file
-- _Relies on_
-  + [[Codegen]]
-  + [[Library]]
-  + [[HashMap]]
-********* Types <<Net/EAC/Types>>
-- _Relies on_
-  + [[Codegen]]
-  + [[Library]]
-*** test
-**** LLVM <<test/LLVM>>
-- _Relies on_
-  + [[Codegen/Types]]
-  + [[JIT]]
-  + [[MonadEnvironment]]
-  + [[Net/EAC/Types]]
-  + [[Net/Environment]]
-  + [[LLVM/Translation]]
-  + [[Erased]]
-  + [[Unit]]
-  + [[Library]]
-**** LLVM2
-- _Relies on_
-  + [[Codegen]]
-  + [[JIT]]
-  + [[Net/EAC]]
-  + [[MonadEnvironment]]
-  + [[Net/EAC/Types]]
-  + [[Net/Environment]]
-  + [[Library]]
-  + [[HashMap]]
-**** Main <<LLVM/test/Main>>
-- _Relies on_
-  + [[Library]]
 ** Michelson
 *** Setup <<Michelson/Setup>>
 *** src
@@ -610,7 +343,7 @@ Surface language
 *** src
 **** Juvix
 ***** Backends
-****** LLVM <<llvm/src/Juvix/Backends/LLVM>>
+****** LLVM
 - _Relies on_
   + [[LLVM/Parameterization]]
   + [[LLVM/Pipeline]]
@@ -1311,13 +1044,13 @@ with any stage of the compiler while modifying the source code.
   + [[Erased/Types]]
   + [[InteractionNet/Default]]
   + [[InteractionNet/Parser]]
-  + [[InteractionNet/Translation]]
+  + [[Translation]]
   + [[Type]]
 ****** Default <<InteractionNet/Default>>
 Gives the default execution environment for netToAst
 Can be added to via core translation
 - _Relies on_
-  + [[InteractionNet/Shared]]
+  + [[Shared]]
   + [[Type]]
   + [[Library]]
   + [[HashMap]]
@@ -1337,15 +1070,15 @@ Can be added to via core translation
 - Parses the syntax according to the formal =BNF=
 - _Relies on_
   + [[InteractionNet/Default]]
-  + [[InteractionNet/Shared]]
+  + [[Shared]]
   + [[Type]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
-****** Shared <<InteractionNet/Shared>>
+****** Shared
 - _Relies on_
   + [[Library]]
-****** Translation <<InteractionNet/Translation>>
+****** Translation
 - Translates the default abstract syntax into Interaction nets
   + Also translates the net into the an ast
 - _Relies on_
@@ -1353,7 +1086,7 @@ Can be added to via core translation
   + [[Interface]]
   + [[InteractionNet/Nets/Default]]
   + [[NodeInterface]]
-  + [[InteractionNet/Shared]]
+  + [[Shared]]
   + [[Type]]
   + [[Library]]
   + [[HashMap]]
@@ -1373,7 +1106,7 @@ Can be added to via core translation
     2. Hard coded math operations
        - This has been moved to primitive value operations
 - _Relies on_
-  + [[InteractionNet/Shared]]
+  + [[Shared]]
   + [[Library]]
   + [[NameSymbol]]
 ****** Backends
@@ -1434,7 +1167,7 @@ Can be added to via core translation
   + [[Backends/Env]]
   + [[Interface]]
   + [[NodeInterface]]
-  + [[InteractionNet/Shared]]
+  + [[Shared]]
   + [[Library]]
   + [[NameSymbol]]
 **** Visualize
@@ -1500,30 +1233,30 @@ Can be added to via core translation
   + [[EAC/Erasure]]
   + [[EAC/Parser]]
   + [[Solve]]
-  + [[Core/EAC/Types]]
+  + [[EAC/Types]]
 ****** Check
 - A constraint checker for EAC.
 - _Relies on_
   + [[ConstraintGen]]
   + [[Solve]]
-  + [[Core/EAC/Types]]
+  + [[EAC/Types]]
   + [[Core/Types]]
   + [[Library]]
 ****** ConstraintGen
 - _Relies on_
-  + [[Core/EAC/Types]]
+  + [[EAC/Types]]
   + [[Erased/Types]]
   + [[Core/Types]]
   + [[Library]]
   + [[HashMap]]
 ****** Erasure <<EAC/Erasure>>
 - _Relies on_
-  + [[Core/EAC/Types]]
+  + [[EAC/Types]]
   + [[Erased/Types]]
 ****** Parser <<EAC/Parser>>
 - _Relies on_
-  + [[Core/EAC/Types]]
-  + [[Core/EAC/Types]]
+  + [[EAC/Types]]
+  + [[EAC/Types]]
   + [[Unit]]
   + [[Library]]
   + [[NameSymbol]]
@@ -1533,9 +1266,9 @@ Can be added to via core translation
   Bracket checker to confirm that the solved constraints Z3 gives us
   is correct
 - _Relies on_
-  + [[Core/EAC/Types]]
+  + [[EAC/Types]]
   + [[Library]]
-****** Types <<Core/EAC/Types>>
+****** Types <<EAC/Types>>
 - _Relies on_
   + [[Erased/Types]]
   + [[Library]]
