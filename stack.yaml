@@ -11,12 +11,18 @@ packages:
 - ./library/EasyPipeline
 - ./library/Backends/Plonk
 - ./library/Backends/llvm
-# - ./library/InteractionNet
-# - ./library/InteractionNetIR
 
 extra-deps:
-- llvm-hs-pretty-0.9.0.0
+
+################################
+# LLVM-HS Library dependencies #
+################################
 - llvm-hs-pure-9.0.0
+- llvm-hs-pretty-0.9.0.0
+
+########################
+# General Dependencies #
+########################
 - capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
 - github: jyp/prettiest
   commit: e5ce6cd6b4da71860c3d97da84bed4a827fa00ef
