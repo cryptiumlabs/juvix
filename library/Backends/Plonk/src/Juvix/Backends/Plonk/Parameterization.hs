@@ -156,10 +156,9 @@ toArg App.Cont {} = Nothing
 toArg App.Return {retType, retTerm} =
   Just $
     App.TermArg $
-      App.Take
-        { usage = Usage.Omega,
-          type' = retType,
-          term = retTerm
+      App.Return
+        { retType = retType,
+          retTerm = retTerm
         }
 
 toTakes :: PrimVal' ext f -> (Take f, [Arg' ext f], Natural)
@@ -194,13 +193,13 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext f) where
             Right $
               App.Cont {fun, args = toList args, numLeft = ar - argLen}
           EQ
-            | Just takes <- traverse App.argToTake args ->
+            | Just takes <- traverse App.argToReturn args ->
               applyProper fun takes |> first Core.Extra
             | otherwise ->
               Right $ App.Cont {fun, args = toList args, numLeft = 0}
           GT -> Left $ Core.ExtraArguments fun' args2
 
-applyProper :: Take f -> NonEmpty (Take f) -> Either (ApplyError f) (Return' ext f)
+applyProper :: Take f -> NonEmpty (Return' ext f) -> Either (ApplyError f) (Return' ext f)
 applyProper fun args = panic "Apply proper not implemented"
 
 instance Eval.HasWeak (PrimTy f) where weakBy' _ _ t = t
