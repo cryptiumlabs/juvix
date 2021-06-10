@@ -52,7 +52,7 @@ mkDef ::
   Context.SumT term1 ty1 ->
   Context.T term2 ty2 Sexp.T ->
   Maybe (Context.Def Sexp.T Sexp.T)
-mkDef typeCons dataConstructor _s@Context.Sum {sumTDef = _, sumTName} c = do
+mkDef typeCons dataConstructor Context.Sum {sumTName} c = do
   t <- extractTypeDeclar . Context.extractValue =<< Context.lookup (NameSymbol.fromSymbol sumTName) c
   declaration <- Sexp.findKey Sexp.car dataConstructor t
   Just $
