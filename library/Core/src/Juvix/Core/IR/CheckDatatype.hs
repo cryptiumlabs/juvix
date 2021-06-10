@@ -18,6 +18,10 @@ typeCheckAllCons ::
   ( HasThrowTC' NoExt extT primTy primVal m,
     Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show extT,
+    ShowExt extT primTy primVal,
     CanTC' extT primTy primVal m,
     Param.CanApply (TypedPrim primTy primVal),
     Eval.NoExtensions extT primTy (TypedPrim primTy primVal),
@@ -46,6 +50,10 @@ typeCheckConstructor ::
   ( HasThrowTC' NoExt extT primTy primVal m,
     Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show extT,
+    ShowExt extT primTy primVal,
     CanTC' extT primTy primVal m,
     Param.CanApply (TypedPrim primTy primVal),
     Eval.NoExtensions extT primTy (TypedPrim primTy primVal),
@@ -82,7 +90,7 @@ typeCheckConstructor param tel _lpos rtel globals con = do
 teleToType ::
   RawTelescope extT primTy primVal ->
   IR.Term' extT primTy primVal ->
-  (Maybe Name, IR.Term' extT primTy primVal)
+  (Maybe GlobalName, IR.Term' extT primTy primVal)
 teleToType [] t = (Nothing, t)
 teleToType (hd : tel) t2 =
   ( Just (rawName hd),
@@ -94,12 +102,12 @@ teleToType (hd : tel) t2 =
   )
 
 typeToTele ::
-  (Maybe Name, IR.Term' ext primTy primVal) ->
+  (Maybe GlobalName, IR.Term' ext primTy primVal) ->
   (RawTelescope ext primTy primVal, IR.Term' ext primTy primVal)
 typeToTele (n, t) = ttt (n, t) []
   where
     ttt ::
-      (Maybe Name, IR.Term' ext primTy primVal) ->
+      (Maybe GlobalName, IR.Term' ext primTy primVal) ->
       RawTelescope ext primTy primVal ->
       (RawTelescope ext primTy primVal, IR.Term' ext primTy primVal)
     ttt (Just n, Pi usage t' t2 ext) tel =
@@ -122,6 +130,10 @@ checkDataType ::
   ( Eval.CanEval NoExt extT primTy primVal,
     Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show extT,
+    ShowExt extT primTy primVal,
     IR.ValueAll Eq NoExt primTy primVal,
     IR.NeutralAll Eq NoExt primTy primVal,
     CanTC' extT primTy primVal m,
@@ -143,6 +155,10 @@ checkDataTypeArg ::
   ( Eval.CanEval NoExt extT primTy primVal,
     Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show extT,
+    ShowExt extT primTy primVal,
     IR.ValueAll Eq NoExt primTy primVal,
     IR.NeutralAll Eq NoExt primTy primVal,
     CanTC' extT primTy primVal m,
@@ -221,15 +237,9 @@ checkParams ::
 checkParams tel@(hd : tl) para@(Elim elim _) =
   let n = rawName hd
    in case elim of
-        Free n' _ ->
-          if n == n'
-            then return ()
-            else throwTC $ ParamVarNError tel n n'
-        App (Free n' _) term _ ->
-          if n == n'
-            then checkParams tl term
-            else throwTC $ ParamVarNError tel n n'
-        _ -> throwTC $ ParamError para
+        Free (Global n') _ | n == n' -> return ()
+        App (Free (Global n') _) term _ | n == n' -> checkParams tl term
+        _ -> throwTC $ ParamError n para
 checkParams [] _ = return ()
-checkParams _ exps =
-  throwTC $ ParamError exps
+checkParams (hd : _) exp =
+  throwTC $ ParamError (rawName hd) exp

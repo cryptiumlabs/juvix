@@ -1,0 +1,6 @@
+mod C where
+
+open B
+
+sig si : 3
+let si = 3

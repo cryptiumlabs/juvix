@@ -1,4 +1,0 @@
-mod Foo-Helper where
-
-sig bar : 5
-let bar = 5

@@ -4,6 +4,7 @@
 module Juvix.Core.IR.CheckTerm
   ( module Juvix.Core.IR.CheckTerm,
     module Typed,
+    module Error,
     module Env,
   )
 where
@@ -13,6 +14,7 @@ import Data.List.NonEmpty ((<|))
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Typechecker.Env as Env
+import Juvix.Core.IR.Typechecker.Error as Error
 import Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
@@ -27,6 +29,9 @@ data Leftovers a = Leftovers
   }
   deriving (Eq, Show, Generic)
 
+type ShowExt ext primTy primVal =
+  (IR.TermAll Show ext primTy primVal, IR.ElimAll Show ext primTy primVal)
+
 leftoversOk :: Leftovers a -> Bool
 leftoversOk (Leftovers {loLocals, loPatVars}) =
   all leftoverOk loLocals && all leftoverOk loPatVars
@@ -39,6 +44,10 @@ leftoverOk ρ = ρ == Usage.Omega || ρ == mempty
 typeTerm ::
   ( Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show ext,
+    ShowExt ext primTy primVal,
     CanTC' ext primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
@@ -52,6 +61,10 @@ typeTerm param t ann = loValue <$> typeTermWith param IntMap.empty [] t ann
 typeTermWith ::
   ( Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show ext,
+    ShowExt ext primTy primVal,
     CanTC' ext primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
@@ -70,6 +83,10 @@ typeTermWith param pats ctx t ann =
 typeElim ::
   ( Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show ext,
+    ShowExt ext primTy primVal,
     CanTC' ext primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
@@ -84,6 +101,10 @@ typeElim param e σ =
 typeElimWith ::
   ( Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show ext,
+    ShowExt ext primTy primVal,
     CanTC' ext primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
@@ -109,6 +130,12 @@ withLeftovers m =
 typeTerm' ::
   ( Eq primTy,
     Eq primVal,
+    Show primVal,
+    Show ext,
+    ShowExt ext primTy primVal,
+    (Show (IR.XAnn ext primTy primVal)),
+    Show primTy,
+    (Show (IR.ElimX ext primTy primVal)),
     CanInnerTC' ext primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
@@ -134,7 +161,8 @@ typeTerm' term ann@(Annotation σ ty) =
       requireZero σ
       void $ requireStar ty
       a' <- typeTerm' a ann
-      b' <- typeTerm' b ann
+      av <- evalTC a'
+      b' <- withLocal (Annotation mempty av) $ typeTerm' b ann
       pure $ Typed.Pi π a' b' ann
     IR.Lam' t _ -> do
       (π, a, b) <- requirePi ty
@@ -181,6 +209,10 @@ typeTerm' term ann@(Annotation σ ty) =
 typeElim' ::
   ( Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show ext,
+    ShowExt ext primTy primVal,
     CanInnerTC' ext primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
@@ -234,7 +266,7 @@ popLocal = do
       unless (leftoverOk ρ) $ throwTC (LeftoverUsage ρ)
       put @"bound" ctx
     [] -> do
-      throwTC (UnboundIndex 0)
+      throwTC (UnboundLocal 0)
 
 withLocal ::
   ( HasBound primTy primVal m,
@@ -249,7 +281,9 @@ requireZero ::
   HasThrowTC' IR.NoExt ext primTy primVal m =>
   Usage.T ->
   m ()
-requireZero π = unless (π == mempty) $ throwTC (UsageMustBeZero π)
+requireZero π =
+  unless (π == mempty) $
+    throwTC (InsufficientUsage π (Usage.SNat 0))
 
 requireStar ::
   HasThrowTC' IR.NoExt ext primTy primVal m =>
@@ -280,8 +314,8 @@ typePrim p ty = do
 toPrimTy ::
   CanInnerTC' ext primTy primVal m =>
   Typed.ValueT primTy primVal ->
-  m (NonEmpty primTy)
-toPrimTy ty = maybe (throwTC $ NotPrimTy ty) pure $ go ty
+  m (Param.PrimType primTy)
+toPrimTy ty = maybe (throwTC $ NotPrimTy ty) (pure . Param.PrimType) $ go ty
   where
     go (IR.VPrimTy t) = pure $ t :| []
     go (IR.VPi _ (IR.VPrimTy s) t) = (s <|) <$> go t
@@ -335,7 +369,7 @@ useLocal π var = do
   put @"bound" ctx
   pure ty
   where
-    go _ _ [] = throwTC (UnboundIndex var)
+    go _ _ [] = throwTC (UnboundLocal var)
     go w 0 (Annotation ρ ty : ctx) = do
       case ρ `Usage.minus` π of
         Just ρ' -> pure (Eval.weakBy w ty, Annotation ρ' ty : ctx)

@@ -3,17 +3,31 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-snapshots:
-- original: lts-17.3
-  completed:
-    sha256: 1e9f31ec160a144f796bc49b91dfc2bab5eca88b1dcc93da569108febaf5b382
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/3.yaml
-    size: 563099
 packages:
-- original:
+- completed:
     hackage: capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
-  completed:
     pantry-tree:
-      sha256: 21bf502c888f32bd6aabeeef05bc2a362cf72bf694b432a0eda9431ac4cfea9b
       size: 2581
+      sha256: 21bf502c888f32bd6aabeeef05bc2a362cf72bf694b432a0eda9431ac4cfea9b
+  original:
     hackage: capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
+- completed:
+    hackage: tasty-silver-3.2.1@sha256:93d753d112f21e10075e10b1156ef16cf09bd6588a8c239cab7ac8afc3556ea3,2364
+    pantry-tree:
+      size: 683
+      sha256: fe6474825c83236014c4c4de549292ab82223869f4a96be716b359f1901f247d
+  original:
+    hackage: tasty-silver-3.2.1@sha256:93d753d112f21e10075e10b1156ef16cf09bd6588a8c239cab7ac8afc3556ea3,2364
+- completed:
+    hackage: tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638
+    pantry-tree:
+      size: 1873
+      sha256: 0c8fb1ece12aa96b9e884a2c382bfe5f3688c0f7a69bc165bdae64674b4ffe83
+  original:
+    hackage: tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638
+snapshots:
+- completed:
+    size: 563099
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/3.yaml
+    sha256: 1e9f31ec160a144f796bc49b91dfc2bab5eca88b1dcc93da569108febaf5b382
+  original: lts-17.3

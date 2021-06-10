@@ -56,7 +56,11 @@ pattern List xs <- (toList -> Just xs)
 
 -- TODO ∷ make reader instance
 
+-- TODO ∷ this is poorly written, please simplify
+
 instance Show T where
+  show (Cons car (Atom a)) =
+    "(" <> show car <> " . " <> show (Atom a) <> ")"
   show (Cons car cdr)
     | take 1 (showNoParens cdr) == ")" =
       "(" <> show car <> showNoParens cdr
@@ -69,6 +73,8 @@ instance Show T where
   show Nil = "()"
 
 showNoParens :: T -> String
+showNoParens (Cons car (Atom a)) =
+  show car <> " . " <> show (Atom a) <> ")"
 showNoParens (Cons car cdr)
   | showNoParens cdr == ")" =
     show car <> showNoParens cdr

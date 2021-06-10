@@ -10,23 +10,13 @@ import qualified Data.Scientific as S
 import Juvix.Backends.Plonk (FFAnnTerm, FFType, PrimVal (..))
 import qualified Juvix.Backends.Plonk as P
 import qualified Juvix.Core as Core
-import Juvix.Library (Natural, undefined, ($), (.))
 import Juvix.Library hiding (Type, exp)
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Pipeline as Pipeline
 import qualified Test.Example.Polynomial as Example
+import Test.Orphan ()
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-
-deriving instance Bits Fr
-
-instance A.FromJSON Fr where
-  parseJSON (A.Number n) = case S.floatingOrInteger n of
-    Left floating -> panic $ "Can't parse floating :" <> show n
-    Right f -> pure . toP $ toInteger f
-
-instance A.ToJSON Fr where
-  toJSON f = A.Number $ S.scientific (fromP f) 0
 
 top :: IO T.TestTree
 top = do

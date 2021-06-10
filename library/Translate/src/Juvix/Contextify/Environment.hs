@@ -217,7 +217,7 @@ searchAndClosureNoCtx a as cont
   | named ":lambda" = lambda as cont
   where
     named = Sexp.isAtomNamed (Sexp.Atom a)
-searchAndClosureNoCtx _ _ _ = error "imporper closure call"
+searchAndClosureNoCtx _ _ _ = error "improper closure call"
 
 -- | @searchAndClosure@ is responsible for properly updating the
 -- closure based on any binders we may encounter. The signature is made

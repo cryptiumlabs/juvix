@@ -83,14 +83,15 @@ compilePrim p m args = case p of
   P.PXor -> compileBinOp m BXor args
   n -> panic $ show n
 
+-- TODO: Make signature handle failure
 compileTerm :: (Integral f, Show f) => FFAnnTerm f -> Map NameSymbol.T Wire -> [FFAnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
 compileTerm _term@(Ann.Ann _ _ t) m a =
   case t of
     Ann.Prim p -> compilePrim p m a
     Ann.Var symbol -> case Map.lookup symbol m of
       Just v -> pure . Left $ v
-      Nothing -> panic $ "Unable to find variable " <> show symbol
-    Ann.AppM fun@(Ann.Ann {}) args -> compileTerm fun m args
+      Nothing -> panic $ "Unable to find variable " <> show symbol <> " in " <> show m
+    Ann.AppM fun@Ann.Ann {} args -> compileTerm fun m args
     Ann.LamM _ args b -> do
       m' <- do
         pairs <-

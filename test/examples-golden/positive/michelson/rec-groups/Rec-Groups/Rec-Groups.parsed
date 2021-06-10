@@ -1,0 +1,30 @@
+Right
+    ( Header
+        ( "Rec-Groups" :| [] )
+        [ ModuleOpen
+            ( Open
+                ( "Rec-Groups-Helper" :| [] )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "main"
+                , signatureUsage = Nothing
+                , signatureArrowType = Name
+                    ( "foo" :| [] )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "main"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Name
+                            ( "foo" :| [] )
+                        )
+                    }
+                )
+            )
+        ]
+    )

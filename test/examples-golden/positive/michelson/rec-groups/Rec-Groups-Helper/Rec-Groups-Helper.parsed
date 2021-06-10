@@ -1,0 +1,77 @@
+Right
+    ( Header
+        ( "Rec-Groups-Helper" :| [] )
+        [ Function
+            ( Func
+                ( Like
+                    { functionLikedName = "ty_"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive
+                            ( Prim
+                                ( "Builtin" :| [ "Type" ] )
+                            )
+                        )
+                    }
+                )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "ty"
+                , signatureUsage = Nothing
+                , signatureArrowType = Application
+                    ( App
+                        { applicationName = Name
+                            ( "ty_" :| [] )
+                        , applicationArgs = Constant
+                            ( Number
+                                ( Integer' 1 )
+                            ) :| []
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "ty"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Application
+                            ( App
+                                { applicationName = Name
+                                    ( "ty_" :| [] )
+                                , applicationArgs = Constant
+                                    ( Number
+                                        ( Integer' 0 )
+                                    ) :| []
+                                }
+                            )
+                        )
+                    }
+                )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "foo"
+                , signatureUsage = Nothing
+                , signatureArrowType = Name
+                    ( "ty" :| [] )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "foo"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Name
+                            ( "ty" :| [] )
+                        )
+                    }
+                )
+            )
+        ]
+    )

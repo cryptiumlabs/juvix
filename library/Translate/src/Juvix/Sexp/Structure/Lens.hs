@@ -27,3 +27,13 @@ Lens.makeLensesWith Lens.camelCaseFields ''Record
 Lens.makeLensesWith Lens.camelCaseFields ''Punned
 Lens.makeLensesWith Lens.camelCaseFields ''NotPunned
 Lens.makeLensesWith Lens.camelCaseFields ''RecordNoPunned
+Lens.makeLensesWith Lens.camelCaseFields ''Infix
+Lens.makeLensesWith Lens.camelCaseFields ''OpenIn
+Lens.makeLensesWith Lens.camelCaseFields ''Open
+Lens.makeLensesWith Lens.camelCaseFields ''Declare
+Lens.makeLensesWith Lens.camelCaseFields ''Declaim
+Lens.makeLensesWith Lens.camelCaseFields ''Type
+Lens.makeLensesWith Lens.camelCaseFields ''LetType
+Lens.makeLensesWith Lens.camelCaseFields ''LetSignature
+Lens.makeLensesWith Lens.camelCaseFields ''DefModule
+Lens.makeLensesWith Lens.camelCaseFields ''LetModule

@@ -30,22 +30,30 @@ class HasBackend b where
   stdlibs :: b -> [FilePath]
   stdlibs _ = []
 
+  parseWithLibs :: [FilePath] -> b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
+  parseWithLibs libs b code = liftIO $ do
+    fp <- Temp.writeSystemTempFile "juvix-toCore.ju" (Text.unpack code)
+    core <- Pipeline.toCore (libs ++ [fp])
+    handleCore core
+
   parse :: b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
   parse b code = do
     core <- liftIO $ toCore_wrap code
-    case core of
-      Right ctx -> return ctx
-      Left (Pipeline.ParseErr err) -> Feedback.fail $ P.errorBundlePretty err
-      Left err -> Feedback.fail $ show err
+    handleCore core
     where
       toCore_wrap :: Text -> IO (Either Pipeline.Error (Context.T Sexp.T Sexp.T Sexp.T))
       toCore_wrap code = do
         fp <- Temp.writeSystemTempFile "juvix-toCore.ju" (Text.unpack code)
         Pipeline.toCore
-          (["stdlib/Prelude.ju", fp] ++ stdlibs b)
+          ("stdlib/Prelude.ju" : stdlibs b ++ [fp])
 
-  typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)))
-  compile :: FilePath -> ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)) -> Pipeline ()
+  typecheck ::
+    Context.T Sexp.T Sexp.T Sexp.T ->
+    Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
+  compile ::
+    FilePath ->
+    ErasedAnn.AnnTermT (Ty b) (Val b) ->
+    Pipeline ()
 
 -- | Write the output code to a given file.
 writeout :: FilePath -> Text -> Pipeline ()
@@ -63,3 +71,9 @@ parseExplicit _b code libs = do
     toCore_wrap code = do
       fp <- Temp.writeSystemTempFile "juvix-toCore.ju" (Text.unpack code)
       Pipeline.toCore (fp : libs)
+
+handleCore :: MonadFail m => Either Error a -> m a
+handleCore core = case core of
+  Right ctx -> return ctx
+  Left (Pipeline.ParseErr err) -> Feedback.fail $ P.errorBundlePretty err
+  Left err -> Feedback.fail $ show err
