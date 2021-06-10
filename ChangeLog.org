@@ -1,5 +1,8 @@
 * Changelog for Juvix
 
+** 0.1.0.8
+- Add =Show= instances for extended =Term= and =Elim= types
+
 ** 0.1.0.7
   + Fix checking of Π types
 
