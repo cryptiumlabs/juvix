@@ -17,6 +17,7 @@ import qualified Juvix.Backends.Plonk.Parameterization as Parameterization
 import qualified Juvix.Backends.Plonk.Types as Types
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
 import Debug.Pretty.Simple ( pTraceShowM ) 
@@ -83,17 +84,17 @@ instance
     case res of
       Right (FF.CoreDefs _order globals) -> do
         let globalDefs = HM.mapMaybe Pipeline.toCoreDef globals
+        let convGlobals = map (Pipeline.convGlobal Types.PField) globalDefs
+            newGlobals = HM.map (Pipeline.unsafeEvalGlobal convGlobals) convGlobals
+            lookupGlobal = IR.rawLookupFun' globalDefs
         -- TODO: Fix MAIN
         case HM.elems $ HM.filter Pipeline.isMain globalDefs of
           [] -> Feedback.fail $ "No main function found in " <> show globalDefs
+          -- TODO: Convert main n = ... to main = \n -> ...
           [IR.RawGFunction f]
             | IR.RawFunction _name usage ty (clause :| []) <- f,
-              IR.RawFunClause _ _ term _ <- clause -> do
-                -- TODO: Convert main n = ... to main = \n -> ...
-              let convGlobals = map (Pipeline.convGlobal Types.PField) globalDefs
-                  newGlobals = HM.map (Pipeline.unsafeEvalGlobal convGlobals) convGlobals
-                  lookupGlobal = IR.rawLookupFun' globalDefs
-                  inlinedTerm = IR.inlineAllGlobals term lookupGlobal
+              IR.RawFunClause _ [] term _ <- clause -> do
+              let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
               (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @(Types.PrimTy f) @(Types.PrimVal f) @Types.CompilationError inlinedTerm (IR.globalToUsage usage) ty) (Parameterization.param @f) newGlobals
               case res of
                 Right r -> do
@@ -101,6 +102,12 @@ instance
                 Left err -> do
                   print term
                   Feedback.fail $ show err
+          [f@(IR.RawGFunction _)] -> do
+            case IR.toLambdaR f of
+              Nothing -> do
+                Feedback.fail "Unable to convert main to lambda" 
+              Just elim -> do
+                notImplemented 
           somethingElse -> do
             pTraceShowM somethingElse
             Feedback.fail $ show somethingElse
