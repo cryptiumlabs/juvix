@@ -26,3 +26,4 @@ let accept-withdraws-from key {transaction = initial} {transaction = final}
   | key == final.account-to =
     let difference = initial.account-from.balance - final.account-from.balance in
     difference < 10
+  | else = false

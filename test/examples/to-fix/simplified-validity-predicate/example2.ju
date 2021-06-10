@@ -13,7 +13,7 @@ type account = {
 
 type transaction-type = {
   sender   : account,
-  reciever : account
+  receiver : account
 }
 
 type storage = {
@@ -26,17 +26,17 @@ type trust-level
   | NotTrusted
 
 -- Would be great if we could pattern match like this as well
-sig determine-trust-level : stirng -> trust-level
+sig determine-trust-level : string -> trust-level
 let determine-trust-level "bob"   = Trusted { maximum-funds = 30 }
 let determine-trust-level "maria" = Trusted { maximum-funds = 50 }
 let determine-trust-level _       = NotTrusted
 
-sig accept-withdraws-from : storage -> stroage -> bool
+sig accept-withdraws-from : storage -> storage -> bool
 let accept-withdraws-from initial final =
   -- Let abstractions should work
   let trusted? =
-    determine-trust-level initial.trans.reciever.name
-  -- here we just rely on desturcting a simple Sum type, no record matching
+    determine-trust-level initial.trans.receiver.name
+  -- here we just rely on destructuring a simple Sum type, no record matching
   -- however we need stand alone case statements for this.
   in case trusted? of
      | Trusted funds ->

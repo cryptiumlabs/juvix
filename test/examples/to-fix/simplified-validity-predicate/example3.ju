@@ -23,7 +23,7 @@ type storage = {
   trans : transaction-type
 }
 
--- Instead of matching and giving back a trust level like example 3,
+-- Instead of matching and giving back a trust level like example 2,
 -- let's just try for guarding the strings
 sig determine-maximum-withdraw : string -> nat
 let determine-maximum-withdraw str
