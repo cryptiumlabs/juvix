@@ -4,7 +4,7 @@
 *** src
 **** Juvix
 ***** Backends
-****** LLVM <<Backends/LLVM>>
+****** LLVM <<LLVM/src/Juvix/Backends/LLVM>>
 - Serves as the LLVM backend compiler to Juvix.
 - This is an alternative to the interpreter provided.
 ******* DSL
@@ -273,7 +273,7 @@ Serves as a module for various debugging functions
 ***** Backends
 ****** Michelson <<Backends/Michelson>>
 - _Relies on_
-  + [[Compilation]]
+  + [[Michelson/Compilation]]
   + [[Michelson/Parameterisation]]
   + [[Michelson/Pipeline]]
 ******* Contract <<Michelson/Contract>>
@@ -299,7 +299,7 @@ This module provides a default contract environment
 ******* Parameterisation <<Michelson/Parameterisation>>
 Module that implements the backend parameters for the Michelson backend.
 - _Relies on_
-  + [[Compilation]]
+  + [[Michelson/Compilation]]
   + [[Compilation/Pretty]]
   + [[Compilation/Types]]
   + [[Compilation/Types]]
@@ -323,7 +323,7 @@ Module that implements the backend parameters for the Michelson backend.
   + [[Library/Usage]]
 ******* Pipeline <<Michelson/Pipeline>>
 - _Relies on_
-  + [[Compilation]]
+  + [[Michelson/Compilation]]
   + [[Michelson/Parameterisation]]
   + [[Core/IR]]
   + [[Core/Pipeline]]
@@ -331,7 +331,7 @@ Module that implements the backend parameters for the Michelson backend.
   + [[Feedback]]
   + [[Juvix/Pipeline]]
   + [[FromFrontend]]
-******* Compilation
+******* Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
   + [[Compilation/Types]]
@@ -443,7 +443,7 @@ Module that implements the backend parameters for the Michelson backend.
 **** Test
 ***** Michelson <<Test/Michelson>>
 - _Relies on_
-  + [[Compilation]]
+  + [[Michelson/Compilation]]
   + [[Compilation/Types]]
   + [[DSL/Environment]]
   + [[Instructions]]
@@ -457,7 +457,7 @@ Module that implements the backend parameters for the Michelson backend.
 ***** Pipeline <<Test/Pipeline>>
 - _Relies on_
   + [[Backends/Michelson]]
-  + [[Compilation]]
+  + [[Michelson/Compilation]]
   + [[Core/IR]]
   + [[Core/Pipeline]]
   + [[Core/Types]]
@@ -484,7 +484,7 @@ Module that implements the backend parameters for the Michelson backend.
   + [[Plonk/Dot]]
   + [[Plonk/IR]]
   + [[Lang]]
-  + [[Parameterization]]
+  + [[Plonk/Parameterization]]
   + [[Plonk/Pipeline]]
   + [[Plonk/Types]]
 ******* Builder
@@ -517,7 +517,7 @@ Surface language
   + [[Circuit]]
   + [[Plonk/IR]]
   + [[Library]]
-******* Parameterization
+******* Parameterization <<Plonk/Parameterization>>
 - _Relies on_
   + [[Plonk/Types]]
   + [[Application]]
@@ -536,7 +536,7 @@ Surface language
   + [[Circuit]]
   + [[Plonk/Compiler]]
   + [[Plonk/Dot]]
-  + [[Parameterization]]
+  + [[Plonk/Parameterization]]
   + [[Plonk/Types]]
   + [[ErasedAnn/Types]]
   + [[Core/IR]]
@@ -605,6 +605,49 @@ Surface language
   + [[ErasedAnn]]
   + [[Library]]
   + [[Library/Usage]]
+** llvm
+*** Setup <<llvm/Setup>>
+*** src
+**** Juvix
+***** Backends
+****** LLVM <<llvm/src/Juvix/Backends/LLVM>>
+- _Relies on_
+  + [[LLVM/Parameterization]]
+  + [[LLVM/Pipeline]]
+  + [[Primitive]]
+******* Compilation <<LLVM/Compilation>>
+- _Relies on_
+  + [[Primitive]]
+  + [[ErasedAnn]]
+  + [[Library]]
+  + [[Feedback]]
+******* Parameterization <<LLVM/Parameterization>>
+Parameterization and application of the LLVM backend primitives.
+- _Relies on_
+  + [[Primitive]]
+  + [[Application]]
+  + [[IR/Evaluator]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+******* Pipeline <<LLVM/Pipeline>>
+The basic connection between the backend and the Juvix pipeline.
+- _Relies on_
+  + [[LLVM/Compilation]]
+  + [[LLVM/Parameterization]]
+  + [[Primitive]]
+  + [[Core/IR]]
+  + [[Core/Pipeline]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Juvix/Pipeline]]
+  + [[FromFrontend]]
+******* Primitive
+Representation of LLVM primitives in Juvix.
+- _Relies on_
+  + [[Application]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
 * Core
 ** Setup <<Core/Setup>>
 ** src
