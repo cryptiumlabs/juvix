@@ -1,14 +1,15 @@
 * Changelog for Juvix
-
+** 0.1.0.8
+- Simplifies: =Context=
+  + Adds: =mapWithName=, =mapSumWithName=, and =overTopLevelMap=
+  + Removes: the repeat =mapCurrentContext'= function and simplifies
+    the core logic by using the new functions
 ** 0.1.0.7
-  + Fix checking of Π types
-
+- Fix checking of Π types
 ** 0.1.0.6
-  + Add Golden tests
-
+- Add Golden tests
 ** 0.1.0.5
-- Split the =stack.yeaml= generator into many files
-
+- Split the =stack.yaml= generator into many files
 ** 0.1.0.4
 - _Changes to =Library/Sexp.hs=_
   + Adds documentation to all functions
@@ -46,3 +47,4 @@
 - Changelog created.
 - Documentation around how to bump the changelog in the contributors
   guide.
+
