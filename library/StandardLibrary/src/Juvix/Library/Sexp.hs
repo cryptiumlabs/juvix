@@ -29,12 +29,22 @@ module Juvix.Library.Sexp
   )
 where
 
+import qualified Data.ByteString.Char8 as ByteString
 import Juvix.Library hiding (foldr, list, show, toList)
 import qualified Juvix.Library as Std
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Sexp.Parser
 import Juvix.Library.Sexp.Types
-import Prelude (error)
+import Prelude (Read (..), error, errorWithoutStackTrace)
+
+instance Read T where
+  readsPrec _ str =
+    [ ( case parse $ ByteString.pack str of
+          Right x -> x
+          Left _ -> errorWithoutStackTrace "Prelude.read: no parse",
+        ""
+      )
+    ]
 
 -- | @foldSearchPred@ is like foldPred with some notable exceptions.
 -- 1. Instead of recusing on the @predChange@ form, it will just leave

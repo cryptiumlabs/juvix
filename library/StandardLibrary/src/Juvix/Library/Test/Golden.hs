@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-
+{-# LANGUAGE TypeApplications #-}
 module Juvix.Library.Test.Golden
   ( getGolden,
     compareGolden,
@@ -21,7 +21,8 @@ import Test.Tasty
 import qualified Test.Tasty.Silver as T
 import qualified Test.Tasty.Silver.Advanced as T
 import Text.Pretty.Simple (pShowNoColor)
-
+import qualified Text.Pretty.Simple as Pretty
+import qualified Data.Text.Lazy as TLazy
 --------------------------------------------------------------------------------
 -- Contracts as a file (Golden tests)
 --------------------------------------------------------------------------------
@@ -79,6 +80,7 @@ toGolden = toS . Text.replace "examples" "examples-golden" . toS
 
 -- | Make a single golden test.
 mkGoldenTest ::
+  forall a.
   (Show a, Eq a) =>
   -- | get golden
   (FilePath -> IO (Maybe a)) ->
@@ -96,7 +98,7 @@ mkGoldenTest getGolden action ext pathToFile =
     (action pathToFile)
     compareGolden
     -- show the golden/actual value
-    (T.ShowText . toS . pShowNoColor)
+    (T.ShowText . TLazy.toStrict . printCompactParens)
     createOutput
   where
     directory = FP.dropFileName pathToFile
@@ -105,7 +107,7 @@ mkGoldenTest getGolden action ext pathToFile =
     outfile = toGolden directory FP.</> goldenBase FP.</> outFilename
     createOutput =
       ByteString.writeFile outfile
-        . (encodeUtf8 . toS . pShowNoColor)
+        . (encodeUtf8 . TLazy.toStrict . printCompactParens)
 
 expectSuccess :: (Monad m, Show (app msg)) => Feedback.FeedbackT app msg m b -> m b
 expectSuccess v = do
@@ -120,3 +122,12 @@ expectFailure v = do
   case feedback of
     Feedback.Success _msgs r -> panic $ "Expected failure but succeeded with: " <> show r
     Feedback.Fail msgs -> pure msgs
+
+printCompactParens :: Show a => a -> TLazy.Text
+printCompactParens =
+    Pretty.pShowOpt
+    ( Pretty.defaultOutputOptionsDarkBg
+        { Pretty.outputOptionsCompactParens = True,
+          Pretty.outputOptionsCompact = True
+        }
+    )
