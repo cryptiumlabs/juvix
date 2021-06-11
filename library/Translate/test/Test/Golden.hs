@@ -12,18 +12,12 @@ import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Sexp as SexpTrans
 import Juvix.Frontend.Types (TopLevel)
 import Juvix.Frontend.Types.Base (Header)
-import qualified Juvix.Frontend.Types.Base as Frontend
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import Juvix.Library.Test.Golden
 import Test.Tasty
-import qualified Text.Pretty.Simple as Pretty
 import Prelude (error)
-
---------------------------------------------------------------------------------
--- Parse contracts (Golden tests)
---------------------------------------------------------------------------------
 
 -- TODO: Add translations as well?
 
@@ -34,33 +28,38 @@ top =
     <$> sequence
       [parseTests, desugartests, contextTests]
 
+
+--------------------------------------------------------------------------------
+-- Parse Test Frame
+--------------------------------------------------------------------------------
+
+posNegTests ::
+  (Applicative f, IsString t) => TestName -> (t -> f [TestTree]) -> f TestTree
+posNegTests testName discoverFunction =
+  testGroup testName
+    <$> sequenceA
+      [ testGroup "positive" <$> discoverFunction "../../test/examples/positive",
+        testGroup "negative" <$> discoverFunction "../../test/examples/negative"
+      ]
+
+
+--------------------------------------------------------------------------------
+-- Parse contracts (Golden tests)
+--------------------------------------------------------------------------------
+
 parseContract :: FilePath -> IO (Either [Char] (Header TopLevel))
 parseContract file = do
   Parser.prettyParse <$> ByteString.readFile file
 
 parseTests :: IO TestTree
 parseTests =
-  testGroup "parse"
-    <$> sequenceA
-      [ discoverGoldenTestsParse "../../test/examples/positive",
-        discoverGoldenTestsParse "../../test/examples/negative"
-      ]
+  posNegTests "parse" (\path -> fmap (\x -> [x]) (discoverGoldenTestsParse path))
 
 desugartests :: IO TestTree
-desugartests =
-  testGroup "desugar"
-    <$> sequenceA
-      [ testGroup "positive" <$> discoverGoldenTestsDesugar "../../test/examples/positive",
-        testGroup "negative" <$> discoverGoldenTestsDesugar "../../test/examples/negative"
-      ]
+desugartests = posNegTests "desugar" discoverGoldenTestsDesugar
 
 contextTests :: IO TestTree
-contextTests =
-  testGroup "desugar"
-    <$> sequenceA
-      [ testGroup "positive" <$> discoverGoldenTestsContext "../../test/examples/positive",
-        testGroup "negative" <$> discoverGoldenTestsContext "../../test/examples/negative"
-      ]
+contextTests = posNegTests "context" discoverGoldenTestsContext
 
 -- | Discover golden tests for input files with extension @.ju@ and output
 -- files with extension @.parsed@.
@@ -70,39 +69,41 @@ discoverGoldenTestsParse ::
   IO TestTree
 discoverGoldenTestsParse = discoverGoldenTests [".ju"] ".parsed" getGolden parseContract
 
-discoverGoldenTestsDesugar ::
-  -- | the directory in which to recursively look for golden tests
-  FilePath ->
-  IO [TestTree]
-discoverGoldenTestsDesugar filePath =
-  zipWithM callGolden [0 ..] discoverDesugar
+discoverGoldenTestPasses ::
+  (Eq a, Show a, Read a) => (t -> FilePath -> IO a) -> [(t, [Char])] -> FilePath -> IO [TestTree]
+discoverGoldenTestPasses handleDiscoverFunction discoverPasses filePath =
+  zipWithM callGolden [0 ..] discoverPasses
   where
-    callGolden i (function, name) =
+    callGolden i (passFunction, name) =
       discoverGoldenTests
         [".ju"]
         ("." <> show i <> "-" <> name)
         getGolden
-        (\fileName -> function . snd <$> sexp fileName)
+        (handleDiscoverFunction passFunction)
         filePath
+
+discoverGoldenTestsDesugar ::
+  -- | the directory in which to recursively look for golden tests
+  FilePath ->
+  IO [TestTree]
+discoverGoldenTestsDesugar =
+  discoverGoldenTestPasses handleDiscoverFunction discoverDesugar
+  where
+    handleDiscoverFunction desugarPass filePath =
+      desugarPass . snd <$> sexp filePath
 
 discoverGoldenTestsContext ::
   -- | the directory in which to recursively look for golden tests
   FilePath ->
   IO [TestTree]
-discoverGoldenTestsContext filePath =
-  traverse callGolden discoverContext
+discoverGoldenTestsContext =
+  discoverGoldenTestPasses handleDiscoverFunction discoverContext
   where
-    callGolden (function, name) =
-      discoverGoldenTests
-        [".ju"]
-        ("." <> name)
-        getGolden
-        ( \fileName -> do
-            desugaredPath <- fullyDesugarPath (fileName : library)
-            handleContextPass desugaredPath function
-        )
-        filePath
+    handleDiscoverFunction contextPass filePath = do
+      desugaredPath <- fullyDesugarPath (filePath : library)
+      handleContextPass desugaredPath contextPass
 
+library :: IsString a => [a]
 library =
   [ "../../stdlib/Circuit.ju",
     "../../stdlib/LLVM.ju",
@@ -133,11 +134,12 @@ discoverContext ::
   [(NonEmpty (NameSymbol.T, [Sexp.T]) -> IO Environment.SexpContext, b)]
 discoverContext =
   [ (contextifySexp, "contextify-sexp"),
-    (resolveModuleContext, "resolve-module")
+    (resolveModuleContext, "resolve-module"),
+    (resolveInfixContext, "resolve-infix")
   ]
 
 ----------------------------------------------------------------------
--- Desugar
+-- Desugar Passes
 ----------------------------------------------------------------------
 
 -- here we setup the long sequence that op basically does
@@ -162,27 +164,38 @@ desugarMultipleSig = Pass.combineSig . desugarMultipleDefun
 desugarRemovePunnedRecords = fmap Pass.removePunnedRecords . desugarMultipleSig
 desugarHandlerTransform = fmap Pass.handlerTransform . desugarRemovePunnedRecords
 
+fullDesugar :: [Sexp.T] -> [Sexp.T]
 fullDesugar = desugarHandlerTransform
+
+----------------------------------------------------------------------
+-- Context Passes
+----------------------------------------------------------------------
 
 contextifySexp ::
   NonEmpty (NameSymbol.T, [Sexp.T]) -> IO Environment.SexpContext
 contextifySexp names = do
   context <- Contextify.fullyContextify names
   case context of
-    Left _err -> error "bad please fix me"
+    Left _err -> error "Not all modules included, please include more modules"
     Right ctx -> pure ctx
 
 resolveModuleContext ::
   NonEmpty (NameSymbol.T, [Sexp.T]) -> IO Environment.SexpContext
 resolveModuleContext names = do
-  context <- Contextify.fullyContextify names
-  case context of
-    Left _err -> error "bad please fix me"
-    Right ctx -> do
-      (newCtx, _) <- Environment.runMIO (Contextify.resolveModule ctx)
-      case newCtx of
-        Right ctx -> pure ctx
-        Left _err -> error "not valid pass"
+  ctx <- contextifySexp names
+  (newCtx, _) <- Environment.runMIO (Contextify.resolveModule ctx)
+  case newCtx of
+    Right ctx -> pure ctx
+    Left _err -> error "not valid pass"
+
+resolveInfixContext ::
+  NonEmpty (NameSymbol.T, [Sexp.T]) -> IO Environment.SexpContext
+resolveInfixContext names = do
+  ctx <- resolveModuleContext names
+  let (infix', _) = Environment.runM (Contextify.inifixSoloPass ctx)
+  case infix' of
+    Left _err -> error "can't resolve infix symbols"
+    Right ctx -> pure ctx
 
 ----------------------------------------------------------------------
 -- Helpers
