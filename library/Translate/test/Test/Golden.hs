@@ -31,7 +31,7 @@ top =
   testGroup
     "golden tests"
     <$> sequence
-      [parseTests, desugartests]
+      [parseTests, desugartests, contextTests]
 
 parseContract :: FilePath -> IO (Either [Char] (Header TopLevel))
 parseContract file = do
