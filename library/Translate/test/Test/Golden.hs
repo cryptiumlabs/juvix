@@ -17,6 +17,7 @@ import qualified Juvix.Library.Sexp as Sexp
 import Juvix.Library.Test.Golden
 import Test.Tasty
 import qualified Text.Pretty.Simple as Pretty
+import qualified Data.List.NonEmpty as NonEmpty
 import Prelude (error)
 
 --------------------------------------------------------------------------------
@@ -44,6 +45,7 @@ parseTests =
         discoverGoldenTestsParse "../../test/examples/negative"
       ]
 
+desugartests :: IO TestTree
 desugartests =
   testGroup "desugar"
     <$> sequenceA
@@ -51,6 +53,7 @@ desugartests =
         testGroup "negative" <$> discoverGoldenTestsDesugar "../../test/examples/negative"
       ]
 
+contextTests :: IO TestTree
 contextTests =
   testGroup "desugar"
     <$> sequenceA
@@ -78,8 +81,24 @@ discoverGoldenTestsDesugar filePath =
         [".ju"]
         ("." <> show i <> "-" <> name)
         getGolden
-        (\fileName -> function <$> sexp fileName)
+        (\fileName -> function . snd <$> sexp fileName)
         filePath
+
+discoverGoldenTestsContext ::
+  -- | the directory in which to recursively look for golden tests
+  FilePath ->
+  IO [TestTree]
+discoverGoldenTestsContext filePath =
+  zipWithM callGolden [0 ..] discoverContext
+  where
+    callGolden i (function, name) =
+      discoverGoldenTests
+        [".ju"]
+        ("." <> show i <> "-" <> name)
+        getGolden
+        (\fileName -> function . (NonEmpty.:| [])  =<< sexp fileName)
+        filePath
+
 
 ----------------------------------------------------------------------
 -- Pass Test lists
@@ -152,23 +171,17 @@ resolveModuleContext names = do
         Right ctx -> pure ctx
         Left _err -> error "not valid pass"
 
--- op names = do
---       case newCtx of
---         Left err -> pure $ Left $ PassErr err
---         Right t ->
---           let (infix', _) = Environment.runM (Passes.inifixSoloPass t)
---            in case infix' of
---                 Left err -> pure $ Left $ PassErr err
---                 Right x -> pure (Right x)
+
 
 ----------------------------------------------------------------------
 -- Helpers
 ----------------------------------------------------------------------
 
-sexp :: FilePath -> IO [Sexp.T]
+sexp :: FilePath -> IO (NameSymbol.T, [Sexp.T])
 sexp path = do
   fileRead <- Frontend.ofSingleFile path
   case fileRead of
-    Right (_, top) ->
-      pure $ fmap SexpTrans.transTopLevel top
+    Right (names, top) ->
+      pure $ (names, fmap SexpTrans.transTopLevel top)
     Left _ -> pure $ error "failure"
+
