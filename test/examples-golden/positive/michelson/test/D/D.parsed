@@ -1,61 +1,35 @@
 Right
-    ( Header
-        ( "D" :| [] )
-        [ ModuleOpen
-            ( Open
-                ( "A" :| [] )
-            )
-        , ModuleOpen
-            ( Open
-                ( "B" :| [] )
-            )
-        , Signature
-            ( Sig
-                { signatureName = "fi"
-                , signatureUsage = Nothing
-                , signatureArrowType = Constant
-                    ( Number
-                        ( Integer' 3 )
-                    )
-                , signatureConstraints = []
-                }
-            )
-        , Function
-            ( Func
-                ( Like
-                    { functionLikedName = "fi"
-                    , functionLikeArgs = []
-                    , functionLikeBody = Body
-                        ( Constant
-                            ( Number
-                                ( Integer' 3 )
-                            )
-                        )
-                    }
-                )
-            )
-        , Signature
-            ( Sig
-                { signatureName = "main"
-                , signatureUsage = Nothing
-                , signatureArrowType = Constant
-                    ( Number
-                        ( Integer' 3 )
-                    )
-                , signatureConstraints = []
-                }
-            )
-        , Function
-            ( Func
-                ( Like
-                    { functionLikedName = "main"
-                    , functionLikeArgs = []
-                    , functionLikeBody = Body
-                        ( Name
-                            ( "fi" :| [] )
-                        )
-                    }
-                )
-            )
-        ]
-    )
+    [0;95;1m([0m Header
+        [0;96;1m([0m [0;97;1m"[0m[0;94;1mD[0m[0;97;1m"[0m :| [0;93;1m[[0m[0;93;1m][0m [0;96;1m)[0m
+        [0;96;1m[[0m ModuleOpen
+            [0;93;1m([0m Open [0;35m([0m [0;97;1m"[0m[0;94;1mA[0m[0;97;1m"[0m :| [0;36m[[0m[0;36m][0m [0;35m)[0m [0;93;1m)[0m
+        [0;96;1m,[0m ModuleOpen
+            [0;93;1m([0m Open [0;35m([0m [0;97;1m"[0m[0;94;1mB[0m[0;97;1m"[0m :| [0;36m[[0m[0;36m][0m [0;35m)[0m [0;93;1m)[0m
+        [0;96;1m,[0m Signature
+            [0;93;1m([0m Sig
+                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1mfi[0m[0;97;1m"[0m
+                [0;35m,[0m signatureUsage = Nothing
+                [0;35m,[0m signatureArrowType = Constant
+                    [0;36m([0m Number [0;33m([0m Integer' [0;92;1m3[0m [0;33m)[0m [0;36m)[0m
+                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
+        [0;96;1m,[0m Function
+            [0;93;1m([0m Func
+                [0;35m([0m Like
+                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1mfi[0m[0;97;1m"[0m
+                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
+                    [0;36m,[0m functionLikeBody = Body
+                        [0;33m([0m Constant [0;35;1m([0m Number [0;36;1m([0m Integer' [0;92;1m3[0m [0;36;1m)[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
+        [0;96;1m,[0m Signature
+            [0;93;1m([0m Sig
+                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1mmain[0m[0;97;1m"[0m
+                [0;35m,[0m signatureUsage = Nothing
+                [0;35m,[0m signatureArrowType = Constant
+                    [0;36m([0m Number [0;33m([0m Integer' [0;92;1m3[0m [0;33m)[0m [0;36m)[0m
+                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
+        [0;96;1m,[0m Function
+            [0;93;1m([0m Func
+                [0;35m([0m Like
+                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1mmain[0m[0;97;1m"[0m
+                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
+                    [0;36m,[0m functionLikeBody = Body
+                        [0;33m([0m Name [0;35;1m([0m [0;97;1m"[0m[0;94;1mfi[0m[0;97;1m"[0m :| [0;36;1m[[0m[0;36;1m][0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m [0;96;1m][0m [0;95;1m)[0m

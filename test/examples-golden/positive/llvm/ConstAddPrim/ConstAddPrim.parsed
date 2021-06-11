@@ -1,84 +1,53 @@
 Right
-    ( Header
-        ( "ConstAddPrim" :| [] )
-        [ ModuleOpen
-            ( Open
-                ( "Prelude" :| [] )
-            )
-        , ModuleOpen
-            ( Open
-                ( "Prelude" :| [ "LLVM" ] )
-            )
-        , Signature
-            ( Sig
-                { signatureName = "addint"
-                , signatureUsage = Nothing
-                , signatureArrowType = Infix
-                    ( Inf
-                        { infixLeft = Name
-                            ( "int" :| [] )
-                        , infixOp = "->" :| []
-                        , infixRight = Infix
-                            ( Inf
-                                { infixLeft = Name
-                                    ( "int" :| [] )
-                                , infixOp = "->" :| []
-                                , infixRight = Name
-                                    ( "int" :| [] )
-                                }
-                            )
-                        }
-                    )
-                , signatureConstraints = []
-                }
-            )
-        , Function
-            ( Func
-                ( Like
-                    { functionLikedName = "addint"
-                    , functionLikeArgs = []
-                    , functionLikeBody = Body
-                        ( Primitive
-                            ( Prim
-                                ( "LLVM" :| [ "add" ] )
-                            )
-                        )
-                    }
-                )
-            )
-        , Signature
-            ( Sig
-                { signatureName = "main"
-                , signatureUsage = Nothing
-                , signatureArrowType = Name
-                    ( "int" :| [] )
-                , signatureConstraints = []
-                }
-            )
-        , Function
-            ( Func
-                ( Like
-                    { functionLikedName = "main"
-                    , functionLikeArgs = []
-                    , functionLikeBody = Body
-                        ( Application
-                            ( App
-                                { applicationName = Name
-                                    ( "addint" :| [] )
-                                , applicationArgs = Constant
-                                    ( Number
-                                        ( Integer' 4 )
-                                    ) :|
-                                    [ Constant
-                                        ( Number
-                                            ( Integer' 6 )
-                                        )
-                                    ]
-                                }
-                            )
-                        )
-                    }
-                )
-            )
-        ]
-    )
+    [0;95;1m([0m Header
+        [0;96;1m([0m [0;97;1m"[0m[0;94;1mConstAddPrim[0m[0;97;1m"[0m :| [0;93;1m[[0m[0;93;1m][0m [0;96;1m)[0m
+        [0;96;1m[[0m ModuleOpen
+            [0;93;1m([0m Open [0;35m([0m [0;97;1m"[0m[0;94;1mPrelude[0m[0;97;1m"[0m :| [0;36m[[0m[0;36m][0m [0;35m)[0m [0;93;1m)[0m
+        [0;96;1m,[0m ModuleOpen
+            [0;93;1m([0m Open [0;35m([0m [0;97;1m"[0m[0;94;1mPrelude[0m[0;97;1m"[0m :| [0;36m[[0m [0;97;1m"[0m[0;94;1mLLVM[0m[0;97;1m"[0m [0;36m][0m [0;35m)[0m [0;93;1m)[0m
+        [0;96;1m,[0m Signature
+            [0;93;1m([0m Sig
+                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1maddint[0m[0;97;1m"[0m
+                [0;35m,[0m signatureUsage = Nothing
+                [0;35m,[0m signatureArrowType = Infix
+                    [0;36m([0m Inf
+                        [0;33m{[0m infixLeft = Name
+                            [0;35;1m([0m [0;97;1m"[0m[0;94;1mint[0m[0;97;1m"[0m :| [0;36;1m[[0m[0;36;1m][0m [0;35;1m)[0m
+                        [0;33m,[0m infixOp = [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m :| [0;35;1m[[0m[0;35;1m][0m
+                        [0;33m,[0m infixRight = Infix
+                            [0;35;1m([0m Inf
+                                [0;36;1m{[0m infixLeft = Name
+                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mint[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m
+                                [0;36;1m,[0m infixOp = [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m :| [0;33;1m[[0m[0;33;1m][0m
+                                [0;36;1m,[0m infixRight = Name
+                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mint[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m [0;36;1m}[0m [0;35;1m)[0m [0;33m}[0m [0;36m)[0m
+                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
+        [0;96;1m,[0m Function
+            [0;93;1m([0m Func
+                [0;35m([0m Like
+                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1maddint[0m[0;97;1m"[0m
+                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
+                    [0;36m,[0m functionLikeBody = Body
+                        [0;33m([0m Primitive [0;35;1m([0m Prim [0;36;1m([0m [0;97;1m"[0m[0;94;1mLLVM[0m[0;97;1m"[0m :| [0;33;1m[[0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m [0;33;1m][0m [0;36;1m)[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
+        [0;96;1m,[0m Signature
+            [0;93;1m([0m Sig
+                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1mmain[0m[0;97;1m"[0m
+                [0;35m,[0m signatureUsage = Nothing
+                [0;35m,[0m signatureArrowType = Name
+                    [0;36m([0m [0;97;1m"[0m[0;94;1mint[0m[0;97;1m"[0m :| [0;33m[[0m[0;33m][0m [0;36m)[0m
+                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
+        [0;96;1m,[0m Function
+            [0;93;1m([0m Func
+                [0;35m([0m Like
+                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1mmain[0m[0;97;1m"[0m
+                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
+                    [0;36m,[0m functionLikeBody = Body
+                        [0;33m([0m Application
+                            [0;35;1m([0m App
+                                [0;36;1m{[0m applicationName = Name
+                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1maddint[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m
+                                [0;36;1m,[0m applicationArgs = Constant
+                                    [0;33;1m([0m Number [0;95m([0m Integer' [0;92;1m4[0m [0;95m)[0m [0;33;1m)[0m :|
+                                    [0;33;1m[[0m Constant
+                                        [0;95m([0m Number
+                                            [0;96m([0m Integer' [0;92;1m6[0m [0;96m)[0m [0;95m)[0m [0;33;1m][0m [0;36;1m}[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m [0;96;1m][0m [0;95;1m)[0m

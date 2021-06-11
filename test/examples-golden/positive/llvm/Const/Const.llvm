@@ -1,9 +1,0 @@
-"; ModuleID = 'juvix-module'
-
-
- 
-
-
-define external ccc  i8 @main()    {
-  ret i8 10 
-}"
