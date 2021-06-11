@@ -1,0 +1,11 @@
+T
+    [0;95;1m{[0m currentNameSpace = Rec
+        [0;96;1m{[0m recordContents = T
+            [0;93;1m{[0m public = fromList [0;35m[[0m[0;35m][0m[0;93;1m,[0m private = fromList [0;35m[[0m[0;35m][0m [0;93;1m}[0m
+        [0;96;1m,[0m recordMTy = Nothing
+        [0;96;1m,[0m recordOpenList = [0;93;1m[[0m[0;93;1m][0m
+        [0;96;1m,[0m recordQualifiedMap = map [0;96;1m}[0m
+    [0;95;1m,[0m currentName = [0;97;1m"[0m[0;94;1mRec-Groups-Helper[0m[0;97;1m"[0m :| [0;96;1m[[0m[0;96;1m][0m
+    [0;95;1m,[0m topLevelMap = fromList
+        [0;96;1m[[0m [0;93;1m([0m [0;97;1m"[0m[0;94;1mRec-Groups-Helper[0m[0;97;1m"[0m[0;93;1m,[0m CurrentNameSpace [0;93;1m)[0m [0;96;1m][0m
+    [0;95;1m,[0m reverseLookup = fromList [0;96;1m[[0m[0;96;1m][0m [0;95;1m}[0m
