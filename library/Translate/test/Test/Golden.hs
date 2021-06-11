@@ -57,8 +57,8 @@ contextTests :: IO TestTree
 contextTests =
   testGroup "desugar"
     <$> sequenceA
-      [ testGroup "positive" <$> discoverGoldenTestsDesugar "../../test/examples/positive",
-        testGroup "negative" <$> discoverGoldenTestsDesugar "../../test/examples/negative"
+      [ testGroup "positive" <$> discoverGoldenTestsContext "../../test/examples/positive",
+        testGroup "negative" <$> discoverGoldenTestsContext "../../test/examples/negative"
       ]
 
 -- | Discover golden tests for input files with extension @.ju@ and output
@@ -89,12 +89,12 @@ discoverGoldenTestsContext ::
   FilePath ->
   IO [TestTree]
 discoverGoldenTestsContext filePath =
-  zipWithM callGolden [0 ..] discoverContext
+  traverse callGolden discoverContext
   where
-    callGolden i (function, name) =
+    callGolden (function, name) =
       discoverGoldenTests
         [".ju"]
-        ("." <> show i <> "-" <> name)
+        ("." <> name)
         getGolden
         (\fileName -> function . (NonEmpty.:| [])  =<< sexp fileName)
         filePath
