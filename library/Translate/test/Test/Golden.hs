@@ -1,9 +1,11 @@
 module Test.Golden (top) where
 
 import qualified Data.ByteString as ByteString (readFile)
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.Environment as Environment
 import qualified Juvix.Contextify.Passes as Contextify
+import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Desugar.Passes as Pass
 import qualified Juvix.Frontend as Frontend
 import qualified Juvix.Frontend.Parser as Parser
@@ -17,7 +19,6 @@ import qualified Juvix.Library.Sexp as Sexp
 import Juvix.Library.Test.Golden
 import Test.Tasty
 import qualified Text.Pretty.Simple as Pretty
-import qualified Data.List.NonEmpty as NonEmpty
 import Prelude (error)
 
 --------------------------------------------------------------------------------
@@ -96,9 +97,19 @@ discoverGoldenTestsContext filePath =
         [".ju"]
         ("." <> name)
         getGolden
-        (\fileName -> function . (NonEmpty.:| [])  =<< sexp fileName)
+        ( \fileName -> do
+            desugaredPath <- fullyDesugarPath (fileName : library)
+            handleContextPass desugaredPath function
+        )
         filePath
 
+library =
+  [ "../../stdlib/Circuit.ju",
+    "../../stdlib/LLVM.ju",
+    "../../stdlib/MichelsonAlias.ju",
+    "../../stdlib/Michelson.ju",
+    "../../stdlib/Prelude.ju"
+  ]
 
 ----------------------------------------------------------------------
 -- Pass Test lists
@@ -151,6 +162,8 @@ desugarMultipleSig = Pass.combineSig . desugarMultipleDefun
 desugarRemovePunnedRecords = fmap Pass.removePunnedRecords . desugarMultipleSig
 desugarHandlerTransform = fmap Pass.handlerTransform . desugarRemovePunnedRecords
 
+fullDesugar = desugarHandlerTransform
+
 contextifySexp ::
   NonEmpty (NameSymbol.T, [Sexp.T]) -> IO Environment.SexpContext
 contextifySexp names = do
@@ -171,11 +184,30 @@ resolveModuleContext names = do
         Right ctx -> pure ctx
         Left _err -> error "not valid pass"
 
-
-
 ----------------------------------------------------------------------
 -- Helpers
 ----------------------------------------------------------------------
+
+handleContextPass ::
+  (Monad m, Show ty, Show term, Show sumRep) =>
+  [(NonEmpty Symbol, b)] ->
+  (NonEmpty (NonEmpty Symbol, b) -> m (Context.T term ty sumRep)) ->
+  m (Context.Record term ty sumRep)
+handleContextPass desuagredSexp contextPass =
+  case desuagredSexp of
+    [] ->
+      error "error: there are no files given"
+    (moduleName, moduleDefns) : xs -> do
+      let nonEmptyDesugar = (moduleName, moduleDefns) NonEmpty.:| xs
+      context <- contextPass nonEmptyDesugar
+      pure $ getModuleName moduleName context
+  where
+    getModuleName name context =
+      case fmap Context.extractValue $ Context.lookup name context of
+        Just (Context.Record r) ->
+          r
+        maybeDef ->
+          error ("Definition is not a Record:" <> show maybeDef)
 
 sexp :: FilePath -> IO (NameSymbol.T, [Sexp.T])
 sexp path = do
@@ -185,3 +217,10 @@ sexp path = do
       pure $ (names, fmap SexpTrans.transTopLevel top)
     Left _ -> pure $ error "failure"
 
+fullyDesugarPath :: [FilePath] -> IO [(NameSymbol.T, [Sexp.T])]
+fullyDesugarPath paths = do
+  fileRead <- Frontend.ofPath paths
+  case fileRead of
+    Right xs ->
+      pure $ fmap (\(names, top) -> (names, fullDesugar (fmap SexpTrans.transTopLevel top))) xs
+    Left _ -> pure $ error "failure"
