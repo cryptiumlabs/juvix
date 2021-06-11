@@ -1,67 +1,67 @@
 Rec
-    [0;95;1m{[0m recordContents = T
-        [0;96;1m{[0m public = fromList
-            [0;93;1m[[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mmake-pair[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1mlist[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1moperation[0m[0;97;1m"[0m [0;36;1m)[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnat[0m[0;97;1m"[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mpair[0m[0;97;1m"[0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1m:paren[0m[0;97;1m"[0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1mlist[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1moperation[0m[0;97;1m"[0m [0;96m)[0m [0;95m)[0m [0;97;1m"[0m[0;94;1mnat[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;33;1m([0m [0;97;1m"[0m[0;94;1m:primitive[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mMichelson.pair[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1m+[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnat[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnat[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnat[0m[0;97;1m"[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;33;1m([0m [0;97;1m"[0m[0;94;1m:primitive[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mMichelson.add[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m5[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mmain[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1mpair[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnat[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnat[0m[0;97;1m"[0m [0;36;1m)[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1mpair[0m[0;97;1m"[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1m:paren[0m[0;97;1m"[0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1mlist[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1moperation[0m[0;97;1m"[0m [0;95m)[0m [0;33;1m)[0m [0;97;1m"[0m[0;94;1mnat[0m[0;97;1m"[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1m:lambda[0m[0;97;1m"[0m [0;95m([0m [0;97;1m"[0m[0;94;1m_[0m[0;97;1m"[0m [0;95m)[0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1mmake-pair[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnil[0m[0;97;1m"[0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1m:paren[0m[0;97;1m"[0m
-                                                [0;93m([0m [0;97;1m"[0m[0;94;1mg[0m[0;97;1m"[0m
-                                                    [0;95;1m([0m [0;97;1m"[0m[0;94;1m:paren[0m[0;97;1m"[0m
-                                                        [0;96;1m([0m [0;97;1m"[0m[0;94;1mP[0m[0;97;1m"[0m [0;92;1m3[0m [0;92;1m4[0m [0;96;1m)[0m [0;95;1m)[0m [0;93m)[0m [0;96m)[0m [0;95m)[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mnil[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1mlist[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1moperation[0m[0;97;1m"[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;33;1m([0m [0;97;1m"[0m[0;94;1m:primitive[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mMichelson.nil[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m [0;93;1m][0m
-        [0;96;1m,[0m private = fromList [0;93;1m[[0m[0;93;1m][0m [0;96;1m}[0m
-    [0;95;1m,[0m recordMTy = Nothing
-    [0;95;1m,[0m recordOpenList = [0;96;1m[[0m[0;96;1m][0m
-    [0;95;1m,[0m recordQualifiedMap = map [0;95;1m}[0m
+    { recordContents = T
+        { public = fromList
+            [
+                ( "make-pair"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->"
+                                ( "list" "operation" )
+                                ( ":infix" "->" "nat"
+                                    ( "pair"
+                                        ( ":paren"
+                                            ( "list" "operation" ) ) "nat" ) ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Michelson.pair" ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "+"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "nat"
+                                ( ":infix" "->" "nat" "nat" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Michelson.add" ) ) )
+                        , defPrecedence = Pred Left 5 } ) )
+            ,
+                ( "main"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->"
+                                ( "pair" "nat" "nat" )
+                                ( "pair"
+                                    ( ":paren"
+                                        ( "list" "operation" ) ) "nat" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( ()
+                                    ( ":lambda" ( "_" )
+                                        ( "make-pair" "nil"
+                                            ( ":paren"
+                                                ( "g"
+                                                    ( ":paren"
+                                                        ( "P" 3 4 ) ) ) ) ) ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "nil"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( "list" "operation" )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Michelson.nil" ) ) )
+                        , defPrecedence = Pred Left 9 } ) ) ]
+        , private = fromList [] }
+    , recordMTy = Nothing
+    , recordOpenList = []
+    , recordQualifiedMap = map }

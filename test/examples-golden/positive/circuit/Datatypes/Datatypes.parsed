@@ -1,306 +1,306 @@
 Right
-    [0;95;1m([0m Header
-        [0;96;1m([0m [0;97;1m"[0m[0;94;1mDatatypes[0m[0;97;1m"[0m :| [0;93;1m[[0m[0;93;1m][0m [0;96;1m)[0m
-        [0;96;1m[[0m ModuleOpen
-            [0;93;1m([0m Open [0;35m([0m [0;97;1m"[0m[0;94;1mPrelude[0m[0;97;1m"[0m :| [0;36m[[0m[0;36m][0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m ModuleOpen
-            [0;93;1m([0m Open [0;35m([0m [0;97;1m"[0m[0;94;1mCircuit[0m[0;97;1m"[0m :| [0;36m[[0m[0;36m][0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Signature
-            [0;93;1m([0m Sig
-                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m
-                [0;35m,[0m signatureUsage = Nothing
-                [0;35m,[0m signatureArrowType = Name
-                    [0;36m([0m [0;97;1m"[0m[0;94;1mty[0m[0;97;1m"[0m :| [0;33m[[0m[0;33m][0m [0;36m)[0m
-                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Primitive
-                            [0;35;1m([0m Prim [0;36;1m([0m [0;97;1m"[0m[0;94;1mCircuit[0m[0;97;1m"[0m :| [0;33;1m[[0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m [0;33;1m][0m [0;36;1m)[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Signature
-            [0;93;1m([0m Sig
-                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1m+[0m[0;97;1m"[0m
-                [0;35m,[0m signatureUsage = Nothing
-                [0;35m,[0m signatureArrowType = Infix
-                    [0;36m([0m Inf
-                        [0;33m{[0m infixLeft = Name
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;36;1m[[0m[0;36;1m][0m [0;35;1m)[0m
-                        [0;33m,[0m infixOp = [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m :| [0;35;1m[[0m[0;35;1m][0m
-                        [0;33m,[0m infixRight = Infix
-                            [0;35;1m([0m Inf
-                                [0;36;1m{[0m infixLeft = Name
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m
-                                [0;36;1m,[0m infixOp = [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m :| [0;33;1m[[0m[0;33;1m][0m
-                                [0;36;1m,[0m infixRight = Name
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m [0;36;1m}[0m [0;35;1m)[0m [0;33m}[0m [0;36m)[0m
-                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1m+[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Primitive [0;35;1m([0m Prim [0;36;1m([0m [0;97;1m"[0m[0;94;1mCircuit[0m[0;97;1m"[0m :| [0;33;1m[[0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m [0;33;1m][0m [0;36;1m)[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Declaration
-            [0;93;1m([0m Infixivity [0;35m([0m AssocL [0;97;1m"[0m[0;94;1m+[0m[0;97;1m"[0m [0;92;1m5[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Signature
-            [0;93;1m([0m Sig
-                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1m^[0m[0;97;1m"[0m
-                [0;35m,[0m signatureUsage = Nothing
-                [0;35m,[0m signatureArrowType = Infix
-                    [0;36m([0m Inf
-                        [0;33m{[0m infixLeft = Name
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;36;1m[[0m[0;36;1m][0m [0;35;1m)[0m
-                        [0;33m,[0m infixOp = [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m :| [0;35;1m[[0m[0;35;1m][0m
-                        [0;33m,[0m infixRight = Infix
-                            [0;35;1m([0m Inf
-                                [0;36;1m{[0m infixLeft = Name
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m
-                                [0;36;1m,[0m infixOp = [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m :| [0;33;1m[[0m[0;33;1m][0m
-                                [0;36;1m,[0m infixRight = Name
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m [0;36;1m}[0m [0;35;1m)[0m [0;33m}[0m [0;36m)[0m
-                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1m^[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Primitive [0;35;1m([0m Prim [0;36;1m([0m [0;97;1m"[0m[0;94;1mCircuit[0m[0;97;1m"[0m :| [0;33;1m[[0m [0;97;1m"[0m[0;94;1mexp[0m[0;97;1m"[0m [0;33;1m][0m [0;36;1m)[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Declaration
-            [0;93;1m([0m Infixivity [0;35m([0m AssocL [0;97;1m"[0m[0;94;1m^[0m[0;97;1m"[0m [0;92;1m8[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Signature
-            [0;93;1m([0m Sig
-                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1m*[0m[0;97;1m"[0m
-                [0;35m,[0m signatureUsage = Nothing
-                [0;35m,[0m signatureArrowType = Infix
-                    [0;36m([0m Inf
-                        [0;33m{[0m infixLeft = Name
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;36;1m[[0m[0;36;1m][0m [0;35;1m)[0m
-                        [0;33m,[0m infixOp = [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m :| [0;35;1m[[0m[0;35;1m][0m
-                        [0;33m,[0m infixRight = Infix
-                            [0;35;1m([0m Inf
-                                [0;36;1m{[0m infixLeft = Name
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m
-                                [0;36;1m,[0m infixOp = [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m :| [0;33;1m[[0m[0;33;1m][0m
-                                [0;36;1m,[0m infixRight = Name
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m [0;36;1m}[0m [0;35;1m)[0m [0;33m}[0m [0;36m)[0m
-                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1m*[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Primitive [0;35;1m([0m Prim [0;36;1m([0m [0;97;1m"[0m[0;94;1mCircuit[0m[0;97;1m"[0m :| [0;33;1m[[0m [0;97;1m"[0m[0;94;1mmul[0m[0;97;1m"[0m [0;33;1m][0m [0;36;1m)[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Declaration
-            [0;93;1m([0m Infixivity [0;35m([0m AssocL [0;97;1m"[0m[0;94;1m*[0m[0;97;1m"[0m [0;92;1m7[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Signature
-            [0;93;1m([0m Sig
-                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1m==[0m[0;97;1m"[0m
-                [0;35m,[0m signatureUsage = Nothing
-                [0;35m,[0m signatureArrowType = Infix
-                    [0;36m([0m Inf
-                        [0;33m{[0m infixLeft = Name
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;36;1m[[0m[0;36;1m][0m [0;35;1m)[0m
-                        [0;33m,[0m infixOp = [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m :| [0;35;1m[[0m[0;35;1m][0m
-                        [0;33m,[0m infixRight = Infix
-                            [0;35;1m([0m Inf
-                                [0;36;1m{[0m infixLeft = Name
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m
-                                [0;36;1m,[0m infixOp = [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m :| [0;33;1m[[0m[0;33;1m][0m
-                                [0;36;1m,[0m infixRight = Name
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mbool[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m [0;36;1m}[0m [0;35;1m)[0m [0;33m}[0m [0;36m)[0m
-                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1m==[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Primitive [0;35;1m([0m Prim [0;36;1m([0m [0;97;1m"[0m[0;94;1mCircuit[0m[0;97;1m"[0m :| [0;33;1m[[0m [0;97;1m"[0m[0;94;1meq[0m[0;97;1m"[0m [0;33;1m][0m [0;36;1m)[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Declaration
-            [0;93;1m([0m Infixivity [0;35m([0m AssocL [0;97;1m"[0m[0;94;1m==[0m[0;97;1m"[0m [0;92;1m2[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Signature
-            [0;93;1m([0m Sig
-                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1mx[0m[0;97;1m"[0m
-                [0;35m,[0m signatureUsage = Nothing
-                [0;35m,[0m signatureArrowType = Name
-                    [0;36m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;33m[[0m[0;33m][0m [0;36m)[0m
-                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1mx[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Constant [0;35;1m([0m Number [0;36;1m([0m Integer' [0;92;1m3[0m [0;36;1m)[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Type
-            [0;93;1m([0m Typ
-                [0;35m{[0m typeUsage = Nothing
-                [0;35m,[0m typeName' = [0;97;1m"[0m[0;94;1mBar[0m[0;97;1m"[0m
-                [0;35m,[0m typeArgs = [0;36m[[0m[0;36m][0m
-                [0;35m,[0m typeForm = Arrowed
-                    [0;36m{[0m dataArrow = Name
-                        [0;33m([0m [0;97;1m"[0m[0;94;1mty[0m[0;97;1m"[0m :| [0;35;1m[[0m[0;35;1m][0m [0;33m)[0m
-                    [0;36m,[0m dataAdt' = Sum
-                        [0;33m([0m S
-                            [0;35;1m{[0m sumConstructor = [0;97;1m"[0m[0;94;1mP[0m[0;97;1m"[0m
-                            [0;35;1m,[0m sumValue = Just
-                                [0;36;1m([0m ADTLike
-                                    [0;33;1m[[0m Name
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;96m[[0m[0;96m][0m [0;95m)[0m
-                                    [0;33;1m,[0m Name
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;96m[[0m[0;96m][0m [0;95m)[0m [0;33;1m][0m [0;36;1m)[0m [0;35;1m}[0m :|
-                            [0;35;1m[[0m S
-                                [0;36;1m{[0m sumConstructor = [0;97;1m"[0m[0;94;1mQ[0m[0;97;1m"[0m
-                                [0;36;1m,[0m sumValue = Just
-                                    [0;33;1m([0m ADTLike
-                                        [0;95m[[0m Name
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;93m[[0m[0;93m][0m [0;96m)[0m
-                                        [0;95m,[0m Name
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;93m[[0m[0;93m][0m [0;96m)[0m
-                                        [0;95m,[0m Name
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;93m[[0m[0;93m][0m [0;96m)[0m [0;95m][0m [0;33;1m)[0m [0;36;1m}[0m [0;35;1m][0m [0;33m)[0m [0;36m}[0m [0;35m}[0m [0;93;1m)[0m
-        [0;96;1m,[0m Signature
-            [0;93;1m([0m Sig
-                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1mt[0m[0;97;1m"[0m
-                [0;35m,[0m signatureUsage = Nothing
-                [0;35m,[0m signatureArrowType = Infix
-                    [0;36m([0m Inf
-                        [0;33m{[0m infixLeft = Name
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;36;1m[[0m[0;36;1m][0m [0;35;1m)[0m
-                        [0;33m,[0m infixOp = [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m :| [0;35;1m[[0m[0;35;1m][0m
-                        [0;33m,[0m infixRight = Name
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;36;1m[[0m[0;36;1m][0m [0;35;1m)[0m [0;33m}[0m [0;36m)[0m
-                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1mt[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs =
-                        [0;33m[[0m ConcreteA
-                            [0;35;1m([0m MatchLogic
-                                [0;36;1m{[0m matchLogicContents = MatchName [0;97;1m"[0m[0;94;1mx[0m[0;97;1m"[0m
-                                [0;36;1m,[0m matchLogicNamed = Nothing [0;36;1m}[0m [0;35;1m)[0m [0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Infix
-                            [0;35;1m([0m Inf
-                                [0;36;1m{[0m infixLeft = Name
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mx[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m
-                                [0;36;1m,[0m infixOp = [0;97;1m"[0m[0;94;1m+[0m[0;97;1m"[0m :| [0;33;1m[[0m[0;33;1m][0m
-                                [0;36;1m,[0m infixRight = Constant
-                                    [0;33;1m([0m Number [0;95m([0m Integer' [0;92;1m5[0m [0;95m)[0m [0;33;1m)[0m [0;36;1m}[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Signature
-            [0;93;1m([0m Sig
-                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1mnorm[0m[0;97;1m"[0m
-                [0;35m,[0m signatureUsage = Nothing
-                [0;35m,[0m signatureArrowType = Infix
-                    [0;36m([0m Inf
-                        [0;33m{[0m infixLeft = Name
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1mBar[0m[0;97;1m"[0m :| [0;36;1m[[0m[0;36;1m][0m [0;35;1m)[0m
-                        [0;33m,[0m infixOp = [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m :| [0;35;1m[[0m[0;35;1m][0m
-                        [0;33m,[0m infixRight = Name
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;36;1m[[0m[0;36;1m][0m [0;35;1m)[0m [0;33m}[0m [0;36m)[0m
-                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1mnorm[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs =
-                        [0;33m[[0m ConcreteA
-                            [0;35;1m([0m MatchLogic
-                                [0;36;1m{[0m matchLogicContents = MatchCon
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mP[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m
-                                    [0;33;1m[[0m MatchLogic
-                                        [0;95m{[0m matchLogicContents = MatchName [0;97;1m"[0m[0;94;1mx[0m[0;97;1m"[0m
-                                        [0;95m,[0m matchLogicNamed = Nothing [0;95m}[0m
-                                    [0;33;1m,[0m MatchLogic
-                                        [0;95m{[0m matchLogicContents = MatchName [0;97;1m"[0m[0;94;1my[0m[0;97;1m"[0m
-                                        [0;95m,[0m matchLogicNamed = Nothing [0;95m}[0m [0;33;1m][0m
-                                [0;36;1m,[0m matchLogicNamed = Nothing [0;36;1m}[0m [0;35;1m)[0m [0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Infix
-                            [0;35;1m([0m Inf
-                                [0;36;1m{[0m infixLeft = Name
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mx[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m
-                                [0;36;1m,[0m infixOp = [0;97;1m"[0m[0;94;1m^[0m[0;97;1m"[0m :| [0;33;1m[[0m[0;33;1m][0m
-                                [0;36;1m,[0m infixRight = Infix
-                                    [0;33;1m([0m Inf
-                                        [0;95m{[0m infixLeft = Constant
-                                            [0;96m([0m Number [0;93m([0m Integer' [0;92;1m2[0m [0;93m)[0m [0;96m)[0m
-                                        [0;95m,[0m infixOp = [0;97;1m"[0m[0;94;1m+[0m[0;97;1m"[0m :| [0;96m[[0m[0;96m][0m
-                                        [0;95m,[0m infixRight = Infix
-                                            [0;96m([0m Inf
-                                                [0;93m{[0m infixLeft = Name
-                                                    [0;95;1m([0m [0;97;1m"[0m[0;94;1my[0m[0;97;1m"[0m :| [0;96;1m[[0m[0;96;1m][0m [0;95;1m)[0m
-                                                [0;93m,[0m infixOp = [0;97;1m"[0m[0;94;1m^[0m[0;97;1m"[0m :| [0;95;1m[[0m[0;95;1m][0m
-                                                [0;93m,[0m infixRight = Constant
-                                                    [0;95;1m([0m Number
-                                                        [0;96;1m([0m Integer' [0;92;1m2[0m [0;96;1m)[0m [0;95;1m)[0m [0;93m}[0m [0;96m)[0m [0;95m}[0m [0;33;1m)[0m [0;36;1m}[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1mnorm[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs =
-                        [0;33m[[0m ConcreteA
-                            [0;35;1m([0m MatchLogic
-                                [0;36;1m{[0m matchLogicContents = MatchCon
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mQ[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m
-                                    [0;33;1m[[0m MatchLogic
-                                        [0;95m{[0m matchLogicContents = MatchName [0;97;1m"[0m[0;94;1mx[0m[0;97;1m"[0m
-                                        [0;95m,[0m matchLogicNamed = Nothing [0;95m}[0m
-                                    [0;33;1m,[0m MatchLogic
-                                        [0;95m{[0m matchLogicContents = MatchName [0;97;1m"[0m[0;94;1my[0m[0;97;1m"[0m
-                                        [0;95m,[0m matchLogicNamed = Nothing [0;95m}[0m
-                                    [0;33;1m,[0m MatchLogic
-                                        [0;95m{[0m matchLogicContents = MatchName [0;97;1m"[0m[0;94;1mz[0m[0;97;1m"[0m
-                                        [0;95m,[0m matchLogicNamed = Nothing [0;95m}[0m [0;33;1m][0m
-                                [0;36;1m,[0m matchLogicNamed = Nothing [0;36;1m}[0m [0;35;1m)[0m [0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Infix
-                            [0;35;1m([0m Inf
-                                [0;36;1m{[0m infixLeft = Name
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mx[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m
-                                [0;36;1m,[0m infixOp = [0;97;1m"[0m[0;94;1m^[0m[0;97;1m"[0m :| [0;33;1m[[0m[0;33;1m][0m
-                                [0;36;1m,[0m infixRight = Infix
-                                    [0;33;1m([0m Inf
-                                        [0;95m{[0m infixLeft = Constant
-                                            [0;96m([0m Number [0;93m([0m Integer' [0;92;1m2[0m [0;93m)[0m [0;96m)[0m
-                                        [0;95m,[0m infixOp = [0;97;1m"[0m[0;94;1m+[0m[0;97;1m"[0m :| [0;96m[[0m[0;96m][0m
-                                        [0;95m,[0m infixRight = Infix
-                                            [0;96m([0m Inf
-                                                [0;93m{[0m infixLeft = Name
-                                                    [0;95;1m([0m [0;97;1m"[0m[0;94;1my[0m[0;97;1m"[0m :| [0;96;1m[[0m[0;96;1m][0m [0;95;1m)[0m
-                                                [0;93m,[0m infixOp = [0;97;1m"[0m[0;94;1m^[0m[0;97;1m"[0m :| [0;95;1m[[0m[0;95;1m][0m
-                                                [0;93m,[0m infixRight = Infix
-                                                    [0;95;1m([0m Inf
-                                                        [0;96;1m{[0m infixLeft = Constant
-                                                            [0;93;1m([0m Number
-                                                                [0;35m([0m Integer' [0;92;1m2[0m [0;35m)[0m [0;93;1m)[0m
-                                                        [0;96;1m,[0m infixOp = [0;97;1m"[0m[0;94;1m+[0m[0;97;1m"[0m :| [0;93;1m[[0m[0;93;1m][0m
-                                                        [0;96;1m,[0m infixRight = Infix
-                                                            [0;93;1m([0m Inf
-                                                                [0;35m{[0m infixLeft = Name
-                                                                    [0;36m([0m [0;97;1m"[0m[0;94;1mz[0m[0;97;1m"[0m :| [0;33m[[0m[0;33m][0m [0;36m)[0m
-                                                                [0;35m,[0m infixOp = [0;97;1m"[0m[0;94;1m^[0m[0;97;1m"[0m :| [0;36m[[0m[0;36m][0m
-                                                                [0;35m,[0m infixRight = Constant
-                                                                    [0;36m([0m Number
-                                                                        [0;33m([0m Integer' [0;92;1m2[0m [0;33m)[0m [0;36m)[0m [0;35m}[0m [0;93;1m)[0m [0;96;1m}[0m [0;95;1m)[0m [0;93m}[0m [0;96m)[0m [0;95m}[0m [0;33;1m)[0m [0;36;1m}[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Signature
-            [0;93;1m([0m Sig
-                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1mmain[0m[0;97;1m"[0m
-                [0;35m,[0m signatureUsage = Nothing
-                [0;35m,[0m signatureArrowType = Name
-                    [0;36m([0m [0;97;1m"[0m[0;94;1mfield[0m[0;97;1m"[0m :| [0;33m[[0m[0;33m][0m [0;36m)[0m
-                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1mmain[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Constant [0;35;1m([0m Number [0;36;1m([0m Integer' [0;92;1m3[0m [0;36;1m)[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m [0;96;1m][0m [0;95;1m)[0m
+    ( Header
+        ( "Datatypes" :| [] )
+        [ ModuleOpen
+            ( Open ( "Prelude" :| [] ) )
+        , ModuleOpen
+            ( Open ( "Circuit" :| [] ) )
+        , Signature
+            ( Sig
+                { signatureName = "field"
+                , signatureUsage = Nothing
+                , signatureArrowType = Name
+                    ( "ty" :| [] )
+                , signatureConstraints = [] } )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "field"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive
+                            ( Prim ( "Circuit" :| [ "field" ] ) ) ) } ) )
+        , Signature
+            ( Sig
+                { signatureName = "+"
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "field" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "field" :| [] )
+                                , infixOp = "->" :| []
+                                , infixRight = Name
+                                    ( "field" :| [] ) } ) } )
+                , signatureConstraints = [] } )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "+"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive ( Prim ( "Circuit" :| [ "add" ] ) ) ) } ) )
+        , Declaration
+            ( Infixivity ( AssocL "+" 5 ) )
+        , Signature
+            ( Sig
+                { signatureName = "^"
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "field" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "field" :| [] )
+                                , infixOp = "->" :| []
+                                , infixRight = Name
+                                    ( "field" :| [] ) } ) } )
+                , signatureConstraints = [] } )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "^"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive ( Prim ( "Circuit" :| [ "exp" ] ) ) ) } ) )
+        , Declaration
+            ( Infixivity ( AssocL "^" 8 ) )
+        , Signature
+            ( Sig
+                { signatureName = "*"
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "field" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "field" :| [] )
+                                , infixOp = "->" :| []
+                                , infixRight = Name
+                                    ( "field" :| [] ) } ) } )
+                , signatureConstraints = [] } )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "*"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive ( Prim ( "Circuit" :| [ "mul" ] ) ) ) } ) )
+        , Declaration
+            ( Infixivity ( AssocL "*" 7 ) )
+        , Signature
+            ( Sig
+                { signatureName = "=="
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "field" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "field" :| [] )
+                                , infixOp = "->" :| []
+                                , infixRight = Name
+                                    ( "bool" :| [] ) } ) } )
+                , signatureConstraints = [] } )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "=="
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive ( Prim ( "Circuit" :| [ "eq" ] ) ) ) } ) )
+        , Declaration
+            ( Infixivity ( AssocL "==" 2 ) )
+        , Signature
+            ( Sig
+                { signatureName = "x"
+                , signatureUsage = Nothing
+                , signatureArrowType = Name
+                    ( "field" :| [] )
+                , signatureConstraints = [] } )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "x"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Constant ( Number ( Integer' 3 ) ) ) } ) )
+        , Type
+            ( Typ
+                { typeUsage = Nothing
+                , typeName' = "Bar"
+                , typeArgs = []
+                , typeForm = Arrowed
+                    { dataArrow = Name
+                        ( "ty" :| [] )
+                    , dataAdt' = Sum
+                        ( S
+                            { sumConstructor = "P"
+                            , sumValue = Just
+                                ( ADTLike
+                                    [ Name
+                                        ( "field" :| [] )
+                                    , Name
+                                        ( "field" :| [] ) ] ) } :|
+                            [ S
+                                { sumConstructor = "Q"
+                                , sumValue = Just
+                                    ( ADTLike
+                                        [ Name
+                                            ( "field" :| [] )
+                                        , Name
+                                            ( "field" :| [] )
+                                        , Name
+                                            ( "field" :| [] ) ] ) } ] ) } } )
+        , Signature
+            ( Sig
+                { signatureName = "t"
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "field" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Name
+                            ( "field" :| [] ) } )
+                , signatureConstraints = [] } )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "t"
+                    , functionLikeArgs =
+                        [ ConcreteA
+                            ( MatchLogic
+                                { matchLogicContents = MatchName "x"
+                                , matchLogicNamed = Nothing } ) ]
+                    , functionLikeBody = Body
+                        ( Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "x" :| [] )
+                                , infixOp = "+" :| []
+                                , infixRight = Constant
+                                    ( Number ( Integer' 5 ) ) } ) ) } ) )
+        , Signature
+            ( Sig
+                { signatureName = "norm"
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "Bar" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Name
+                            ( "field" :| [] ) } )
+                , signatureConstraints = [] } )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "norm"
+                    , functionLikeArgs =
+                        [ ConcreteA
+                            ( MatchLogic
+                                { matchLogicContents = MatchCon
+                                    ( "P" :| [] )
+                                    [ MatchLogic
+                                        { matchLogicContents = MatchName "x"
+                                        , matchLogicNamed = Nothing }
+                                    , MatchLogic
+                                        { matchLogicContents = MatchName "y"
+                                        , matchLogicNamed = Nothing } ]
+                                , matchLogicNamed = Nothing } ) ]
+                    , functionLikeBody = Body
+                        ( Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "x" :| [] )
+                                , infixOp = "^" :| []
+                                , infixRight = Infix
+                                    ( Inf
+                                        { infixLeft = Constant
+                                            ( Number ( Integer' 2 ) )
+                                        , infixOp = "+" :| []
+                                        , infixRight = Infix
+                                            ( Inf
+                                                { infixLeft = Name
+                                                    ( "y" :| [] )
+                                                , infixOp = "^" :| []
+                                                , infixRight = Constant
+                                                    ( Number
+                                                        ( Integer' 2 ) ) } ) } ) } ) ) } ) )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "norm"
+                    , functionLikeArgs =
+                        [ ConcreteA
+                            ( MatchLogic
+                                { matchLogicContents = MatchCon
+                                    ( "Q" :| [] )
+                                    [ MatchLogic
+                                        { matchLogicContents = MatchName "x"
+                                        , matchLogicNamed = Nothing }
+                                    , MatchLogic
+                                        { matchLogicContents = MatchName "y"
+                                        , matchLogicNamed = Nothing }
+                                    , MatchLogic
+                                        { matchLogicContents = MatchName "z"
+                                        , matchLogicNamed = Nothing } ]
+                                , matchLogicNamed = Nothing } ) ]
+                    , functionLikeBody = Body
+                        ( Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "x" :| [] )
+                                , infixOp = "^" :| []
+                                , infixRight = Infix
+                                    ( Inf
+                                        { infixLeft = Constant
+                                            ( Number ( Integer' 2 ) )
+                                        , infixOp = "+" :| []
+                                        , infixRight = Infix
+                                            ( Inf
+                                                { infixLeft = Name
+                                                    ( "y" :| [] )
+                                                , infixOp = "^" :| []
+                                                , infixRight = Infix
+                                                    ( Inf
+                                                        { infixLeft = Constant
+                                                            ( Number
+                                                                ( Integer' 2 ) )
+                                                        , infixOp = "+" :| []
+                                                        , infixRight = Infix
+                                                            ( Inf
+                                                                { infixLeft = Name
+                                                                    ( "z" :| [] )
+                                                                , infixOp = "^" :| []
+                                                                , infixRight = Constant
+                                                                    ( Number
+                                                                        ( Integer' 2 ) ) } ) } ) } ) } ) } ) ) } ) )
+        , Signature
+            ( Sig
+                { signatureName = "main"
+                , signatureUsage = Nothing
+                , signatureArrowType = Name
+                    ( "field" :| [] )
+                , signatureConstraints = [] } )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "main"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Constant ( Number ( Integer' 3 ) ) ) } ) ) ] )

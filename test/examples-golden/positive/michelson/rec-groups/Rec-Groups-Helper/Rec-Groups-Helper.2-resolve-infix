@@ -1,36 +1,36 @@
 Rec
-    [0;95;1m{[0m recordContents = T
-        [0;96;1m{[0m public = fromList
-            [0;93;1m[[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mty_[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Nothing
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;33;1m([0m [0;97;1m"[0m[0;94;1m:primitive[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mBuiltin.Type[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mty[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1mty_[0m[0;97;1m"[0m [0;92;1m1[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;33;1m([0m [0;97;1m"[0m[0;94;1mty_[0m[0;97;1m"[0m [0;92;1m0[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mfoo[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just [0;97;1m"[0m[0;94;1mty[0m[0;97;1m"[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;97;1m"[0m[0;94;1mty[0m[0;97;1m"[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m [0;93;1m][0m
-        [0;96;1m,[0m private = fromList [0;93;1m[[0m[0;93;1m][0m [0;96;1m}[0m
-    [0;95;1m,[0m recordMTy = Nothing
-    [0;95;1m,[0m recordOpenList = [0;96;1m[[0m[0;96;1m][0m
-    [0;95;1m,[0m recordQualifiedMap = map [0;95;1m}[0m
+    { recordContents = T
+        { public = fromList
+            [
+                ( "ty_"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Nothing
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Builtin.Type" ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "ty"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( "ty_" 1 )
+                        , defTerm =
+                            ( ":lambda-case" ( () ( "ty_" 0 ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "foo"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just "ty"
+                        , defTerm =
+                            ( ":lambda-case" ( () "ty" ) )
+                        , defPrecedence = Pred Left 9 } ) ) ]
+        , private = fromList [] }
+    , recordMTy = Nothing
+    , recordOpenList = []
+    , recordQualifiedMap = map }

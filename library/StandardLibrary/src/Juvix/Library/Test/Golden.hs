@@ -126,7 +126,7 @@ expectFailure v = do
 printCompactParens :: Show a => a -> TLazy.Text
 printCompactParens =
     Pretty.pShowOpt
-    ( Pretty.defaultOutputOptionsDarkBg
+    ( Pretty.defaultOutputOptionsNoColor
         { Pretty.outputOptionsCompactParens = True,
           Pretty.outputOptionsCompact = True
         }

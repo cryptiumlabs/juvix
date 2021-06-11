@@ -1,76 +1,76 @@
 Rec
-    [0;95;1m{[0m recordContents = T
-        [0;96;1m{[0m public = fromList
-            [0;93;1m[[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1m*[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;33;1m([0m [0;97;1m"[0m[0;94;1m:primitive[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mCircuit.mul[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m7[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1m+[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;33;1m([0m [0;97;1m"[0m[0;94;1m:primitive[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mCircuit.add[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m5[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mmain[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;33;1m([0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m [0;92;1m2[0m [0;92;1m2[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1m^[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;33;1m([0m [0;97;1m"[0m[0;94;1m:primitive[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mCircuit.exp[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m8[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;33;1m([0m [0;97;1m"[0m[0;94;1m:primitive[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mCircuit.add[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1m==[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.field[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.Circuit.bool[0m[0;97;1m"[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;33;1m([0m [0;97;1m"[0m[0;94;1m:primitive[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mCircuit.eq[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m2[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m [0;93;1m][0m
-        [0;96;1m,[0m private = fromList [0;93;1m[[0m[0;93;1m][0m [0;96;1m}[0m
-    [0;95;1m,[0m recordMTy = Nothing
-    [0;95;1m,[0m recordOpenList = [0;96;1m[[0m[0;96;1m][0m
-    [0;95;1m,[0m recordQualifiedMap = map [0;95;1m}[0m
+    { recordContents = T
+        { public = fromList
+            [
+                ( "*"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "TopLevel.Prelude.->" "TopLevel.Prelude.Circuit.field"
+                                ( ":infix" "TopLevel.Prelude.->" "TopLevel.Prelude.Circuit.field" "TopLevel.Prelude.Circuit.field" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Circuit.mul" ) ) )
+                        , defPrecedence = Pred Left 7 } ) )
+            ,
+                ( "+"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "TopLevel.Prelude.->" "TopLevel.Prelude.Circuit.field"
+                                ( ":infix" "TopLevel.Prelude.->" "TopLevel.Prelude.Circuit.field" "TopLevel.Prelude.Circuit.field" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Circuit.add" ) ) )
+                        , defPrecedence = Pred Left 5 } ) )
+            ,
+                ( "main"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just "TopLevel.Prelude.Circuit.field"
+                        , defTerm =
+                            ( ":lambda-case" ( () ( "add" 2 2 ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "^"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "TopLevel.Prelude.->" "TopLevel.Prelude.Circuit.field"
+                                ( ":infix" "TopLevel.Prelude.->" "TopLevel.Prelude.Circuit.field" "TopLevel.Prelude.Circuit.field" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Circuit.exp" ) ) )
+                        , defPrecedence = Pred Left 8 } ) )
+            ,
+                ( "add"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "TopLevel.Prelude.->" "TopLevel.Prelude.Circuit.field"
+                                ( ":infix" "TopLevel.Prelude.->" "TopLevel.Prelude.Circuit.field" "TopLevel.Prelude.Circuit.field" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Circuit.add" ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "=="
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "TopLevel.Prelude.->" "TopLevel.Prelude.Circuit.field"
+                                ( ":infix" "TopLevel.Prelude.->" "TopLevel.Prelude.Circuit.field" "TopLevel.Prelude.Circuit.bool" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Circuit.eq" ) ) )
+                        , defPrecedence = Pred Left 2 } ) ) ]
+        , private = fromList [] }
+    , recordMTy = Nothing
+    , recordOpenList = []
+    , recordQualifiedMap = map }

@@ -1,69 +1,69 @@
 Rec
-    [0;95;1m{[0m recordContents = T
-        [0;96;1m{[0m public = fromList
-            [0;93;1m[[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mstring[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Nothing
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;33;1m([0m [0;97;1m"[0m[0;94;1m:primitive[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mMichelson.string[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mdefault[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstring[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTopLevel.Prelude.->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mpara[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m [0;33;1m)[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mpair[0m[0;97;1m"[0m [0;95m([0m [0;97;1m"[0m[0;94;1m:list[0m[0;97;1m"[0m [0;95m)[0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1minit-storage[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;97;1m"[0m[0;94;1munit[0m[0;97;1m"[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Nothing
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;97;1m"[0m[0;94;1munit[0m[0;97;1m"[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mpair[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Nothing
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;33;1m([0m [0;97;1m"[0m[0;94;1m:primitive[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mMichelson.pair[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1munit[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Nothing
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;33;1m([0m[0;33;1m)[0m [0;33;1m([0m [0;97;1m"[0m[0;94;1m:primitive[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mParam.unit[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m [0;93;1m][0m
-        [0;96;1m,[0m private = fromList [0;93;1m[[0m[0;93;1m][0m [0;96;1m}[0m
-    [0;95;1m,[0m recordMTy = Nothing
-    [0;95;1m,[0m recordOpenList = [0;96;1m[[0m[0;96;1m][0m
-    [0;95;1m,[0m recordQualifiedMap = map [0;95;1m}[0m
+    { recordContents = T
+        { public = fromList
+            [
+                ( "string"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Nothing
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Michelson.string" ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "default"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "TopLevel.Prelude.->" "string"
+                                ( ":infix" "TopLevel.Prelude.->" "storage" "storage" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                (
+                                    ( "para" "storage" )
+                                    ( "pair" ( ":list" ) "storage" ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "init-storage"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just "storage"
+                        , defTerm =
+                            ( ":lambda-case" ( () "unit" ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "storage"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Nothing
+                        , defTerm =
+                            ( ":lambda-case" ( () "unit" ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "pair"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Nothing
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Michelson.pair" ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "unit"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Nothing
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Param.unit" ) ) )
+                        , defPrecedence = Pred Left 9 } ) ) ]
+        , private = fromList [] }
+    , recordMTy = Nothing
+    , recordOpenList = []
+    , recordQualifiedMap = map }

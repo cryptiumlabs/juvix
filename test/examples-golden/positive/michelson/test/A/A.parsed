@@ -1,17 +1,17 @@
 Right
-    [0;95;1m([0m Header
-        [0;96;1m([0m [0;97;1m"[0m[0;94;1mA[0m[0;97;1m"[0m :| [0;93;1m[[0m[0;93;1m][0m [0;96;1m)[0m
-        [0;96;1m[[0m Signature
-            [0;93;1m([0m Sig
-                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1mbar[0m[0;97;1m"[0m
-                [0;35m,[0m signatureUsage = Nothing
-                [0;35m,[0m signatureArrowType = Constant
-                    [0;36m([0m Number [0;33m([0m Integer' [0;92;1m5[0m [0;33m)[0m [0;36m)[0m
-                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1mbar[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Constant [0;35;1m([0m Number [0;36;1m([0m Integer' [0;92;1m5[0m [0;36;1m)[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m [0;96;1m][0m [0;95;1m)[0m
+    ( Header
+        ( "A" :| [] )
+        [ Signature
+            ( Sig
+                { signatureName = "bar"
+                , signatureUsage = Nothing
+                , signatureArrowType = Constant
+                    ( Number ( Integer' 5 ) )
+                , signatureConstraints = [] } )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "bar"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Constant ( Number ( Integer' 5 ) ) ) } ) ) ] )

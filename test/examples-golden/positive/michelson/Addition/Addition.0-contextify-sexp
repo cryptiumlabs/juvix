@@ -1,65 +1,65 @@
 Rec
-    [0;95;1m{[0m recordContents = T
-        [0;96;1m{[0m public = fromList
-            [0;93;1m[[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mdefault[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnat[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1maddnat[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m [0;33;1m)[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mpair[0m[0;97;1m"[0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1m:paren[0m[0;97;1m"[0m [0;96m([0m [0;97;1m"[0m[0;94;1madd-storage[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m [0;96m)[0m [0;95m)[0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1m:paren[0m[0;97;1m"[0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1mfoo[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1minput[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m [0;96m)[0m [0;95m)[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1m:record-d[0m[0;97;1m"[0m
-                [0;35m,[0m SumCon
-                    [0;36m([0m Sum [0;33m{[0m sumTDef = Nothing[0;33m,[0m sumTName = [0;97;1m"[0m[0;94;1mStorage[0m[0;97;1m"[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mfoo[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnat[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mva[0m[0;97;1m"[0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1m:record-no-pun[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalue[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalue[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalu[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalu[0m[0;97;1m"[0m [0;95m)[0m [0;33;1m)[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1m:record-no-pun[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalue[0m[0;97;1m"[0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalu[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mva[0m[0;97;1m"[0m [0;95m)[0m [0;97;1m"[0m[0;94;1mvalu[0m[0;97;1m"[0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalue[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mva[0m[0;97;1m"[0m [0;95m)[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mStorage[0m[0;97;1m"[0m
-                [0;35m,[0m TypeDeclar
-                    [0;36m{[0m definitionRepr =
-                        [0;33m([0m [0;97;1m"[0m[0;94;1mStorage[0m[0;97;1m"[0m [0;35;1m([0m[0;35;1m)[0m
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:record-d[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalue[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnat[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalu[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnat[0m[0;97;1m"[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1madd-storage[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnat[0m[0;97;1m"[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m
-                                    [0;33;1m([0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1m:record-no-pun[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalue[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalue[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalu[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalu[0m[0;97;1m"[0m [0;95m)[0m [0;33;1m)[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalue[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mvalu[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m [0;93;1m][0m
-        [0;96;1m,[0m private = fromList [0;93;1m[[0m[0;93;1m][0m [0;96;1m}[0m
-    [0;95;1m,[0m recordMTy = Nothing
-    [0;95;1m,[0m recordOpenList = [0;96;1m[[0m[0;96;1m][0m
-    [0;95;1m,[0m recordQualifiedMap = map [0;95;1m}[0m
+    { recordContents = T
+        { public = fromList
+            [
+                ( "default"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "nat"
+                                ( ":infix" "->" "storage" "storage" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                (
+                                    ( "addnat" "storage" )
+                                    ( "pair"
+                                        ( ":paren" ( "add-storage" "storage" ) )
+                                        ( ":paren"
+                                            ( "foo" "input" "storage" ) ) ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( ":record-d"
+                , SumCon
+                    ( Sum { sumTDef = Nothing, sumTName = "Storage" } ) )
+            ,
+                ( "foo"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "nat"
+                                ( ":infix" "->" "storage" "storage" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                (
+                                    ( "va"
+                                        ( ":record-no-pun" "value" "value" "valu" "valu" ) )
+                                    ( ":record-no-pun" "value"
+                                        ( "add" "valu" "va" ) "valu"
+                                        ( "add" "value" "va" ) ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "Storage"
+                , TypeDeclar
+                    { definitionRepr =
+                        ( "Storage" ()
+                            ( ":record-d" "value" "nat" "valu" "nat" ) ) } )
+            ,
+                ( "add-storage"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "storage" "nat" )
+                        , defTerm =
+                            ( ":lambda-case"
+                                (
+                                    (
+                                        ( ":record-no-pun" "value" "value" "valu" "valu" ) )
+                                    ( "add" "value" "valu" ) ) )
+                        , defPrecedence = Pred Left 9 } ) ) ]
+        , private = fromList [] }
+    , recordMTy = Nothing
+    , recordOpenList = []
+    , recordQualifiedMap = map }

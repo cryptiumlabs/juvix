@@ -1,86 +1,86 @@
 Right
-    [0;95;1m([0m NoHeader
-        [0;96;1m[[0m ModuleOpen
-            [0;93;1m([0m Open [0;35m([0m [0;97;1m"[0m[0;94;1mPrelude[0m[0;97;1m"[0m :| [0;36m[[0m[0;36m][0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1mstring[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Primitive
-                            [0;35;1m([0m Prim [0;36;1m([0m [0;97;1m"[0m[0;94;1mMichelson[0m[0;97;1m"[0m :| [0;33;1m[[0m [0;97;1m"[0m[0;94;1mstring[0m[0;97;1m"[0m [0;33;1m][0m [0;36;1m)[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1mpair[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Primitive
-                            [0;35;1m([0m Prim [0;36;1m([0m [0;97;1m"[0m[0;94;1mMichelson[0m[0;97;1m"[0m :| [0;33;1m[[0m [0;97;1m"[0m[0;94;1mpair[0m[0;97;1m"[0m [0;33;1m][0m [0;36;1m)[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1munit[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Primitive [0;35;1m([0m Prim [0;36;1m([0m [0;97;1m"[0m[0;94;1mParam[0m[0;97;1m"[0m :| [0;33;1m[[0m [0;97;1m"[0m[0;94;1munit[0m[0;97;1m"[0m [0;33;1m][0m [0;36;1m)[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Name [0;35;1m([0m [0;97;1m"[0m[0;94;1munit[0m[0;97;1m"[0m :| [0;36;1m[[0m[0;36;1m][0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Signature
-            [0;93;1m([0m Sig
-                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1mdefault[0m[0;97;1m"[0m
-                [0;35m,[0m signatureUsage = Nothing
-                [0;35m,[0m signatureArrowType = Infix
-                    [0;36m([0m Inf
-                        [0;33m{[0m infixLeft = Name
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1mstring[0m[0;97;1m"[0m :| [0;36;1m[[0m[0;36;1m][0m [0;35;1m)[0m
-                        [0;33m,[0m infixOp = [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m :| [0;35;1m[[0m[0;35;1m][0m
-                        [0;33m,[0m infixRight = Infix
-                            [0;35;1m([0m Inf
-                                [0;36;1m{[0m infixLeft = Name
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m
-                                [0;36;1m,[0m infixOp = [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m :| [0;33;1m[[0m[0;33;1m][0m
-                                [0;36;1m,[0m infixRight = Name
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m [0;36;1m}[0m [0;35;1m)[0m [0;33m}[0m [0;36m)[0m
-                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1mdefault[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs =
-                        [0;33m[[0m ConcreteA
-                            [0;35;1m([0m MatchLogic
-                                [0;36;1m{[0m matchLogicContents = MatchName [0;97;1m"[0m[0;94;1mpara[0m[0;97;1m"[0m
-                                [0;36;1m,[0m matchLogicNamed = Nothing [0;36;1m}[0m [0;35;1m)[0m
-                        [0;33m,[0m ConcreteA
-                            [0;35;1m([0m MatchLogic
-                                [0;36;1m{[0m matchLogicContents = MatchName [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m
-                                [0;36;1m,[0m matchLogicNamed = Nothing [0;36;1m}[0m [0;35;1m)[0m [0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Application
-                            [0;35;1m([0m App
-                                [0;36;1m{[0m applicationName = Name
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mpair[0m[0;97;1m"[0m :| [0;95m[[0m[0;95m][0m [0;33;1m)[0m
-                                [0;36;1m,[0m applicationArgs = List
-                                    [0;33;1m([0m ListLit [0;95m[[0m[0;95m][0m [0;33;1m)[0m :|
-                                    [0;33;1m[[0m Name [0;95m([0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m :| [0;96m[[0m[0;96m][0m [0;95m)[0m [0;33;1m][0m [0;36;1m}[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m
-        [0;96;1m,[0m Signature
-            [0;93;1m([0m Sig
-                [0;35m{[0m signatureName = [0;97;1m"[0m[0;94;1minit-storage[0m[0;97;1m"[0m
-                [0;35m,[0m signatureUsage = Nothing
-                [0;35m,[0m signatureArrowType = Name
-                    [0;36m([0m [0;97;1m"[0m[0;94;1mstorage[0m[0;97;1m"[0m :| [0;33m[[0m[0;33m][0m [0;36m)[0m
-                [0;35m,[0m signatureConstraints = [0;36m[[0m[0;36m][0m [0;35m}[0m [0;93;1m)[0m
-        [0;96;1m,[0m Function
-            [0;93;1m([0m Func
-                [0;35m([0m Like
-                    [0;36m{[0m functionLikedName = [0;97;1m"[0m[0;94;1minit-storage[0m[0;97;1m"[0m
-                    [0;36m,[0m functionLikeArgs = [0;33m[[0m[0;33m][0m
-                    [0;36m,[0m functionLikeBody = Body
-                        [0;33m([0m Name [0;35;1m([0m [0;97;1m"[0m[0;94;1munit[0m[0;97;1m"[0m :| [0;36;1m[[0m[0;36;1m][0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m)[0m [0;96;1m][0m [0;95;1m)[0m
+    ( NoHeader
+        [ ModuleOpen
+            ( Open ( "Prelude" :| [] ) )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "string"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive
+                            ( Prim ( "Michelson" :| [ "string" ] ) ) ) } ) )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "pair"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive
+                            ( Prim ( "Michelson" :| [ "pair" ] ) ) ) } ) )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "unit"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive ( Prim ( "Param" :| [ "unit" ] ) ) ) } ) )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "storage"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Name ( "unit" :| [] ) ) } ) )
+        , Signature
+            ( Sig
+                { signatureName = "default"
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "string" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "storage" :| [] )
+                                , infixOp = "->" :| []
+                                , infixRight = Name
+                                    ( "storage" :| [] ) } ) } )
+                , signatureConstraints = [] } )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "default"
+                    , functionLikeArgs =
+                        [ ConcreteA
+                            ( MatchLogic
+                                { matchLogicContents = MatchName "para"
+                                , matchLogicNamed = Nothing } )
+                        , ConcreteA
+                            ( MatchLogic
+                                { matchLogicContents = MatchName "storage"
+                                , matchLogicNamed = Nothing } ) ]
+                    , functionLikeBody = Body
+                        ( Application
+                            ( App
+                                { applicationName = Name
+                                    ( "pair" :| [] )
+                                , applicationArgs = List
+                                    ( ListLit [] ) :|
+                                    [ Name ( "storage" :| [] ) ] } ) ) } ) )
+        , Signature
+            ( Sig
+                { signatureName = "init-storage"
+                , signatureUsage = Nothing
+                , signatureArrowType = Name
+                    ( "storage" :| [] )
+                , signatureConstraints = [] } )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "init-storage"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Name ( "unit" :| [] ) ) } ) ) ] )

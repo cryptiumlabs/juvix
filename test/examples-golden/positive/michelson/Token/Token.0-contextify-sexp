@@ -1,157 +1,157 @@
 Rec
-    [0;95;1m{[0m recordContents = T
-        [0;96;1m{[0m public = fromList
-            [0;93;1m[[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mtransfer-stor[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m:[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstor[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mToken.Storage[0m[0;97;1m"[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m:[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mfrom[0m[0;97;1m"[0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mToken.Address[0m[0;97;1m"[0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m:[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mto[0m[0;97;1m"[0m
-                                                [0;93m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mToken.Address[0m[0;97;1m"[0m
-                                                    [0;95;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m:[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnum[0m[0;97;1m"[0m
-                                                        [0;96;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m
-                                                            [0;93;1m([0m [0;97;1m"[0m[0;94;1m:refinement[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mNat.T[0m[0;97;1m"[0m
-                                                                [0;35m([0m [0;97;1m"[0m[0;94;1mhas-n[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstor.accounts[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mfrom[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnum[0m[0;97;1m"[0m [0;35m)[0m [0;93;1m)[0m [0;97;1m"[0m[0;94;1mToken.Storage[0m[0;97;1m"[0m [0;96;1m)[0m [0;95;1m)[0m [0;93m)[0m [0;96m)[0m [0;95m)[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mstor[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1madd-from[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1madd-to[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnum[0m[0;97;1m"[0m [0;33;1m)[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1m:let-match[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnew-acc[0m[0;97;1m"[0m
-                                        [0;95m([0m [0;96m([0m[0;96m)[0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1maccount-add[0m[0;97;1m"[0m
-                                                [0;93m([0m [0;97;1m"[0m[0;94;1m:paren[0m[0;97;1m"[0m
-                                                    [0;95;1m([0m [0;97;1m"[0m[0;94;1maccount-sub[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstor.accounts[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1madd-from[0m[0;97;1m"[0m [0;95;1m)[0m [0;93m)[0m [0;97;1m"[0m[0;94;1madd-to[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnum[0m[0;97;1m"[0m [0;96m)[0m [0;95m)[0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1m:record-no-pun[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mtotal-supply[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mstor.total-supply[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1maccounts[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnew-acc[0m[0;97;1m"[0m [0;95m)[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mError[0m[0;97;1m"[0m
-                [0;35m,[0m TypeDeclar
-                    [0;36m{[0m definitionRepr =
-                        [0;33m([0m [0;97;1m"[0m[0;94;1mError[0m[0;97;1m"[0m [0;35;1m([0m[0;35;1m)[0m [0;35;1m([0m [0;97;1m"[0m[0;94;1mNotEnoughFunds[0m[0;97;1m"[0m [0;35;1m)[0m [0;35;1m([0m [0;97;1m"[0m[0;94;1mNotSameAccount[0m[0;97;1m"[0m [0;35;1m)[0m [0;35;1m([0m [0;97;1m"[0m[0;94;1mNotOwnerToken[0m[0;97;1m"[0m [0;35;1m)[0m [0;35;1m([0m [0;97;1m"[0m[0;94;1mNotEnoughTokens[0m[0;97;1m"[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mexec[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mToken.T[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mTransaction.T[0m[0;97;1m"[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mEither.T[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mError[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mToken.T[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mtoken[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mtx[0m[0;97;1m"[0m [0;33;1m)[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mcase[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mtx.data[0m[0;97;1m"[0m
-                                        [0;95m([0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1mTransfer[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m_[0m[0;97;1m"[0m [0;96m)[0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1mcase[0m[0;97;1m"[0m
-                                                [0;93m([0m [0;97;1m"[0m[0;94;1mValidation.transfer[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mtoken[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mtx[0m[0;97;1m"[0m [0;93m)[0m
-                                                [0;93m([0m [0;95;1m([0m [0;97;1m"[0m[0;94;1mTrue[0m[0;97;1m"[0m [0;95;1m)[0m
-                                                    [0;95;1m([0m [0;97;1m"[0m[0;94;1mRight[0m[0;97;1m"[0m
-                                                        [0;96;1m([0m [0;97;1m"[0m[0;94;1m:paren[0m[0;97;1m"[0m
-                                                            [0;93;1m([0m [0;97;1m"[0m[0;94;1mtransfer[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mtoken[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mtx[0m[0;97;1m"[0m [0;93;1m)[0m [0;96;1m)[0m [0;95;1m)[0m [0;93m)[0m
-                                                [0;93m([0m [0;95;1m([0m [0;97;1m"[0m[0;94;1mFalse[0m[0;97;1m"[0m [0;95;1m)[0m
-                                                    [0;95;1m([0m [0;97;1m"[0m[0;94;1mcase[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1melse[0m[0;97;1m"[0m
-                                                        [0;96;1m([0m [0;93;1m([0m [0;97;1m"[0m[0;94;1mTrue[0m[0;97;1m"[0m [0;93;1m)[0m
-                                                            [0;93;1m([0m [0;97;1m"[0m[0;94;1mLeft[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mNotEnoughFunds[0m[0;97;1m"[0m [0;93;1m)[0m [0;96;1m)[0m [0;95;1m)[0m [0;93m)[0m [0;96m)[0m [0;95m)[0m
-                                        [0;95m([0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1mMint[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m_[0m[0;97;1m"[0m [0;96m)[0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1mcase[0m[0;97;1m"[0m
-                                                [0;93m([0m [0;97;1m"[0m[0;94;1mValidation.mint[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mtoken[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mtx[0m[0;97;1m"[0m [0;93m)[0m
-                                                [0;93m([0m [0;95;1m([0m [0;97;1m"[0m[0;94;1mTrue[0m[0;97;1m"[0m [0;95;1m)[0m
-                                                    [0;95;1m([0m [0;97;1m"[0m[0;94;1mRight[0m[0;97;1m"[0m
-                                                        [0;96;1m([0m [0;97;1m"[0m[0;94;1m:paren[0m[0;97;1m"[0m
-                                                            [0;93;1m([0m [0;97;1m"[0m[0;94;1mmint[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mtoken[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mtx[0m[0;97;1m"[0m [0;93;1m)[0m [0;96;1m)[0m [0;95;1m)[0m [0;93m)[0m
-                                                [0;93m([0m [0;95;1m([0m [0;97;1m"[0m[0;94;1mFalse[0m[0;97;1m"[0m [0;95;1m)[0m
-                                                    [0;95;1m([0m [0;97;1m"[0m[0;94;1mcase[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1melse[0m[0;97;1m"[0m
-                                                        [0;96;1m([0m [0;93;1m([0m [0;97;1m"[0m[0;94;1mTrue[0m[0;97;1m"[0m [0;93;1m)[0m
-                                                            [0;93;1m([0m [0;97;1m"[0m[0;94;1mLeft[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mNotEnoughFunds[0m[0;97;1m"[0m [0;93;1m)[0m [0;96;1m)[0m [0;95;1m)[0m [0;93m)[0m [0;96m)[0m [0;95m)[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mNotEnoughTokens[0m[0;97;1m"[0m
-                [0;35m,[0m SumCon
-                    [0;36m([0m Sum [0;33m{[0m sumTDef = Nothing[0;33m,[0m sumTName = [0;97;1m"[0m[0;94;1mError[0m[0;97;1m"[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mNotSameAccount[0m[0;97;1m"[0m
-                [0;35m,[0m SumCon
-                    [0;36m([0m Sum [0;33m{[0m sumTDef = Nothing[0;33m,[0m sumTName = [0;97;1m"[0m[0;94;1mError[0m[0;97;1m"[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mNotEnoughFunds[0m[0;97;1m"[0m
-                [0;35m,[0m SumCon
-                    [0;36m([0m Sum [0;33m{[0m sumTDef = Nothing[0;33m,[0m sumTName = [0;97;1m"[0m[0;94;1mError[0m[0;97;1m"[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mNotOwnerToken[0m[0;97;1m"[0m
-                [0;35m,[0m SumCon
-                    [0;36m([0m Sum [0;33m{[0m sumTDef = Nothing[0;33m,[0m sumTName = [0;97;1m"[0m[0;94;1mError[0m[0;97;1m"[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1maccount-add[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mAccounts.T[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mToken.Address[0m[0;97;1m"[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mNat.T[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mAccounts.T[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1maccounts[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnumber[0m[0;97;1m"[0m [0;33;1m)[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mAccounts.update[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1maccounts[0m[0;97;1m"[0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1m:paren[0m[0;97;1m"[0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1m+[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnumber[0m[0;97;1m"[0m [0;96m)[0m [0;95m)[0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1maccount-sub[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m:[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1macc[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mAccounts.T[0m[0;97;1m"[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m:[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mToken.Address[0m[0;97;1m"[0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m:[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnum[0m[0;97;1m"[0m
-                                                [0;93m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m
-                                                    [0;95;1m([0m [0;97;1m"[0m[0;94;1m:refinement[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mNat.T[0m[0;97;1m"[0m
-                                                        [0;96;1m([0m [0;97;1m"[0m[0;94;1mhas-n[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1macc[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnum[0m[0;97;1m"[0m [0;96;1m)[0m [0;95;1m)[0m [0;97;1m"[0m[0;94;1mAccounts.T[0m[0;97;1m"[0m [0;93m)[0m [0;96m)[0m [0;95m)[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1maccounts[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnumber[0m[0;97;1m"[0m [0;33;1m)[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mcase[0m[0;97;1m"[0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1mAccounts.select[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1maccounts[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m [0;95m)[0m
-                                        [0;95m([0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1mJust[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mbalance[0m[0;97;1m"[0m [0;96m)[0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1mAccounts.put[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1maccounts[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m
-                                                [0;93m([0m [0;97;1m"[0m[0;94;1m:paren[0m[0;97;1m"[0m
-                                                    [0;95;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m-[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mbalance[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mnumber[0m[0;97;1m"[0m [0;95;1m)[0m [0;93m)[0m [0;96m)[0m [0;95m)[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m
-            [0;93;1m,[0m
-                [0;35m([0m [0;97;1m"[0m[0;94;1mhas-n[0m[0;97;1m"[0m
-                [0;35m,[0m Def
-                    [0;36m([0m D
-                        [0;33m{[0m defUsage = Nothing
-                        [0;33m,[0m defMTy = Just
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mAccounts.T[0m[0;97;1m"[0m
-                                [0;36;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mToken.Address[0m[0;97;1m"[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m->[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mNat[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mBool[0m[0;97;1m"[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defTerm =
-                            [0;35;1m([0m [0;97;1m"[0m[0;94;1m:lambda-case[0m[0;97;1m"[0m
-                                [0;36;1m([0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1maccounts[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mto-transfer[0m[0;97;1m"[0m [0;33;1m)[0m
-                                    [0;33;1m([0m [0;97;1m"[0m[0;94;1mcase[0m[0;97;1m"[0m
-                                        [0;95m([0m [0;97;1m"[0m[0;94;1mAccounts.select[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1maccounts[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1madd[0m[0;97;1m"[0m [0;95m)[0m
-                                        [0;95m([0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1mJust[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mn[0m[0;97;1m"[0m [0;96m)[0m
-                                            [0;96m([0m [0;97;1m"[0m[0;94;1m:infix[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1m<=[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mto-transfer[0m[0;97;1m"[0m [0;97;1m"[0m[0;94;1mn[0m[0;97;1m"[0m [0;96m)[0m [0;95m)[0m
-                                        [0;95m([0m [0;96m([0m [0;97;1m"[0m[0;94;1mNothing[0m[0;97;1m"[0m [0;96m)[0m [0;97;1m"[0m[0;94;1mFalse[0m[0;97;1m"[0m [0;95m)[0m [0;33;1m)[0m [0;36;1m)[0m [0;35;1m)[0m
-                        [0;33m,[0m defPrecedence = Pred Left [0;92;1m9[0m [0;33m}[0m [0;36m)[0m [0;35m)[0m [0;93;1m][0m
-        [0;96;1m,[0m private = fromList [0;93;1m[[0m[0;93;1m][0m [0;96;1m}[0m
-    [0;95;1m,[0m recordMTy = Nothing
-    [0;95;1m,[0m recordOpenList = [0;96;1m[[0m[0;96;1m][0m
-    [0;95;1m,[0m recordQualifiedMap = map [0;95;1m}[0m
+    { recordContents = T
+        { public = fromList
+            [
+                ( "transfer-stor"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" ":" "stor"
+                                ( ":infix" "->" "Token.Storage"
+                                    ( ":infix" ":" "from"
+                                        ( ":infix" "->" "Token.Address"
+                                            ( ":infix" ":" "to"
+                                                ( ":infix" "->" "Token.Address"
+                                                    ( ":infix" ":" "num"
+                                                        ( ":infix" "->"
+                                                            ( ":refinement" "Nat.T"
+                                                                ( "has-n" "stor.accounts" "from" "num" ) ) "Token.Storage" ) ) ) ) ) ) ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                (
+                                    ( "stor" "add-from" "add-to" "num" )
+                                    ( ":let-match" "new-acc"
+                                        ( ()
+                                            ( "account-add"
+                                                ( ":paren"
+                                                    ( "account-sub" "stor.accounts" "add-from" ) ) "add-to" "num" ) )
+                                        ( ":record-no-pun" "total-supply" "stor.total-supply" "accounts" "new-acc" ) ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "Error"
+                , TypeDeclar
+                    { definitionRepr =
+                        ( "Error" () ( "NotEnoughFunds" ) ( "NotSameAccount" ) ( "NotOwnerToken" ) ( "NotEnoughTokens" ) ) } )
+            ,
+                ( "exec"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "Token.T"
+                                ( ":infix" "->" "Transaction.T"
+                                    ( "Either.T" "Error" "Token.T" ) ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                (
+                                    ( "token" "tx" )
+                                    ( "case" "tx.data"
+                                        (
+                                            ( "Transfer" "_" )
+                                            ( "case"
+                                                ( "Validation.transfer" "token" "tx" )
+                                                ( ( "True" )
+                                                    ( "Right"
+                                                        ( ":paren"
+                                                            ( "transfer" "token" "tx" ) ) ) )
+                                                ( ( "False" )
+                                                    ( "case" "else"
+                                                        ( ( "True" )
+                                                            ( "Left" "NotEnoughFunds" ) ) ) ) ) )
+                                        (
+                                            ( "Mint" "_" )
+                                            ( "case"
+                                                ( "Validation.mint" "token" "tx" )
+                                                ( ( "True" )
+                                                    ( "Right"
+                                                        ( ":paren"
+                                                            ( "mint" "token" "tx" ) ) ) )
+                                                ( ( "False" )
+                                                    ( "case" "else"
+                                                        ( ( "True" )
+                                                            ( "Left" "NotEnoughFunds" ) ) ) ) ) ) ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "NotEnoughTokens"
+                , SumCon
+                    ( Sum { sumTDef = Nothing, sumTName = "Error" } ) )
+            ,
+                ( "NotSameAccount"
+                , SumCon
+                    ( Sum { sumTDef = Nothing, sumTName = "Error" } ) )
+            ,
+                ( "NotEnoughFunds"
+                , SumCon
+                    ( Sum { sumTDef = Nothing, sumTName = "Error" } ) )
+            ,
+                ( "NotOwnerToken"
+                , SumCon
+                    ( Sum { sumTDef = Nothing, sumTName = "Error" } ) )
+            ,
+                ( "account-add"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "Accounts.T"
+                                ( ":infix" "->" "Token.Address"
+                                    ( ":infix" "->" "Nat.T" "Accounts.T" ) ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                (
+                                    ( "accounts" "add" "number" )
+                                    ( "Accounts.update" "accounts"
+                                        ( ":paren"
+                                            ( "+" "number" ) ) "add" ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "account-sub"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" ":" "acc"
+                                ( ":infix" "->" "Accounts.T"
+                                    ( ":infix" ":" "add"
+                                        ( ":infix" "->" "Token.Address"
+                                            ( ":infix" ":" "num"
+                                                ( ":infix" "->"
+                                                    ( ":refinement" "Nat.T"
+                                                        ( "has-n" "acc" "add" "num" ) ) "Accounts.T" ) ) ) ) ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                (
+                                    ( "accounts" "add" "number" )
+                                    ( "case"
+                                        ( "Accounts.select" "accounts" "add" )
+                                        (
+                                            ( "Just" "balance" )
+                                            ( "Accounts.put" "accounts" "add"
+                                                ( ":paren"
+                                                    ( ":infix" "-" "balance" "number" ) ) ) ) ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "has-n"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "Accounts.T"
+                                ( ":infix" "->" "Token.Address"
+                                    ( ":infix" "->" "Nat" "Bool" ) ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                (
+                                    ( "accounts" "add" "to-transfer" )
+                                    ( "case"
+                                        ( "Accounts.select" "accounts" "add" )
+                                        (
+                                            ( "Just" "n" )
+                                            ( ":infix" "<=" "to-transfer" "n" ) )
+                                        ( ( "Nothing" ) "False" ) ) ) )
+                        , defPrecedence = Pred Left 9 } ) ) ]
+        , private = fromList [] }
+    , recordMTy = Nothing
+    , recordOpenList = []
+    , recordQualifiedMap = map }

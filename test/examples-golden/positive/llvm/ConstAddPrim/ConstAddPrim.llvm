@@ -1,4 +1,4 @@
-[0;97;1m"[0m[0;94;1m; ModuleID = 'juvix-module'
+"; ModuleID = 'juvix-module'
 
 
  
@@ -7,4 +7,4 @@
 define external ccc  i8 @main()    {
   %1 = add   i8 4, 6 
   ret i8 %1 
-}[0m[0;97;1m"[0m
+}"

@@ -77,7 +77,7 @@ discoverGoldenTestPasses handleDiscoverFunction discoverPasses filePath =
     callGolden i (passFunction, name) =
       discoverGoldenTests
         [".ju"]
-        ("." <> show i <> "-" <> name)
+        ("." <> show (i :: Integer) <> "-" <> name)
         getGolden
         (handleDiscoverFunction passFunction)
         filePath
