@@ -1,0 +1,9 @@
+Ann
+    [0;95;1m{[0m usage = Omega
+    [0;95;1m,[0m type' = PrimTy
+        [0;96;1m([0m PrimTy [0;93;1m([0m IntegerType [0;35m{[0m typeBits = [0;92;1m8[0m [0;35m}[0m [0;93;1m)[0m [0;96;1m)[0m
+    [0;95;1m,[0m term = Prim
+        [0;96;1m([0m Return
+            [0;93;1m{[0m retType = PrimType
+                [0;35m{[0m getPrimType = PrimTy [0;36m([0m IntegerType [0;33m{[0m typeBits = [0;92;1m8[0m [0;33m}[0m [0;36m)[0m :| [0;36m[[0m[0;36m][0m [0;35m}[0m
+            [0;93;1m,[0m retTerm = LitInt [0;92;1m10[0m [0;93;1m}[0m [0;96;1m)[0m [0;95;1m}[0m

@@ -1,0 +1,33 @@
+Ann
+    [0;95;1m{[0m usage = Omega
+    [0;95;1m,[0m type' = PrimTy PField
+    [0;95;1m,[0m term = AppM
+        [0;96;1m([0m Ann
+            [0;93;1m{[0m usage = Omega
+            [0;93;1m,[0m type' = Pi Omega [0;35m([0m PrimTy PField [0;35m)[0m
+                [0;35m([0m Pi Omega [0;36m([0m PrimTy PField [0;36m)[0m [0;36m([0m PrimTy PField [0;36m)[0m [0;35m)[0m
+            [0;93;1m,[0m term = Prim
+                [0;35m([0m Return
+                    [0;36m{[0m retType = PrimType
+                        [0;33m{[0m getPrimType = PField :| [0;35;1m[[0m PField[0;35;1m,[0m PField [0;35;1m][0m [0;33m}[0m
+                    [0;36m,[0m retTerm = PAdd [0;36m}[0m [0;35m)[0m [0;93;1m}[0m [0;96;1m)[0m
+        [0;96;1m[[0m Ann
+            [0;93;1m{[0m usage = Omega
+            [0;93;1m,[0m type' = PrimTy PField
+            [0;93;1m,[0m term = Prim
+                [0;35m([0m Return
+                    [0;36m{[0m retType = PrimType
+                        [0;33m{[0m getPrimType = PField :| [0;35;1m[[0m[0;35;1m][0m [0;33m}[0m
+                    [0;36m,[0m retTerm = PConst
+                        [0;33m([0m P
+                            [0;35;1m([0m [0;92;1m2[0m `modulo` [0;92;1m52435875175126190479447740508185965837690552500527637822603658699938581184513[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m}[0m
+        [0;96;1m,[0m Ann
+            [0;93;1m{[0m usage = Omega
+            [0;93;1m,[0m type' = PrimTy PField
+            [0;93;1m,[0m term = Prim
+                [0;35m([0m Return
+                    [0;36m{[0m retType = PrimType
+                        [0;33m{[0m getPrimType = PField :| [0;35;1m[[0m[0;35;1m][0m [0;33m}[0m
+                    [0;36m,[0m retTerm = PConst
+                        [0;33m([0m P
+                            [0;35;1m([0m [0;92;1m2[0m `modulo` [0;92;1m52435875175126190479447740508185965837690552500527637822603658699938581184513[0m [0;35;1m)[0m [0;33m)[0m [0;36m}[0m [0;35m)[0m [0;93;1m}[0m [0;96;1m][0m [0;95;1m}[0m
