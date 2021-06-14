@@ -18,6 +18,7 @@ import qualified Juvix.Backends.Plonk.Types as Types
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.IR.TransformExt as TransformExt
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
 import Debug.Pretty.Simple ( pTraceShowM ) 
@@ -91,28 +92,14 @@ instance
         case HM.elems $ HM.filter Pipeline.isMain globalDefs of
           [] -> Feedback.fail $ "No main function found in " <> show globalDefs
           -- TODO: Convert main n = ... to main = \n -> ...
-          [IR.RawGFunction f]
-            | IR.RawFunction _name usage ty (clause :| []) <- f,
-              IR.RawFunClause _ _ term _ <- clause -> do
-              let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-              (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @(Types.PrimTy f) @(Types.PrimVal f) @Types.CompilationError inlinedTerm (IR.globalToUsage usage) ty) (Parameterization.param @f) newGlobals
-              case res of
-                Right r -> do
-                  pure r
-                Left err -> do
-                  print term
-                  Feedback.fail $ show err
-
           -- main x y = ...
           [f@(IR.RawGFunction _)]  ->
-            case IR.toLambdaR f of
+            case TransformExt.extForgetE <$> IR.toLambdaR @IR.NoExt f of
               Nothing -> do
                 Feedback.fail "Unable to convert main to lambda" 
-              Just elim 
-                | IR.Ann usage term ty _ <- elim -> do
-                  -- forgetter
+              Just (IR.Ann usage term ty _) -> do
                   let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-                  (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @(Types.PrimTy f) @(Types.PrimVal f) @Types.CompilationError inlinedTerm (IR.globalToUsage usage) ty) (Parameterization.param @f) newGlobals
+                  (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @(Types.PrimTy f) @(Types.PrimVal f) @Types.CompilationError inlinedTerm usage ty) (Parameterization.param @f) newGlobals
                   case res of
                     Right r -> do
                       pure r
