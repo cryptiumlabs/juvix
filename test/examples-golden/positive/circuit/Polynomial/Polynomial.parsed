@@ -11,43 +11,6 @@ Right
             )
         , Signature
             ( Sig
-                { signatureName = "add"
-                , signatureUsage = Nothing
-                , signatureArrowType = Infix
-                    ( Inf
-                        { infixLeft = Name
-                            ( "field" :| [] )
-                        , infixOp = "->" :| []
-                        , infixRight = Infix
-                            ( Inf
-                                { infixLeft = Name
-                                    ( "field" :| [] )
-                                , infixOp = "->" :| []
-                                , infixRight = Name
-                                    ( "field" :| [] )
-                                }
-                            )
-                        }
-                    )
-                , signatureConstraints = []
-                }
-            )
-        , Function
-            ( Func
-                ( Like
-                    { functionLikedName = "add"
-                    , functionLikeArgs = []
-                    , functionLikeBody = Body
-                        ( Primitive
-                            ( Prim
-                                ( "Circuit" :| [ "add" ] )
-                            )
-                        )
-                    }
-                )
-            )
-        , Signature
-            ( Sig
                 { signatureName = "+"
                 , signatureUsage = Nothing
                 , signatureArrowType = Infix
