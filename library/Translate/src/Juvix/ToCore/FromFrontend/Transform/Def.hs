@@ -19,6 +19,7 @@ import Juvix.ToCore.FromFrontend.Transform.Helpers
     lookupSig,
     splitDataType,
   )
+import Juvix.ToCore.FromFrontend.Transform.IR (transformTermIR)
 import Juvix.ToCore.Types
   ( CoreDef (..),
     CoreSig (..),
@@ -103,9 +104,6 @@ transformDef x def = do
         patts <- traverse transformArg args
         clauseBody <- transformTermIR q body
         pure $ IR.RawFunClause [] patts clauseBody False
-      where
-        transformTermIR q fe = do
-          hrToIR <$> transformTermHR q fe
     transformClause _ _ = error "malformed tansformClause"
 
     transformArg p@(name Sexp.:> _rest)
