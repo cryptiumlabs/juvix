@@ -45,7 +45,7 @@ data PrimTy
   | Set
   | ContractT
   | Application PrimTy (NonEmpty PrimTy)
-  deriving (Show, Eq, Generic, Data)
+  deriving (Show, Read, Eq, Generic, Data)
 
 data RawPrimVal
   = Constant (M.Value' Op)
@@ -108,7 +108,7 @@ data RawPrimVal
   | Loop
   | Iter
   | MapOp
-  deriving (Show, Eq, Generic, Data)
+  deriving (Show, Read, Eq, Generic, Data)
 
 type Return' ext = App.Return' ext (P.PrimType PrimTy) RawPrimVal
 
@@ -146,7 +146,7 @@ data CompilationError
   | FieldEltInMichelsonValue
   | AppliedConstantToArgument
   | TooManyArguments
-  deriving (Show, Eq, Generic)
+  deriving (Show, Read, Eq, Generic)
 
 data CompilationLog
   = TermToInstr Term Op
