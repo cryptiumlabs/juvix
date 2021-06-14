@@ -9,6 +9,7 @@ where
 import qualified Data.Aeson as A
 import Data.Field.Galois (GaloisField)
 import qualified Data.HashMap.Strict as HM
+import Debug.Pretty.Simple (pTraceShowM)
 import qualified Juvix.Backends.Plonk.Builder as Builder
 import qualified Juvix.Backends.Plonk.Circuit as Circuit
 import qualified Juvix.Backends.Plonk.Compiler as Compiler
@@ -20,7 +21,6 @@ import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt as TransformExt
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
-import Debug.Pretty.Simple ( pTraceShowM ) 
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
     TypedPrim,
@@ -92,19 +92,19 @@ instance
           [] -> Feedback.fail $ "No main function found in " <> show globalDefs
           -- TODO: Convert main n = ... to main = \n -> ...
           -- main x y = ...
-          [f@(IR.RawGFunction _)]  ->
+          [f@(IR.RawGFunction _)] ->
             case TransformExt.extForgetE <$> IR.toLambdaR @IR.NoExt f of
               Nothing -> do
-                Feedback.fail "Unable to convert main to lambda" 
+                Feedback.fail "Unable to convert main to lambda"
               Just (IR.Ann usage term ty _) -> do
-                  let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-                  (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @(Types.PrimTy f) @(Types.PrimVal f) @Types.CompilationError inlinedTerm usage ty) (Parameterization.param @f) newGlobals
-                  case res of
-                    Right r -> do
-                      pure r
-                    Left err -> do
-                      print term
-                      Feedback.fail $ show err 
+                let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
+                (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @(Types.PrimTy f) @(Types.PrimVal f) @Types.CompilationError inlinedTerm usage ty) (Parameterization.param @f) newGlobals
+                case res of
+                  Right r -> do
+                    pure r
+                  Left err -> do
+                    print term
+                    Feedback.fail $ show err
           somethingElse -> do
             pTraceShowM somethingElse
             Feedback.fail $ show somethingElse
