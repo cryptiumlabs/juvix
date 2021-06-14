@@ -57,12 +57,10 @@ Module that implements the backend parameters for the Michelson backend.
 - _Relies on_
   + [[Michelson/Compilation]]
   + [[Michelson/Parameterisation]]
-  + [[Core/IR]]
   + [[Core/Pipeline]]
   + [[Library]]
   + [[Feedback]]
   + [[Juvix/Pipeline]]
-  + [[FromFrontend]]
 ******* Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
@@ -272,16 +270,13 @@ Surface language
   + [[Plonk/Types]]
   + [[ErasedAnn/Types]]
   + [[Core/IR]]
-  + [[TransformExt]]
   + [[OnlyExts]]
   + [[Typechecker/Types]]
   + [[Core/Parameterisation]]
   + [[Core/Parameterisation]]
   + [[Core/Pipeline]]
   + [[Library]]
-  + [[Feedback]]
   + [[Juvix/Pipeline]]
-  + [[FromFrontend]]
 ******* Types <<Plonk/Types>>
 - _Relies on_
   + [[Application]]
@@ -1386,6 +1381,18 @@ Can be added to via core translation
   + [[Pipeline/Internal]]
   + [[Pipeline/Internal]]
   + [[Pipeline/Types]]
+  + [[ErasedAnn/Types]]
+  + [[Core/IR]]
+  + [[TransformExt]]
+  + [[OnlyExts]]
+  + [[Typechecker/Types]]
+  + [[Core/Parameterisation]]
+  + [[Core/Parameterisation]]
+  + [[Core/Pipeline]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[FromFrontend]]
+  + [[Core/Types]]
 ***** Compile
 - _Relies on_
   + [[Application]]
