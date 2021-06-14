@@ -78,6 +78,7 @@ tests:
     - bytestring
     - directory
     - filepath
+    - megaparsec
     - pretty-simple
     - pretty-show
     - strict

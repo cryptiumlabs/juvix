@@ -1,4 +1,4 @@
-module Test.Golden (top) where
+module Test.Golden where
 
 import qualified Data.ByteString as ByteString (readFile)
 import qualified Data.List.NonEmpty as NonEmpty
@@ -9,17 +9,37 @@ import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Desugar.Passes as Pass
 import qualified Juvix.Frontend as Frontend
 import qualified Juvix.Frontend.Parser as Parser
+import qualified Text.Megaparsec as P
+import qualified Text.Megaparsec.Byte as P
+import qualified Juvix.Library.Parser as J
 import qualified Juvix.Frontend.Sexp as SexpTrans
-import Juvix.Frontend.Types (TopLevel)
+import Juvix.Frontend.Types (TopLevel, ModuleOpen(..))
 import Juvix.Frontend.Types.Base (Header)
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
-import Juvix.Library.Test.Golden
+import Juvix.Library.Test.Golden ( discoverGoldenTests, getGolden )
+import qualified System.FilePath as FP
+import Juvix.Library.Parser (Parser)
+
+import Control.Arrow (left)
+import qualified Data.List as List
 import Test.Tasty
 import Prelude (error)
 
--- TODO: Add translations as well?
+juvixRootPath :: FilePath
+juvixRootPath = "../../"
+
+withJuvixRootPath :: FilePath -> FilePath
+withJuvixRootPath p = juvixRootPath <> p
+
+withJuvixStdlibPath :: FilePath -> FilePath
+withJuvixStdlibPath p = juvixRootPath <> "stdlib/" <> p
+
+
+withJuvixExamplesPath :: FilePath -> FilePath
+withJuvixExamplesPath p = juvixRootPath <> "test/examples/" <> p
+
 
 top :: IO TestTree
 top =
@@ -34,12 +54,14 @@ top =
 --------------------------------------------------------------------------------
 
 posNegTests ::
-  (Applicative f, IsString t) => TestName -> (t -> f [TestTree]) -> f TestTree
+  (Applicative f) => TestName -> (FilePath -> f [TestTree]) -> f TestTree
 posNegTests testName discoverFunction =
   testGroup testName
     <$> sequenceA
-      [ testGroup "positive" <$> discoverFunction "../../test/examples/positive",
-        testGroup "negative" <$> discoverFunction "../../test/examples/negative"
+      [ testGroup "positive" <$> discoverFunction
+        (withJuvixExamplesPath "positive"),
+        testGroup "negative" <$> discoverFunction
+        (withJuvixExamplesPath "negative")
       ]
 
 
@@ -53,7 +75,7 @@ parseContract file = do
 
 parseTests :: IO TestTree
 parseTests =
-  posNegTests "parse" (\path -> fmap (\x -> [x]) (discoverGoldenTestsParse path))
+  posNegTests "parse" (fmap (: []) . discoverGoldenTestsParse)
 
 desugartests :: IO TestTree
 desugartests = posNegTests "desugar" discoverGoldenTestsDesugar
@@ -96,21 +118,51 @@ discoverGoldenTestsContext ::
   -- | the directory in which to recursively look for golden tests
   FilePath ->
   IO [TestTree]
-discoverGoldenTestsContext =
-  discoverGoldenTestPasses handleDiscoverFunction discoverContext
+discoverGoldenTestsContext filePath =
+  traverse callGolden discoverContext
   where
-    handleDiscoverFunction contextPass filePath = do
-      desugaredPath <- fullyDesugarPath (filePath : library)
-      handleContextPass desugaredPath contextPass
+    callGolden (contextPass, name) =
+      discoverGoldenTests
+        [".ju"]
+        ("." <> name)
+        getGolden
+        ( \filePath -> do
+            let directory = FP.dropFileName filePath
+            deps <- fmap (directory <>) <$> findFileDependencies filePath
+            desugaredPath <- fullyDesugarPath (filePath : (deps ++ library))
+            handleContextPass desugaredPath contextPass
+        )
+        filePath
 
-library :: IsString a => [a]
-library =
-  [ "../../stdlib/Circuit.ju",
-    "../../stdlib/LLVM.ju",
-    "../../stdlib/MichelsonAlias.ju",
-    "../../stdlib/Michelson.ju",
-    "../../stdlib/Prelude.ju"
+
+parseOpen :: ByteString -> Either [Char] [ModuleOpen]
+parseOpen = left P.errorBundlePretty . P.parse (J.eatSpaces parseDependencies) "" . Parser.removeComments
+
+parseDependencies :: Parser [ModuleOpen]
+parseDependencies = do
+  void $ P.manyTill P.anySingle (P.lookAhead $ P.string "open")
+  P.try $ P.many (J.spaceLiner Parser.moduleOpen)
+
+fromOpen :: ModuleOpen -> FilePath
+fromOpen (Open s) = List.intercalate "/" (unintern <$> NonEmpty.toList s) <> ".ju"
+
+findFileDependencies :: FilePath -> IO [FilePath]
+findFileDependencies f = do
+  contract <- ByteString.readFile f
+  pure $ either (const []) (filter (\f -> not $ elem f stdlibs) . fmap fromOpen) (parseOpen contract)
+
+stdlibs ::[FilePath]
+stdlibs =
+  [ "Circuit.ju",
+    "LLVM.ju",
+    "MichelsonAlias.ju",
+    "Michelson.ju",
+    "Prelude.ju"
   ]
+
+library :: [FilePath]
+library = withJuvixStdlibPath <$> stdlibs
+
 
 ----------------------------------------------------------------------
 -- Pass Test lists

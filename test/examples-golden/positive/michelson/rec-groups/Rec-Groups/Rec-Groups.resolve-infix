@@ -1,0 +1,17 @@
+Rec
+    { recordContents = T
+        { public = fromList
+            [
+                ( "main"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just "TopLevel.Rec-Groups-Helper.foo"
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () "TopLevel.Rec-Groups-Helper.foo" ) )
+                        , defPrecedence = Pred Left 9 } ) ) ]
+        , private = fromList [] }
+    , recordMTy = Nothing
+    , recordOpenList = []
+    , recordQualifiedMap = map }

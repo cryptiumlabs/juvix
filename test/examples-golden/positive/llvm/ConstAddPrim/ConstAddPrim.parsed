@@ -4,7 +4,7 @@ Right
         [ ModuleOpen
             ( Open ( "Prelude" :| [] ) )
         , ModuleOpen
-            ( Open ( "Prelude" :| [ "LLVM" ] ) )
+            ( Open ( "LLVM" :| [] ) )
         , Signature
             ( Sig
                 { signatureName = "addint"
