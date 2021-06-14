@@ -8,7 +8,6 @@ where
 
 import qualified Data.Aeson as A
 import Data.Field.Galois (GaloisField)
-import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Backends.Plonk.Builder as Builder
 import qualified Juvix.Backends.Plonk.Circuit as Circuit
 import qualified Juvix.Backends.Plonk.Compiler as Compiler
@@ -17,10 +16,8 @@ import qualified Juvix.Backends.Plonk.Parameterization as Parameterization
 import qualified Juvix.Backends.Plonk.Types as Types
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.TransformExt as TransformExt
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
-import Debug.Pretty.Simple ( pTraceShowM ) 
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
     TypedPrim,
@@ -28,9 +25,7 @@ import Juvix.Core.Parameterisation
 import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Pipeline as CorePipeline
 import Juvix.Library
-import qualified Juvix.Library.Feedback as Feedback
 import Juvix.Pipeline as Pipeline
-import Juvix.ToCore.FromFrontend as FF (CoreDefs (..))
 import qualified Text.PrettyPrint.Leijen.Text as Pretty
 
 data BPlonk f = BPlonk
@@ -79,37 +74,7 @@ instance
   type Ty (BPlonk f) = Types.PrimTy f
   type Val (BPlonk f) = Types.PrimVal f
   stdlibs _ = ["stdlib/Circuit.ju"]
-  typecheck ctx = do
-    let res = Pipeline.contextToCore ctx (Parameterization.param @f)
-    case res of
-      Right (FF.CoreDefs _order globals) -> do
-        let globalDefs = HM.mapMaybe Pipeline.toCoreDef globals
-        let convGlobals = map (Pipeline.convGlobal Types.PField) globalDefs
-            newGlobals = HM.map (Pipeline.unsafeEvalGlobal convGlobals) convGlobals
-            lookupGlobal = IR.rawLookupFun' globalDefs
-        -- TODO: Fix MAIN
-        case HM.elems $ HM.filter Pipeline.isMain globalDefs of
-          [] -> Feedback.fail $ "No main function found in " <> show globalDefs
-          -- TODO: Convert main n = ... to main = \n -> ...
-          -- main x y = ...
-          [f@(IR.RawGFunction _)]  ->
-            case TransformExt.extForgetE <$> IR.toLambdaR @IR.NoExt f of
-              Nothing -> do
-                Feedback.fail "Unable to convert main to lambda" 
-              Just (IR.Ann usage term ty _) -> do
-                  let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-                  (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @(Types.PrimTy f) @(Types.PrimVal f) @Types.CompilationError inlinedTerm usage ty) (Parameterization.param @f) newGlobals
-                  case res of
-                    Right r -> do
-                      pure r
-                    Left err -> do
-                      print term
-                      Feedback.fail $ show err 
-          somethingElse -> do
-            pTraceShowM somethingElse
-            Feedback.fail $ show somethingElse
-      Left err -> Feedback.fail $ "failed at ctxToCore\n" ++ show err
-
+  typecheck ctx = Pipeline.typchk ctx (Parameterization.param @f) Types.PField (Proxy @Types.CompilationError)
   compile out term = do
     let circuit = compileCircuit term
     liftIO $ Dot.dotWriteSVG out (Dot.arithCircuitToDot circuit)
