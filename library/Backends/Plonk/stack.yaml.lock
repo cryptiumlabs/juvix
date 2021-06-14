@@ -59,20 +59,6 @@ packages:
   original:
     url: https://github.com/seereason/sr-extra/archive/d5435dcb2ae5da5f9e0fb8e5a3c40f99937a046f.tar.gz
 - completed:
-    hackage: derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422
-    pantry-tree:
-      size: 982
-      sha256: 7273803f80bf23fd4143430351d4fa6732df7c4f8e9df74a054ae25f572908ec
-  original:
-    hackage: derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422
-- completed:
-    hackage: derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817
-    pantry-tree:
-      size: 1408
-      sha256: 4af20d2207a60b331e04d94c5474da25aaf0118a0d217d57ac007c1e0a179eb7
-  original:
-    hackage: derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817
-- completed:
     hackage: witherable-0.3.5@sha256:6590a15735b50ac14dcc138d4265ff1585d5f3e9d3047d5ebc5abf4cd5f50084,1476
     pantry-tree:
       size: 271

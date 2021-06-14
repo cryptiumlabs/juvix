@@ -3,14 +3,14 @@
 
 -- |
 -- - This file defines the main ADT for the Juvix front end language.
--- - This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+-- - This ADT corresponds to the bnf laid out [[https://github.com/heliaxdev/juvix/blob/develop/doc/Frontend/syntax.org][here]].
 -- - Later a trees that grow version of this will be implemented, so
 --   infix functions can better transition across syntax
 -- - Note :: The names for the types in =ArrowData= are stored in the
 --           =ArrowGen= and not in =NamedType=
 module Juvix.Frontend.Types.Base where
 
-import Juvix.Library hiding (Data, Product, Sum, Type)
+import Juvix.Library hiding (Data, Handler, Product, Sum, Type)
 import qualified Juvix.Library.Usage as Usage
 
 type ConstructorName = NameSymb
@@ -26,6 +26,8 @@ data TopLevel
   | Signature Signature
   | Module Module
   | Function Function
+  | Handler Handler
+  | Effect Effect
   | Declaration Declaration
   | TypeClass
   | TypeClassInstance
@@ -56,7 +58,7 @@ data Type = Typ
   }
   deriving (Show, Read, Eq)
 
--- 'Data' is thedata declaration in the Juvix language
+-- 'Data' is the data declaration in the Juvix language
 data Data
   = Arrowed
       { dataArrow :: Expression,
@@ -147,6 +149,28 @@ data NameType = NameType'
     nameTypeName :: !Name
   }
   deriving (Show, Read, Eq)
+
+--------------------------------------------------------------------------------
+-- Effect Handlers
+--------------------------------------------------------------------------------
+
+data Effect = Eff
+  { effName :: Symbol,
+    effOps :: [Signature]
+  }
+  deriving (Show, Read, Eq)
+
+data Operation = Op (FunctionLike Expression)
+  deriving (Show, Read, Eq)
+
+--  A 'Handler', as implemented here, is a set of functions that implement
+-- (at least) one `Effect` interface.
+-- However, Handlers are NOT scoped, meaning that they can't be defined
+-- defined within another function. We CAN fix that, but it requires
+-- us to make some choices, it's wise to have Witch up and running first.
+data Handler
+  = Hand Symbol [Operation]
+  deriving (Show, Read, Generic, Eq)
 
 --------------------------------------------------------------------------------
 -- Functions And Modules

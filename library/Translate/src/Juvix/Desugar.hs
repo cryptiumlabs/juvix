@@ -2,10 +2,7 @@
 -- function, removes all extra parts of syntax that can be boiled down
 -- to simple macro expansion (simplification of the frontend syntax
 -- from the syntax alone with no extra information needed!)
-module Juvix.Desugar
-  ( op,
-  )
-where
+module Juvix.Desugar (op) where
 
 import qualified Juvix.Desugar.Passes as Pass
 import Juvix.Library
@@ -26,4 +23,4 @@ op syn =
     |> Pass.multipleTransDefun
     |> Pass.combineSig
     >>| Pass.removePunnedRecords
-    >>| Pass.translateDo
+    >>| Pass.handlerTransform

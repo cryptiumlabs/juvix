@@ -1,0 +1,12 @@
+-- Simple example to show addition using primitives.
+
+mod ConstAdd where
+
+open Prelude
+open Prelude.LLVM
+
+sig addint : int -> int -> int
+let addint = add int
+
+sig main : int
+let main = addint 4 6

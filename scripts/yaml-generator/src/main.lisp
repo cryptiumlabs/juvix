@@ -14,7 +14,7 @@
   (generate-yaml-file *core*               "library/Core/stack.yaml")
   (generate-yaml-file *translate*          "library/Translate/stack.yaml")
   (generate-yaml-file *Michelson*          "library/Backends/Michelson/stack.yaml")
-  (generate-yaml-file *LLVM*               "library/Backends/LLVM/stack.yaml")
+  (generate-yaml-file *llvm*               "library/Backends/llvm/stack.yaml")
   (generate-yaml-file *plonk*              "library/Backends/Plonk/stack.yaml")
   (generate-yaml-file *easy-pipeline*      "library/EasyPipeline/stack.yaml")
   (generate-yaml-file *Pipeline*           "library/Pipeline/stack.yaml")

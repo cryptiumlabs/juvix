@@ -1,0 +1,41 @@
+mod Example where
+
+-- Example 3 is a lot like example 2 but with the abscence of pattern
+-- matching
+
+open Prelude
+open Michelson
+
+-- What we want supported
+
+-- Basic record declaration
+type account = {
+   balance : nat,
+   name    : string
+}
+
+type transaction-type = {
+  sender   : account,
+  reciever : account
+}
+
+type storage = {
+  trans : transaction-type
+}
+
+-- Instead of matching and giving back a trust level like example 2,
+-- let's just try for guarding the strings
+sig determine-maximum-withdraw : string -> nat
+let determine-maximum-withdraw str
+  | str == "bob"   = 30
+  | str == "maria" = 50
+  | else           = 0
+
+sig accept-withdraws-from : storage -> storage -> bool
+let accept-withdraws-from initial final =
+  -- Let abstractions should work
+  let withdrawl-amount =
+    determine-maximum-withdraw initial.trans.reciever.name
+  -- here we just compare directly
+  in withdrawl-amount
+         >= final.trans.sender.balance - initial.trans.sender.balance

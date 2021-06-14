@@ -164,7 +164,8 @@ bindingForms x =
              ":lambda-case",
              ":declaim",
              ":lambda",
-             ":primitive"
+             ":primitive",
+             ":defop"
            ]
 
 -- should really be moved out of here
@@ -189,7 +190,11 @@ namedForms =
     ":record-no-pun",
     ":paren",
     ":block",
-    ":primitive"
+    ":primitive",
+    ":defeff",
+    ":defhandler",
+    ":defop",
+    ":opsig"
   ]
 
 -- | @searchAndClosureNoCtx@ like searchAndClosure but does not rely on

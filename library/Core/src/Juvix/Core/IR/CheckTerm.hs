@@ -29,6 +29,9 @@ data Leftovers a = Leftovers
   }
   deriving (Eq, Show, Generic)
 
+type ShowExt ext primTy primVal =
+  (IR.TermAll Show ext primTy primVal, IR.ElimAll Show ext primTy primVal)
+
 leftoversOk :: Leftovers a -> Bool
 leftoversOk (Leftovers {loLocals, loPatVars}) =
   all leftoverOk loLocals && all leftoverOk loPatVars
@@ -41,6 +44,10 @@ leftoverOk ρ = ρ == Usage.Omega || ρ == mempty
 typeTerm ::
   ( Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show ext,
+    ShowExt ext primTy primVal,
     CanTC' ext primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
@@ -54,6 +61,10 @@ typeTerm param t ann = loValue <$> typeTermWith param IntMap.empty [] t ann
 typeTermWith ::
   ( Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show ext,
+    ShowExt ext primTy primVal,
     CanTC' ext primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
@@ -72,6 +83,10 @@ typeTermWith param pats ctx t ann =
 typeElim ::
   ( Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show ext,
+    ShowExt ext primTy primVal,
     CanTC' ext primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
@@ -86,6 +101,10 @@ typeElim param e σ =
 typeElimWith ::
   ( Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show ext,
+    ShowExt ext primTy primVal,
     CanTC' ext primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
@@ -111,6 +130,12 @@ withLeftovers m =
 typeTerm' ::
   ( Eq primTy,
     Eq primVal,
+    Show primVal,
+    Show ext,
+    ShowExt ext primTy primVal,
+    (Show (IR.XAnn ext primTy primVal)),
+    Show primTy,
+    (Show (IR.ElimX ext primTy primVal)),
     CanInnerTC' ext primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
@@ -136,7 +161,8 @@ typeTerm' term ann@(Annotation σ ty) =
       requireZero σ
       void $ requireStar ty
       a' <- typeTerm' a ann
-      b' <- typeTerm' b ann
+      av <- evalTC a'
+      b' <- withLocal (Annotation mempty av) $ typeTerm' b ann
       pure $ Typed.Pi π a' b' ann
     IR.Lam' t _ -> do
       (π, a, b) <- requirePi ty
@@ -183,6 +209,10 @@ typeTerm' term ann@(Annotation σ ty) =
 typeElim' ::
   ( Eq primTy,
     Eq primVal,
+    Show primTy,
+    Show primVal,
+    Show ext,
+    ShowExt ext primTy primVal,
     CanInnerTC' ext primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)

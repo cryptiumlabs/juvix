@@ -1,0 +1,84 @@
+Right
+    ( Header
+        ( "ConstAddPrim" :| [] )
+        [ ModuleOpen
+            ( Open
+                ( "Prelude" :| [] )
+            )
+        , ModuleOpen
+            ( Open
+                ( "Prelude" :| [ "LLVM" ] )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "addint"
+                , signatureUsage = Nothing
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "int" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "int" :| [] )
+                                , infixOp = "->" :| []
+                                , infixRight = Name
+                                    ( "int" :| [] )
+                                }
+                            )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "addint"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Primitive
+                            ( Prim
+                                ( "LLVM" :| [ "add" ] )
+                            )
+                        )
+                    }
+                )
+            )
+        , Signature
+            ( Sig
+                { signatureName = "main"
+                , signatureUsage = Nothing
+                , signatureArrowType = Name
+                    ( "int" :| [] )
+                , signatureConstraints = []
+                }
+            )
+        , Function
+            ( Func
+                ( Like
+                    { functionLikedName = "main"
+                    , functionLikeArgs = []
+                    , functionLikeBody = Body
+                        ( Application
+                            ( App
+                                { applicationName = Name
+                                    ( "addint" :| [] )
+                                , applicationArgs = Constant
+                                    ( Number
+                                        ( Integer' 4 )
+                                    ) :|
+                                    [ Constant
+                                        ( Number
+                                            ( Integer' 6 )
+                                        )
+                                    ]
+                                }
+                            )
+                        )
+                    }
+                )
+            )
+        ]
+    )

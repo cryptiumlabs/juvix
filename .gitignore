@@ -15,6 +15,7 @@
 */.stack-work/
 *.hie
 *.cabal
+*.prof
 
 # Juvix temporary
 juvix.yaml

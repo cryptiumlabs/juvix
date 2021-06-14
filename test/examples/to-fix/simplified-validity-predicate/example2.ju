@@ -1,0 +1,46 @@
+mod Example where
+
+open Prelude
+open Michelson
+
+-- What we want supported
+
+-- Basic record declaration
+type account = {
+   balance : nat,
+   name    : string
+}
+
+type transaction-type = {
+  sender   : account,
+  receiver : account
+}
+
+type storage = {
+  trans : transaction-type
+}
+
+-- having sum types would be nice.
+type trust-level
+  = Trusted { maximum-withdraw : nat }
+  | NotTrusted
+
+-- Would be great if we could pattern match like this as well
+sig determine-trust-level : string -> trust-level
+let determine-trust-level "bob"   = Trusted { maximum-funds = 30 }
+let determine-trust-level "maria" = Trusted { maximum-funds = 50 }
+let determine-trust-level _       = NotTrusted
+
+sig accept-withdraws-from : storage -> storage -> bool
+let accept-withdraws-from initial final =
+  -- Let abstractions should work
+  let trusted? =
+    determine-trust-level initial.trans.receiver.name
+  -- here we just rely on destructuring a simple Sum type, no record matching
+  -- however we need stand alone case statements for this.
+  in case trusted? of
+     | Trusted funds ->
+       funds.maximum-withdraw
+         >= final.trans.sender.balance - initial.trans.sender.balance
+     | NotTrusted ->
+       false

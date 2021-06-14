@@ -94,9 +94,11 @@ topLevel =
   P.try (Types.Type <$> typeP)
     <|> P.try fun
     <|> P.try modT
+    <|> P.try (Types.Handler <$> handlerParser)
     <|> P.try (Types.ModuleOpen <$> moduleOpen)
     <|> P.try (Types.Signature <$> signature')
     <|> P.try (Types.Declaration <$> declaration)
+    <|> P.try (Types.Effect <$> effParser)
 
 expressionGen' ::
   Parser Types.Expression -> Parser Types.Expression
@@ -134,7 +136,7 @@ app'' :: Parser Types.Expression
 app'' = Types.Application <$> P.try application
 
 all'' :: Parser Types.Expression
-all'' = P.try do''' <|> app''
+all'' = P.try do''' <|> app'' <|> (Types.Application <$> P.try via_)
 
 expressionGen :: Parser Types.Expression -> Parser Types.Expression
 expressionGen p =
@@ -450,6 +452,54 @@ nameParser =
     <|> Types.Concrete <$> prefixSymbol
 
 --------------------------------------------------
+-- Effect handler parser
+--------------------------------------------------
+
+handlerParser :: Parser Types.Handler
+handlerParser = do
+  reserved "handler"
+  name <- prefixSymbolSN
+  J.skipLiner J.equals
+  ops <- P.many (J.spaceLiner opParser)
+  pure $ Types.Hand name ops
+
+opParser :: Parser Types.Operation
+opParser =
+  Types.Op
+    <$> functionModStartReserved
+      "let"
+      ( \name args -> do
+          guard <- guard expression
+          pure (Types.Like name args guard)
+      )
+
+effParser :: Parser Types.Effect
+effParser = do
+  reserved "effect"
+  name <- prefixSymbolSN
+  J.skipLiner J.equals
+  ops <- P.many (J.spaceLiner opSig)
+  pure $ Types.Eff {effName = name, effOps = ops}
+
+opSig :: Parser Types.Signature
+opSig = do
+  reserved "let"
+  name <- prefixSymbolSN
+  maybeUsage <-
+    P.optional (fmap Types.Constant constantSN <|> spaceLiner (J.parens expressionSN))
+  skipLiner J.colon
+  typeclasses <- signatureConstraintSN
+  exp <- expression
+  pure (Types.Sig name maybeUsage exp typeclasses)
+
+via_ :: Parser Types.Application
+via_ = do
+  args <- J.many1H (spaceLiner expressionArguments)
+  reserved "via"
+  name <- spaceLiner (expressionGen' (fail ""))
+  pure (Types.App name args)
+
+--------------------------------------------------
 -- Arrow Type parser
 --------------------------------------------------
 
@@ -607,14 +657,20 @@ doubleStringEscape =
   P.between (P.string "\\\"") (P.string "\\\"") (P.takeWhile1P (Just "Not quote") (/= J.doubleQuote))
 
 stringWithoutEscape :: Parser ByteString
-stringWithoutEscape = J.between J.quote (P.takeWhile1P (Just "Not quote") (/= J.quote)) J.quote
+stringWithoutEscape =
+  J.between J.quote (P.takeWhile1P (Just "Not quote") (/= J.quote)) J.quote
 
 doubleStringWithoutEscape :: Parser ByteString
-doubleStringWithoutEscape = J.between J.doubleQuote (P.takeWhile1P (Just "Not quote") (/= J.doubleQuote)) J.doubleQuote
+doubleStringWithoutEscape =
+  J.between J.doubleQuote (P.takeWhile1P (Just "Not quote") (/= J.doubleQuote)) J.doubleQuote
 
 string' :: Parser Types.String'
 string' = do
-  words <- P.try stringEscape <|> P.try doubleStringEscape <|> P.try stringWithoutEscape <|> doubleStringWithoutEscape
+  words <-
+    P.try stringEscape
+      <|> P.try doubleStringEscape
+      <|> P.try stringWithoutEscape
+      <|> doubleStringWithoutEscape
   pure (Types.Sho $ Encoding.decodeUtf8 words)
 
 --------------------------------------------------

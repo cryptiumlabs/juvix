@@ -1,0 +1,9 @@
+-- Simple example to show the identity function.
+
+mod Identity where
+
+open Prelude
+open Prelude.LLVM
+
+sig main : int
+let main = id 10

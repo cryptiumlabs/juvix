@@ -178,19 +178,8 @@
 (defparameter *llvm-hs-deps*
   (make-groups :comment "LLVM-HS Library dependencies"
                :deps (list
-                      (make-dependency-bare :name "llvm-hs-9.0.1")
                       (make-dependency-bare :name "llvm-hs-pure-9.0.0")
-                      (string->dep-sha
-                       "llvm-hs-pretty-0.6.2.0@sha256:4c600122965e8dff586bdca0044ec2b1896f2875c2da5ad89bbab9799c9697cd,1670"))))
-
-(defparameter *llvm-hs-extra-deps*
-  (make-groups :comment "LLVM-HS Library Extra dependencies"
-               :deps (list
-                      (string->dep-sha
-                       "derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422")
-                      (string->dep-sha
-                       "derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817"))))
-
+                      (make-dependency-bare :name "llvm-hs-pretty-0.9.0.0"))))
 
 ;; --------------------------------------
 ;; Interaction Net Groups Depencenies
@@ -269,7 +258,6 @@ common ones to include"
                                 *aeson-options*
                                 *un-exceptionalio*
                                 *sr-extra*)
-        *llvm-hs-extra-deps*
         *withdraw*
         *graph-visualizer*
         *standard-library-extra-deps*
@@ -337,20 +325,6 @@ common ones to include"
    :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                      *eac-solver*)))
 
-(defparameter *LLVM*
-  (make-stack-yaml
-   :name "Backends/LLVM"
-   :resolver 17.9
-   :path-to-other "../../"
-   :packages (list *standard-library* *core* *interaction-net*)
-   :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
-                     *llvm-hs-deps*
-                     *llvm-hs-extra-deps*
-                     *eac-solver*
-                     *standard-library-extra-deps*
-                     *interaction-net-extra-deps*)
-   :extra "allow-newer: true"))
-
 ;; Define these before pipeline due to mutual recursion
 (defparameter *Pipeline*
   (make-stack-yaml
@@ -361,6 +335,26 @@ common ones to include"
    ;; hack name, for sub dirs
    :name "Pipeline"
    :extra-deps (big-dep-list)
+   :extra "allow-newer: true"))
+
+(defparameter *llvm*
+  (make-stack-yaml
+   :name "Backends/llvm"
+   :resolver 17.3
+   :path-to-other "../../"
+   :packages (list *standard-library* *core* *pipeline* *translate* *frontend*)
+   :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
+                     *llvm-hs-deps*
+
+                     ;; for pipeline
+                     *graph-visualizer*
+                     *morley-sub-deps*
+                     *morley-sub-deps-extra*
+                     *morley-arithmetic-circuit-deps*
+
+                     ;; for standard-library
+                     *standard-library-extra-deps*
+                     )
    :extra "allow-newer: true"))
 
 (defparameter *Michelson*
@@ -418,9 +412,10 @@ common ones to include"
                    *translate*
                    *michelson*
                    *easy-pipeline*
-                   *plonk*)
+                   *plonk*
+                   *llvm*)
    :path-to-other "./library/"
    :extra-deps
-   (big-dep-list)
+   (cons *llvm-hs-deps* (big-dep-list))
    :extra "allow-newer: true"))
 

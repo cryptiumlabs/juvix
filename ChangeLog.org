@@ -1,11 +1,59 @@
 * Changelog for Juvix
+** 0.1.1.2
+- Simplifies: =Context=
+  + Adds: =mapWithName=, =mapSumWithName=, and =overTopLevelMap=
+  + Removes: the repeat =mapCurrentContext'= function and simplifies
+    the core logic by using the new functions
+** 0.1.1.1
+- Adds a minimal llvm backend to the juvix compiler
+** 0.1.1.0
+ - _Summary_:
+   + new syntax for effect handlers in Juvix.
 
+ - _Main contributions_:
+   + adds `effect` and `handler` syntaxes (also `_ via _`);
+   + removes do notation as `Prelude.»=`.
+
+*** Added Syntaxes
+#+BEGIN_SRC ocaml
+effect Print =
+  let print  : string -> unit
+  let pure : x -> string
+#+END_SRC
+A new effect Print is defined, and its interface signature. All
+effects must have a `return` clause, and hopefully operation
+signatures as well (an effect without operations is just a pure
+computation).
+
+#+BEGIN_SRC ocaml
+handler printer =
+  let print  = %IO.print
+  let pure x  = toString x
+#+END_SRC
+A handler provides an implementation of at least one effect and
+a return clause, and it can implement as many operations as the
+user wants.
+
+#+BEGIN_SRC ocaml
+let main = prog via printer
+#+END_SRC
+Handlers can be applied to programs using the `via` operator,
+which is just a shortcut for function application.
+
+*** Do Notation
+The do notation no longer gets translated into `Prelude.»=`,
+it is just another effect construct now, to be translated by
+the ANF pass.
+** 0.1.0.9
+- Add validity predicate examples in the don't work test directories
+** 0.1.0.8
+- Add =Show= instances for extended =Term= and =Elim= types
+** 0.1.0.7
+- Fix checking of Π types
 ** 0.1.0.6
-  + Add Golden tests
-
+- Add Golden tests
 ** 0.1.0.5
-- Split the =stack.yeaml= generator into many files
-
+- Split the =stack.yaml= generator into many files
 ** 0.1.0.4
 - _Changes to =Library/Sexp.hs=_
   + Adds documentation to all functions
@@ -43,3 +91,4 @@
 - Changelog created.
 - Documentation around how to bump the changelog in the contributors
   guide.
+
