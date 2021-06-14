@@ -73,8 +73,9 @@ instance
   where
   type Ty (BPlonk f) = Types.PrimTy f
   type Val (BPlonk f) = Types.PrimVal f
+  type Err (BPlonk f) = Types.CompilationError f
   stdlibs _ = ["stdlib/Circuit.ju"]
-  typecheck ctx = Pipeline.typchk ctx (Parameterization.param @f) Types.PField (Proxy @Types.CompilationError)
+  typecheck ctx = Pipeline.typecheck' ctx (Parameterization.param @f) Types.PField 
   compile out term = do
     let circuit = compileCircuit term
     liftIO $ Dot.dotWriteSVG out (Dot.arithCircuitToDot circuit)

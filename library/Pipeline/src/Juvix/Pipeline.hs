@@ -45,6 +45,7 @@ import qualified Juvix.Core.Types as Core
 class HasBackend b where
   type Ty b = ty | ty -> b
   type Val b = val | val -> b
+  type Err b = e | e -> b
 
   stdlibs :: b -> [FilePath]
   stdlibs _ = []
@@ -66,9 +67,49 @@ class HasBackend b where
         Pipeline.toCore
           ("stdlib/Prelude.ju" : stdlibs b ++ [fp])
 
-  typecheck ::
+  typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
+
+  typecheck' ::
+    (Eq (Ty b), Show (Ty b), Eq (Val b), Show (Err b), Show (Val b), CanApply  (Ty b), CanApply (TypedPrim (Ty b) (Val b)), 
+    IR.HasWeak (Val b), IR.HasSubstValue IR.NoExt (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
+    IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
+    Show (ApplyErrorExtra (Ty b)), Show (ApplyErrorExtra (TypedPrim (Ty b) (Val b))),
+    Show (Arg (Ty b)), Show (Arg (TypedPrim (Ty b) (Val b))), 
+    IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (Val b) (Ty b),
+    IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (Val b) (Val b),
+    IR.HasPatSubstTerm (OnlyExts.T TypeChecker.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b)
+    ) =>
     Context.T Sexp.T Sexp.T Sexp.T ->
+    Param.Parameterisation (Ty b) (Val b) ->
+    Ty b ->
     Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
+  typecheck' ctx param ty =  do
+    let res = Pipeline.contextToCore ctx param
+    case res of
+      Right (FF.CoreDefs _order globals) -> do
+        let globalDefs = HM.mapMaybe toCoreDef globals
+        let convGlobals = map (convGlobal ty) globalDefs
+            newGlobals = HM.map (unsafeEvalGlobal convGlobals) convGlobals
+            lookupGlobal = IR.rawLookupFun' globalDefs
+        case HM.elems $ HM.filter isMain globalDefs of
+          [] -> Feedback.fail $ "No main function found in " <> show globalDefs
+          [f@(IR.RawGFunction _)]  ->
+            case TransformExt.extForgetE <$> IR.toLambdaR @IR.NoExt f of
+              Nothing -> do
+                Feedback.fail "Unable to convert main to lambda" 
+              Just (IR.Ann usage term ty _) -> do
+                  let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
+                  (res, _) <- liftIO $ exec (CorePipeline.coreToAnn @(Err b) inlinedTerm usage ty) param newGlobals
+                  case res of
+                    Right r -> do
+                      pure r
+                    Left err -> do
+                      print term
+                      Feedback.fail $ show err
+          somethingElse -> do
+            pTraceShowM somethingElse
+            Feedback.fail $ show somethingElse
+      Left err -> Feedback.fail $ "failed at ctxToCore\n" ++ show err
   compile ::
     FilePath ->
     ErasedAnn.AnnTermT (Ty b) (Val b) ->
@@ -97,41 +138,3 @@ handleCore core = case core of
   Left (Pipeline.ParseErr err) -> Feedback.fail $ P.errorBundlePretty err
   Left err -> Feedback.fail $ show err
 
-typchk :: forall ty val err.
-  (Eq ty, Show ty, Eq val, Show err, Show val,CanApply  ty, CanApply (TypedPrim ty val), 
-  IR.HasWeak val, IR.HasSubstValue IR.NoExt ty (TypedPrim ty val) ty,
-  IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) ty (TypedPrim ty val) ty,
-  Show (ApplyErrorExtra ty), Show (ApplyErrorExtra (TypedPrim ty val)),
-  Show (Arg ty), Show (Arg (TypedPrim ty val)), 
-  IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) ty val ty,
-  IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) ty val val,
-  IR.HasPatSubstTerm (OnlyExts.T TypeChecker.T) ty (TypedPrim ty val) ty
-  )
-  => Context.T Sexp.T Sexp.T Sexp.T -> Param.Parameterisation ty val -> ty -> Proxy err -> Pipeline (ErasedAnn.AnnTermT ty val)
-typchk ctx param ty _ =  do
-    let res = Pipeline.contextToCore ctx param
-    case res of
-      Right (FF.CoreDefs _order globals) -> do
-        let globalDefs = HM.mapMaybe toCoreDef globals
-        let convGlobals = map (convGlobal ty) globalDefs
-            newGlobals = HM.map (unsafeEvalGlobal convGlobals) convGlobals
-            lookupGlobal = IR.rawLookupFun' globalDefs
-        case HM.elems $ HM.filter isMain globalDefs of
-          [] -> Feedback.fail $ "No main function found in " <> show globalDefs
-          [f@(IR.RawGFunction _)]  ->
-            case TransformExt.extForgetE <$> IR.toLambdaR @IR.NoExt f of
-              Nothing -> do
-                Feedback.fail "Unable to convert main to lambda" 
-              Just (IR.Ann usage term ty _) -> do
-                  let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-                  (res, _) <- liftIO $ exec (CorePipeline.coreToAnn @err inlinedTerm usage ty) param newGlobals
-                  case res of
-                    Right r -> do
-                      pure r
-                    Left err -> do
-                      print term
-                      Feedback.fail $ show err
-          somethingElse -> do
-            pTraceShowM somethingElse
-            Feedback.fail $ show somethingElse
-      Left err -> Feedback.fail $ "failed at ctxToCore\n" ++ show err

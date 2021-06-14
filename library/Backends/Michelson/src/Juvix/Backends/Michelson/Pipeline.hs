@@ -13,9 +13,11 @@ data BMichelson = BMichelson
 instance HasBackend BMichelson where
   type Ty BMichelson = Param.PrimTy
   type Val BMichelson = Param.RawPrimVal
+  type Err BMichelson = Param.CompilationError
+
   stdlibs _ = ["stdlib/Michelson.ju", "stdlib/MichelsonAlias.ju"]
 
-  typecheck ctx = Pipeline.typchk ctx Param.michelson Param.Set (Proxy @Param.CompilationError)
+  typecheck ctx = Pipeline.typecheck' ctx Param.michelson Param.Set
 
   compile out term = do
     let (res, _logs) = M.compileContract $ CorePipeline.toRaw term

@@ -22,11 +22,12 @@ data BLLVM = BLLVM
 instance Pipeline.HasBackend BLLVM where
   type Ty BLLVM = PrimTy
   type Val BLLVM = RawPrimVal
+  type Err BLLVM = CompilationError
 
   stdlibs _ = ["stdlib/LLVM.ju"]
 
   -- Copied over from the Michelson backend, and adapter where necessary.
-  typecheck ctx = Pipeline.typchk ctx llvm Set (Proxy @CompilationError)
+  typecheck ctx = Pipeline.typecheck' ctx llvm Set 
 
   compile out term = do
     let raw = Core.toRaw term
