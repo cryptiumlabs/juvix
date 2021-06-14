@@ -23,5 +23,5 @@ sig (==) : field -> field -> bool
 let (==) = %Circuit.eq
 declare infixl (==) 2
 
-sig main : field -> field -> field
-let main x y = add x y -- 2 2 -- \x y -> x ^ 3 == y -- ^ 2 -- + 1-- x ^ 3 + 2 * x ^ 2 + 1 
+sig main : field -> field -> bool
+let main x y = x ^ 3 == y -- ^ 2 -- + 1-- x ^ 3 + 2 * x ^ 2 + 1 
