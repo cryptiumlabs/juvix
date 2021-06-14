@@ -1,6 +1,8 @@
 module Test.Golden where
 
+import Control.Arrow (left)
 import qualified Data.ByteString as ByteString (readFile)
+import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.Environment as Environment
@@ -9,26 +11,24 @@ import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Desugar.Passes as Pass
 import qualified Juvix.Frontend as Frontend
 import qualified Juvix.Frontend.Parser as Parser
-import qualified Text.Megaparsec as P
-import qualified Text.Megaparsec.Byte as P
-import qualified Juvix.Library.Parser as J
 import qualified Juvix.Frontend.Sexp as SexpTrans
-import Juvix.Frontend.Types (TopLevel, ModuleOpen(..))
+import Juvix.Frontend.Types (ModuleOpen (..), TopLevel)
 import Juvix.Frontend.Types.Base (Header)
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
-import Juvix.Library.Test.Golden ( discoverGoldenTests, getGolden )
-import qualified System.FilePath as FP
 import Juvix.Library.Parser (Parser)
-
-import Control.Arrow (left)
-import qualified Data.List as List
+import qualified Juvix.Library.Parser as J
+import qualified Juvix.Library.Sexp as Sexp
+import Juvix.Library.Test.Golden (discoverGoldenTests, getGolden)
+import qualified System.FilePath as FP
 import Test.Tasty
+import qualified Text.Megaparsec as P
+import qualified Text.Megaparsec.Byte as P
 import Prelude (error)
 
 juvixRootPath :: FilePath
 juvixRootPath = "../../"
+{-# INLINE juvixRootPath #-}
 
 withJuvixRootPath :: FilePath -> FilePath
 withJuvixRootPath p = juvixRootPath <> p
@@ -36,10 +36,10 @@ withJuvixRootPath p = juvixRootPath <> p
 withJuvixStdlibPath :: FilePath -> FilePath
 withJuvixStdlibPath p = juvixRootPath <> "stdlib/" <> p
 
-
 withJuvixExamplesPath :: FilePath -> FilePath
 withJuvixExamplesPath p = juvixRootPath <> "test/examples/" <> p
 
+{-# INLINE withJuvixExamplesPath #-}
 
 top :: IO TestTree
 top =
@@ -47,7 +47,6 @@ top =
     "golden tests"
     <$> sequence
       [parseTests, desugartests, contextTests]
-
 
 --------------------------------------------------------------------------------
 -- Parse Test Frame
@@ -58,12 +57,13 @@ posNegTests ::
 posNegTests testName discoverFunction =
   testGroup testName
     <$> sequenceA
-      [ testGroup "positive" <$> discoverFunction
-        (withJuvixExamplesPath "positive"),
-        testGroup "negative" <$> discoverFunction
-        (withJuvixExamplesPath "negative")
+      [ testGroup "positive"
+          <$> discoverFunction
+            (withJuvixExamplesPath "positive"),
+        testGroup "negative"
+          <$> discoverFunction
+            (withJuvixExamplesPath "negative")
       ]
-
 
 --------------------------------------------------------------------------------
 -- Parse contracts (Golden tests)
@@ -94,12 +94,12 @@ discoverGoldenTestsParse = discoverGoldenTests [".ju"] ".parsed" getGolden parse
 discoverGoldenTestPasses ::
   (Eq a, Show a, Read a) => (t -> FilePath -> IO a) -> [(t, [Char])] -> FilePath -> IO [TestTree]
 discoverGoldenTestPasses handleDiscoverFunction discoverPasses filePath =
-  zipWithM callGolden [0 ..] discoverPasses
+  traverse callGolden discoverPasses
   where
-    callGolden i (passFunction, name) =
+    callGolden (passFunction, name) =
       discoverGoldenTests
         [".ju"]
-        ("." <> show (i :: Integer) <> "-" <> name)
+        ("." <> name)
         getGolden
         (handleDiscoverFunction passFunction)
         filePath
@@ -118,25 +118,20 @@ discoverGoldenTestsContext ::
   -- | the directory in which to recursively look for golden tests
   FilePath ->
   IO [TestTree]
-discoverGoldenTestsContext filePath =
-  traverse callGolden discoverContext
+discoverGoldenTestsContext =
+  discoverGoldenTestPasses handleDiscoverFunction discoverContext
   where
-    callGolden (contextPass, name) =
-      discoverGoldenTests
-        [".ju"]
-        ("." <> name)
-        getGolden
-        ( \filePath -> do
-            let directory = FP.dropFileName filePath
-            deps <- fmap (directory <>) <$> findFileDependencies filePath
-            desugaredPath <- fullyDesugarPath (filePath : (deps ++ library))
-            handleContextPass desugaredPath contextPass
-        )
-        filePath
-
+    handleDiscoverFunction contextPass filePath = do
+      let directory = FP.dropFileName filePath
+      deps <- fmap (directory <>) <$> findFileDependencies filePath
+      desugaredPath <- fullyDesugarPath (filePath : (deps <> library))
+      handleContextPass desugaredPath contextPass
 
 parseOpen :: ByteString -> Either [Char] [ModuleOpen]
-parseOpen = left P.errorBundlePretty . P.parse (J.eatSpaces parseDependencies) "" . Parser.removeComments
+parseOpen =
+  left P.errorBundlePretty
+    . P.parse (J.eatSpaces parseDependencies) ""
+    . Parser.removeComments
 
 parseDependencies :: Parser [ModuleOpen]
 parseDependencies = do
@@ -151,7 +146,7 @@ findFileDependencies f = do
   contract <- ByteString.readFile f
   pure $ either (const []) (filter (\f -> not $ elem f stdlibs) . fmap fromOpen) (parseOpen contract)
 
-stdlibs ::[FilePath]
+stdlibs :: [FilePath]
 stdlibs =
   [ "Circuit.ju",
     "LLVM.ju",
@@ -163,32 +158,39 @@ stdlibs =
 library :: [FilePath]
 library = withJuvixStdlibPath <$> stdlibs
 
-
 ----------------------------------------------------------------------
 -- Pass Test lists
 ----------------------------------------------------------------------
 
-discoverDesugar :: IsString b => [([Sexp.T] -> [Sexp.T], b)]
+discoverPrefix ::
+  (Semigroup b, IsString b) => [(a, b)] -> [b] -> [(a, b)]
+discoverPrefix =
+  zipWith (\(function, string) prefix -> (function, prefix <> "-" <> string))
+
+discoverDesugar :: [([Sexp.T] -> [Sexp.T], [Char])]
 discoverDesugar =
-  [ (desugarModule, "desugar-module"),
-    (desugarLet, "desugar-let"),
-    (desugarCond, "desugar-cond"),
-    (desugarIf, "desugar-if"),
-    (desugarMultipleLet, "desugar-multiple-let"),
-    (desugarMultipleDefun, "desugar-multiple-defun"),
-    (desugarMultipleSig, "desugar-multiple-sig"),
-    (desugarRemovePunnedRecords, "desugar-remove-punned-records"),
-    (desugarHandlerTransform, "desugar-handler-transform")
-  ]
+  discoverPrefix
+    [ (desugarModule, "desugar-module"),
+      (desugarLet, "desugar-let"),
+      (desugarCond, "desugar-cond"),
+      (desugarIf, "desugar-if"),
+      (desugarMultipleLet, "desugar-multiple-let"),
+      (desugarMultipleDefun, "desugar-multiple-defun"),
+      (desugarMultipleSig, "desugar-multiple-sig"),
+      (desugarRemovePunnedRecords, "desugar-remove-punned-records"),
+      (desugarHandlerTransform, "desugar-handler-transform")
+    ]
+    (fmap show ([0 ..] :: [Integer]))
 
 discoverContext ::
-  IsString b =>
-  [(NonEmpty (NameSymbol.T, [Sexp.T]) -> IO Environment.SexpContext, b)]
+  [(NonEmpty (NameSymbol.T, [Sexp.T]) -> IO Environment.SexpContext, [Char])]
 discoverContext =
-  [ (contextifySexp, "contextify-sexp"),
-    (resolveModuleContext, "resolve-module"),
-    (resolveInfixContext, "resolve-infix")
-  ]
+  discoverPrefix
+    [ (contextifySexp, "contextify-sexp"),
+      (resolveModuleContext, "resolve-module"),
+      (resolveInfixContext, "resolve-infix")
+    ]
+    (fmap (: []) ['A' .. 'Z'])
 
 ----------------------------------------------------------------------
 -- Desugar Passes
