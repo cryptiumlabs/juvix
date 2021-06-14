@@ -8,6 +8,11 @@ where
 
 import qualified Data.Aeson as A
 import Data.Field.Galois (GaloisField)
+<<<<<<< HEAD
+=======
+import qualified Data.HashMap.Strict as HM
+import Debug.Pretty.Simple (pTraceShowM)
+>>>>>>> d5ef62af74b28b74209df7c8b7038930d95985d2
 import qualified Juvix.Backends.Plonk.Builder as Builder
 import qualified Juvix.Backends.Plonk.Circuit as Circuit
 import qualified Juvix.Backends.Plonk.Compiler as Compiler
