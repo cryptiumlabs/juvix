@@ -1,6 +1,5 @@
 module Main where
 
-import Common.Context (contextTests)
 import Conv (coreConversions)
 import Erasure (erasureTests)
 import qualified HR.Pretty
@@ -23,7 +22,6 @@ allCheckedTests =
     "All tests that are checked"
     [ coreTests,
       erasureTests,
-      contextTests,
       Weak.top,
       HR.Pretty.top
     ]

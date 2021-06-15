@@ -1,9 +1,9 @@
-module Common.Context where
+module Context where
 
 import Control.Lens (over)
 import qualified Data.Text as Text
-import qualified Juvix.Core.Common.Context as Context
-import qualified Juvix.Core.Common.NameSpace as NameSpace
+import qualified Juvix.Context as Context
+import qualified Juvix.Context.NameSpace as NameSpace
 import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -18,8 +18,8 @@ foo = Unsafe.unsafePerformIO (Context.empty ("Foo" :| ["Bar", "Baz"]))
 unsafeEmpty :: NameSymbol.T -> Context.T term ty sumRep
 unsafeEmpty x = Unsafe.unsafePerformIO (Context.empty x)
 
-contextTests :: T.TestTree
-contextTests =
+top :: T.TestTree
+top =
   T.testGroup
     "Context tests:"
     [ switchAboveLookupCheck,
