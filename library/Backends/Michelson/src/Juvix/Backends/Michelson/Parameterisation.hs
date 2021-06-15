@@ -115,10 +115,9 @@ toArg App.Cont {} = Nothing
 toArg App.Return {retType, retTerm} =
   Just $
     App.TermArg $
-      App.Take
-        { usage = Usage.Omega,
-          type' = retType,
-          term = retTerm
+      App.Return
+        { retType = retType,
+          retTerm = retTerm
         }
 
 -- | Translate a value into a  'Take' and the arguments to pass.
@@ -196,7 +195,7 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext) where
       -- If there are exactly enough arguments to apply, do so.
       -- In case there aren't any arguments, return a continuation.
       EQ
-        | Just takes <- traverse App.argToTake args ->
+        | Just takes <- traverse App.argToReturn args ->
           applyProper fun takes |> first Core.Extra
         | otherwise ->
           Right $ App.Cont {fun, args = toList args, numLeft = 0}
@@ -205,7 +204,7 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext) where
 
 -- | Apply arguments to a function. Requires that the right number of arguments
 -- are passed.
-applyProper :: Take -> NonEmpty Take -> Either ApplyError (Return' ext)
+applyProper :: Take -> NonEmpty (Return' ext) -> Either ApplyError (Return' ext)
 applyProper fun args =
   case compd >>= Interpreter.dummyInterpret of
     Right x -> do
@@ -214,10 +213,14 @@ applyProper fun args =
     Left err -> Left $ CompilationError err
   where
     fun' = takeToTerm fun
-    args' = takeToTerm <$> toList args
+    args' = returnToTerm <$> toList args
     newTerm = Run.applyPrimOnArgs fun' args'
     -- TODO ∷ do something with the logs!?
     (compd, _log) = Compilation.compileExpr newTerm
+
+-- | Translate a 'Return' into a 'RawTerm'.
+returnToTerm :: Return' ext -> RawTerm
+returnToTerm = undefined
 
 -- | Translate a 'Take' into a 'RawTerm'.
 takeToTerm :: Take -> RawTerm

@@ -1,0 +1,27 @@
+mod Nested where
+
+open Prelude
+open Circuit
+
+sig field : ty
+let field = %Circuit.field
+
+sig (+) : field -> field -> field
+let (+) = %Circuit.add
+declare infixl (+) 5
+
+sig (^) : field -> field -> field
+let (^) = %Circuit.exp
+declare infixl (^) 8
+
+sig (*) : field -> field -> field
+let (*) = %Circuit.mul
+declare infixl (*) 7
+
+
+sig (==) : field -> field -> bool
+let (==) = %Circuit.eq
+declare infixl (==) 2
+
+sig main : field -> field -> field -> field
+let main = \x y z -> x^2 + y^2 + z^2 
