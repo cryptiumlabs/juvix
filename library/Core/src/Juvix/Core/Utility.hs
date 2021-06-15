@@ -10,7 +10,6 @@
 --   patterns and symbols
 -- - =HasNamStack= talks about the mapping between names in the =HR=
 --   form and the =De Brunjin= Index
-
 module Juvix.Core.Utility
   ( -- * Capabilities
     HasNameStack,
