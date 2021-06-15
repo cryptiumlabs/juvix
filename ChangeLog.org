@@ -1,6 +1,7 @@
 * Changelog for Juvix
 ** 0.1.1.3
 - Split =Context= into it's own pacakge
+- Tests and documentation for Utility in Core
 ** 0.1.1.2
 - Simplifies: =Context=
   + Adds: =mapWithName=, =mapSumWithName=, and =overTopLevelMap=
