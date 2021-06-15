@@ -14,7 +14,7 @@ where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Core as Core
-import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.Context as Context
 import qualified Juvix.Core.Common.Context.Traverse as Context
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as P

@@ -11,6 +11,7 @@ packages:
 - ./library/EasyPipeline
 - ./library/Backends/Plonk
 - ./library/Backends/llvm
+- ./library/Context
 
 extra-deps:
 

@@ -13,6 +13,7 @@ dependencies:
 - standard-library
 - core
 - frontend
+- Context
 - extensible-data
 - unordered-containers
 - stm-containers

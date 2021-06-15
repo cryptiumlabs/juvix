@@ -2,7 +2,7 @@ module Juvix.ToCore.FromFrontend.Transform.Def (transformDef) where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NonEmpty
-import qualified Juvix.Core.Common.Context as Ctx
+import qualified Juvix.Context as Ctx
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Translate (hrToIR)
 import Juvix.Library

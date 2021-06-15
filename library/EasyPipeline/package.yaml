@@ -37,6 +37,7 @@ dependencies:
   - translate
   - michelson
   - Pipeline
+  - Context
   # - llvm
   # - interaction-net
   # - arithmetic-circuit
