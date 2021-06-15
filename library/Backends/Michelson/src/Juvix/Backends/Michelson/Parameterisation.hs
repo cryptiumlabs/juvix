@@ -75,6 +75,7 @@ hasType' CompareMutez ty = P.checkFirst2AndLast ty isBool
 hasType' CompareHash ty = P.checkFirst2AndLast ty isBool
 -- Hacks make more exact later
 hasType' EDivI (x :| [y, _]) = P.check2Equal (x :| [y])
+hasType' EDivI ty = False
 hasType' (Inst M.TRANSFER_TOKENS {}) (_ :| [_, _, _]) = True
 hasType' (Inst M.UNIT {}) (_ :| []) = True
 hasType' (Inst M.BALANCE {}) (_ :| []) = True
@@ -95,6 +96,16 @@ hasType' (Constant _v) ty
   | length ty == 1 = True
   | otherwise = False
 hasType' _ ((Application List _) :| []) = True
+hasType' (Inst (M.LSL _)) ((PrimTy (M.Ty M.TNat _)) :| [PrimTy (M.Ty M.TNat _), PrimTy (M.Ty M.TNat _)]) = True
+hasType' (Inst (M.LSL _)) _ = False
+hasType' (Inst (M.SHA256 _)) ((PrimTy (M.Ty M.TBytes _)) :| [PrimTy (M.Ty M.TBytes _)]) = True
+hasType' (Inst (M.SHA256 _)) _ = False
+hasType' (Inst (M.SHA512 _)) ((PrimTy (M.Ty M.TBytes _)) :| [PrimTy (M.Ty M.TBytes _)]) = True
+hasType' (Inst (M.SHA512 _)) _ = False
+hasType' (Inst (M.NOW _)) (PrimTy (M.Ty M.TTimestamp _) :| []) = True
+hasType' (Inst (M.NOW _)) _ = False
+hasType' (Inst (M.SET_DELEGATE _)) ((Application Types.Option (PrimTy (M.Ty M.TKeyHash _) :| [])) :| [PrimTy (M.Ty M.TOperation _)]) = True
+hasType' (Inst (M.SET_DELEGATE _)) _ = False
 -- do something nicer here
 hasType' x ty = Prelude.error ("unsupported: " <> Juvix.Library.show x <> " :: " <> Juvix.Library.show ty)
 

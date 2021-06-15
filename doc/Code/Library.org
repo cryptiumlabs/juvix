@@ -193,6 +193,12 @@ Module that implements the backend parameters for the Michelson backend.
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Usage]]
+***** Parameterisation <<Test/Parameterisation>>
+- _Relies on_
+  + [[Compilation/Types]]
+  + [[Untyped]]
+  + [[Michelson/Parameterisation]]
+  + [[Core/Parameterisation]]
 ***** Pipeline <<Test/Pipeline>>
 - _Relies on_
   + [[Backends/Michelson]]
