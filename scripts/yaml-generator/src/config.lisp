@@ -289,6 +289,13 @@ common ones to include"
    :packages   (list *standard-library*)
    :extra-deps (list (make-general-dependencies *capability* *prettiest*) *standard-library-extra-deps*)))
 
+(defparameter *Context*
+  (make-stack-yaml
+   :name     "Context"
+   :packages (list *standard-library*)
+   :extra-deps (list (make-general-dependencies *capability* *prettiest*)
+                     *standard-library-extra-deps*)))
+
 (defparameter *core*
   (make-stack-yaml
    :name       "Core"

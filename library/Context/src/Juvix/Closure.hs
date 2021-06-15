@@ -1,9 +1,9 @@
 -- | Closure.T serves as the data structure in which we will store
 -- temporary lexical bindings as our code encounters binders.
-module Juvix.Core.Common.Closure where
+module Juvix.Closure where
 
 import qualified Data.HashSet as Set
-import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.Context as Context
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
