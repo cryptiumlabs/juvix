@@ -5,9 +5,9 @@ module Juvix.Context.Types where
 
 import Control.Lens hiding ((|>))
 import GHC.Show
-import Juvix.Context.Precedence
 import qualified Juvix.Context.NameSpace as NameSpace
 import qualified Juvix.Context.Open as Open
+import Juvix.Context.Precedence
 import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol

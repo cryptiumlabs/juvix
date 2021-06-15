@@ -20,11 +20,11 @@
 -- with any stage of the compiler while modifying the source code.
 module Easy where
 
+import qualified Juvix.Context as Context
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as ResolveOpen
 import qualified Juvix.Contextify.ToContext.Types as ContextifyT
 import qualified Juvix.Core as Core
-import qualified Juvix.Context as Context
 import qualified Juvix.Core.Common.Context.Traverse as Traverse
 import qualified Juvix.Desugar as Desugar
 import qualified Juvix.Frontend as Frontend

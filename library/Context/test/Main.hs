@@ -3,7 +3,6 @@ module Main where
 import qualified Context
 import qualified Test.Tasty as T
 
-
 allCheckeddTests :: T.TestTree
 allCheckeddTests =
   T.testGroup

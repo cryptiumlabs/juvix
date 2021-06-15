@@ -12,9 +12,9 @@ module Juvix.Context
 where
 
 import Control.Lens hiding ((|>))
+import qualified Juvix.Context.NameSpace as NameSpace
 import Juvix.Context.Precedence
 import Juvix.Context.Types
-import qualified Juvix.Context.NameSpace as NameSpace
 import Juvix.Library hiding (Sum, modify, toList)
 import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap

@@ -397,6 +397,60 @@ Representation of LLVM primitives in Juvix.
   + [[Library/Test/Golden]]
   + [[Juvix/Pipeline]]
   + [[Juvix/Pipeline]]
+* Context
+** Setup <<Context/Setup>>
+** src
+*** Juvix
+**** Closure
+Closure.T serves as the data structure in which we will store
+temporary lexical bindings as our code encounters binders.
+- _Relies on_
+  + [[Juvix/Context]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
+**** Context <<Juvix/Context>>
+- Serves as the context for lower level programs of the =Juvix=
+  Programming Language
+- This is parameterized per phase which may store the type and
+  term in slightly different ways
+- _Relies on_
+  + [[Precedence]]
+  + [[Context/Types]]
+  + [[NameSpace]]
+  + [[Library]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+***** NameSpace
+- _Relies on_
+  + [[Library]]
+  + [[HashMap]]
+***** Open
+- _Relies on_
+  + [[Library]]
+***** Precedence
+- _Relies on_
+  + [[Library]]
+***** Types <<Context/Types>>
+- _Relies on_
+  + [[Precedence]]
+  + [[NameSpace]]
+  + [[Open]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+  + [[Library/Usage]]
+** test
+*** Context <<test/Context>>
+- _Relies on_
+  + [[Juvix/Context]]
+  + [[NameSpace]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+*** Main <<Context/test/Main>>
 * Core
 ** Setup <<Core/Setup>>
 ** src
@@ -449,48 +503,6 @@ relation.
   + [[IR/Types]]
   + [[Library]]
   + [[NameSymbol]]
-***** Common
-****** Closure
-Closure.T serves as the data structure in which we will store
-temporary lexical bindings as our code encounters binders.
-- _Relies on_
-  + [[Core/Common/Context]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
-  + [[Library/Sexp]]
-****** NameSpace
-- _Relies on_
-  + [[Library]]
-  + [[HashMap]]
-****** Open
-- _Relies on_
-  + [[Library]]
-****** Context <<Core/Common/Context>>
-- Serves as the context for lower level programs of the =Juvix=
-  Programming Language
-- This is parameterized per phase which may store the type and
-  term in slightly different ways
-- _Relies on_
-  + [[Precedence]]
-  + [[Context/Types]]
-  + [[NameSpace]]
-  + [[Library]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
-******* Precedence
-- _Relies on_
-  + [[Library]]
-******* Types <<Context/Types>>
-- _Relies on_
-  + [[Precedence]]
-  + [[NameSpace]]
-  + [[Open]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
-  + [[Library/Usage]]
 ***** Erased
 - _Relies on_
   + [[Erased/Evaluator]]
@@ -901,14 +913,6 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Library]]
   + [[HashMap]]
   + [[Library/Usage]]
-*** Common
-**** Context <<test/Common/Context>>
-- _Relies on_
-  + [[Core/Common/Context]]
-  + [[NameSpace]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
 *** HR
 **** Pretty <<test/HR/Pretty>>
 - _Relies on_
@@ -948,7 +952,7 @@ with any stage of the compiler while modifying the source code.
   + [[ResolveOpenInfo]]
   + [[ToContext/Types]]
   + [[Core]]
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Traverse]]
   + [[Desugar]]
   + [[Frontend]]
@@ -1316,7 +1320,7 @@ Can be added to via core translation
 **** Core
 - _Relies on_
   + [[Juvix/Contextify]]
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Core/Erasure]]
   + [[Core/HR/Pretty]]
   + [[Core/Pipeline]]
@@ -1377,7 +1381,7 @@ Can be added to via core translation
 **** Pipeline <<Juvix/Pipeline>>
 - _Relies on_
   + [[Application]]
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[ErasedAnn]]
   + [[Library]]
   + [[Feedback]]
@@ -1399,7 +1403,7 @@ Can be added to via core translation
 ***** Internal <<Pipeline/Internal>>
 - _Relies on_
   + [[Core]]
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Traverse]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
@@ -1619,7 +1623,7 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[ResolveOpenInfo]]
   + [[ToContext/Sexp]]
   + [[ToContext/Types]]
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
@@ -1627,7 +1631,7 @@ TODO ∷ determine what has changed in the rebasing of this algo
 - _Relies on_
   + [[InfixPrecedence/ShuntYard]]
   + [[Closure]]
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[NameSpace]]
   + [[Library]]
   + [[NameSymbol]]
@@ -1637,7 +1641,7 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Contextify/Environment]]
   + [[InfixPrecedence/ShuntYard]]
   + [[Closure]]
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
@@ -1672,7 +1676,7 @@ TODO ∷ determine what has changed in the rebasing of this algo
   the reverse map and the qualification from that point
   forward.... these are thankfully quite straight forward
 - _Relies on_
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[NameSpace]]
   + [[Open]]
   + [[Library]]
@@ -1681,14 +1685,14 @@ TODO ∷ determine what has changed in the rebasing of this algo
 ****** Sexp <<ToContext/Sexp>>
 - _Relies on_
   + [[ToContext/Types]]
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[NameSpace]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
 ****** Types <<ToContext/Types>>
 - _Relies on_
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
@@ -1698,7 +1702,7 @@ TODO ∷ determine what has changed in the rebasing of this algo
 ******* Traverse
 Calculate mutually-recursive groups of definitions.
 - _Relies on_
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Traverse/Types]]
   + [[NameSpace]]
   + [[FreeVars]]
@@ -1772,7 +1776,7 @@ _TODO_
 **** ToCore
 ***** Types <<ToCore/Types>>
 - _Relies on_
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Core/HR]]
   + [[Core/IR]]
   + [[IR/Types/Base]]
@@ -1792,7 +1796,7 @@ _TODO_
   + [[Sig]]
 ******* Def
 - _Relies on_
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Core/IR]]
   + [[Translate]]
   + [[Library]]
@@ -1814,7 +1818,7 @@ _TODO_
   + [[ToCore/Types]]
 ******* Helpers <<Transform/Helpers>>
 - _Relies on_
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Core/HR]]
   + [[Core/IR]]
   + [[Core/Parameterisation]]
@@ -1825,7 +1829,7 @@ _TODO_
   + [[ToCore/Types]]
 ******* Sig
 - _Relies on_
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
@@ -1864,7 +1868,7 @@ _TODO_
   + [[Juvix/Contextify]]
   + [[Contextify/Environment]]
   + [[ResolveOpenInfo]]
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Library]]
   + [[Library/Sexp]]
 **** Golden <<Translate/test/Test/Golden>>
@@ -1888,7 +1892,7 @@ _TODO_
   + [[Juvix/Contextify]]
   + [[ResolveOpenInfo]]
   + [[ToContext/Types]]
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Desugar]]
   + [[Frontend/Parser]]
   + [[Frontend/Sexp]]
@@ -1899,7 +1903,7 @@ _TODO_
 ***** Contextify <<Contextualise/Contextify>>
 - _Relies on_
   + [[Juvix/Contextify]]
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Desugar]]
   + [[Frontend/Parser]]
   + [[Frontend/Sexp]]
@@ -1925,7 +1929,7 @@ Temporary conversion from the Sexpression syntax to the ML syntax
 ***** Helpers <<Sexp/Helpers>>
 - _Relies on_
   + [[Juvix/Contextify]]
-  + [[Core/Common/Context]]
+  + [[Juvix/Context]]
   + [[Desugar]]
   + [[Frontend/Parser]]
   + [[Frontend/Sexp]]
