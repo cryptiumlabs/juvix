@@ -17,9 +17,13 @@ import Juvix.Core.Parameterisation
 import Juvix.Library
 import qualified Juvix.Library.PrettyPrint as PP
 
+-- | Errors used throughout the pipeline.
 data PipelineError primTy primVal compErr
   = InternalInconsistencyError Text
-  | TypecheckerError (TC.TypecheckError primTy primVal)
+  | -- | Currently, we exit with this when a user program doesn't typecheck.
+    --   I expect the long-term plan is to convert it to a human-readable
+    --   error.
+    TypecheckerError (TC.TypecheckError primTy primVal)
   | -- EACError (EAC.Errors primTy primVal)
     ErasureError (Erasure.Error primTy (TypedPrim primTy primVal))
   | PrimError compErr
@@ -59,6 +63,7 @@ data PipelineLog primTy primVal
   | LogRanZ3 Double
   deriving (Show, Generic)
 
+-- | Map from a term to a formula of Elementary Affine Logic (EAL).
 -- compErr serves to resolve the compilation error type
 -- needed to promote a backend specific compilation error
 data TermAssignment primTy primVal compErr = Assignment
@@ -67,6 +72,7 @@ data TermAssignment primTy primVal compErr = Assignment
   }
   deriving (Show, Generic)
 
+-- | A 'TermAssignment' additionally annotated with a type.
 data AssignWithType primTy primVal compErr = WithType
   { termAssign :: TermAssignment primTy primVal compErr,
     type' :: EC.Type primTy
