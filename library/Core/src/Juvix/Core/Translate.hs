@@ -32,7 +32,10 @@ hrToIRWith ::
   IR.PatternMap NameSymbol.T ->
   HR.Term primTy primVal ->
   IR.Term primTy primVal
-hrToIRWith pats = fst . exec pats mempty . hrToIR'
+hrToIRWith pats term =
+  hrToIR' term
+    |> exec pats mempty
+    |> fst
 
 hrToIR' ::
   HasNameStack m =>
@@ -169,7 +172,7 @@ hrPatternToIR' = \case
   HR.PCon k ps -> IR.PCon k <$> traverse hrPatternToIR' ps
   HR.PPair p q -> IR.PPair <$> hrPatternToIR' p <*> hrPatternToIR' q
   HR.PUnit -> pure IR.PUnit
-  HR.PVar x -> withNextPatVar \i -> IR.PVar i <$ setSymToPat x i
+  HR.PVar x -> withNextPatVar (\i -> IR.PVar i <$ setSymToPat x i)
   HR.PDot e -> IR.PDot <$> hrToIR' e
   HR.PPrim p -> pure $ IR.PPrim p
 
