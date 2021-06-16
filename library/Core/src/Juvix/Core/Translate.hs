@@ -37,6 +37,9 @@ hrToIRWith pats term =
     |> exec pats mempty
     |> fst
 
+-- | @hrToIR'@ transforms an HR term into an IR term. The is achieved
+-- by pushing binder's variables to the stack, then getting the index
+-- when names occur for the proper De-bruijn index
 hrToIR' ::
   HasNameStack m =>
   HR.Term primTy primVal ->
@@ -66,6 +69,7 @@ hrToIR' = \case
     pure (IR.Let π l b)
   HR.Elim e -> IR.Elim |<< hrElimToIR' e
 
+-- | @hrElimToIR'@ works the same as @hrToIR'@ but for Elims
 hrElimToIR' ::
   HasNameStack m =>
   HR.Elim primTy primVal ->
@@ -95,6 +99,10 @@ irToHRWith ::
   HR.Term primTy primVal
 irToHRWith pats t = fst $ exec pats (varsTerm t) $ irToHR' t
 
+-- | @irToHR'@ transforms an IR term into an HR one. works like
+-- @hrToIR'@ but in reverse. Namely we have binders introduce a new
+-- name to the stack, then the free var index, @n@, grabs the @nth@
+-- item in the stack
 irToHR' ::
   (HasNames m, HasPatToSym m) =>
   IR.Term primTy primVal ->
@@ -126,6 +134,7 @@ irToHR' = \case
       pure (HR.Let π n l b)
   IR.Elim e -> HR.Elim |<< irElimToHR' e
 
+-- | @irElimToHR'@ works the same as @irToHR'@ but for Elims
 irElimToHR' ::
   (HasNames m, HasPatToSym m) =>
   IR.Elim primTy primVal ->
