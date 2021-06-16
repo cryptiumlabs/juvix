@@ -17,8 +17,8 @@ patVarsTests =
     "pattern variable tests:"
     [ T.testCase
         "generates from 0"
-        (Util.take 10 (Util.patVarsExcept (PS.fromList [])) T.@=? [0..9]),
+        (Util.take 10 (Util.patVarsExcept (PS.fromList [])) T.@=? [0 .. 9]),
       T.testCase
         "patVar properly excludes given elements"
-        (Util.take 10 (Util.patVarsExcept (PS.fromList [0,2..18])) T.@=? [1,3..19])
+        (Util.take 10 (Util.patVarsExcept (PS.fromList [0, 2 .. 18])) T.@=? [1, 3 .. 19])
     ]

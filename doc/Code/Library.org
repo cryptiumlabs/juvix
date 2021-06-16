@@ -484,7 +484,7 @@ relation.
 - _Relies on_
   + [[HR/Types]]
   + [[IR/Types]]
-  + [[Utility]]
+  + [[Core/Utility]]
   + [[Library]]
   + [[NameSymbol]]
 ***** Types <<Core/Types>>
@@ -498,7 +498,16 @@ relation.
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[PrettyPrint]]
-***** Utility
+***** Utility <<Core/Utility>>
+Provides utility and functionality for automatic pattern names,
+name streams, and aliases for capabilities over these structures.
+- Streams are offered in this module for an infinite name supply
+  structures
+- Operations are given for shuffling these in a capability
+- Pattern Variables are given to help set the mapping between
+  patterns and symbols
+- =HasNamStack= talks about the mapping between names in the =HR=
+  form and the =De Brunjin= Index
 - _Relies on_
   + [[IR/Types]]
   + [[Library]]
@@ -913,6 +922,9 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Library]]
   + [[HashMap]]
   + [[Library/Usage]]
+*** Utility <<test/Utility>>
+- _Relies on_
+  + [[Core/Utility]]
 *** HR
 **** Pretty <<test/HR/Pretty>>
 - _Relies on_
