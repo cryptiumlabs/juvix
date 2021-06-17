@@ -27,9 +27,9 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 hrToIR :: HR.Term primTy primVal -> IR.Term primTy primVal
 hrToIR = hrToIRWith mempty
 
-
 -- contract: no shadowing
 -- TODO - handle this automatically by renaming shadowed vars
+
 -- | @hrToIRWith@ runs @hrToIR'@ with given @pats@, currently these
 -- patterns are unused
 hrToIRWith ::
