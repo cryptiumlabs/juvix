@@ -22,11 +22,16 @@ import Juvix.Core.Utility
 import Juvix.Library hiding (filter)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
+-- | @hrToIR@ runs @hrToIR'@ with an empty stack, see that function for
+-- more documentation
 hrToIR :: HR.Term primTy primVal -> IR.Term primTy primVal
 hrToIR = hrToIRWith mempty
 
+
 -- contract: no shadowing
 -- TODO - handle this automatically by renaming shadowed vars
+-- | @hrToIRWith@ runs @hrToIR'@ with given @pats@, currently these
+-- patterns are unused
 hrToIRWith ::
   -- | pattern var <-> name mapping from outer scopes
   IR.PatternMap NameSymbol.T ->
@@ -89,9 +94,13 @@ hrElimToIR' = \case
     x <- hrToIR' x
     pure (IR.Ann u t x l)
 
+-- | @irToHR@ runs @irToHR'@ with an empty stack, see that function for
+-- more documentation
 irToHR :: IR.Term primTy primVal -> HR.Term primTy primVal
 irToHR = irToHRWith mempty
 
+-- | @irToHRWith@ runs @irToHR'@ with given @pats@, currently these
+-- patterns are unused
 irToHRWith ::
   -- | pattern var <-> name mapping from outer scopes
   IR.PatternMap NameSymbol.T ->
