@@ -5,8 +5,6 @@ module Juvix.Core.Translate
     hrToIRWith,
     irToHR,
     irToHRWith,
-    hrPatternToIR,
-    hrPatternToIRWith,
     irPatternToHR,
     irPatternToHRWith,
   )
@@ -147,31 +145,6 @@ irElimToHR' = \case
     x <- irToHR' x
     pure (HR.Ann u t x l)
 
-hrPatternToIR ::
-  HR.Pattern primTy primVal ->
-  (IR.Pattern primTy primVal, HashMap NameSymbol.T IR.PatternVar)
-hrPatternToIR = hrPatternToIRWith mempty
-
-hrPatternToIRWith ::
-  IR.PatternMap NameSymbol.T ->
-  HR.Pattern primTy primVal ->
-  (IR.Pattern primTy primVal, HashMap NameSymbol.T IR.PatternVar)
-hrPatternToIRWith pats pat =
-  hrPatternToIR' pat
-    |> exec pats mempty
-    |> second symToPat
-
-hrPatternToIR' ::
-  (HasNameStack m, HasSymToPat m, HasNextPatVar m) =>
-  HR.Pattern primTy primVal ->
-  m (IR.Pattern primTy primVal)
-hrPatternToIR' = \case
-  HR.PCon k ps -> IR.PCon k <$> traverse hrPatternToIR' ps
-  HR.PPair p q -> IR.PPair <$> hrPatternToIR' p <*> hrPatternToIR' q
-  HR.PUnit -> pure IR.PUnit
-  HR.PVar x -> withNextPatVar \i -> IR.PVar i <$ setSymToPat x i
-  HR.PDot e -> IR.PDot <$> hrToIR' e
-  HR.PPrim p -> pure $ IR.PPrim p
 
 irPatternToHR ::
   IR.Pattern primTy primVal ->
