@@ -6,6 +6,7 @@ import qualified Juvix.Core.Translate as Trans
 import Juvix.Library
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
+import qualified Juvix.Library.Usage as Usage
 
 shouldConvertHR :: HR.Term () () -> IR.Term () () -> T.TestTree
 shouldConvertHR hr ir =
@@ -63,5 +64,12 @@ irTohrConversion =
         (HR.Lam "a" (HR.Lam "b" (HR.Elim (HR.Var "a")))),
       shouldConvertIR
         (IR.Lam (IR.Lam (IR.Elim (IR.Bound 0))))
-        (HR.Lam "a" (HR.Lam "b" (HR.Elim (HR.Var "b"))))
+        (HR.Lam "a" (HR.Lam "b" (HR.Elim (HR.Var "b")))),
+      -- TODO: Find a good example for Pi, Sig and Let, i.e. for all other binders  
+      shouldConvertIR
+        (IR.Sig Usage.Omega (IR.PrimTy ()) (IR.PrimTy ()))
+        (HR.Sig Usage.Omega "a" (HR.PrimTy ()) (HR.PrimTy ())),
+      shouldConvertIR
+        (IR.Pi Usage.Omega (IR.PrimTy ()) (IR.PrimTy ()))
+        (HR.Pi Usage.Omega "a" (HR.PrimTy ()) (HR.PrimTy ()))
     ]
