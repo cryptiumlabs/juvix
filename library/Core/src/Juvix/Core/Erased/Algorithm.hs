@@ -129,8 +129,8 @@ erasePrimVal p = do
 
 erasePatterns ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
-  ([pat], ([(Usage.Usage, arg)], ret)) ->
-  m ([pat], ([(Usage.Usage, arg)], ret))
+  ([pat], ([(Usage.T, arg)], ret)) ->
+  m ([pat], ([(Usage.T, arg)], ret))
 erasePatterns ([], ([], ret)) = pure ([], ([], ret))
 erasePatterns (_ : ps, ((Usage.SNat 0, _) : args, ret)) = erasePatterns (ps, (args, ret))
 erasePatterns (p : ps, (arg : args, ret)) = do
@@ -140,7 +140,7 @@ erasePatterns _ = throw @"erasureError" (Erasure.InternalError "invalid type & p
 
 piTypeToList ::
   IR.Term primTy primVal ->
-  ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal)
+  ([(Usage.T, IR.Term primTy primVal)], IR.Term primTy primVal)
 piTypeToList ty =
   case ty of
     IR.Pi usage arg ret ->

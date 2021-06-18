@@ -7,7 +7,7 @@ import Data.Kind (Constraint)
 import Juvix.Core.Base.Types.Base
 import Juvix.Library hiding (Pos)
 import Juvix.Library.HashMap (HashMap)
-import Juvix.Library.Usage (Usage)
+import qualified Juvix.Library.Usage as Usage
 
 type RawGlobalAll (c :: Type -> Constraint) ext primTy primVal =
   ( c primTy,
@@ -92,7 +92,7 @@ deriving instance
 
 data RawDataArg' ext primTy primVal = RawDataArg
   { rawArgName :: GlobalName,
-    rawArgUsage :: Usage,
+    rawArgUsage :: Usage.T,
     rawArgType :: Term' ext primTy primVal
   }
   deriving (Generic)
@@ -115,7 +115,7 @@ deriving instance
 
 data DataArg' ext primTy primVal = DataArg
   { argName :: GlobalName,
-    argUsage :: Usage,
+    argUsage :: Usage.T,
     argType :: Value' ext primTy primVal
   }
   deriving (Generic)
@@ -349,7 +349,7 @@ type Globals' extV extT primTy primVal =
 
 data RawTeleEle' ext primTy primVal = RawTeleEle
   { rawName :: GlobalName,
-    rawUsage :: Usage,
+    rawUsage :: Usage.T,
     rawTy :: Term' ext primTy primVal,
     rawExtension :: XPi ext primTy primVal
   }
@@ -376,7 +376,7 @@ type RawTelescope ext primTy primVal =
 
 data TeleEle' extV extT primTy primVal = TeleEle
   { name :: GlobalName,
-    usage :: Usage,
+    usage :: Usage.T,
     ty :: Value' extV primTy primVal,
     extension :: XPi extT primTy primVal
   }
