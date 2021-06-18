@@ -963,6 +963,7 @@ with any stage of the compiler while modifying the source code.
   + [[Michelson/Parameterisation]]
   + [[Plonk]]
   + [[Juvix/Context]]
+  + [[NameSpace]]
   + [[Juvix/Contextify]]
   + [[ResolveOpenInfo]]
   + [[ToContext/Types]]
