@@ -20,6 +20,8 @@
 -- with any stage of the compiler while modifying the source code.
 module Easy where
 
+import qualified Juvix.Backends.Michelson.Parameterisation as Michelson.Param
+import qualified Juvix.Backends.Plonk as Plonk
 import qualified Juvix.Context as Context
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as ResolveOpen
@@ -36,15 +38,15 @@ import qualified Juvix.Frontend.Types.Base as Frontend
 import qualified Juvix.FrontendDesugar as FrontDesugar
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
+import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymb
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Pipeline as Pipeline
 import qualified Juvix.Pipeline.Compile as Compile
+import qualified Juvix.ToCore.Types as ToCore.Types
 import qualified Text.Pretty.Simple as Pretty
-import qualified Juvix.Backends.Michelson.Parameterisation as Michelson.Param
-import qualified Juvix.Backends.Plonk as Plonk
-import qualified Prelude (Show (..))
 import Prelude (error)
+import qualified Prelude (Show (..))
 
 --------------------------------------------------------------------------------
 -- OPTIONS
@@ -279,6 +281,14 @@ contextifyFile ::
   IO (Either Contextify.ResolveErr (Context.T Sexp.T Sexp.T Sexp.T))
 contextifyFile = contextifyFileGen Contextify.fullyContextify
 
+----------------------------------------
+-- CONTEXTIFY Examples
+----------------------------------------
+contexify1 :: IO ()
+contexify1 = do
+  Right ctx <- contextifyDesugar "let foo = 3" defMichelson
+  printDefModule defMichelson ctx
+
 --------------------------------------------------------------------------------
 -- Context Resolve Phase
 --------------------------------------------------------------------------------
@@ -304,8 +314,53 @@ contextifyDesugarFile = contextifyFileGen Contextify.op
 -- Core Phase
 --------------------------------------------------------------------------------
 
-coreify = do
-  Right 
+coreify ::
+  (Show primTy, Show primVal) =>
+  ByteString ->
+  Options primTy primVal ->
+  IO
+    ( Either
+        (ToCore.Types.Error primTy primVal)
+        (ToCore.Types.CoreDefs primTy primVal)
+    )
+coreify juvix options = do
+  Right ctx <- contextifyDesugar juvix options
+  pure $ Pipeline.contextToCore ctx (param options)
+
+coreifyFile ::
+  (Show primTy, Show primVal) =>
+  FilePath ->
+  Options primTy primVal ->
+  IO
+    ( Either
+        (ToCore.Types.Error primTy primVal)
+        (ToCore.Types.CoreDefs primTy primVal)
+    )
+coreifyFile juvix options = do
+  Right ctx <- contextifyDesugarFile juvix options
+  pure $ Pipeline.contextToCore ctx (param options)
+
+----------------------------------------
+-- Coreify Examples
+----------------------------------------
+
+printCoreFunction ::
+  (MonadIO m, Show primTy1, Show primVal1) =>
+  ToCore.Types.CoreDefs primTy1 primVal1 ->
+  Options primTy2 primVal2 ->
+  Symbol ->
+  m ()
+
+coreify1 :: IO ()
+coreify1 = do
+  Right x <- coreify "sig foo : int let foo = 3" defMichelson
+  printCoreFunction x defMichelson "foo"
+
+coreify2 :: IO ()
+coreify2 = do
+  -- Broken
+  Right x <- coreify "sig foo : int let foo x = x" defMichelson
+  printCoreFunction x defMichelson "foo"
 
 --------------------------------------------------------------------------------
 -- Helpers
@@ -330,6 +385,12 @@ printModule name ctx =
       printCompactParens (Context.currentNameSpace ctx)
     Nothing ->
       pure ()
+
+printCoreFunction core option functionName =
+  let name =
+        currentContextName option <> NameSymb.fromSymbol functionName
+   in Map.lookup name (ToCore.Types.defs core)
+        |> printCompactParens
 
 printDefModule ::
   (MonadIO m, Show ty, Show term, Show sum) => Options a b -> Context.T term ty sum -> m ()
