@@ -350,7 +350,6 @@ printCoreFunction ::
   Options primTy2 primVal2 ->
   Symbol ->
   m ()
-
 coreify1 :: IO ()
 coreify1 = do
   Right x <- coreify "sig foo : int let foo = 3" defMichelson
