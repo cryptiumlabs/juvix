@@ -41,20 +41,27 @@ import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Pipeline as Pipeline
 import qualified Juvix.Pipeline.Compile as Compile
 import qualified Text.Pretty.Simple as Pretty
+import qualified Juvix.Backends.Michelson.Parameterisation as Michelson.Param
+import qualified Juvix.Backends.Plonk as Plonk
+import qualified Prelude (Show (..))
 import Prelude (error)
 
 --------------------------------------------------------------------------------
 -- OPTIONS
 --------------------------------------------------------------------------------
 
-data Options = Opt
+instance Prelude.Show (Core.Parameterisation primTy primVal) where
+  show _ = "param"
+
+data Options primTy primVal = Opt
   { prelude :: [FilePath],
-    currentContextName :: NameSymb.T
+    currentContextName :: NameSymb.T,
+    param :: Core.Parameterisation primTy primVal
   }
   deriving (Show)
 
 -- we can override defaults by saying def { newOptions }
-def :: Options
+def :: Options primTy primVal
 def =
   Opt
     { -- to avoid being overhwlemed in the repl by giant text, we have
@@ -62,11 +69,12 @@ def =
       -- replace it by the full library
       prelude = ["juvix/minimal.ju"],
       -- by default our code will live in Juvix-User
-      currentContextName = "Juvix-User"
+      currentContextName = "Juvix-User",
+      param = undefined
     }
 
 -- @defMichelson@ gives us Michelson prelude
-defMichelson :: Options
+defMichelson :: Options Michelson.Param.PrimTy Michelson.Param.RawPrimVal
 defMichelson =
   def
     { prelude =
@@ -74,17 +82,19 @@ defMichelson =
         [ "../../stdlib/Prelude.ju",
           "../../stdlib/Michelson.ju",
           "../../stdlib/MichelsonAlias.ju"
-        ]
+        ],
+      param = Michelson.Param.michelson
     }
 
 -- @defCircuit@ gives us the circuit prelude
-defCircuit :: Options
+-- defCircuit :: Options
 defCircuit =
   def
     { prelude =
         [ "../../stdlib/Prelude.ju",
           "../../stdlib/Circuit.ju"
-        ]
+        ],
+      param = Plonk.param
     }
 
 -- These functions help us stop at various part of the pipeline
@@ -114,7 +124,7 @@ sexpFile file = do
 
 -- | here we run the sexp transformation on the library
 -- Prelude ⟶ ML AST ⟶ LISP AST
-sexpLibrary :: Options -> IO [(NameSymb.T, [Sexp.T])]
+sexpLibrary :: Options primTy primVal -> IO [(NameSymb.T, [Sexp.T])]
 sexpLibrary def = do
   files <- Frontend.ofPath (prelude def)
   case files of
@@ -160,7 +170,7 @@ desugarFile = fmap desugarLisp . sexpFile
 
 -- | @desugarLibrary@ is run on the library to get the s-expression
 -- Prelude ⟶ … ⟶ De-sugared LISP
-desugarLibrary :: Options -> IO [(NameSymb.T, [Sexp.T])]
+desugarLibrary :: Options primTy primVal -> IO [(NameSymb.T, [Sexp.T])]
 desugarLibrary def = do
   lib <- sexpLibrary def
   pure (second desugarLisp <$> lib)
@@ -188,7 +198,7 @@ desugarMinimalPrelude = desugarLibrary def
 
 -- | @contextifyGen@ is the generator function for the various contexitfy passes
 contextifyGen ::
-  (NonEmpty (NameSymb.T, [Sexp.T]) -> IO b) -> ByteString -> Options -> IO b
+  (NonEmpty (NameSymb.T, [Sexp.T]) -> IO b) -> ByteString -> Options pt pv -> IO b
 contextifyGen f text def = do
   lib <- desugarLibrary def
   let dusugared = desugar text
@@ -196,7 +206,7 @@ contextifyGen f text def = do
 
 -- | @contextifyFileGen@ is like @contextifyGen@ but for the file variants
 contextifyFileGen ::
-  (NonEmpty (NameSymb.T, [Sexp.T]) -> IO b) -> FilePath -> Options -> IO b
+  (NonEmpty (NameSymb.T, [Sexp.T]) -> IO b) -> FilePath -> Options pt pv -> IO b
 contextifyFileGen f file def = do
   lib <- desugarLibrary def
   dusugared <- desugarFile file
@@ -212,7 +222,7 @@ contextifyFileGen f file def = do
 -- Text ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP, Resolves
 contextifyNoResolve ::
   ByteString ->
-  Options ->
+  Options primTy primVal ->
   IO (Contextify.PathError (ContextifyT.ContextSexp, [ResolveOpen.PreQualified]))
 contextifyNoResolve = contextifyGen Contextify.contextify
 
@@ -220,7 +230,7 @@ contextifyNoResolve = contextifyGen Contextify.contextify
 -- File ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP, Resolves
 contextifyNoResolveFile ::
   FilePath ->
-  Options ->
+  Options primTy primVal ->
   IO (Contextify.PathError (ContextifyT.ContextSexp, [ResolveOpen.PreQualified]))
 contextifyNoResolveFile = contextifyFileGen Contextify.contextify
 
@@ -257,7 +267,7 @@ contextifyNoResolve1Pretty = do
 -- Text ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP ⟶ Resolved Contextified
 contextify ::
   ByteString ->
-  Options ->
+  Options primTy primVal ->
   IO (Either Contextify.ResolveErr (Context.T Sexp.T Sexp.T Sexp.T))
 contextify = contextifyGen Contextify.fullyContextify
 
@@ -265,7 +275,7 @@ contextify = contextifyGen Contextify.fullyContextify
 -- Text ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP ⟶ Resolved Contextified
 contextifyFile ::
   FilePath ->
-  Options ->
+  Options primTy primVal ->
   IO (Either Contextify.ResolveErr (Context.T Sexp.T Sexp.T Sexp.T))
 contextifyFile = contextifyFileGen Contextify.fullyContextify
 
@@ -278,7 +288,7 @@ contextifyFile = contextifyFileGen Contextify.fullyContextify
 -- Text ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP ⟶ Resolved Contextified ⟶ Context Desugar
 contextifyDesugar ::
   ByteString ->
-  Options ->
+  Options primTy primVal ->
   IO (Either Contextify.ResolveErr (Context.T Sexp.T Sexp.T Sexp.T))
 contextifyDesugar = contextifyGen Contextify.op
 
@@ -286,9 +296,16 @@ contextifyDesugar = contextifyGen Contextify.op
 -- Text ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP ⟶ Resolved Contextified ⟶ Context Desugar
 contextifyDesugarFile ::
   FilePath ->
-  Options ->
+  Options primTy primVal ->
   IO (Either Contextify.ResolveErr (Context.T Sexp.T Sexp.T Sexp.T))
 contextifyDesugarFile = contextifyFileGen Contextify.op
+
+--------------------------------------------------------------------------------
+-- Core Phase
+--------------------------------------------------------------------------------
+
+coreify = do
+  Right 
 
 --------------------------------------------------------------------------------
 -- Helpers
@@ -315,7 +332,7 @@ printModule name ctx =
       pure ()
 
 printDefModule ::
-  (MonadIO m, Show ty, Show term, Show sum) => Options -> Context.T term ty sum -> m ()
+  (MonadIO m, Show ty, Show term, Show sum) => Options a b -> Context.T term ty sum -> m ()
 printDefModule = printModule . currentContextName
 
 ignoreHeader :: Either a (Frontend.Header topLevel) -> [topLevel]

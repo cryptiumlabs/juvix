@@ -9,6 +9,7 @@ packages:
 - ../Backends/Michelson
 - ../Pipeline
 - ../Context
+- ../Backends/Plonk
 
 extra-deps:
 

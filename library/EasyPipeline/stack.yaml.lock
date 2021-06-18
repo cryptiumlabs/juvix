@@ -18,6 +18,17 @@ packages:
       size: 2581
     hackage: capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
 - original:
+    url: https://github.com/jyp/prettiest/archive/e5ce6cd6b4da71860c3d97da84bed4a827fa00ef.tar.gz
+  completed:
+    pantry-tree:
+      sha256: c768b2faa4e5d7b791d987679616d8f90f169a73ae3fd38c20f37f08d02d930d
+      size: 2327
+    version: '3.0'
+    name: pretty-compact
+    sha256: 27a4b2e7ee8f4768b27e7173f758fd0af83b1d8e3c3af9711b5fed2b27ef54ec
+    url: https://github.com/jyp/prettiest/archive/e5ce6cd6b4da71860c3d97da84bed4a827fa00ef.tar.gz
+    size: 359995
+- original:
     url: https://github.com/metastatedev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
   completed:
     pantry-tree:
@@ -53,20 +64,6 @@ packages:
     sha256: e82c3443094ace54328f1380df201ea54a7a40b893ebe82dabc9d51120ef8ff4
     url: https://github.com/seereason/sr-extra/archive/d5435dcb2ae5da5f9e0fb8e5a3c40f99937a046f.tar.gz
     size: 51947
-- original:
-    hackage: derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422
-  completed:
-    pantry-tree:
-      sha256: 7273803f80bf23fd4143430351d4fa6732df7c4f8e9df74a054ae25f572908ec
-      size: 982
-    hackage: derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422
-- original:
-    hackage: derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817
-  completed:
-    pantry-tree:
-      sha256: 4af20d2207a60b331e04d94c5474da25aaf0118a0d217d57ac007c1e0a179eb7
-      size: 1408
-    hackage: derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817
 - original:
     hackage: witherable-0.3.5@sha256:6590a15735b50ac14dcc138d4265ff1585d5f3e9d3047d5ebc5abf4cd5f50084,1476
   completed:

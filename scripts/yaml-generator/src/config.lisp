@@ -405,7 +405,8 @@ common ones to include"
                    *translate*
                    *michelson*
                    *pipeline*
-                   *Context*)
+                   *Context*
+                   *plonk*)
    ;; hack name, for sub dirs
    :name "EasyPipeline"
    :extra-deps (big-dep-list)
