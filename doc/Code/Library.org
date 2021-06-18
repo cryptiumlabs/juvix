@@ -697,9 +697,9 @@ datatype and function declarations.
   + [[Library]]
   + [[Library/Usage]]
 ****** Evaluator <<IR/Evaluator>>
-This includes the evaluators (evalTerm and evalElim),
-the value application function (vapp) and
-the substitution functions (substTerm and substElim).
+This includes the evaluators (`evalTerm` and `evalElim`),
+the value application function (`vapp`) and
+the substitution functions (`substTerm` and `substElim`).
 - _Relies on_
   + [[PatSubst]]
   + [[Evaluator/Subst]]
