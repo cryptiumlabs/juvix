@@ -2,9 +2,9 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 -- |
--- This includes the evaluators (evalTerm and evalElim),
--- the value application function (vapp) and
--- the substitution functions (substTerm and substElim).
+-- This includes the evaluators (`evalTerm` and `evalElim`),
+-- the value application function (`vapp`) and
+-- the substitution functions (`substTerm` and `substElim`).
 module Juvix.Core.IR.Evaluator
   ( module Juvix.Core.IR.Evaluator,
     module Juvix.Core.IR.Evaluator.Types,
@@ -42,7 +42,7 @@ type EvalPatSubst ext primTy primVal =
     HasPatSubstTerm (OnlyExts.T ext) primTy primVal primVal
   )
 
--- |
+-- | Alias for a type constraint for terms that can be evaluated.
 -- * @extT@: extension of current term
 -- * @extG@: extension of terms in globals
 type CanEval extT extG primTy primVal =
@@ -55,11 +55,14 @@ type CanEval extT extG primTy primVal =
     HasSubstValue IR.NoExt primTy primVal primVal
   )
 
+-- | Perform inlining of variables to globals in the input program.
 inlineAllGlobals ::
   ( EvalPatSubst ext primTy primVal,
     NoExtensions ext primTy primVal
   ) =>
+  -- | Term to perform inlining on.
   IR.Term' ext primTy primVal ->
+  -- | Lookup function used to dereference the variables.
   LookupFun ext primTy primVal ->
   IR.Term' ext primTy primVal
 inlineAllGlobals t map =
@@ -83,11 +86,14 @@ inlineAllGlobals t map =
     IR.Star' {} -> t
     IR.TermX {} -> t
 
+-- | Perform inling of references to globals in an elimination.
 inlineAllGlobalsElim ::
   ( EvalPatSubst ext primTy primVal,
     NoExtensions ext primTy primVal
   ) =>
+  -- | Elimination to perform inlining on.
   IR.Elim' ext primTy primVal ->
+  -- | Lookup function used to dereference the variables.
   LookupFun ext primTy primVal ->
   IR.Elim' ext primTy primVal
 inlineAllGlobalsElim t map =
@@ -101,11 +107,15 @@ inlineAllGlobalsElim t map =
       IR.Ann' u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) uni ann
     IR.ElimX {} -> t
 
--- annotations are discarded
+-- | Evaluate a term with extensions, discards annotations but keeps the
+-- extentions.
 evalTermWith ::
   CanEval extT extG primTy primVal =>
+  -- | Lookup function for globals that may be present in the term.
   LookupFun extG primTy primVal ->
+  -- | Functions to transform term and elim extensions.
   ExtFuns extG extT primTy primVal ->
+  -- | The term to evaluate.
   IR.Term' (OnlyExts.T extT) primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalTermWith _ _ (IR.Star' u _) =
@@ -135,10 +145,15 @@ evalTermWith g exts (IR.Elim' e _) =
 evalTermWith g exts (IR.TermX a) =
   tExtFun exts g a
 
+-- | Evaluate an elimination with extensions, discards annotations but keeps
+-- the extentions.
 evalElimWith ::
   CanEval extT extG primTy primVal =>
+  -- | Lookup function for globals that may be present in the elimination.
   LookupFun extG primTy primVal ->
+  -- | Functions to transform term and elim extensions.
   ExtFuns extG extT primTy primVal ->
+  -- | The elimination to evaluate.
   IR.Elim' (OnlyExts.T extT) primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalElimWith _ _ (IR.Bound' i _) =
@@ -158,20 +173,29 @@ evalElimWith g exts (IR.Ann' _ s _ _ _) =
 evalElimWith g exts (IR.ElimX a) =
   eExtFun exts g a
 
+-- | Evaluate a term with extensions, discards annotations but keeps the
+-- extentions.
 evalTerm ::
   CanEval extT extG primTy primVal =>
+  -- | Lookup function for globals that may be present in the term.
   LookupFun extG primTy primVal ->
+  -- | Term to evaluate.
   IR.Term' extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalTerm g t = evalTermWith g rejectExts $ OnlyExts.onlyExtsT t
 
+-- | Evaluate an elimination with extensions, discards annotations but keeps
+-- the extensions.
 evalElim ::
   CanEval extT extG primTy primVal =>
+  -- | Lookup function for globals that may be present in the elimination.
   LookupFun extG primTy primVal ->
+  -- | Elimination to evaluate.
   IR.Elim' extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalElim g e = evalElimWith g rejectExts $ OnlyExts.onlyExtsE e
 
+-- | Translate a term into an elimination.
 -- TODO generalise the @IR.NoExt@s
 toLambda' ::
   forall ext' ext primTy primVal.
@@ -203,22 +227,26 @@ toLambda' π' ty' pats rhs = do
       IR.Term' (OnlyExts.T z) primTy primVal
     lam x = IR.Lam' x ()
 
+-- | Extract variable from a pattern definition.
 singleVar :: Alternative f => IR.Pattern' ext primTy primVal -> f IR.PatternVar
 singleVar (IR.PVar' p _) = pure p
 singleVar _ = empty
 
+-- | Discard annotations from a `Term'`, but keep the extensions.
 toOnlyExtsT ::
   NoExtensions ext1 primTy primVal =>
   IR.Term' ext1 primTy primVal ->
   IR.Term' (OnlyExts.T ext2) primTy primVal
 toOnlyExtsT = extTransformT $ OnlyExts.injector `compose` forgetter
 
+-- | Discard annotations from an `Elim'`, but keep the extensions.
 toOnlyExtsE ::
   NoExtensions ext1 primTy primVal =>
   IR.Elim' ext1 primTy primVal ->
   IR.Elim' (OnlyExts.T ext2) primTy primVal
 toOnlyExtsE = extTransformE $ OnlyExts.injector `compose` forgetter
 
+-- | Translate a `Global'` function definition into an elimination.
 toLambda ::
   forall ext ext' primTy primVal.
   ( EvalPatSubst ext' primTy primVal,
@@ -231,6 +259,7 @@ toLambda (IR.GFunction (IR.Function {funUsage = π, funType = ty, funClauses}))
     toLambda' π (IR.quote ty) pats rhs
 toLambda _ = Nothing
 
+-- | Translate a `RawGlobal'` function definition into an elimination term.
 toLambdaR ::
   forall ext ext' primTy primVal.
   ( EvalPatSubst ext' primTy primVal,
@@ -244,6 +273,8 @@ toLambdaR (IR.RawGFunction f)
     toLambda' π (extForgetT ty) pats rhs
 toLambdaR _ = Nothing
 
+-- | Given an environment of global definitions, and a name to lookup,
+-- translate the (possible) term into an elimination.
 lookupFun ::
   forall ext' ext primTy primVal.
   ( EvalPatSubst ext' primTy primVal,
@@ -254,6 +285,7 @@ lookupFun ::
 lookupFun globals x =
   HashMap.lookup x globals >>= toLambda
 
+-- | Variant of `lookupFun` that works on `RawGlobals'`.
 rawLookupFun ::
   forall ext' ext primTy primVal.
   ( EvalPatSubst ext' primTy primVal,
@@ -264,12 +296,14 @@ rawLookupFun ::
 rawLookupFun globals x =
   HashMap.lookup x globals >>= toLambdaR
 
+-- | Variant of `lookupFun` that creates a extension free elimination.
 lookupFun' ::
   EvalPatSubst IR.NoExt primTy primVal =>
   IR.Globals primTy primVal ->
   LookupFun IR.NoExt primTy primVal
 lookupFun' globals x = lookupFun @IR.NoExt globals x >>| extForgetE
 
+-- | Variant of `lookupFun'` that works on `RawGlobals`.
 rawLookupFun' ::
   EvalPatSubst IR.NoExt primTy primVal =>
   IR.RawGlobals primTy primVal ->
