@@ -980,6 +980,8 @@ with any stage of the compiler while modifying the source code.
   + [[Library/Sexp]]
   + [[Juvix/Pipeline]]
   + [[Compile]]
+  + [[Michelson/Parameterisation]]
+  + [[Plonk]]
 ** test
 *** Spec <<EasyPipeline/test/Spec>>
 * Frontend

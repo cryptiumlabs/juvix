@@ -20,6 +20,8 @@
 -- with any stage of the compiler while modifying the source code.
 module Easy where
 
+import qualified Juvix.Backends.Michelson.Parameterisation as Michelson.Param
+import qualified Juvix.Backends.Plonk as Plonk
 import qualified Juvix.Context as Context
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as ResolveOpen
@@ -41,10 +43,8 @@ import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Pipeline as Pipeline
 import qualified Juvix.Pipeline.Compile as Compile
 import qualified Text.Pretty.Simple as Pretty
-import qualified Juvix.Backends.Michelson.Parameterisation as Michelson.Param
-import qualified Juvix.Backends.Plonk as Plonk
-import qualified Prelude (Show (..))
 import Prelude (error)
+import qualified Prelude (Show (..))
 
 --------------------------------------------------------------------------------
 -- OPTIONS
@@ -305,7 +305,7 @@ contextifyDesugarFile = contextifyFileGen Contextify.op
 --------------------------------------------------------------------------------
 
 coreify = do
-  Right 
+  Right
 
 --------------------------------------------------------------------------------
 -- Helpers
