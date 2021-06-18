@@ -23,6 +23,7 @@ module Easy where
 import qualified Juvix.Backends.Michelson.Parameterisation as Michelson.Param
 import qualified Juvix.Backends.Plonk as Plonk
 import qualified Juvix.Context as Context
+import qualified Juvix.Context.NameSpace as NameSpace
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as ResolveOpen
 import qualified Juvix.Contextify.ToContext.Types as ContextifyT
@@ -100,6 +101,14 @@ defCircuit =
     }
 
 -- These functions help us stop at various part of the pipeline
+
+----------------------------------------
+-- QUICK TIME LAPSE EXAMPLES
+----------------------------------------
+
+timeLapse1 :: IO ()
+timeLapse1 =
+  printTimeLapse "sig foo : int Prelude.-> int let foo x = x" defMichelson
 
 --------------------------------------------------------------------------------
 -- SEXP PHASE
@@ -281,14 +290,6 @@ contextifyFile ::
   IO (Either Contextify.ResolveErr (Context.T Sexp.T Sexp.T Sexp.T))
 contextifyFile = contextifyFileGen Contextify.fullyContextify
 
-----------------------------------------
--- CONTEXTIFY Examples
-----------------------------------------
-contexify1 :: IO ()
-contexify1 = do
-  Right ctx <- contextifyDesugar "let foo = 3" defMichelson
-  printDefModule defMichelson ctx
-
 --------------------------------------------------------------------------------
 -- Context Resolve Phase
 --------------------------------------------------------------------------------
@@ -309,6 +310,14 @@ contextifyDesugarFile ::
   Options primTy primVal ->
   IO (Either Contextify.ResolveErr (Context.T Sexp.T Sexp.T Sexp.T))
 contextifyDesugarFile = contextifyFileGen Contextify.op
+
+----------------------------------------
+-- CONTEXTIFY Examples
+----------------------------------------
+contexify1 :: IO ()
+contexify1 = do
+  Right ctx <- contextifyDesugar "let foo = 3" defMichelson
+  printDefModule defMichelson ctx
 
 --------------------------------------------------------------------------------
 -- Core Phase
@@ -344,12 +353,6 @@ coreifyFile juvix options = do
 -- Coreify Examples
 ----------------------------------------
 
-printCoreFunction ::
-  (MonadIO m, Show primTy1, Show primVal1) =>
-  ToCore.Types.CoreDefs primTy1 primVal1 ->
-  Options primTy2 primVal2 ->
-  Symbol ->
-  m ()
 coreify1 :: IO ()
 coreify1 = do
   Right x <- coreify "sig foo : int let foo = 3" defMichelson
@@ -357,7 +360,7 @@ coreify1 = do
 
 coreify2 :: IO ()
 coreify2 = do
-  -- Broken
+  -- Broken example that works currently
   Right x <- coreify "sig foo : int let foo x = x" defMichelson
   printCoreFunction x defMichelson "foo"
 
@@ -385,11 +388,51 @@ printModule name ctx =
     Nothing ->
       pure ()
 
+printCoreFunction ::
+  (MonadIO m, Show primTy1, Show primVal1) =>
+  ToCore.Types.CoreDefs primTy1 primVal1 ->
+  Options primTy2 primVal2 ->
+  Symbol ->
+  m ()
 printCoreFunction core option functionName =
   let name =
         currentContextName option <> NameSymb.fromSymbol functionName
    in Map.lookup name (ToCore.Types.defs core)
         |> printCompactParens
+
+printTimeLapse ::
+  (Show primTy2, Show primVal2) => ByteString -> Options primTy2 primVal2 -> IO ()
+printTimeLapse byteString option = do
+  let sexpd = sexp byteString
+  printCompactParens sexpd
+  --
+  let desugared = desugar byteString
+  printCompactParens desugared
+  --
+  Right context <- contextifyDesugar byteString option
+  printDefModule option context
+  --
+  let currentDefinedItems = definedFunctionsInModule option context
+  --
+  Right cored <- coreify byteString option
+  traverse_ (printCoreFunction cored option) currentDefinedItems
+
+printTimeLapseFile ::
+  (Show primTy2, Show primVal2) => FilePath -> Options primTy2 primVal2 -> IO ()
+printTimeLapseFile file option = do
+  sexpd <- sexpFile file
+  printCompactParens sexpd
+  --
+  desugared <- desugarFile file
+  printCompactParens desugared
+  --
+  Right context <- contextifyDesugarFile file option
+  printDefModule option context
+  --
+  let currentDefinedItems = definedFunctionsInModule option context
+  --
+  Right cored <- coreifyFile file option
+  traverse_ (printCoreFunction cored option) currentDefinedItems
 
 printDefModule ::
   (MonadIO m, Show ty, Show term, Show sum) => Options a b -> Context.T term ty sum -> m ()
@@ -398,3 +441,15 @@ printDefModule = printModule . currentContextName
 ignoreHeader :: Either a (Frontend.Header topLevel) -> [topLevel]
 ignoreHeader (Right (Frontend.NoHeader xs)) = xs
 ignoreHeader _ = error "not no header"
+
+definedFunctionsInModule ::
+  Options primTy primVal -> Context.T term ty sumRep -> [Symbol]
+definedFunctionsInModule option context =
+  case Context.inNameSpace (currentContextName option) context of
+    Just ctx ->
+      ctx
+        |> Context.currentNameSpace
+        |> Context.recordContents
+        |> NameSpace.toList1
+        |> fmap fst
+    Nothing -> []
