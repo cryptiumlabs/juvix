@@ -960,6 +960,8 @@ process until the compiler is at the full backends.
 We can view this approach as giving us a quick way to play around
 with any stage of the compiler while modifying the source code.
 - _Relies on_
+  + [[Michelson/Parameterisation]]
+  + [[Plonk]]
   + [[Juvix/Context]]
   + [[Juvix/Contextify]]
   + [[ResolveOpenInfo]]
@@ -976,12 +978,12 @@ with any stage of the compiler while modifying the source code.
   + [[FrontendDesugar]]
   + [[Library]]
   + [[Feedback]]
+  + [[HashMap]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
   + [[Juvix/Pipeline]]
   + [[Compile]]
-  + [[Michelson/Parameterisation]]
-  + [[Plonk]]
+  + [[ToCore/Types]]
 ** test
 *** Spec <<EasyPipeline/test/Spec>>
 * Frontend
