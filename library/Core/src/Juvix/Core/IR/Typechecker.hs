@@ -1,7 +1,7 @@
 -- | This file contains the functions and aux functions to typecheck
 -- datatype and function declarations.
 -- Datatype declarations are typechecked by @checkDataType@ in CheckDataType.hs.
--- Function declarations are typechecked by @typeCheckFuns@ in CheckFunction.hs.
+-- Terms are typechecked by @typeTerm@ in CheckTerm.hs.
 -- Typechecked declarations are added to the signature.
 module Juvix.Core.IR.Typechecker
   ( module Juvix.Core.IR.Typechecker,
