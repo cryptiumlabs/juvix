@@ -388,6 +388,16 @@ printModule name ctx =
     Nothing ->
       pure ()
 
+lookupCoreFunction ::
+  ToCore.Types.CoreDefs primTy1 primVal1 ->
+  Options primTy2 primVal2 ->
+  Symbol ->
+  Maybe (ToCore.Types.CoreDef primTy1 primVal1)
+lookupCoreFunction core option functionName =
+  let name =
+        currentContextName option <> NameSymb.fromSymbol functionName
+   in Map.lookup name (ToCore.Types.defs core)
+
 printCoreFunction ::
   (MonadIO m, Show primTy1, Show primVal1) =>
   ToCore.Types.CoreDefs primTy1 primVal1 ->
@@ -395,10 +405,7 @@ printCoreFunction ::
   Symbol ->
   m ()
 printCoreFunction core option functionName =
-  let name =
-        currentContextName option <> NameSymb.fromSymbol functionName
-   in Map.lookup name (ToCore.Types.defs core)
-        |> printCompactParens
+  lookupCoreFunction core option functionName |> printCompactParens
 
 printTimeLapse ::
   (Show primTy2, Show primVal2) => ByteString -> Options primTy2 primVal2 -> IO ()

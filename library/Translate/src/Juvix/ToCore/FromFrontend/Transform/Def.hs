@@ -104,7 +104,6 @@ transformDef x def = do
       | Just args <- Sexp.toList args' = do
         put @"patVars" mempty
         put @"nextPatVar" 0
-        -- TODO :: put this in hrToIRWith
         pattsHR <- traverse transformArgHR args
         let (patts, pattsTable) = Translate.hrPatternsToIR pattsHR
             transformTermIR q fe =
