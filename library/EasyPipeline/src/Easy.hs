@@ -67,7 +67,7 @@ data Options primTy primVal = Opt
 def :: Options primTy primVal
 def =
   Opt
-    { -- to avoid being overhwlemed in the repl by giant text, we have
+    { -- to avoid being overwhelmed in the repl by giant text, we have
       -- a minimal file here. Our functions will take def, so we can
       -- replace it by the full library
       prelude = ["juvix/minimal.ju"],
@@ -209,7 +209,7 @@ desugarMinimalPrelude = desugarLibrary def
 
 -- | @contextifyGen@ is the generator function for the various contexitfy passes
 contextifyGen ::
-  (NonEmpty (NameSymb.T, [Sexp.T]) -> IO b) -> ByteString -> Options pt pv -> IO b
+  (NonEmpty (NameSymb.T, [Sexp.T]) -> IO b) -> ByteString -> Options primTy primVal -> IO b
 contextifyGen f text def = do
   lib <- desugarLibrary def
   let dusugared = desugar text
@@ -217,7 +217,7 @@ contextifyGen f text def = do
 
 -- | @contextifyFileGen@ is like @contextifyGen@ but for the file variants
 contextifyFileGen ::
-  (NonEmpty (NameSymb.T, [Sexp.T]) -> IO b) -> FilePath -> Options pt pv -> IO b
+  (NonEmpty (NameSymb.T, [Sexp.T]) -> IO b) -> FilePath -> Options primTy primVal -> IO b
 contextifyFileGen f file def = do
   lib <- desugarLibrary def
   dusugared <- desugarFile file
@@ -435,7 +435,10 @@ printTimeLapseFile file option = do
   traverse_ (printCoreFunction cored option) currentDefinedItems
 
 printDefModule ::
-  (MonadIO m, Show ty, Show term, Show sum) => Options a b -> Context.T term ty sum -> m ()
+  (MonadIO m, Show ty, Show term, Show sum) =>
+  Options primTy primVal ->
+  Context.T term ty sum ->
+  m ()
 printDefModule = printModule . currentContextName
 
 ignoreHeader :: Either a (Frontend.Header topLevel) -> [topLevel]
