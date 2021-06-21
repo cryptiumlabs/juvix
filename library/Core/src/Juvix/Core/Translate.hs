@@ -29,17 +29,17 @@ hrToIR = hrToIRWith mempty
 -- contract: no shadowing
 -- TODO - handle this automatically by renaming shadowed vars
 hrToIRWith ::
-  -- | pattern var <-> name mapping from outer scopes
-  IR.PatternMap NameSymbol.T ->
+  -- | name <-> pattern var mapping from outer scopes
+  HashMap NameSymbol.T IR.PatternVar ->
   HR.Term primTy primVal ->
   IR.Term primTy primVal
 hrToIRWith pats term =
   hrToIR' term
-    |> exec pats mempty
+    |> execSymToPat pats mempty
     |> fst
 
 hrToIR' ::
-  HasNameStack m =>
+  (HasNameStack m, HasSymToPat m) =>
   HR.Term primTy primVal ->
   m (IR.Term primTy primVal)
 hrToIR' = \case
@@ -68,15 +68,19 @@ hrToIR' = \case
   HR.Elim e -> IR.Elim |<< hrElimToIR' e
 
 hrElimToIR' ::
-  HasNameStack m =>
+  (HasNameStack m, HasSymToPat m) =>
   HR.Elim primTy primVal ->
   m (IR.Elim primTy primVal)
 hrElimToIR' = \case
   HR.Var n -> do
     maybeIndex <- lookupName n
-    pure $ case maybeIndex of
-      Just ind -> IR.Bound (fromIntegral ind)
-      Nothing -> IR.Free (IR.Global n)
+    case maybeIndex of
+      Just ind -> pure $ IR.Bound (fromIntegral ind)
+      Nothing -> do
+        symTable <- get @"symToPat"
+        maybe (IR.Global n) IR.Pattern (symTable HM.!? n)
+          |> IR.Free
+          |> pure
   HR.App f x -> do
     f <- hrElimToIR' f
     x <- hrToIR' x
