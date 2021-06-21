@@ -1,4 +1,7 @@
 * Changelog for Juvix
+** 0.1.1.4
+- Adds: easy pipeline support up to Core.
+  + Creates: A time-lapse function
 ** 0.1.1.3
 - Split =Context= into it's own pacakge
 - Tests and documentation for Utility in Core
