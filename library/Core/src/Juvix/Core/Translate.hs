@@ -269,7 +269,8 @@ exec pats avoid (M env) =
       }
 
 -- | @execSymToPat@ works like exec but takes the symtoPat map instead of the patToSym map
-execSymToPat :: HashMap NameSymbol.T IR.PatternVar -> HashSet NameSymbol.T -> M a -> (a, Env)
+execSymToPat ::
+  HashMap NameSymbol.T IR.PatternVar -> HashSet NameSymbol.T -> M a -> (a, Env)
 execSymToPat pats = exec (HM.toList pats |> map swap |> PM.fromList)
 
 -- TODO separate states for h→i and i→h maybe??
