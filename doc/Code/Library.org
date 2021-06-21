@@ -1814,7 +1814,9 @@ _TODO_
 ******* Def
 - _Relies on_
   + [[Juvix/Context]]
+  + [[Core/HR]]
   + [[Core/IR]]
+  + [[Translate]]
   + [[Translate]]
   + [[Library]]
   + [[NameSymbol]]
