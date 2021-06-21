@@ -63,7 +63,7 @@ Module that implements the backend parameters for the Michelson backend.
   + [[Library]]
   + [[Feedback]]
   + [[Juvix/Pipeline]]
-  + [[FromFrontend]]
+  + [[ToCore/FromFrontend]]
 ******* Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
@@ -281,7 +281,7 @@ Surface language
   + [[Library]]
   + [[Feedback]]
   + [[Juvix/Pipeline]]
-  + [[FromFrontend]]
+  + [[ToCore/FromFrontend]]
 ******* Types <<Plonk/Types>>
 - _Relies on_
   + [[Application]]
@@ -375,7 +375,7 @@ The basic connection between the backend and the Juvix pipeline.
   + [[Library]]
   + [[Feedback]]
   + [[Juvix/Pipeline]]
-  + [[FromFrontend]]
+  + [[ToCore/FromFrontend]]
 ******* Primitive
 Representation of LLVM primitives in Juvix.
 - _Relies on_
@@ -986,7 +986,14 @@ with any stage of the compiler while modifying the source code.
   + [[Compile]]
   + [[ToCore/Types]]
 ** test
+*** FromFrontend <<test/FromFrontend>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[Library]]
+  + [[ToCore/Types]]
 *** Spec <<EasyPipeline/test/Spec>>
+- _Relies on_
+  + [[Library]]
 * Frontend
 ** Setup <<Frontend/Setup>>
 ** src
@@ -1430,7 +1437,7 @@ Can be added to via core translation
   + [[Library/Parser]]
   + [[Library/Sexp]]
   + [[Library/Usage]]
-  + [[FromFrontend]]
+  + [[ToCore/FromFrontend]]
 ***** Types <<Pipeline/Types>>
 - _Relies on_
   + [[ErasedAnn/Types]]
@@ -1803,7 +1810,7 @@ _TODO_
   + [[NameSymbol]]
   + [[Library/Sexp]]
   + [[Library/Usage]]
-***** FromFrontend
+***** FromFrontend <<ToCore/FromFrontend>>
 - _Relies on_
   + [[Transform]]
   + [[ToCore/Types]]
