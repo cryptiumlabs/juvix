@@ -241,7 +241,8 @@ coreCheckerEval =
       letComp,
       evaluations,
       skiCont,
-      subtype
+      subtype,
+      inlinings
     ]
 
 skiComp :: T.TestTree
@@ -349,6 +350,30 @@ evaluations =
     videntity = IR.VLam $ IR.VBound 0
     name = IR.Elim . IR.Free . IR.Global
     vname = IR.VFree . IR.Global
+
+inlinings :: T.TestTree
+inlinings =
+  T.testGroup
+    "Inlining"
+    [ shouldInlineE "F" (name "F") (name "F"),
+      shouldInlineE "B" (name "B") (name "A"),
+      shouldInlineE "C" (name "C") (name "A"),
+      shouldInlineE "F B"
+        (name "F" `IR.App` tname "B") (name "F" `IR.App` tname "A"),
+      shouldInlineT "*₀" (IR.Star 0) (IR.Star 0)
+    ]
+  where
+    name = IR.Free . IR.Global
+    tname = IR.Elim . name
+    shouldInlineE lbl e e' = T.testCase lbl $
+      IR.inlineAllGlobalsElim e look T.@?= e'
+    shouldInlineT lbl t t' = T.testCase lbl $
+      IR.inlineAllGlobals t look T.@?= t'
+
+    look :: IR.GlobalName -> Maybe (IR.Elim Unit.Ty Unit.Val)
+    look "B" = Just $ name "A"
+    look "C" = Just $ name "B"
+    look _   = Nothing
 
 skiCont :: T.TestTree
 skiCont =

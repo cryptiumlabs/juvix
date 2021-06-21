@@ -93,7 +93,8 @@ inlineAllGlobalsElim ::
 inlineAllGlobalsElim t map =
   case t of
     IR.Bound' {} -> t
-    IR.Free' (IR.Global name) _ann -> fromMaybe t $ map name
+    IR.Free' (IR.Global name) _ann ->
+      maybe t (\t' -> inlineAllGlobalsElim t' map) $ map name
     IR.Free' {} -> t
     IR.App' elim term ann ->
       IR.App' (inlineAllGlobalsElim elim map) (inlineAllGlobals term map) ann
