@@ -100,6 +100,7 @@ transformDef x def = do
       | Just args <- Sexp.toList args' = do
         put @"patVars" mempty
         put @"nextPatVar" 0
+        -- TODO :: put this in hrToIRWith
         patts <- traverse transformArg args
         clauseBody <- transformTermIR q body
         pure $ IR.RawFunClause [] patts clauseBody False
@@ -113,6 +114,7 @@ transformDef x def = do
         throwFF $ PatternUnimplemented p
     transformArg pat = transformPat pat
 
+    -- TODO ∷ refactor heavily, we have code in Core that does this
     transformPat p@(asCon Sexp.:> con)
       -- implicit arguments are not supported
       -- TODO ∷ translate as patterns into @let@
@@ -130,5 +132,6 @@ transformDef x def = do
         IR.PPrim <$> getParamConstant n
       | otherwise = error "malformed match pattern"
 
+    -- TODO ∷ remove this, we do this work in Core
     getNextPatVar :: HasNextPatVar m => m IR.PatternVar
     getNextPatVar = state @"nextPatVar" \v -> (v, succ v)
