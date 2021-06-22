@@ -1,5 +1,43 @@
 ArithCircuit
     [ MulGate
+        { mulL = Var
+            ( InputWire 0 )
+        , mulR = Var
+            ( InputWire 0 )
+        , mulO = IntermediateWire 2
+        }
+    , MulGate
+        { mulL = Var
+            ( IntermediateWire 2 )
+        , mulR = Var
+            ( InputWire 0 )
+        , mulO = IntermediateWire 3
+        }
+    , MulGate
+        { mulL = ConstGate
+            ( P
+                ( 1 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+            )
+        , mulR = Add
+            ( Var
+                ( IntermediateWire 3 )
+            )
+            ( ScalarMul
+                ( P
+                    ( 52435875175126190479447740508185965837690552500527637822603658699938581184512 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                )
+                ( Var
+                    ( InputWire 1 )
+                )
+            )
+        , mulO = IntermediateWire 4
+        }
+    , EqualGate
+        { eqI = IntermediateWire 4
+        , eqM = IntermediateWire 5
+        , eqO = IntermediateWire 6
+        }
+    , MulGate
         { mulL = ConstGate
             ( P
                 ( 1 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
@@ -7,14 +45,17 @@ ArithCircuit
         , mulR = Add
             ( ConstGate
                 ( P
-                    ( 2 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                    ( 1 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
                 )
             )
-            ( ConstGate
+            ( ScalarMul
                 ( P
-                    ( 2 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                    ( 52435875175126190479447740508185965837690552500527637822603658699938581184512 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                )
+                ( Var
+                    ( IntermediateWire 6 )
                 )
             )
-        , mulO = OutputWire 0
+        , mulO = OutputWire 7
         }
     ]

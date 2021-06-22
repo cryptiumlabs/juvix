@@ -2,10 +2,10 @@ module Juvix.Contextify.Passes (resolveModule, inifixSoloPass) where
 
 import Control.Lens hiding (op, (|>))
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Juvix.Closure as Closure
+import qualified Juvix.Context as Context
 import qualified Juvix.Contextify.Environment as Env
 import qualified Juvix.Contextify.InfixPrecedence.ShuntYard as Shunt
-import qualified Juvix.Core.Common.Closure as Closure
-import qualified Juvix.Core.Common.Context as Context
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp

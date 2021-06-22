@@ -289,6 +289,13 @@ common ones to include"
    :packages   (list *standard-library*)
    :extra-deps (list (make-general-dependencies *capability* *prettiest*) *standard-library-extra-deps*)))
 
+(defparameter *Context*
+  (make-stack-yaml
+   :name     "Context"
+   :packages (list *standard-library*)
+   :extra-deps (list (make-general-dependencies *capability* *prettiest*)
+                     *standard-library-extra-deps*)))
+
 (defparameter *core*
   (make-stack-yaml
    :name       "Core"
@@ -300,7 +307,7 @@ common ones to include"
 (defparameter *translate*
   (make-stack-yaml
    :name "Translate"
-   :packages   (list *core* *frontend* *standard-library*)
+   :packages   (list *core* *frontend* *standard-library* *Context*)
    :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                      *standard-library-extra-deps*
                      *eac-solver*)))
@@ -331,7 +338,8 @@ common ones to include"
    :packages (list *standard-library*
                    *frontend*
                    *core*
-                   *translate*)
+                   *translate*
+                   *Context*)
    ;; hack name, for sub dirs
    :name "Pipeline"
    :extra-deps (big-dep-list)
@@ -396,7 +404,9 @@ common ones to include"
                    *core*
                    *translate*
                    *michelson*
-                   *pipeline*)
+                   *pipeline*
+                   *Context*
+                   *plonk*)
    ;; hack name, for sub dirs
    :name "EasyPipeline"
    :extra-deps (big-dep-list)
@@ -413,7 +423,8 @@ common ones to include"
                    *michelson*
                    *easy-pipeline*
                    *plonk*
-                   *llvm*)
+                   *llvm*
+                   *Context*)
    :path-to-other "./library/"
    :extra-deps
    (cons *llvm-hs-deps* (big-dep-list))

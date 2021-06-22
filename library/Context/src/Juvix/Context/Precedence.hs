@@ -1,4 +1,4 @@
-module Juvix.Core.Common.Context.Precedence
+module Juvix.Context.Precedence
   ( default',
     left,
     right,

@@ -5,6 +5,7 @@ packages:
 - ../Core
 - ../Frontend
 - ../StandardLibrary
+- ../Context
 
 extra-deps:
 

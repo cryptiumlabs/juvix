@@ -3,18 +3,18 @@
 --   Programming Language
 -- - This is parameterized per phase which may store the type and
 --   term in slightly different ways
-module Juvix.Core.Common.Context
-  ( module Juvix.Core.Common.Context.Types,
-    module Juvix.Core.Common.Context.Precedence,
+module Juvix.Context
+  ( module Juvix.Context.Types,
+    module Juvix.Context.Precedence,
     -- leave the entire module for now, so lenses can be exported
-    module Juvix.Core.Common.Context,
+    module Juvix.Context,
   )
 where
 
 import Control.Lens hiding ((|>))
-import Juvix.Core.Common.Context.Precedence
-import Juvix.Core.Common.Context.Types
-import qualified Juvix.Core.Common.NameSpace as NameSpace
+import qualified Juvix.Context.NameSpace as NameSpace
+import Juvix.Context.Precedence
+import Juvix.Context.Types
 import Juvix.Library hiding (Sum, modify, toList)
 import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap

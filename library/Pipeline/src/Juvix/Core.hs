@@ -9,8 +9,8 @@ module Juvix.Core
   )
 where
 
+import qualified Juvix.Context as Context
 import qualified Juvix.Contextify as Contextify
-import qualified Juvix.Core.Common.Context as Context
 import Juvix.Core.Erasure (erase, eraseAnn)
 import qualified Juvix.Core.HR.Pretty as HR
 import Juvix.Core.Pipeline
