@@ -49,7 +49,7 @@ patternVarTests =
           "open Prelude\
           \ open Michelson\
           \ open Alias\
-          \ sig foo : int -> int\
+          \ sig foo : int -> int -> int\
           \ let foo x y = x + y"
           Easy.defMichelson
       pure $ grabSingleBody (Easy.lookupCoreFunction x Easy.defMichelson "foo")
