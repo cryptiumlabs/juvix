@@ -1,9 +1,9 @@
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralisedNewtypeDeriving #-}
 
 module Juvix.Library.Test.Golden
-  ( NoQuotes(..),
+  ( NoQuotes (..),
     toNoQuotes,
     getGolden,
     compareGolden,
@@ -25,31 +25,34 @@ import Test.Tasty
 import qualified Test.Tasty.Silver as T
 import qualified Test.Tasty.Silver.Advanced as T
 import Text.Pretty.Simple (pShowNoColor)
+import Text.Read (Read (..))
 import qualified Prelude (show)
-import Text.Read (Read(..))
 
 type FileExtension = String
 
 newtype NoQuotes = NoQuotes Text
-instance Show NoQuotes
-  where show (NoQuotes t) = toS t
+
+instance Show NoQuotes where
+  show (NoQuotes t) = toS t
+
 instance Read NoQuotes where
   readsPrec _ s = [(NoQuotes $ toS s, "")]
+
 instance Eq NoQuotes where
   (NoQuotes s1) == (NoQuotes s2) = t1 == t2
     where
       -- TODO: This filter is potentially dangerous
       t1 = Text.filter (/= '"') . Text.strip <$> lines s1
-      t2 =  Text.filter (/= '"') . Text.strip <$> lines s2
+      t2 = Text.filter (/= '"') . Text.strip <$> lines s2
 
-toNoQuotes ::  
+toNoQuotes ::
   (Monad m, Show a) =>
   (FilePath -> m a) ->
-  FilePath -> m NoQuotes
+  FilePath ->
+  m NoQuotes
 toNoQuotes f filepath = do
   t <- f filepath
   pure $ NoQuotes $ toS $ pShowNoColor t
-
 
 getGolden :: (Read a, Show a) => FilePath -> IO (Maybe a)
 getGolden file = do

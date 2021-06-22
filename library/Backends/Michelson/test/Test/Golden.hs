@@ -4,12 +4,12 @@
 module Test.Golden where
 
 import qualified Juvix.Backends.Michelson as Michelson
+import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.Pipeline as Core
 import Juvix.Library
 import Juvix.Library.Test.Golden
 import qualified Juvix.Pipeline as Pipeline
 import Test.Tasty
-import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import Text.Pretty.Simple (pShowNoColor)
 
 juvixRootPath :: FilePath
@@ -48,11 +48,9 @@ typecheckTests =
       [ typecheckTestPos "test/examples/positive/michelson",
         typecheckTestNeg "test/examples/negative/michelson"
       ]
-
   where
     typecheckTestPos = typecheckTest (expectSuccess . toNoQuotes typecheck)
     typecheckTestNeg = typecheckTest (expectFailure . toNoQuotes typecheck)
-
 
 -- | Discover golden tests for input files with extension @.ju@ and output
 -- files with extension @.typecheck@.
@@ -63,10 +61,13 @@ typecheckTest ::
   IO TestTree
 typecheckTest f (withJuvixRootPath -> p) = discoverGoldenTests [".ju"] ".typecheck" getGolden f p
 
-typecheck
-  :: FilePath
-  -> Pipeline.Pipeline (ErasedAnn.AnnTermT
-        Michelson.PrimTy Michelson.RawPrimVal)
+typecheck ::
+  FilePath ->
+  Pipeline.Pipeline
+    ( ErasedAnn.AnnTermT
+        Michelson.PrimTy
+        Michelson.RawPrimVal
+    )
 typecheck file = do
   contract <- liftIO $ readFile file
   context <- Pipeline.parseWithLibs (withJuvixRootPath <$> libs) Michelson.BMichelson contract
@@ -81,4 +82,3 @@ compileTest ::
   FilePath ->
   IO TestTree
 compileTest f (withJuvixRootPath -> p) = discoverGoldenTests [".ju"] ".michelson" getGolden f p
-
