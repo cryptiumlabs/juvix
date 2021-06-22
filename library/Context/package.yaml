@@ -1,30 +1,31 @@
-name:                translate
+name:                Context
 version:             0.1.0.0
-github:              "heliaxdev/juvix"
+github:              "heliaxdev/Juvix"
 license:             GPL-3
 author:              "Heliax AG <hello@heliax.dev>"
 maintainer:          "Heliax AG <hello@heliax.dev>"
 copyright:           "2020 Heliax AG"
 
-description:         Please see the README on GitHub at <https://github.com/githubuser/Translate#readme>
+extra-source-files:
+- README.org
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/Context#readme>
 
 dependencies:
-- base >= 4.11 && < 5
+- base >= 4.7 && < 5
 - standard-library
-- core
-- frontend
-- Context
-- extensible-data
+- containers
 - unordered-containers
 - stm-containers
-- list-t
 - lens
-- containers
-- dlist
-- syb
-- megaparsec
-- pretty-simple
-- extra
+- text
 
 default-extensions:
   - NoImplicitPrelude
@@ -35,6 +36,7 @@ default-extensions:
   - UnicodeSyntax
   - GADTs
   - DerivingVia
+  - MultiParamTypeClasses
   - MultiWayIf
   - DataKinds
   - TypeApplications
@@ -53,6 +55,7 @@ default-extensions:
   - GeneralizedNewtypeDeriving
   - StandaloneDeriving
   - BlockArguments
+  - FunctionalDependencies
 
 ghc-options:
   - -ferror-spans
@@ -68,7 +71,7 @@ library:
   source-dirs: src
 
 tests:
-  translate-test:
+  Context-test:
     main:                Main.hs
     source-dirs:         test
     ghc-options:
@@ -76,16 +79,6 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - bytestring
-    - directory
-    - filepath
-    - pretty-simple
-    - pretty-show
-    - strict
-    - translate
+    - Context
     - tasty
-    - tasty-golden
     - tasty-hunit
-    - tasty-silver
-    - tasty-quickcheck
-    - text

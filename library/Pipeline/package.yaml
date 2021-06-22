@@ -36,6 +36,7 @@ dependencies:
   - core
   - translate
   - galois-field
+  - Context
   # - llvm
   # - interaction-net
   # - InteractionNetIR

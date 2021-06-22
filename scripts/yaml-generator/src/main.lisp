@@ -11,6 +11,7 @@
 (defun main ()
   (generate-yaml-file *standard-library*   "library/StandardLibrary/stack.yaml")
   (generate-yaml-file *frontend*           "library/Frontend/stack.yaml")
+  (generate-yaml-file *Context*            "library/Context/stack.yaml")
   (generate-yaml-file *core*               "library/Core/stack.yaml")
   (generate-yaml-file *translate*          "library/Translate/stack.yaml")
   (generate-yaml-file *Michelson*          "library/Backends/Michelson/stack.yaml")

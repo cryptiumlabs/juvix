@@ -18,9 +18,9 @@ import qualified Data.HashSet as HashSet
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.List.NonEmpty.Extra as NonEmpty
 import qualified Generics.SYB as SYB
-import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.Context as Context
+import qualified Juvix.Context.NameSpace as NameSpace
 import Juvix.Core.Common.Context.Traverse.Types
-import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.FreeVars as FV
 import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap

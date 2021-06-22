@@ -1,13 +1,13 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Juvix.Core.Common.Context.Types where
+module Juvix.Context.Types where
 
 import Control.Lens hiding ((|>))
 import GHC.Show
-import Juvix.Core.Common.Context.Precedence
-import qualified Juvix.Core.Common.NameSpace as NameSpace
-import qualified Juvix.Core.Common.Open as Open
+import qualified Juvix.Context.NameSpace as NameSpace
+import qualified Juvix.Context.Open as Open
+import Juvix.Context.Precedence
 import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol

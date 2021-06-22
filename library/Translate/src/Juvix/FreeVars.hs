@@ -53,8 +53,8 @@
 module Juvix.FreeVars where
 
 import qualified Data.HashSet as Set
+import qualified Juvix.Closure as Closure
 import qualified Juvix.Contextify.Environment as Env
-import qualified Juvix.Core.Common.Closure as Closure
 import Juvix.Library hiding (Set)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp

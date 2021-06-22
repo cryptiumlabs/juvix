@@ -1,7 +1,7 @@
 module Test.Sexp.Helpers where
 
+import qualified Juvix.Context as Context
 import qualified Juvix.Contextify as Contextify
-import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Desugar as Desugar
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Sexp as SexpTrans

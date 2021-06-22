@@ -1,4 +1,4 @@
-module Juvix.Core.Common.Open where
+module Juvix.Context.Open where
 
 import Juvix.Library
 

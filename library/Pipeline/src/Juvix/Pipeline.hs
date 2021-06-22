@@ -10,8 +10,8 @@ where
 
 import qualified Data.Text as Text
 import qualified Data.Text.IO as T
+import qualified Juvix.Context as Context
 import qualified Juvix.Core.Application as CoreApp
-import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback

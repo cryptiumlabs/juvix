@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveTraversable #-}
 
-module Juvix.Core.Common.NameSpace where
+module Juvix.Context.NameSpace where
 
 import Juvix.Library hiding (modify, toList)
 import qualified Juvix.Library.HashMap as HashMap
