@@ -64,4 +64,4 @@ discoverGoldenTestsCompile ::
   IO TestTree
 discoverGoldenTestsCompile (withJuvixRootPath -> p) = discoverGoldenTests [".ju"] ".michelson" getGolden (expectSuccess . compile) p
   where
-    compile file = Michelson.compileMichelson  =<< typecheck file
+    compile file = Michelson.compileMichelson =<< typecheck file
