@@ -232,7 +232,7 @@ toLambda (IR.GFunction (IR.Function {funUsage = π, funType = ty, funClauses}))
 toLambda _ = Nothing
 
 toLambdaR ::
-  forall ext' ext primTy primVal.
+  forall ext ext' primTy primVal.
   ( EvalPatSubst ext' primTy primVal,
     NoExtensions ext primTy primVal
   ) =>

@@ -45,9 +45,9 @@ compareGolden golden upcoming
           Just $
             "Output doesn't match golden file."
               <> "The new result is \n"
-              <> toS (pShowNoColor upcoming)
+              <> show upcoming
               <> "\n but the expected result is \n"
-              <> toS (pShowNoColor golden),
+              <> show golden,
         T.gActual = resultToText upcoming,
         T.gExpected = resultToText golden
       }

@@ -11,14 +11,6 @@ shouldConvertHR :: HR.Term () () -> IR.Term () () -> T.TestTree
 shouldConvertHR hr ir =
   T.testCase (show hr <> " should convert to " <> show ir) (ir T.@=? Trans.hrToIR hr)
 
-shouldConvertHRWith ::
-  Traversable t => t (HR.Pattern () ()) -> HR.Term () () -> IR.Term () () -> T.TestTree
-shouldConvertHRWith pats hr ir =
-  T.testCase (show hr <> " should convert to " <> show ir) (ir T.@=? convertWith pats hr)
-
-convertWith :: Traversable t => t (HR.Pattern () ()) -> HR.Term () () -> IR.Term () ()
-convertWith pats = Trans.hrToIRWith (snd (Trans.hrPatternsToIR pats))
-
 shouldConvertIR :: IR.Term () () -> HR.Term () () -> T.TestTree
 shouldConvertIR ir hr =
   T.testCase (show ir <> " should convert to " <> show hr) (hr T.@=? Trans.irToHR ir)
@@ -56,11 +48,7 @@ hrToirConversion =
               IR.Bound 0
                 `IR.App` IR.Lam (IR.Elim $ IR.Bound 0)
                 `IR.App` IR.Lam (IR.Elim $ IR.Free (IR.Global "x"))
-        ),
-      shouldConvertHRWith
-        [HR.PVar "a", HR.PVar "hi"]
-        (HR.Elim (HR.Var "a"))
-        (IR.Elim (IR.Free (IR.Pattern 0)))
+        )
     ]
 
 irTohrConversion :: T.TestTree

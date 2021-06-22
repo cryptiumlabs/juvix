@@ -1,7 +1,4 @@
-import qualified FromFrontend
-import Juvix.Library
-import qualified Test.Tasty as T
-import qualified Test.Tasty.HUnit as T
+import Prelude
 
 main :: IO ()
-main = T.defaultMain FromFrontend.top
+main = putStrLn "Test suite not yet implemented"

@@ -8,6 +8,7 @@ where
 
 import qualified Data.Aeson as A
 import Data.Field.Galois (GaloisField)
+import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Backends.Plonk.Builder as Builder
 import qualified Juvix.Backends.Plonk.Circuit as Circuit
 import qualified Juvix.Backends.Plonk.Compiler as Compiler
@@ -25,7 +26,9 @@ import Juvix.Core.Parameterisation
 import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Pipeline as CorePipeline
 import Juvix.Library
+import qualified Juvix.Library.Feedback as Feedback
 import Juvix.Pipeline as Pipeline
+import Juvix.ToCore.FromFrontend as FF (CoreDefs (..))
 import qualified Text.PrettyPrint.Leijen.Text as Pretty
 
 data BPlonk f = BPlonk
@@ -73,9 +76,32 @@ instance
   where
   type Ty (BPlonk f) = Types.PrimTy f
   type Val (BPlonk f) = Types.PrimVal f
-  type Err (BPlonk f) = Types.CompilationError f
   stdlibs _ = ["stdlib/Circuit.ju"]
-  typecheck ctx = Pipeline.typecheck' ctx (Parameterization.param @f) Types.PField
+  typecheck ctx = do
+    let res = Pipeline.contextToCore ctx (Parameterization.param @f)
+    case res of
+      Right (FF.CoreDefs _order globals) -> do
+        let globalDefs = HM.mapMaybe Pipeline.toCoreDef globals
+        -- TODO: Fix MAIN
+        case HM.elems $ HM.filter Pipeline.isMain globalDefs of
+          [] -> Feedback.fail $ "No main function found in " <> show globalDefs
+          [IR.RawGFunction f]
+            | IR.RawFunction _name usage ty (clause :| []) <- f,
+              IR.RawFunClause _ [] term _ <- clause -> do
+              let convGlobals = map (Pipeline.convGlobal Types.PField) globalDefs
+                  newGlobals = HM.map (Pipeline.unsafeEvalGlobal convGlobals) convGlobals
+                  lookupGlobal = IR.rawLookupFun' globalDefs
+                  inlinedTerm = IR.inlineAllGlobals term lookupGlobal
+              (res, _) <- liftIO $ Pipeline.exec (CorePipeline.coreToAnn @(Types.PrimTy f) @(Types.PrimVal f) @Types.CompilationError inlinedTerm (IR.globalToUsage usage) ty) (Parameterization.param @f) newGlobals
+              case res of
+                Right r -> do
+                  pure r
+                Left err -> do
+                  print term
+                  Feedback.fail $ show err
+          somethingElse -> Feedback.fail $ show somethingElse
+      Left err -> Feedback.fail $ "failed at ctxToCore\n" ++ show err
+
   compile out term = do
     let circuit = compileCircuit term
     liftIO $ Dot.dotWriteSVG out (Dot.arithCircuitToDot circuit)

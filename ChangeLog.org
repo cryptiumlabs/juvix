@@ -1,7 +1,4 @@
 * Changelog for Juvix
-** 0.1.1.5
-- Allow main be of any type
-- Refactor typecheck
 ** 0.1.1.4
 - Adds: easy pipeline support up to Core.
   + Creates: A time-lapse function

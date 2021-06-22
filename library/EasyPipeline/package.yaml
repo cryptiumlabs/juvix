@@ -121,8 +121,3 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - EasyPipeline
-    - tasty
-    - tasty-golden
-    - tasty-hunit
-    - tasty-silver
-    - tasty-quickcheck

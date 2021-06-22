@@ -118,7 +118,7 @@ instance Core.CanApply (PrimTy f) where
       |> Right
 
 data ApplyError f
-  = CompilationError (CompilationError f)
+  = CompilationError CompilationError
   | ReturnTypeNotPrimitive (ErasedAnn.Type (PrimTy f))
 
 instance Show f => Show (ApplyError f) where

@@ -87,6 +87,6 @@ type FFTerm f = Term (PrimTy f) (PrimVal f)
 
 type FFAnnTerm f = AnnTerm (PrimTy f) (PrimVal f)
 
-newtype CompilationError f
+newtype CompilationError
   = NotYetImplemented Text
   deriving (Show, Eq, Generic)
