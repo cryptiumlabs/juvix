@@ -1,7 +1,11 @@
 * Changelog for Juvix
-** 0.1.1.5
+** 0.1.1.6
 - Allow main be of any type
 - Refactor typecheck
+** 0.1.1.5
+- Fix: Bug in #809 and #844, where pattern variables were considered
+  to be global variables.
+  + Add: Tests for the bug
 ** 0.1.1.4
 - Adds: easy pipeline support up to Core.
   + Creates: A time-lapse function
