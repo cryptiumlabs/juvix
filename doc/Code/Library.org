@@ -370,7 +370,7 @@ The basic connection between the backend and the Juvix pipeline.
   + [[Library]]
   + [[Feedback]]
   + [[Juvix/Pipeline]]
-  + [[FromFrontend]]
+  + [[ToCore/FromFrontend]]
 ******* Primitive
 Representation of LLVM primitives in Juvix.
 - _Relies on_
@@ -981,7 +981,14 @@ with any stage of the compiler while modifying the source code.
   + [[Compile]]
   + [[ToCore/Types]]
 ** test
+*** FromFrontend <<test/FromFrontend>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[Library]]
+  + [[ToCore/Types]]
 *** Spec <<EasyPipeline/test/Spec>>
+- _Relies on_
+  + [[Library]]
 * Frontend
 ** Setup <<Frontend/Setup>>
 ** src
@@ -1395,13 +1402,6 @@ Can be added to via core translation
   + [[Juvix/Context]]
   + [[Application]]
   + [[ErasedAnn]]
-  + [[Library]]
-  + [[Feedback]]
-  + [[Library/Sexp]]
-  + [[Compile]]
-  + [[Pipeline/Internal]]
-  + [[Pipeline/Internal]]
-  + [[Pipeline/Types]]
   + [[ErasedAnn/Types]]
   + [[Core/IR]]
   + [[TransformExt]]
@@ -1410,10 +1410,15 @@ Can be added to via core translation
   + [[Core/Parameterisation]]
   + [[Core/Parameterisation]]
   + [[Core/Pipeline]]
+  + [[Core/Types]]
   + [[Library]]
   + [[Feedback]]
-  + [[FromFrontend]]
-  + [[Core/Types]]
+  + [[Library/Sexp]]
+  + [[Compile]]
+  + [[Pipeline/Internal]]
+  + [[Pipeline/Internal]]
+  + [[Pipeline/Types]]
+  + [[ToCore/FromFrontend]]
 ***** Compile
 - _Relies on_
   + [[Application]]
@@ -1437,7 +1442,7 @@ Can be added to via core translation
   + [[Library/Parser]]
   + [[Library/Sexp]]
   + [[Library/Usage]]
-  + [[FromFrontend]]
+  + [[ToCore/FromFrontend]]
 ***** Types <<Pipeline/Types>>
 - _Relies on_
   + [[ErasedAnn/Types]]
@@ -1625,21 +1630,6 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Desugar]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[Library]]
-  + [[Library/Sexp]]
 **** Contextify <<Juvix/Contextify>>
 - _Relies on_
   + [[Juvix/Context]]
@@ -1761,6 +1751,21 @@ done with no extra information needed. Thus we export the following passes
   + [[Library/Sexp]]
   + [[Structure]]
   + [[Lens]]
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Desugar]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
+  + [[Library/Sexp]]
 **** Sexp
 ***** Structure
 Hardeing S-expressions into a more readable form. Here we use a
@@ -1810,7 +1815,7 @@ _TODO_
   + [[NameSymbol]]
   + [[Library/Sexp]]
   + [[Library/Usage]]
-***** FromFrontend
+***** FromFrontend <<ToCore/FromFrontend>>
 - _Relies on_
   + [[Transform]]
   + [[ToCore/Types]]
@@ -1821,7 +1826,9 @@ _TODO_
 ******* Def
 - _Relies on_
   + [[Juvix/Context]]
+  + [[Core/HR]]
   + [[Core/IR]]
+  + [[Translate]]
   + [[Translate]]
   + [[Library]]
   + [[NameSymbol]]

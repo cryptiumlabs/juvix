@@ -6,6 +6,7 @@ module Juvix.Core.Translate
     irToHR,
     irToHRWith,
     hrPatternToIR,
+    hrPatternsToIR,
     hrPatternToIRWith,
     irPatternToHR,
     irPatternToHRWith,
@@ -28,17 +29,17 @@ hrToIR = hrToIRWith mempty
 -- contract: no shadowing
 -- TODO - handle this automatically by renaming shadowed vars
 hrToIRWith ::
-  -- | pattern var <-> name mapping from outer scopes
-  IR.PatternMap NameSymbol.T ->
+  -- | name <-> pattern var mapping from outer scopes
+  HashMap NameSymbol.T IR.PatternVar ->
   HR.Term primTy primVal ->
   IR.Term primTy primVal
 hrToIRWith pats term =
   hrToIR' term
-    |> exec pats mempty
+    |> execSymToPat pats mempty
     |> fst
 
 hrToIR' ::
-  HasNameStack m =>
+  (HasNameStack m, HasSymToPat m) =>
   HR.Term primTy primVal ->
   m (IR.Term primTy primVal)
 hrToIR' = \case
@@ -67,15 +68,19 @@ hrToIR' = \case
   HR.Elim e -> IR.Elim |<< hrElimToIR' e
 
 hrElimToIR' ::
-  HasNameStack m =>
+  (HasNameStack m, HasSymToPat m) =>
   HR.Elim primTy primVal ->
   m (IR.Elim primTy primVal)
 hrElimToIR' = \case
   HR.Var n -> do
     maybeIndex <- lookupName n
-    pure $ case maybeIndex of
-      Just ind -> IR.Bound (fromIntegral ind)
-      Nothing -> IR.Free (IR.Global n)
+    case maybeIndex of
+      Just ind -> pure $ IR.Bound (fromIntegral ind)
+      Nothing -> do
+        symTable <- get @"symToPat"
+        maybe (IR.Global n) IR.Pattern (symTable HM.!? n)
+          |> IR.Free
+          |> pure
   HR.App f x -> do
     f <- hrElimToIR' f
     x <- hrToIR' x
@@ -150,18 +155,26 @@ irElimToHR' = \case
     x <- irToHR' x
     pure (HR.Ann u t x l)
 
+-- | @hrPatternsToIR@ works like @hrPatternToIR@ but for a list of variables
+hrPatternsToIR ::
+  Traversable t =>
+  t (HR.Pattern primTy primVal) ->
+  (t (IR.Pattern primTy primVal), HashMap NameSymbol.T IR.PatternVar)
+hrPatternsToIR pats =
+  mapAccumL (swap ... hrPatternToIRWith) mempty pats |> swap
+
 hrPatternToIR ::
   HR.Pattern primTy primVal ->
   (IR.Pattern primTy primVal, HashMap NameSymbol.T IR.PatternVar)
 hrPatternToIR = hrPatternToIRWith mempty
 
 hrPatternToIRWith ::
-  IR.PatternMap NameSymbol.T ->
+  HashMap NameSymbol.T IR.PatternVar ->
   HR.Pattern primTy primVal ->
   (IR.Pattern primTy primVal, HashMap NameSymbol.T IR.PatternVar)
 hrPatternToIRWith pats pat =
   hrPatternToIR' pat
-    |> exec pats mempty
+    |> execSymToPat pats mempty
     |> second symToPat
 
 hrPatternToIR' ::
@@ -233,6 +246,8 @@ varsPattern = \case
   IR.PDot t -> varsTerm t
   IR.PPrim _ -> mempty
 
+-- TODO ∷ the patterns are nice, however this doesn't reflect in the
+-- nextPatVar. If we add a max key function that could fix it
 exec ::
   -- | Existing mapping of names to pattern variables, if any
   IR.PatternMap NameSymbol.T ->
@@ -244,11 +259,19 @@ exec pats avoid (M env) =
   runState env $
     Env
       { nameSupply = filter (`notElem` avoid) names,
-        nextPatVar = 0,
+        nextPatVar =
+          case PM.lookupMax pats of
+            Nothing -> 0
+            Just (k, _) -> succ k,
         nameStack = [],
         patToSym = pats,
         symToPat = PM.toList pats |> map swap |> HM.fromList
       }
+
+-- | @execSymToPat@ works like exec but takes the symtoPat map instead of the patToSym map
+execSymToPat ::
+  HashMap NameSymbol.T IR.PatternVar -> HashSet NameSymbol.T -> M a -> (a, Env)
+execSymToPat pats = exec (HM.toList pats |> map swap |> PM.fromList)
 
 -- TODO separate states for h→i and i→h maybe??
 data Env = Env
