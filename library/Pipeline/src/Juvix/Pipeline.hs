@@ -12,8 +12,8 @@ import qualified Data.Aeson as A
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Text as Text
 import qualified Data.Text.IO as T
-import qualified Juvix.Context as Context
 import Debug.Pretty.Simple (pTraceShowM)
+import qualified Juvix.Context as Context
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
