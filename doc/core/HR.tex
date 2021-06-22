@@ -70,6 +70,8 @@ Do all types get affected by this distinction between HR and IR? No. Only \texti
 \begin{enumerate}
     \item \textbf{Pi}
 
+    % TODO: The usage in Pi is about how many times the arguments is used
+
     A function whose type of return value varies with its argument is a dependent function and the type of this function is called \textit{pi-type}.
     
     Function types $(x \stackrel{\pi}{:} S) \rightarrow T$ record how the function will use its argument via the $\pi$ annotation.
@@ -204,7 +206,7 @@ extElim =
     IR.defaultExtElim
       { IR.typeBound = Nothing,
         IR.typeFree = Nothing,
-        -- Extend with extra constructor Var 
+        -- | Extend with extra constructor Var 
         -- that was not existing before
         IR.typeElimX = [("Var", [[t|NameSymbol.T|]])]
       }

@@ -2,9 +2,11 @@
 
 module Juvix.Library.Sexp.Parser
   ( parse,
+    prettyParse
   )
 where
 
+import Control.Arrow (left)
 import qualified Data.Text.Encoding as Encoding
 import Juvix.Library hiding (list)
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -16,6 +18,10 @@ import qualified Text.Megaparsec as P
 -- | @parse@ parses any sexp expression into the Sexp type
 parse :: ByteString -> Either ParserError Sexp.T
 parse = P.parse (J.eatSpaces sexp) ""
+
+
+prettyParse :: ByteString -> Either [Char] Sexp.T
+prettyParse = left P.errorBundlePretty . parse
 
 --------------------------------------------------------------------------------
 -- Sexp Main Parsers
