@@ -28,21 +28,49 @@ patternVarTests =
         "pattern vars should be tracked"
         ( do
             pattern' <- rawPattern
-            pattern' T.@=? rawPatternShouldBe
+            rawPatternShouldBe T.@=? pattern'
+        ),
+      T.testCase
+        "Multiple variables should be tracked"
+        ( do
+            pattern' <- rawPatternAdd
+            rawPatternAddShouldBe T.@=? pattern'
         )
     ]
   where
     rawPattern = do
       Right x <- Easy.coreify "sig foo : int let foo x = x" Easy.defMichelson
-      let Just
-            ( Types.CoreDef
-                ( IR.RawGFunction
-                    IR.RawFunction
-                      { IR.rawFunClauses = IR.RawFunClause {IR.rawClauseBody = body} :| []
-                      }
-                  )
-              ) =
-              Easy.lookupCoreFunction x Easy.defMichelson "foo"
-      pure body
+      pure (grabSingleBody (Easy.lookupCoreFunction x Easy.defMichelson "foo"))
     rawPatternShouldBe =
       IR.Elim (IR.Free (IR.Pattern 0))
+    rawPatternAdd = do
+      Right x <-
+        Easy.coreify
+          "open Prelude\
+          \ open Michelson\
+          \ open Alias\
+          \ sig foo : int -> int -> int\
+          \ let foo x y = x + y"
+          Easy.defMichelson
+      pure $ grabSingleBody (Easy.lookupCoreFunction x Easy.defMichelson "foo")
+    rawPatternAddShouldBe =
+      IR.Elim
+        ( IR.App
+            ( IR.App
+                (IR.Free (IR.Global "Prelude.Michelson.Alias.+"))
+                (IR.Elim (IR.Free (IR.Pattern 0)))
+            )
+            (IR.Elim (IR.Free (IR.Pattern 1)))
+        )
+
+grabSingleBody
+  ( Just
+      ( Types.CoreDef
+          ( IR.RawGFunction
+              IR.RawFunction
+                { IR.rawFunClauses = IR.RawFunClause {IR.rawClauseBody = body} :| []
+                }
+            )
+        )
+    ) =
+    body
