@@ -15,9 +15,9 @@ let make-pair = %Michelson.pair
 
 -- type Bar : ty = | P nat nat |  Q nat nat nat
 
--- sig g : Bar -> nat
--- let g (P x y) = x + y
--- let g (Q x y z) = x + y -- + z^2
+sig g : Bar -> nat
+let g (P x y) = x + y
+let g (Q x y z) = x + y 
 
 
 sig main : pair nat nat -> pair (list operation) nat
