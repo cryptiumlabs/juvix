@@ -30,11 +30,11 @@ import qualified Juvix.Core.Pipeline as CorePipeline
 import qualified Juvix.Core.Types as Core
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
-import qualified Juvix.Sexp as Sexp
 import Juvix.Pipeline.Compile
 import Juvix.Pipeline.Internal
 import qualified Juvix.Pipeline.Internal as Pipeline
 import Juvix.Pipeline.Types
+import qualified Juvix.Sexp as Sexp
 import Juvix.ToCore.FromFrontend as FF (CoreDefs (..))
 import qualified System.IO.Temp as Temp
 import qualified Text.Megaparsec as P

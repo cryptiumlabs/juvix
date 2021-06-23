@@ -344,6 +344,7 @@ common ones to include"
 (defparameter *Pipeline*
   (make-stack-yaml
    :packages (list *standard-library*
+                   *sexp*
                    *frontend*
                    *core*
                    *translate*

@@ -263,71 +263,73 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
                        (body from-body))
                   "")))))))
 
-(generate-haskell "ArgBody" '("sexp" "sexp") nil)
+(defun frontend-types ()
+  (generate-haskell "Type" (repeat 3 "sexp") "type" :list-star t)
 
-(generate-haskell "Type" (repeat 3 "sexp") "type" :list-star t)
+  (generate-haskell "LetType" (repeat 4 "sexp") ":let-type")
 
-(generate-haskell "LetType" (repeat 4 "sexp") ":let-type")
+  (generate-haskell "Defun" '("sexp" "sexp" "sexp") ":defun")
 
-(generate-haskell "Defun" '("sexp" "sexp" "sexp") ":defun")
+  (generate-haskell "Signature" '("sexp" "sexp") ":defsig")
 
-(generate-haskell "DefunMatch" '("sexp" "argBody") ":defun-match" :list-star t)
+  (generate-haskell "LetSignature" (repeat 3 "sexp") ":let-sig")
 
-(generate-haskell "DefunSigMatch" '("sexp" "sexp" "argBody") ":defsig-match" :list-star t)
+  (generate-haskell "Let" (repeat 4 "sexp") "let")
 
-(generate-haskell "Signature" '("sexp" "sexp") ":defsig")
+  ;; here we assume predAns is not a list of sexps for the answer, is
+  ;; this actually acurate. Future refactor plan
+  (generate-haskell "PredAns" (repeat 2 "sexp") nil)
 
-(generate-haskell "LetSignature" (repeat 3 "sexp") ":let-sig")
+  (generate-haskell "Cond" '("predAns") ":cond" :list-star t)
 
-(generate-haskell "Let" (repeat 4 "sexp") "let")
+  (generate-haskell "DeconBody" (repeat 2 "sexp") nil)
 
-;; bodys here, as there are multiple!
-(generate-haskell "LetMatch" '("sexp" "argBodys" "sexp") ":let-match")
+  (generate-haskell "Case" '("sexp" "deconBody") "case" :list-star t)
 
-;; here we assume predAns is not a list of sexps for the answer, is
-;; this actually acurate. Future refactor plan
-(generate-haskell "PredAns" (repeat 2 "sexp") nil)
+  (generate-haskell "Arrow" '("sexp" "sexp") "%<-")
 
-(generate-haskell "Cond" '("predAns") ":cond" :list-star t)
+  (generate-haskell "Lambda" '("sexp" "sexp") "lambda")
 
-(generate-haskell "If" (repeat 3 "sexp") "if")
+  (generate-haskell "Punned" '("sexp") nil)
 
-(generate-haskell "IfNoElse" (repeat 2 "sexp") "if")
+  (generate-haskell "NotPunned" '("sexp" "sexp") nil)
 
-(generate-haskell "DeconBody" (repeat 2 "sexp") nil)
+  (generate-haskell "Record" '("nameBind") ":record" :list-star t)
 
-(generate-haskell "Case" '("sexp" "deconBody") "case" :list-star t)
+  (generate-haskell "Infix" (repeat 3 "sexp") ":infix")
 
-(generate-haskell "Arrow" '("sexp" "sexp") "%<-")
+  (generate-haskell "OpenIn" (repeat 2 "sexp") ":open-in")
 
-(generate-haskell "Lambda" '("sexp" "sexp") "lambda")
+  (generate-haskell "Open" '("sexp") "open")
 
-(generate-haskell "Punned" '("sexp") nil)
+  (generate-haskell "Declare" '("sexp") "declare")
 
-(generate-haskell "NotPunned" '("sexp" "sexp") nil)
+  (generate-haskell "Declaim" (repeat 2 "sexp") ":declaim")
 
-(generate-haskell "Record" '("nameBind") ":record" :list-star t)
+  (generate-haskell "DefModule" (repeat 3 "sexp") ":defmodule" :list-star t)
 
-(generate-haskell "RecordNoPunned" '("notPunnedGroup") ":record-no-pun"
+  (generate-haskell "LetModule" (repeat 4 "sexp") ":let-mod")
+
+  (generate-haskell "Effect" (repeat 2 "sexp") ":defeff")
+
+  (generate-haskell "DefHandler" (repeat 2 "sexp") ":defHandler"))
+
+(defun transition-types ()
+  (generate-haskell "ArgBody" '("sexp" "sexp") nil)
+
+  (generate-haskell "DefunMatch" '("sexp" "argBody") ":defun-match" :list-star t)
+
+  (generate-haskell "If" (repeat 3 "sexp") "if")
+
+  (generate-haskell "IfNoElse" (repeat 2 "sexp") "if")
+
+  (generate-haskell "DefunSigMatch" '("sexp" "sexp" "argBody") ":defsig-match" :list-star t)
+
+  ;; bodys here, as there are multiple!
+  (generate-haskell "LetMatch" '("sexp" "argBodys" "sexp") ":let-match")
+
+  (generate-haskell "LetHandler" (repeat 3 "sexp") ":let-handler")
+
+  (generate-haskell "RecordNoPunned" '("notPunnedGroup") ":record-no-pun"
                   :list-star t
-                  :un-grouped t)
-
-(generate-haskell "Infix" (repeat 3 "sexp") ":infix")
-
-(generate-haskell "OpenIn" (repeat 2 "sexp") ":open-in")
-
-(generate-haskell "Open" '("sexp") "open")
-
-(generate-haskell "Declare" '("sexp") "declare")
-
-(generate-haskell "Declaim" (repeat 2 "sexp") ":declaim")
-
-(generate-haskell "DefModule" (repeat 3 "sexp") ":defmodule" :list-star t)
-
-(generate-haskell "LetModule" (repeat 4 "sexp") ":let-mod")
-
-(generate-haskell "LetHandler" (repeat 2 "sexp") ":let-handler")
-
-(generate-haskell "Effect" (repeat 2 "sexp") ":defeff")
-
-(generate-haskell "DefHandler" (repeat 3 "sexp") ":defHandler")
+                  :un-grouped t))

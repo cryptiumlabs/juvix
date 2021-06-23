@@ -9,8 +9,9 @@ import qualified Juvix.Contextify.InfixPrecedence.ShuntYard as Shunt
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Sexp as Sexp
-import qualified Juvix.Sexp.Structure as Structure
+import qualified Juvix.Sexp.Structure.Frontend as Structure
 import Juvix.Sexp.Structure.Lens
+import qualified Juvix.Sexp.Structure.Transition as Structure
 import qualified StmContainers.Map as STM
 
 resolveModule ::

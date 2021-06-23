@@ -404,7 +404,7 @@ temporary lexical bindings as our code encounters binders.
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 **** Context <<Juvix/Context>>
 - Serves as the context for lower level programs of the =Juvix=
   Programming Language
@@ -965,7 +965,7 @@ with any stage of the compiler while modifying the source code.
   + [[Core]]
   + [[Traverse]]
   + [[Desugar]]
-  + [[Frontend]]
+  + [[Juvix/Frontend]]
   + [[Frontend/Parser]]
   + [[Frontend/Sexp]]
   + [[Frontend/Types]]
@@ -976,9 +976,9 @@ with any stage of the compiler while modifying the source code.
   + [[Feedback]]
   + [[HashMap]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
   + [[Juvix/Pipeline]]
   + [[Compile]]
+  + [[Juvix/Sexp]]
   + [[ToCore/Types]]
 ** test
 *** FromFrontend <<test/FromFrontend>>
@@ -993,7 +993,7 @@ with any stage of the compiler while modifying the source code.
 ** Setup <<Frontend/Setup>>
 ** src
 *** Juvix
-**** Frontend
+**** Frontend <<Juvix/Frontend>>
 - _Relies on_
   + [[Frontend/Parser]]
   + [[Frontend/Types]]
@@ -1015,7 +1015,7 @@ with any stage of the compiler while modifying the source code.
   + [[Frontend/Types/Base]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 ***** Types <<Frontend/Types>>
 - This file defines the main ADT for the Juvix front end language.
 - This ADT corresponds to the BNF laid out [[https://github.com/heliaxdev/juvix/blob/develop/doc/Frontend/syntax.org][here]].
@@ -1059,7 +1059,7 @@ with any stage of the compiler while modifying the source code.
   + [[Frontend/Sexp]]
   + [[Frontend/Types]]
   + [[Library]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 * InteractionNet
 ** Setup <<InteractionNet/Setup>>
 ** src
@@ -1350,7 +1350,7 @@ Can be added to via core translation
   + [[Library]]
   + [[NameSymbol]]
   + [[PrettyPrint]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 ***** Pipeline <<Core/Pipeline>>
 - _Relies on_
   + [[Application]]
@@ -1413,11 +1413,11 @@ Can be added to via core translation
   + [[Core/Types]]
   + [[Library]]
   + [[Feedback]]
-  + [[Library/Sexp]]
   + [[Compile]]
   + [[Pipeline/Internal]]
   + [[Pipeline/Internal]]
   + [[Pipeline/Types]]
+  + [[Juvix/Sexp]]
   + [[ToCore/FromFrontend]]
 ***** Compile
 - _Relies on_
@@ -1436,12 +1436,12 @@ Can be added to via core translation
   + [[Traverse]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
-  + [[Frontend]]
+  + [[Juvix/Frontend]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Parser]]
-  + [[Library/Sexp]]
   + [[Library/Usage]]
+  + [[Juvix/Sexp]]
   + [[ToCore/FromFrontend]]
 ***** Types <<Pipeline/Types>>
 - _Relies on_
@@ -1467,6 +1467,113 @@ Can be added to via core translation
   + [[Traverse]]
   + [[Library]]
   + [[Juvix/Pipeline]]
+* Sexp
+** Setup <<Sexp/Setup>>
+** src
+*** Juvix
+**** Sexp <<Juvix/Sexp>>
+This module serves as the main sexpression import it contains the
+sexp type and all the various helper functionality one can need
+- _Relies on_
+  + [[Library]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Juvix/Sexp/Parser]]
+  + [[Sexp/Types]]
+***** Parser <<Juvix/Sexp/Parser>>
+- _Relies on_
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Parser]]
+  + [[Parser/Internal]]
+  + [[Sexp/Types]]
+***** Types <<Sexp/Types>>
+- _Relies on_
+  + [[Library]]
+  + [[LineNum]]
+  + [[NameSymbol]]
+***** Structure
+****** Frontend <<Structure/Frontend>>
+Hardeing S-expressions into a more readable form. Here we use a
+mixture of record structures and aliases. Each cover a form that we
+wish to talk about rather than just match away at
+- _The form for transformation follows this structure_
+#+begin_src haskell
+  -- the data type
+  data Form = ... deriving (Show)
+  is<Form>   :: Sexp.T -> Bool
+  to<Form>   :: Sexp.T -> Maybe <Form>
+  from<Form> :: <Form> -> Sexp.T
+#+end_src
+_TODO_
+ 1. Figure out if we can even express a spec system in
+    Haskell... =to<Form>= and =From<From>= have the exact same signature
+ 2. replace the repeat code with the =to<Form>= with an abstraction
+ 3. put the meta data with the form so we don't have to do it by
+    hand in the code that uses this
+    1. Use =Juvix.Library.LineNum=
+    2. append the =Form= With this
+    3. have to<Form> fill this
+    4. Have extra smart consturctors that are =<form>=, so that we
+       can automatically fill in this meta data
+- _Relies on_
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Juvix/Sexp]]
+  + [[Structure/Helpers]]
+****** Helpers <<Structure/Helpers>>
+- _Relies on_
+  + [[Library]]
+  + [[Juvix/Sexp]]
+****** Lens
+- _Relies on_
+  + [[Structure/Frontend]]
+  + [[Transition]]
+****** Transition
+Hardeing S-expressions into a more readable form. Here we use a
+mixture of record structures and aliases. Each cover a form that we
+wish to talk about rather than just match away at
+- _The form for transformation follows this structure_
+#+begin_src haskell
+  -- the data type
+  data Form = ... deriving (Show)
+  is<Form>   :: Sexp.T -> Bool
+  to<Form>   :: Sexp.T -> Maybe <Form>
+  from<Form> :: <Form> -> Sexp.T
+#+end_src
+_TODO_
+ 1. Figure out if we can even express a spec system in
+    Haskell... =to<Form>= and =From<From>= have the exact same signature
+ 2. replace the repeat code with the =to<Form>= with an abstraction
+ 3. put the meta data with the form so we don't have to do it by
+    hand in the code that uses this
+    1. Use =Juvix.Library.LineNum=
+    2. append the =Form= With this
+    3. have to<Form> fill this
+    4. Have extra smart consturctors that are =<form>=, so that we
+       can automatically fill in this meta data
+- _Relies on_
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Juvix/Sexp]]
+  + [[Structure/Frontend]]
+  + [[Structure/Helpers]]
+** test
+*** Main <<Sexp/test/Main>>
+- _Relies on_
+  + [[Library]]
+*** Sexp <<Sexp/test/Sexp>>
+- _Relies on_
+  + [[Library]]
+  + [[Juvix/Sexp]]
+**** Parser <<test/Sexp/Parser>>
+- _Relies on_
+  + [[Library]]
+  + [[Juvix/Sexp]]
+**** SimplifiedPasses
+- _Relies on_
+  + [[Library]]
+  + [[Juvix/Sexp]]
 * StandardLibrary
 ** Setup <<StandardLibrary/Setup>>
 ** src
@@ -1521,27 +1628,6 @@ Can be added to via core translation
 ****** Token
 - _Relies on_
   + [[Library]]
-***** Sexp <<Library/Sexp>>
-This module serves as the main sexpression import it contains the
-sexp type and all the various helper functionality one can need
-- _Relies on_
-  + [[Library]]
-  + [[Library]]
-  + [[NameSymbol]]
-  + [[Library/Sexp/Parser]]
-  + [[Sexp/Types]]
-****** Parser <<Library/Sexp/Parser>>
-- _Relies on_
-  + [[Library]]
-  + [[NameSymbol]]
-  + [[Library/Parser]]
-  + [[Parser/Internal]]
-  + [[Sexp/Types]]
-****** Types <<Sexp/Types>>
-- _Relies on_
-  + [[Library]]
-  + [[LineNum]]
-  + [[NameSymbol]]
 ***** Test
 ****** Golden <<Library/Test/Golden>>
 - _Relies on_
@@ -1559,18 +1645,6 @@ sexp type and all the various helper functionality one can need
 - _Relies on_
   + [[Library]]
   + [[PrettyPrint]]
-*** Sexp <<StandardLibrary/test/Sexp>>
-- _Relies on_
-  + [[Library]]
-  + [[Library/Sexp]]
-**** Parser <<test/Sexp/Parser>>
-- _Relies on_
-  + [[Library]]
-  + [[Library/Sexp]]
-**** SimplifiedPasses
-- _Relies on_
-  + [[Library]]
-  + [[Library/Sexp]]
 * Translate
 ** Setup <<Translate/Setup>>
 ** src
@@ -1629,7 +1703,7 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Contextify/Environment]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 **** FrontendDesugar
 - Order of Passes
   1. =RemoveModule=
@@ -1644,7 +1718,7 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Frontend/Sexp]]
   + [[Frontend/Types]]
   + [[Library]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 **** Contextify <<Juvix/Contextify>>
 - _Relies on_
   + [[Juvix/Context]]
@@ -1655,7 +1729,7 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[ToContext/Types]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 ***** Environment <<Contextify/Environment>>
 - _Relies on_
   + [[Closure]]
@@ -1664,7 +1738,7 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[InfixPrecedence/ShuntYard]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 ***** Passes <<Contextify/Passes>>
 - _Relies on_
   + [[Closure]]
@@ -1673,9 +1747,10 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[InfixPrecedence/ShuntYard]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
-  + [[Structure]]
+  + [[Juvix/Sexp]]
+  + [[Structure/Frontend]]
   + [[Lens]]
+  + [[Transition]]
 ***** InfixPrecedence
 ****** ShuntYard <<InfixPrecedence/ShuntYard>>
 - This implements the Shunt Yard algorithm for determining the
@@ -1718,13 +1793,13 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[ToContext/Types]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 ****** Types <<ToContext/Types>>
 - _Relies on_
   + [[Juvix/Context]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 **** Core
 ***** Common
 ****** Context
@@ -1752,7 +1827,7 @@ from the syntax alone with no extra information needed!)
 - _Relies on_
   + [[Desugar/Passes]]
   + [[Library]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 ***** Passes <<Desugar/Passes>>
 Passes contains a list of passes on the frontend syntax that can be
 done with no extra information needed. Thus we export the following passes
@@ -1763,45 +1838,10 @@ done with no extra information needed. Thus we export the following passes
 - Removing punned record arguments
 - _Relies on_
   + [[Library]]
-  + [[Library/Sexp]]
-  + [[Structure]]
+  + [[Juvix/Sexp]]
+  + [[Structure/Frontend]]
   + [[Lens]]
-**** Sexp
-***** Structure
-Hardeing S-expressions into a more readable form. Here we use a
-mixture of record structures and aliases. Each cover a form that we
-wish to talk about rather than just match away at
-- _The form for transformation follows this structure_
-#+begin_src haskell
-  -- the data type
-  data Form = ... deriving (Show)
-  is<Form>   :: Sexp.T -> Bool
-  to<Form>   :: Sexp.T -> Maybe <Form>
-  from<Form> :: <Form> -> Sexp.T
-#+end_src
-_TODO_
- 1. Figure out if we can even express a spec system in
-    Haskell... =to<Form>= and =From<From>= have the exact same signature
- 2. replace the repeat code with the =to<Form>= with an abstraction
- 3. put the meta data with the form so we don't have to do it by
-    hand in the code that uses this
-    1. Use =Juvix.Library.LineNum=
-    2. append the =Form= With this
-    3. have to<Form> fill this
-    4. Have extra smart consturctors that are =<form>=, so that we
-       can automatically fill in this meta data
-- _Relies on_
-  + [[Library]]
-  + [[NameSymbol]]
-  + [[Library/Sexp]]
-  + [[Structure/Helpers]]
-****** Helpers <<Structure/Helpers>>
-- _Relies on_
-  + [[Library]]
-  + [[Library/Sexp]]
-****** Lens
-- _Relies on_
-  + [[Structure]]
+  + [[Transition]]
 **** ToCore
 ***** Types <<ToCore/Types>>
 - _Relies on_
@@ -1813,8 +1853,8 @@ _TODO_
   + [[Library]]
   + [[LineNum]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
   + [[Library/Usage]]
+  + [[Juvix/Sexp]]
 ***** FromFrontend <<ToCore/FromFrontend>>
 - _Relies on_
   + [[Transform]]
@@ -1832,7 +1872,7 @@ _TODO_
   + [[Translate]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
   + [[Transform/HR]]
   + [[Transform/Helpers]]
   + [[Transform/IR]]
@@ -1843,8 +1883,8 @@ _TODO_
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
   + [[Library/Usage]]
+  + [[Juvix/Sexp]]
   + [[Transform/Helpers]]
   + [[Transform/Usage]]
   + [[ToCore/Types]]
@@ -1857,7 +1897,7 @@ _TODO_
   + [[Translate]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
   + [[ToCore/Types]]
 ******* IR <<Transform/IR>>
 - _Relies on_
@@ -1867,8 +1907,8 @@ _TODO_
   + [[Translate]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
   + [[Library/Usage]]
+  + [[Juvix/Sexp]]
   + [[Transform/HR]]
   + [[Transform/Helpers]]
   + [[Transform/Usage]]
@@ -1878,8 +1918,8 @@ _TODO_
   + [[Juvix/Context]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
   + [[Library/Usage]]
+  + [[Juvix/Sexp]]
   + [[Transform/HR]]
   + [[Transform/Helpers]]
   + [[TypeSig]]
@@ -1890,8 +1930,8 @@ _TODO_
   + [[Core/HR]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
   + [[Library/Usage]]
+  + [[Juvix/Sexp]]
   + [[Transform/HR]]
   + [[Transform/Helpers]]
   + [[ToCore/Types]]
@@ -1900,8 +1940,8 @@ _TODO_
   + [[Core/IR]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
   + [[Library/Usage]]
+  + [[Juvix/Sexp]]
   + [[Transform/Helpers]]
   + [[ToCore/Types]]
 ** test
@@ -1916,7 +1956,7 @@ _TODO_
   + [[Contextify/Environment]]
   + [[ResolveOpenInfo]]
   + [[Library]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 **** Golden <<Translate/test/Test/Golden>>
 - _Relies on_
   + [[Frontend/Parser]]
@@ -1944,7 +1984,7 @@ _TODO_
   + [[Frontend/Sexp]]
   + [[Frontend/Types/Base]]
   + [[Library]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 **** Contextualise
 ***** Contextify <<Contextualise/Contextify>>
 - _Relies on_
@@ -1956,7 +1996,7 @@ _TODO_
   + [[Frontend/Types]]
   + [[Library]]
   + [[Parser/Internal]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 ***** Infix
 ****** ShuntYard <<Infix/ShuntYard>>
 - _Relies on_
@@ -1970,7 +2010,7 @@ Temporary conversion from the Sexpression syntax to the ML syntax
 - _Relies on_
   + [[Desugar/Passes]]
   + [[Library]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]
 **** Sexp
 ***** Helpers <<Sexp/Helpers>>
 - _Relies on_
@@ -1982,4 +2022,4 @@ Temporary conversion from the Sexpression syntax to the ML syntax
   + [[Frontend/Types/Base]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
+  + [[Juvix/Sexp]]

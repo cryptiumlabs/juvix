@@ -1,5 +1,6 @@
 module Main where
 
+import Juvix.Library
 import qualified Sexp
 import qualified Sexp.Parser
 import qualified Sexp.SimplifiedPasses
@@ -14,5 +15,5 @@ allCheckedTests =
       Sexp.SimplifiedPasses.top
     ]
 
-
-main = T.defaultMain allCheckeddTests
+main :: IO ()
+main = T.defaultMain allCheckedTests

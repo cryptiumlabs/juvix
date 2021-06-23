@@ -5,7 +5,8 @@
 module Juvix.Sexp.Structure.Lens where
 
 import qualified Control.Lens as Lens hiding ((|>))
-import Juvix.Sexp.Structure
+import Juvix.Sexp.Structure.Frontend
+import Juvix.Sexp.Structure.Transition
 
 Lens.makeLensesWith Lens.camelCaseFields ''Defun
 Lens.makeLensesWith Lens.camelCaseFields ''DefunMatch
