@@ -1,5 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
+-- | The types as used by the evaluator.
 module Juvix.Core.IR.Evaluator.Types where
 
 import qualified Juvix.Core.HR.Pretty as HR
@@ -11,11 +12,16 @@ import Juvix.Core.Translate
 import Juvix.Library
 import qualified Juvix.Library.PrettyPrint as PP
 
+-- | Datatype for describing errors during application.
 data ApplyError primTy primVal
-  = NoApplyError
-  | ApplyErrorV (Param.ApplyError primVal)
-  | ApplyErrorT (Param.ApplyError primTy)
+  = -- | Represent no error.
+    NoApplyError
+  | -- | Error for primitive values.
+    ApplyErrorV (Param.ApplyError primVal)
+  | -- | Error for primitive types.
+    ApplyErrorT (Param.ApplyError primTy)
 
+-- | Constraint definition for errors that can be pretty-printed.
 type ApplyErrorPretty primTy primVal =
   ( PP.PrettyText (Param.ApplyError primTy),
     HR.ToPPAnn (PP.Ann (Param.ApplyError primTy)),
@@ -27,8 +33,10 @@ type ApplyErrorPretty primTy primVal =
     HR.ToPPAnn (PP.Ann primVal)
   )
 
+-- | Get the corresponding syntax highlighting datatype for `ApplyError`.
 type instance PP.Ann (ApplyError _ _) = HR.PPAnn
 
+-- | Pretty printer instance for `ApplyError`.
 instance
   ApplyErrorPretty primTy primVal =>
   PP.PrettyText (ApplyError primTy primVal)
@@ -58,17 +66,24 @@ deriving instance
   ) =>
   Show (ApplyError primTy primVal)
 
+-- | Errors that can occur during evaluation.
 data Error extV extT primTy primVal
-  = CannotApply
+  = -- | Error during application.
+    CannotApply
       { fun, arg :: IR.Value' extV primTy primVal,
         paramErr :: ApplyError primTy primVal
       }
-  | UnsupportedTermExt (IR.TermX extT primTy primVal)
-  | UnsupportedElimExt (IR.ElimX extT primTy primVal)
+  | -- | Unsupported term extension.
+    UnsupportedTermExt (IR.TermX extT primTy primVal)
+  | -- | Unsupported elimination extension.
+    UnsupportedElimExt (IR.ElimX extT primTy primVal)
 
+-- | Get the corresponding syntax highlighting datatype for `Error`.
 type instance PP.Ann (Error IR.NoExt TC.T _ _) = HR.PPAnn
 
 -- TODO generalise
+
+-- | Pretty-printer intance for errors.
 instance
   ApplyErrorPretty primTy primVal =>
   PP.PrettyText (Error IR.NoExt TC.T primTy primVal)
@@ -115,21 +130,25 @@ deriving instance
   ) =>
   Show (Error extV extT primTy primVal)
 
+-- | Function type for evaluation of extended terms.
 type TermExtFun extG extT primTy primVal =
   LookupFun extG primTy primVal ->
   IR.TermX extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 
+-- | Function type for evaluation of extended eliminations.
 type ElimExtFun extG extT primTy primVal =
   LookupFun extG primTy primVal ->
   IR.ElimX extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 
+-- | Pair of evaluation functions for extended terms and eliminations.
 data ExtFuns extG extT primTy primVal = ExtFuns
   { tExtFun :: TermExtFun extG extT primTy primVal,
     eExtFun :: ElimExtFun extG extT primTy primVal
   }
 
+-- | Function to remove extensions, both for terms and eliminations.
 rejectExts :: ExtFuns extG extT primTy primVal
 rejectExts =
   ExtFuns
@@ -137,5 +156,7 @@ rejectExts =
       eExtFun = \_ -> Left . UnsupportedElimExt
     }
 
+-- | Type synonym for a function that does a lookup for an @IR.Elim'@ based on
+-- an @IR.GlobalName@.
 type LookupFun ext primTy primVal =
   IR.GlobalName -> Maybe (IR.Elim' ext primTy primVal)
