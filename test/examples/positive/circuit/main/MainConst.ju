@@ -1,0 +1,9 @@
+mod MainConst where
+
+
+open Prelude
+open Circuit
+
+sig main : field
+let main = 3 
+

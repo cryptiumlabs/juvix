@@ -17,18 +17,19 @@ packages:
       sha256: 21bf502c888f32bd6aabeeef05bc2a362cf72bf694b432a0eda9431ac4cfea9b
       size: 2581
     hackage: capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
-- original:
-    url: https://github.com/jyp/prettiest/archive/e5ce6cd6b4da71860c3d97da84bed4a827fa00ef.tar.gz
-  completed:
-    pantry-tree:
-      sha256: c768b2faa4e5d7b791d987679616d8f90f169a73ae3fd38c20f37f08d02d930d
-      size: 2327
-    version: '3.0'
-    name: pretty-compact
-    sha256: 27a4b2e7ee8f4768b27e7173f758fd0af83b1d8e3c3af9711b5fed2b27ef54ec
-    url: https://github.com/jyp/prettiest/archive/e5ce6cd6b4da71860c3d97da84bed4a827fa00ef.tar.gz
+- completed:
     size: 359995
-- original:
+    url: https://github.com/jyp/prettiest/archive/e5ce6cd6b4da71860c3d97da84bed4a827fa00ef.tar.gz
+    name: pretty-compact
+    version: '3.0'
+    sha256: 27a4b2e7ee8f4768b27e7173f758fd0af83b1d8e3c3af9711b5fed2b27ef54ec
+    pantry-tree:
+      size: 2327
+      sha256: c768b2faa4e5d7b791d987679616d8f90f169a73ae3fd38c20f37f08d02d930d
+  original:
+    url: https://github.com/jyp/prettiest/archive/e5ce6cd6b4da71860c3d97da84bed4a827fa00ef.tar.gz
+- completed:
+    size: 18968
     url: https://github.com/phile314/tasty-silver/archive/f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b.tar.gz
   completed:
     pantry-tree:

@@ -38,6 +38,7 @@ dependencies:
   - michelson
   - Pipeline
   - Context
+  - plonk
   # - llvm
   # - interaction-net
   # - arithmetic-circuit
@@ -120,3 +121,8 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - EasyPipeline
+    - tasty
+    - tasty-golden
+    - tasty-hunit
+    - tasty-silver
+    - tasty-quickcheck

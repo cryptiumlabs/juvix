@@ -75,7 +75,7 @@ lookupMapPrim ns (App.Cont f xs n) =
         Erasure.InternalError $
           "unknown de Bruijn index " <> show i
 
-coreToAnn :: Comp ty val err (ErasedAnn.AnnTerm ty (ErasedAnn.TypedPrim ty val))
+coreToAnn :: forall err ty val. Comp ty val err (ErasedAnn.AnnTerm ty (ErasedAnn.TypedPrim ty val))
 coreToAnn term usage ty = do
   -- FIXME: allow any universe!
   (term, _) <- typecheckErase' term usage ty

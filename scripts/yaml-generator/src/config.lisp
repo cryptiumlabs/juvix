@@ -350,7 +350,7 @@ common ones to include"
    :name "Backends/llvm"
    :resolver 17.3
    :path-to-other "../../"
-   :packages (list *standard-library* *core* *pipeline* *translate* *frontend*)
+   :packages (list *standard-library* *core* *Context* *pipeline* *translate* *frontend*)
    :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                      *llvm-hs-deps*
 
@@ -370,7 +370,7 @@ common ones to include"
    ;; hack name, for sub dirs
    :name "Backends/Michelson"
    :path-to-other "../../"
-   :packages      (list *standard-library* *core* *pipeline*
+   :packages      (list *standard-library* *core* *pipeline* *Context*
                         ;; this is needed due to pipeline additions
                         ;; have left it unable to build. I think due to cyclic dependencies
                         *translate*
@@ -392,6 +392,7 @@ common ones to include"
    :packages (list *standard-library*
                    *frontend*
                    *core*
+                   *Context*
                    *pipeline*
                    *translate*)
    :extra-deps (big-dep-list :plonk t)
@@ -405,7 +406,8 @@ common ones to include"
                    *translate*
                    *michelson*
                    *pipeline*
-                   *Context*)
+                   *Context*
+                   *plonk*)
    ;; hack name, for sub dirs
    :name "EasyPipeline"
    :extra-deps (big-dep-list)
