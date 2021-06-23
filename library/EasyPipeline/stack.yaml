@@ -10,6 +10,7 @@ packages:
 - ../Pipeline
 - ../Context
 - ../Backends/Plonk
+- ../Sexp
 
 extra-deps:
 

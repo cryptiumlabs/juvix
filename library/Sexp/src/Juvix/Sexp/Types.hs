@@ -3,7 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Juvix.Library.Sexp.Types where
+module Juvix.Sexp.Types where
 
 import Control.Lens hiding (List, (:>), (|>))
 import Juvix.Library hiding (foldr, show, toList)

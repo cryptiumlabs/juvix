@@ -9,7 +9,7 @@ import Juvix.Core.Translate (hrToIR)
 import qualified Juvix.Core.Translate as Translate
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import Juvix.ToCore.FromFrontend.Transform.HR (transformTermHR)
 import Juvix.ToCore.FromFrontend.Transform.Helpers
   ( ReduceEff,

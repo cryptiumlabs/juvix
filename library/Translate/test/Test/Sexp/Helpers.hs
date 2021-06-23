@@ -8,7 +8,7 @@ import qualified Juvix.Frontend.Sexp as SexpTrans
 import qualified Juvix.Frontend.Types.Base as Frontend
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import Prelude (error)
 
 ----------------------------------------------------------------------

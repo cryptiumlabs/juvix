@@ -57,7 +57,7 @@ import qualified Juvix.Closure as Closure
 import qualified Juvix.Contextify.Environment as Env
 import Juvix.Library hiding (Set)
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 
 op :: Sexp.T -> Set.HashSet NameSymbol.T
 op = free . snd . runM . freeVarPass

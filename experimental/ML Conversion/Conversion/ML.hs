@@ -15,7 +15,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Desugar.Types as Target
 import Juvix.Library hiding (product, sum)
 import qualified Juvix.Library.NameSymbol as NameSym
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import Prelude (error)
 
 -- | @op@ converts an s-expression at the desugar level back into ML syntax

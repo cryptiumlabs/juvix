@@ -22,7 +22,7 @@ where
 import Control.Lens hiding ((|>))
 import qualified Data.Set as Set
 import Juvix.Library
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import qualified Juvix.Sexp.Structure as Structure
 import Juvix.Sexp.Structure.Lens
 import Prelude (error)

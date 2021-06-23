@@ -26,7 +26,7 @@ import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Translate (hrToIR)
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import Juvix.ToCore.Types
 
 -- | Retrieve constant primVal from parameterization

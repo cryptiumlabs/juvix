@@ -281,25 +281,33 @@ common ones to include"
    :name "StandardLibrary"
    :extra-deps (list (make-general-dependencies *capability* *prettiest*) *standard-library-extra-deps*)))
 
+(defparameter *sexp*
+  (make-stack-yaml
+   :name "Sexp"
+   :packages (list *standard-library*)
+   :extra-deps (list (make-general-dependencies *capability* *prettiest*)
+                     *standard-library-extra-deps*)))
+
+
 (defparameter *frontend*
   (make-stack-yaml
    ;; why is this one ahead again!?
    :resolver   17.9
    :name       "Frontend"
-   :packages   (list *standard-library*)
+   :packages   (list *standard-library* *sexp*)
    :extra-deps (list (make-general-dependencies *capability* *prettiest*) *standard-library-extra-deps*)))
 
 (defparameter *Context*
   (make-stack-yaml
    :name     "Context"
-   :packages (list *standard-library*)
+   :packages (list *standard-library* *sexp*)
    :extra-deps (list (make-general-dependencies *capability* *prettiest*)
                      *standard-library-extra-deps*)))
 
 (defparameter *core*
   (make-stack-yaml
    :name       "Core"
-   :packages   (list *standard-library*)
+   :packages   (list *standard-library* *sexp*)
    :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                       *standard-library-extra-deps*
                       *eac-solver*)))
@@ -307,7 +315,7 @@ common ones to include"
 (defparameter *translate*
   (make-stack-yaml
    :name "Translate"
-   :packages   (list *core* *frontend* *standard-library* *Context*)
+   :packages   (list *core* *frontend* *standard-library* *sexp* *Context*)
    :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                      *standard-library-extra-deps*
                      *eac-solver*)))
@@ -407,7 +415,8 @@ common ones to include"
                    *michelson*
                    *pipeline*
                    *Context*
-                   *plonk*)
+                   *plonk*
+                   *sexp*)
    ;; hack name, for sub dirs
    :name "EasyPipeline"
    :extra-deps (big-dep-list)
@@ -425,7 +434,8 @@ common ones to include"
                    *easy-pipeline*
                    *plonk*
                    *llvm*
-                   *Context*)
+                   *Context*
+                   *sexp*)
    :path-to-other "./library/"
    :extra-deps
    (cons *llvm-hs-deps* (big-dep-list))

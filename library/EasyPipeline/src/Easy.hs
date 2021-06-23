@@ -41,7 +41,7 @@ import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymb
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import qualified Juvix.Pipeline as Pipeline
 import qualified Juvix.Pipeline.Compile as Compile
 import qualified Juvix.ToCore.Types as ToCore.Types

@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeApplications #-}
 
-module Juvix.Library.Sexp.Parser
+module Juvix.Sexp.Parser
   ( parse,
   )
 where
@@ -10,7 +10,7 @@ import Juvix.Library hiding (list)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Parser as J
 import Juvix.Library.Parser.Internal (Parser, ParserError)
-import qualified Juvix.Library.Sexp.Types as Sexp
+import qualified Juvix.Sexp.Types as Sexp
 import qualified Text.Megaparsec as P
 
 -- | @parse@ parses any sexp expression into the Sexp type

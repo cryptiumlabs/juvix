@@ -3,7 +3,7 @@
 module Sexp.Parser where
 
 import Juvix.Library
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 

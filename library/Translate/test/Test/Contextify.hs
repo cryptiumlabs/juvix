@@ -5,7 +5,7 @@ import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.Environment as Env
 import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as Contextify
 import Juvix.Library (Either (Left, Right), Maybe (Just), ($))
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import Test.Sexp.Helpers
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T

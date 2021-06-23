@@ -31,7 +31,7 @@ module Juvix.Sexp.Structure where
 
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import Juvix.Sexp.Structure.Helpers
 
 -- | @Defun@ is the base defun structure

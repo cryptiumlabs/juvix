@@ -6,7 +6,7 @@ import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
 import Juvix.ToCore.FromFrontend.Transform.Helpers
   ( ReduceEff,

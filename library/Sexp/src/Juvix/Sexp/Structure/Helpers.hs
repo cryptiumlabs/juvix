@@ -1,7 +1,7 @@
 module Juvix.Sexp.Structure.Helpers (fromGen, toStarList, fromStarList) where
 
 import Juvix.Library
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 
 fromGen :: (t -> Bool) -> (t -> Maybe a) -> t -> Maybe a
 fromGen pred func form

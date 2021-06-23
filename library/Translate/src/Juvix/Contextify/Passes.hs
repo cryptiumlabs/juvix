@@ -8,7 +8,7 @@ import qualified Juvix.Contextify.Environment as Env
 import qualified Juvix.Contextify.InfixPrecedence.ShuntYard as Shunt
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import qualified Juvix.Sexp.Structure as Structure
 import Juvix.Sexp.Structure.Lens
 import qualified StmContainers.Map as STM

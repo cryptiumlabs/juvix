@@ -1,8 +1,8 @@
 -- | This module serves as the main sexpression import it contains the
 -- sexp type and all the various helper functionality one can need
-module Juvix.Library.Sexp
-  ( module Juvix.Library.Sexp.Types,
-    module Juvix.Library.Sexp.Parser,
+module Juvix.Sexp
+  ( module Juvix.Sexp.Types,
+    module Juvix.Sexp.Parser,
     foldPred,
     foldr,
     foldr1,
@@ -32,8 +32,8 @@ where
 import Juvix.Library hiding (foldr, list, show, toList)
 import qualified Juvix.Library as Std
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import Juvix.Library.Sexp.Parser
-import Juvix.Library.Sexp.Types
+import Juvix.Sexp.Parser
+import Juvix.Sexp.Types
 import Prelude (error)
 
 -- | @foldSearchPred@ is like foldPred with some notable exceptions.
