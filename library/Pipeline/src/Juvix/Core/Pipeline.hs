@@ -84,7 +84,7 @@ coreToAnn term usage ty = do
 -- For standard evaluation, no elementary affine check, no MonadIO required.
 typecheckEval ::
   CompConstraints primTy primVal compErr m =>
-  HR.Term primTy primVal ->
+  IR.Term primTy primVal ->
   Usage.T ->
   IR.Value primTy (Types.TypedPrim primTy primVal) ->
   m (IR.Value primTy (Types.TypedPrim primTy primVal))
@@ -92,11 +92,7 @@ typecheckEval term usage ty = do
   -- Fetch the parameterisation, needed for typechecking.
   param <- ask @"parameterisation"
   globals <- ask @"globals"
-  -- First convert HR to IR.
-  let irTerm = Translate.hrToIR term
-  tell @"log" [Types.LogHRtoIR term irTerm]
-  -- Typecheck & return accordingly.
-  case IR.typeTerm param irTerm (IR.Annotation usage ty)
+  case IR.typeTerm param term (IR.Annotation usage ty)
     >>= IR.evalTC
     |> IR.execTC globals
     |> fst of
@@ -114,7 +110,7 @@ typecheckErase' ::
       IR.Value primTy (Types.TypedPrim primTy primVal)
     )
 typecheckErase' term usage ty = do
-  ty <- typecheckEval (Translate.irToHR ty) (Usage.SNat 0) (IR.VStar 0)
+  ty <- typecheckEval ty (Usage.SNat 0) (IR.VStar 0)
   term <- typecheckErase term usage ty
   pure (term, ty)
 
