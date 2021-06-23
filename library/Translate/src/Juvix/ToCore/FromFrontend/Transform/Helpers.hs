@@ -13,6 +13,7 @@ module Juvix.ToCore.FromFrontend.Transform.Helpers
     parseVarPat,
     toElim,
     splitDataType,
+    splitDataTypeHR,
     conDefName,
     eleToSymbol,
   )
@@ -220,6 +221,24 @@ splitDataType x ty0 = go ty0
             { rawArgName = x,
               rawArgUsage = π,
               rawArgType = hrToIR s
+            }
+    go (HR.Star ℓ) = pure ([], ℓ)
+    go _ = throwFF $ InvalidDatatypeType x ty0
+
+splitDataTypeHR ::
+  (Show primTy, Show primVal, HasThrowFF primTy primVal m) =>
+  NameSymbol.T ->
+  HR.Term primTy primVal ->
+  m ([IR.RawDataArg' HR.T primTy primVal], IR.Universe)
+splitDataTypeHR x ty0 = go ty0
+  where
+    go (HR.Pi π x s t) = first (arg :) <$> splitDataTypeHR x t
+      where
+        arg =
+          IR.RawDataArg
+            { rawArgName = x,
+              rawArgUsage = π,
+              rawArgType = s
             }
     go (HR.Star ℓ) = pure ([], ℓ)
     go _ = throwFF $ InvalidDatatypeType x ty0

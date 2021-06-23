@@ -273,6 +273,10 @@ data CoreDef primTy primVal
   = CoreDef !(IR.RawGlobal primTy primVal)
   | SpecialDef !NameSymbol.T !Special
   deriving (Eq, Show, Data, Generic)
+data CoreDefHR primTy primVal
+  = CoreDefHR !(IR.RawGlobal' HR.T primTy primVal)
+  | SpecialDefHR !NameSymbol.T !Special
+  deriving (Eq, Show, Data, Generic)
 
 data CoreDefs primTy primVal = CoreDefs
   { order :: [NonEmpty NameSymbol.T],
@@ -280,6 +284,14 @@ data CoreDefs primTy primVal = CoreDefs
   }
   deriving (Eq, Show, Data, Generic)
 
+data CoreDefsHR primTy primVal = CoreDefsHR
+  { orderHR :: [NonEmpty NameSymbol.T],
+    defsHR :: CoreMapHR primTy primVal
+  }
+  deriving (Eq, Show, Data, Generic)
+
+
+type CoreMapHR primTy primVal = HashMap IR.GlobalName (CoreDefHR primTy primVal)
 type CoreMap primTy primVal = HashMap IR.GlobalName (CoreDef primTy primVal)
 
 data FFState primTy primVal = FFState

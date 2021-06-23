@@ -12,6 +12,7 @@ module Juvix.Pipeline.Internal
   )
 where
 
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Context as Context
 import qualified Juvix.Core as Core
@@ -74,6 +75,41 @@ generateSumConsSexp typeCons (Sexp.cdr -> declaration) = do
       | Just l <- Sexp.toList (Sexp.groupBy2 fields) = Sexp.cdr <$> l
     f n acc = Sexp.list [arrow, n, acc]
     arrow = Sexp.atom "TopLevel.Prelude.->"
+
+contextToHR ::
+  (Show primTy, Show primVal) =>
+  Context.T Sexp.T Sexp.T Sexp.T ->
+  P.Parameterisation primTy primVal ->
+  Either (FF.Error primTy primVal) (FF.CoreDefsHR primTy primVal)
+contextToHR ctx param =
+  FF.execEnv ctx param do
+    newCtx <- Context.mapSumWithName ctx attachConstructor
+
+    let ordered = Context.recGroups newCtx
+
+    for_ ordered \grp -> do
+      traverse_ addSig grp
+
+    -- TODO: Cleanup
+    defs <- foldM (\acc grp -> do
+      foldM (\m (Context.Entry x feDef) -> do
+          dfs <- FF.transformDefHR x feDef
+          pure $ foldl' (\m' def -> HM.insert (defName def) def m') m dfs
+          ) acc grp
+      ) mempty ordered
+
+    pure $ FF.CoreDefsHR {FF.defsHR = defs, FF.orderHR = fmap Context.name <$> ordered}
+  where
+    -- Attaches the sum constructor with a data constructor filling
+    attachConstructor s@Context.Sum {sumTDef, sumTName} dataCons c =
+      case sumTDef of
+        Just __ -> s
+        Nothing ->
+          let dataConsSexp = Sexp.atom $ NameSymbol.fromSymbol dataCons
+              typeConsSexp = Sexp.atom $ NameSymbol.fromSymbol sumTName
+           in s {Context.sumTDef = mkDef typeConsSexp dataConsSexp s c}
+        |> Context.SumCon
+        |> pure
 
 contextToCore ::
   (Show primTy, Show primVal) =>

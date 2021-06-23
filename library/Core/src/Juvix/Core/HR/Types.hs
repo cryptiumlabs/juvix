@@ -10,10 +10,12 @@ module Juvix.Core.HR.Types
   )
 where
 
+import Juvix.Library hiding (show)
 import Juvix.Core.HR.Extend
 import Juvix.Core.IR.Types.Base
 
 data T
+  deriving (Data)
 
 extendTerm "Term" [] [t|T|] extTerm
 
