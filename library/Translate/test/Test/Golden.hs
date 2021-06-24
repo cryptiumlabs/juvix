@@ -42,9 +42,20 @@ type Pipeline = Feedback.FeedbackT [] P.String IO
 --                       (Juvix.ToCore.Types.CoreSigsHR primTy primVal)
 --                       (Feedback.FeedbackT [] P.String IO)
 --   ) => ByteString -> ToCore.Env primTy primVal (Either [Char] (Juvix.Core.HR.Types.Term primTy primVal))
+xx :: (Show primTy, Show primVal,
+ HasThrow "fromFrontendError" (ToCore.Error primTy primVal) f,
+ HasReader "param" (Core.Parameterisation primTy primVal) f,
+ HasState "coreSigs" (ToCore.CoreSigsHR primTy primVal) f) =>
+ByteString
+-> f (Either [Char] (Juvix.Core.HR.Types.Term primTy primVal))
 xx x = traverse (HR.transformTermHR (["Mod"])) (SexpParser.prettyParse x) 
 
 
+hr :: ByteString
+  -> IO
+       (Either
+          (ToCore.Error Param.Ty Param.Val)
+          (Either [Char] (Juvix.Core.HR.Types.Term Param.Ty Param.Val)))
 hr x = do
   ctx <- Context.empty "Mod"
   pure $ FF.execEnv ctx Param.t (xx x)

@@ -74,3 +74,17 @@ discoverGoldenTestsCompile ::
 discoverGoldenTestsCompile (withJuvixRootPath -> p) = discoverGoldenTests [".ju"] ".circuit" getGolden (expectSuccess . compile) p
   where
     compile file = Plonk.compileCircuit <$> typecheck file
+
+-- | Discover golden tests for input files with extension @.ju@ and output
+-- files with extension @.hr@.
+discoverGoldenTestsHR ::
+  -- | the directory in which to recursively look for golden tests
+  FilePath ->
+  IO TestTree
+discoverGoldenTestsHR (withJuvixRootPath -> p) = discoverGoldenTests [".ju"] ".hr" getGolden (expectSuccess . toHR) p
+  where
+    toHR = do
+      contract <- liftIO $ readFile file
+      context <- Pipeline.parseWithLibs (withJuvixRootPath <$> libs) (Plonk.BPlonk @Fr) contract
+      Pipeline.toHR context (Parameterization.param @Fr)
+

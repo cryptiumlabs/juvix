@@ -4,6 +4,7 @@ module Juvix.Pipeline.Internal
   ( Error (..),
     toCore,
     contextToCore,
+    contextToHR,
     defName,
     -- we export these functions to be able to call them stepwise from
     -- a testing place
@@ -94,7 +95,7 @@ contextToHR ctx param =
     defs <- foldM (\acc grp -> do
       foldM (\m (Context.Entry x feDef) -> do
           dfs <- FF.transformDefHR x feDef
-          pure $ foldl' (\m' def -> HM.insert (defName def) def m') m dfs
+          pure $ foldl' (\m' def -> HM.insert (defNameHR def) def m') m dfs
           ) acc grp
       ) mempty ordered
 
@@ -180,3 +181,12 @@ defName = \case
   FF.CoreDef (IR.RawGFunction IR.RawFunction {rawFunName = x}) -> x
   FF.CoreDef (IR.RawGAbstract IR.RawAbstract {rawAbsName = x}) -> x
   FF.SpecialDef x _ -> x
+
+defNameHR :: FF.CoreDefHR primTy primVal -> NameSymbol.T
+defNameHR = \case
+  FF.CoreDefHR (IR.RawGDatatype IR.RawDatatype {rawDataName = x}) -> x
+  FF.CoreDefHR (IR.RawGDataCon IR.RawDataCon {rawConName = x}) -> x
+  FF.CoreDefHR (IR.RawGFunction IR.RawFunction {rawFunName = x}) -> x
+  FF.CoreDefHR (IR.RawGAbstract IR.RawAbstract {rawAbsName = x}) -> x
+  FF.SpecialDefHR x _ -> x
+

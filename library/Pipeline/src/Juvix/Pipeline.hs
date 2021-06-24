@@ -35,10 +35,11 @@ import Juvix.Pipeline.Compile
 import Juvix.Pipeline.Internal
 import qualified Juvix.Pipeline.Internal as Pipeline
 import Juvix.Pipeline.Types
-import Juvix.ToCore.FromFrontend as FF (CoreDefs (..))
+import qualified Juvix.ToCore.FromFrontend as FF
 import qualified System.IO.Temp as Temp
 import qualified Text.Megaparsec as P
 import qualified Text.PrettyPrint.Leijen.Text as Pretty
+import qualified Juvix.Core.HR.Types as HR
 
 class HasBackend b where
   type Ty b = ty | ty -> b
@@ -66,6 +67,17 @@ class HasBackend b where
           ("stdlib/Prelude.ju" : stdlibs b ++ [fp])
 
   typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
+
+  toHR ::
+    (Show (Ty b), Show (Val b)) =>
+    Context.T Sexp.T Sexp.T Sexp.T ->
+    Param.Parameterisation (Ty b) (Val b) ->
+    Pipeline (FF.CoreDefsHR (Ty b) (Val b))
+  toHR ctx param = case Pipeline.contextToHR ctx param of
+    Left err -> Feedback.fail $ show err
+    Right defs -> pure defs
+
+  
 
   typecheck' ::
     ( Eq (Ty b),
