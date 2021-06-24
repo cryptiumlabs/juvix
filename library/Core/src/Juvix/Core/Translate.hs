@@ -23,11 +23,17 @@ import Juvix.Core.Utility
 import Juvix.Library hiding (filter)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
+-- | @hrToIR@ runs @hrToIR'@ with an empty stack, see that function for
+-- more documentation
 hrToIR :: HR.Term primTy primVal -> IR.Term primTy primVal
 hrToIR = hrToIRWith mempty
 
 -- contract: no shadowing
 -- TODO - handle this automatically by renaming shadowed vars
+
+-- | @hrToIRWith@ runs @hrToIR'@ with given @pats@. These @pats@ are
+-- used as extra arguments to the algorithm, serving as the global
+-- functions argument to the term itself.
 hrToIRWith ::
   -- | name <-> pattern var mapping from outer scopes
   HashMap NameSymbol.T IR.PatternVar ->
@@ -38,6 +44,10 @@ hrToIRWith pats term =
     |> execSymToPat pats mempty
     |> fst
 
+-- | @hrToIR'@ transforms an HR term into an IR term. The is achieved
+-- by pushing binder variables to the stack. Inside @hrToIR'@ we call
+-- @hrElimToIR'@ for @Elim@'s that lookup the index of stack to get the
+-- correct de Bruijn index.
 hrToIR' ::
   (HasNameStack m, HasSymToPat m) =>
   HR.Term primTy primVal ->
@@ -67,6 +77,11 @@ hrToIR' = \case
     pure (IR.Let π l b)
   HR.Elim e -> IR.Elim |<< hrElimToIR' e
 
+-- | @hrElimToIR'@ is the @Elim@ form of the algorithm
+-- @hrToIR'@. Namely this is responsible for looking up the index of
+-- the given bound variable to be the de Bruijn index. Names which are
+-- not found are either treated as @Global@ or @Pattern@ variables,
+-- with the latter referring to the function arguments to the term
 hrElimToIR' ::
   (HasNameStack m, HasSymToPat m) =>
   HR.Elim primTy primVal ->
@@ -90,9 +105,14 @@ hrElimToIR' = \case
     x <- hrToIR' x
     pure (IR.Ann u t x l)
 
+-- | @irToHR@ runs @irToHR'@ with an empty stack, see that function for
+-- more documentation
 irToHR :: IR.Term primTy primVal -> HR.Term primTy primVal
 irToHR = irToHRWith mempty
 
+-- | @irToHRWith@ runs @irToHR'@ with given @pats@ These @pats@ are
+-- used as extra arguments to the algorithm, serving as the global
+-- functions argument to the term itself.
 irToHRWith ::
   -- | pattern var <-> name mapping from outer scopes
   IR.PatternMap NameSymbol.T ->
@@ -100,6 +120,11 @@ irToHRWith ::
   HR.Term primTy primVal
 irToHRWith pats t = fst $ exec pats (varsTerm t) $ irToHR' t
 
+-- | @irToHR'@ transforms an IR term into an HR one. works like
+-- @hrToIR'@ but in reverse. Namely we have binders introduce a newly
+-- generated name to the stack. Inside of @irToHR'@ we then call
+-- @irElimToHR'@ for @Elim's@ that lookup the de Bruijn index to get
+-- the correct generated name
 irToHR' ::
   (HasNames m, HasPatToSym m) =>
   IR.Term primTy primVal ->
@@ -131,6 +156,9 @@ irToHR' = \case
       pure (HR.Let π n l b)
   IR.Elim e -> HR.Elim |<< irElimToHR' e
 
+-- | @irElimToHR'@ is the @Elim@ form of the algoirthm
+-- @irToHR'@. Namely this is responsible for relating the de Bruijn
+-- index with the generated name.
 irElimToHR' ::
   (HasNames m, HasPatToSym m) =>
   IR.Elim primTy primVal ->
