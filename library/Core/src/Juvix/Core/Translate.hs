@@ -30,8 +30,9 @@ hrToIR = hrToIRWith mempty
 -- contract: no shadowing
 -- TODO - handle this automatically by renaming shadowed vars
 
--- | @hrToIRWith@ runs @hrToIR'@ with given @pats@, currently these
--- patterns are unused
+-- | @hrToIRWith@ runs @hrToIR'@ with given @pats@. These @pats@ are
+-- used as extra arguments to the algorithm, serving as the global
+-- functions argument to the term itself.
 hrToIRWith ::
   -- | pattern var <-> name mapping from outer scopes
   IR.PatternMap NameSymbol.T ->
@@ -43,8 +44,9 @@ hrToIRWith pats term =
     |> fst
 
 -- | @hrToIR'@ transforms an HR term into an IR term. The is achieved
--- by pushing binder's variables to the stack, then getting the index
--- when names occur for the proper De-bruijn index
+-- by pushing binder variables to the stack. Inside @hrToIR'@ we call
+-- @hrElimToIR'@ for @Elim@'s that lookup the index of stack to get the
+-- correct de Bruijn index.
 hrToIR' ::
   HasNameStack m =>
   HR.Term primTy primVal ->
@@ -74,7 +76,11 @@ hrToIR' = \case
     pure (IR.Let π l b)
   HR.Elim e -> IR.Elim |<< hrElimToIR' e
 
--- | @hrElimToIR'@ works the same as @hrToIR'@ but for Elims
+-- | @hrElimToIR'@ is the @Elim@ form of the algorithm
+-- @hrToIR'@. Namely this is responsible for looking up the index of
+-- the given bound variable to be the de Bruijn index. Names which are
+-- not found are either treated as @Global@ or @Pattern@ variables,
+-- with the latter referring to the function arguments to the term
 hrElimToIR' ::
   HasNameStack m =>
   HR.Elim primTy primVal ->
@@ -99,8 +105,9 @@ hrElimToIR' = \case
 irToHR :: IR.Term primTy primVal -> HR.Term primTy primVal
 irToHR = irToHRWith mempty
 
--- | @irToHRWith@ runs @irToHR'@ with given @pats@, currently these
--- patterns are unused
+-- | @irToHRWith@ runs @irToHR'@ with given @pats@ These @pats@ are
+-- used as extra arguments to the algorithm, serving as the global
+-- functions argument to the term itself.
 irToHRWith ::
   -- | pattern var <-> name mapping from outer scopes
   IR.PatternMap NameSymbol.T ->
@@ -109,9 +116,10 @@ irToHRWith ::
 irToHRWith pats t = fst $ exec pats (varsTerm t) $ irToHR' t
 
 -- | @irToHR'@ transforms an IR term into an HR one. works like
--- @hrToIR'@ but in reverse. Namely we have binders introduce a new
--- name to the stack, then the free var index, @n@, grabs the @nth@
--- item in the stack
+-- @hrToIR'@ but in reverse. Namely we have binders introduce a newly
+-- generated name to the stack. Inside of @irToHR'@ we then call
+-- @irElimToHR'@ for @Elim's@ that lookup the de Bruijn index to get
+-- the correct generated name
 irToHR' ::
   (HasNames m, HasPatToSym m) =>
   IR.Term primTy primVal ->
@@ -143,7 +151,9 @@ irToHR' = \case
       pure (HR.Let π n l b)
   IR.Elim e -> HR.Elim |<< irElimToHR' e
 
--- | @irElimToHR'@ works the same as @irToHR'@ but for Elims
+-- | @irElimToHR'@ is the @Elim@ form of the algoirthm
+-- @irToHR'@. Namely this is responsible for relating the de bruijn
+-- index with the generated name.
 irElimToHR' ::
   (HasNames m, HasPatToSym m) =>
   IR.Elim primTy primVal ->
