@@ -16,6 +16,12 @@
 --   to<Form>   :: Sexp.T -> Maybe <Form>
 --   from<Form> :: <Form> -> Sexp.T
 -- #+end_src
+-- + With the following properties of the forms
+--   #+begin_src haskell
+--     ∀ s : Sexp.T. is<Form> s = True ⟷ is-just (to<Form> s)
+--
+--     to<Form> 。 from<Form> = Just
+--   #+end_src
 -- _TODO_
 --  1. Figure out if we can even express a spec system in
 --     Haskell... =to<Form>= and =From<From>= have the exact same signature
