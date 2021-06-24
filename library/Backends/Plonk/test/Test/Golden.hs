@@ -15,7 +15,6 @@ import qualified Juvix.Pipeline as Pipeline
 import Test.Orphan
 import Test.Tasty
 import Text.Pretty.Simple (pPrint)
-
 --------------------------------------------------------------------------------
 -- Parse contracts (Golden tests)
 --------------------------------------------------------------------------------
@@ -83,8 +82,8 @@ discoverGoldenTestsHR ::
   IO TestTree
 discoverGoldenTestsHR (withJuvixRootPath -> p) = discoverGoldenTests [".ju"] ".hr" getGolden (expectSuccess . toHR) p
   where
-    toHR = do
+    toHR file = do
       contract <- liftIO $ readFile file
       context <- Pipeline.parseWithLibs (withJuvixRootPath <$> libs) (Plonk.BPlonk @Fr) contract
-      Pipeline.toHR context (Parameterization.param @Fr)
+      Pipeline.toHR context (Plonk.param @Fr)
 
