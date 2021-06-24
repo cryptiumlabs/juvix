@@ -1,4 +1,8 @@
 * Changelog for Juvix
+** 0.1.1.7
+- Add Michelson golden tests
+- Allow golden tests to be compared with their Show instance
+- Add tests for `main` having different signatures
 ** 0.1.1.6
 - Allow main be of any type
 - Refactor typecheck

@@ -57,6 +57,7 @@ Module that implements the backend parameters for the Michelson backend.
 - _Relies on_
   + [[Michelson/Compilation]]
   + [[Michelson/Parameterisation]]
+  + [[ErasedAnn/Types]]
   + [[Core/Pipeline]]
   + [[Library]]
   + [[Feedback]]
@@ -171,6 +172,14 @@ Module that implements the backend parameters for the Michelson backend.
 - _Relies on_
   + [[Library]]
 **** Test
+***** Golden <<Michelson/test/Test/Golden>>
+- _Relies on_
+  + [[Backends/Michelson]]
+  + [[ErasedAnn/Types]]
+  + [[Core/Pipeline]]
+  + [[Library]]
+  + [[Library/Test/Golden]]
+  + [[Juvix/Pipeline]]
 ***** Michelson <<Test/Michelson>>
 - _Relies on_
   + [[Michelson/Compilation]]

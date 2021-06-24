@@ -1,0 +1,9 @@
+"parameter int;
+storage int;
+code { { DIG 0;
+         DUP;
+         DUG 1;
+         CAR;
+         NIL operation;
+         PAIR;
+         DIP { DROP } } };"

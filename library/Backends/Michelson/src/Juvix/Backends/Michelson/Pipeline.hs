@@ -1,7 +1,8 @@
-module Juvix.Backends.Michelson.Pipeline (BMichelson (..)) where
+module Juvix.Backends.Michelson.Pipeline (BMichelson (..), compileMichelson) where
 
 import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
+import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.Pipeline as CorePipeline
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
@@ -25,3 +26,15 @@ instance HasBackend BMichelson where
       Right c -> do
         writeout out $ M.untypedContractToSource (fst c)
       Left err -> Feedback.fail $ show err
+
+compileMichelson ::
+  MonadFail f =>
+  Param.AnnTerm
+    Param.PrimTy
+    (ErasedAnn.TypedPrim Param.PrimTy Param.RawPrimVal) ->
+  f Text
+compileMichelson term = do
+  let (res, _logs) = M.compileContract $ CorePipeline.toRaw term
+  case res of
+    Right c -> pure $ M.untypedContractToSource (fst c)
+    Left err -> Feedback.fail $ show err

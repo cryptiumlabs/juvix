@@ -1,7 +1,11 @@
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GeneralisedNewtypeDeriving #-}
 
 module Juvix.Library.Test.Golden
-  ( getGolden,
+  ( NoQuotes (..),
+    toNoQuotes,
+    getGolden,
     compareGolden,
     mkGoldenTest,
     discoverGoldenTests,
@@ -21,16 +25,40 @@ import Test.Tasty
 import qualified Test.Tasty.Silver as T
 import qualified Test.Tasty.Silver.Advanced as T
 import Text.Pretty.Simple (pShowNoColor)
+import Text.Read (Read (..))
+import qualified Prelude (show)
 
---------------------------------------------------------------------------------
--- Contracts as a file (Golden tests)
---------------------------------------------------------------------------------
 type FileExtension = String
+
+newtype NoQuotes = NoQuotes Text
+
+instance Show NoQuotes where
+  show (NoQuotes t) = toS t
+
+instance Read NoQuotes where
+  readsPrec _ s = [(NoQuotes $ toS s, "")]
+
+instance Eq NoQuotes where
+  (NoQuotes s1) == (NoQuotes s2) = t1 == t2
+    where
+      -- TODO: This filter is potentially dangerous
+      t1 = Text.filter (/= '"') . Text.strip <$> lines s1
+      t2 = Text.filter (/= '"') . Text.strip <$> lines s2
+
+toNoQuotes ::
+  (Monad m, Show a) =>
+  (FilePath -> m a) ->
+  FilePath ->
+  m NoQuotes
+toNoQuotes f filepath = do
+  t <- f filepath
+  pure $ NoQuotes $ toS $ pShowNoColor t
 
 getGolden :: (Read a, Show a) => FilePath -> IO (Maybe a)
 getGolden file = do
   createDirectoryIfMissing True $ FP.takeDirectory file
   maybeBS <- T.readFileMaybe file
+
   return $ do
     bs <- maybeBS
     readMaybe $ Text.unpack $ decodeUtf8 bs
@@ -114,9 +142,9 @@ expectSuccess v = do
     Feedback.Success _msgs r -> pure r
     Feedback.Fail msgs -> panic $ "Expected success but failed: " <> show msgs
 
-expectFailure :: (Monad m, Show a) => Feedback.FeedbackT app msg m a -> m (app msg)
+expectFailure :: (Monad m, Show a, Show (app msg)) => Feedback.FeedbackT app msg m a -> m NoQuotes
 expectFailure v = do
   feedback <- Feedback.runFeedbackT v
   case feedback of
     Feedback.Success _msgs r -> panic $ "Expected failure but succeeded with: " <> show r
-    Feedback.Fail msgs -> pure msgs
+    Feedback.Fail msgs -> pure $ NoQuotes $ show msgs

@@ -1,0 +1,136 @@
+"Ann
+    { usage = Omega
+    , type' = Pi Omega
+        ( PrimTy
+            ( Application Pair
+                ( PrimTy ( Ty TInt : ) :|
+                    [ PrimTy ( Ty TInt : ) ]
+                )
+            )
+        )
+        ( PrimTy
+            ( Application Pair
+                ( Application List
+                    ( PrimTy ( Ty TOperation : ) :| [] ) :|
+                    [ PrimTy ( Ty TInt : ) ]
+                )
+            )
+        )
+    , term = LamM
+        { capture = []
+        , arguments =
+            [ "0" :| [] ]
+        , body = Ann
+            { usage = Omega
+            , type' = PrimTy
+                ( Application Pair
+                    ( Application List
+                        ( PrimTy ( Ty TOperation : ) :| [] ) :|
+                        [ PrimTy ( Ty TInt : ) ]
+                    )
+                )
+            , term = AppM
+                ( Ann
+                    { usage = Omega
+                    , type' = Pi Omega
+                        ( PrimTy
+                            ( Application List
+                                ( PrimTy ( Ty TOperation : ) :| [] )
+                            )
+                        )
+                        ( Pi Omega
+                            ( PrimTy
+                                ( PrimTy ( Ty TInt : ) )
+                            )
+                            ( PrimTy
+                                ( Application Pair
+                                    ( Application List
+                                        ( PrimTy ( Ty TOperation : ) :| [] ) :|
+                                        [ PrimTy ( Ty TInt : ) ]
+                                    )
+                                )
+                            )
+                        )
+                    , term = Prim
+                        ( Return
+                            { retType = PrimType
+                                { getPrimType = Application List
+                                    ( PrimTy ( Ty TOperation : ) :| [] ) :|
+                                    [ PrimTy ( Ty TInt : )
+                                    , Application Pair
+                                        ( Application List
+                                            ( PrimTy ( Ty TOperation : ) :| [] ) :|
+                                            [ PrimTy ( Ty TInt : ) ]
+                                        )
+                                    ]
+                                }
+                            , retTerm = Inst PAIR
+                            }
+                        )
+                    }
+                )
+                [ Ann
+                    { usage = Omega
+                    , type' = PrimTy
+                        ( Application List
+                            ( PrimTy ( Ty TOperation : ) :| [] )
+                        )
+                    , term = Prim
+                        ( Return
+                            { retType = PrimType
+                                { getPrimType = Application List
+                                    ( PrimTy ( Ty TOperation : ) :| [] ) :| []
+                                }
+                            , retTerm = Nil
+                            }
+                        )
+                    }
+                , Ann
+                    { usage = Omega
+                    , type' = PrimTy
+                        ( PrimTy ( Ty TInt : ) )
+                    , term = AppM
+                        ( Ann
+                            { usage = Omega
+                            , type' = Pi Omega
+                                ( PrimTy
+                                    ( Application Pair
+                                        ( PrimTy ( Ty TInt : ) :|
+                                            [ PrimTy ( Ty TInt : ) ]
+                                        )
+                                    )
+                                )
+                                ( PrimTy
+                                    ( PrimTy ( Ty TInt : ) )
+                                )
+                            , term = Prim
+                                ( Return
+                                    { retType = PrimType
+                                        { getPrimType = Application Pair
+                                            ( PrimTy ( Ty TInt : ) :|
+                                                [ PrimTy ( Ty TInt : ) ]
+                                            ) :|
+                                            [ PrimTy ( Ty TInt : ) ]
+                                        }
+                                    , retTerm = Inst CAR
+                                    }
+                                )
+                            }
+                        )
+                        [ Ann
+                            { usage = Omega
+                            , type' = PrimTy
+                                ( Application Pair
+                                    ( PrimTy ( Ty TInt : ) :|
+                                        [ PrimTy ( Ty TInt : ) ]
+                                    )
+                                )
+                            , term = Var
+                                ( "0" :| [] )
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    }"
