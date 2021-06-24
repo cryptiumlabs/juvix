@@ -152,7 +152,7 @@ irToHR' = \case
   IR.Elim e -> HR.Elim |<< irElimToHR' e
 
 -- | @irElimToHR'@ is the @Elim@ form of the algoirthm
--- @irToHR'@. Namely this is responsible for relating the de bruijn
+-- @irToHR'@. Namely this is responsible for relating the de Bruijn
 -- index with the generated name.
 irElimToHR' ::
   (HasNames m, HasPatToSym m) =>
