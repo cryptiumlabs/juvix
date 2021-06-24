@@ -9,6 +9,16 @@ import Juvix.Library hiding (empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 
+{- !!
+   As it stands, the algorithm does not erase zeroed terms
+   !!
+
+  The type environment is modelled by `ErasureM`, which
+  is a stack of names and types.
+-}
+
+ -- Add capabilities to ErasureM
+ -- TODO move it to Juvix.Core.Erasure.Type
 type ErasureM primTy1 primTy2 primVal1 primVal2 m =
   ( HasState "nextName" Int m,
     HasState "nameStack" [NameSymbol.T] m,
@@ -17,6 +27,7 @@ type ErasureM primTy1 primTy2 primVal1 primVal2 m =
     HasReader "mapPrimVal" (Erasure.MapPrim primVal1 primVal2 primTy1 primVal1) m
   )
 
+ -- | Top-level erasure function
 erase ::
   Erasure.MapPrim primTy1 primTy2 primTy1 primVal1 ->
   Erasure.MapPrim primVal1 primVal2 primTy1 primVal1 ->
@@ -24,9 +35,15 @@ erase ::
   Usage.T ->
   Either (Erasure.Error primTy1 primVal1) (Erasure.Term primTy2 primVal2)
 erase mt mv t π
+  -- You must assume that your program has non-zero resource usage,
+  -- otherwise it's just a bunch of types with no runtime exec.
   | π == mempty = Left $ Erasure.CannotEraseZeroUsageTerm t
+  -- After making sure you have a runnable program, proceed to erase zeroed-terms
   | otherwise = exec mt mv $ eraseTerm t
 
+
+ -- | `eraseGlobal` traverses the tree of terms and apply the correct
+ -- | erasure fn depending of the kind of term
 eraseGlobal ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.Global primTy1 primVal1 ->
@@ -37,9 +54,10 @@ eraseGlobal g =
     IR.GDataCon c -> Erasure.GDataCon |<< eraseDataCon c
     IR.GFunction f -> Erasure.GFunction |<< eraseFunction f
     -- TODO: Need the annotated term here. ref
-    -- https://github.com/metastatedev/juvix/issues/495
+    -- https://github.com/anomanetwork/juvix/issues/495
     IR.GAbstract a -> Erasure.GAbstract |<< eraseAbstract a
 
+ -- | `eraAbstract` keep the structure and erases its type
 eraseAbstract ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.Abstract primTy1 primVal1 ->
@@ -47,6 +65,7 @@ eraseAbstract ::
 eraseAbstract (IR.Abstract name usage ty) =
   Erasure.Abstract name usage <$> eraseType ty
 
+ -- | `eraseDtatype` relays erasure to each component of a datatype
 eraseDatatype ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.Datatype primTy1 primVal1 ->
@@ -56,6 +75,7 @@ eraseDatatype (IR.Datatype name _pos args level cons) = do
   cons <- mapM eraseDataCon cons
   pure (Erasure.Datatype name args level cons)
 
+ -- | `eraseDataArg` erases the accompanying type
 eraseDataArg ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.DataArg primTy1 primVal1 ->
@@ -64,6 +84,7 @@ eraseDataArg (IR.DataArg name usage ty) = do
   ty <- eraseType ty
   pure (Erasure.DataArg name usage ty)
 
+  -- | `eraseDataCon` relays the erasure of types and functions
 eraseDataCon ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.DataCon primTy1 primVal1 ->
@@ -73,6 +94,8 @@ eraseDataCon (IR.DataCon name ty def) = do
   def <- traverse eraseFunction def
   pure (Erasure.DataCon name ty def)
 
+ -- | `eraseFunction` is supposed to look for zeroed terms and pre-bind them.
+ -- | The current implementation makes use of `erasePatterns` to erase zeroed args
 eraseFunction ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.Function primTy1 primVal1 ->
@@ -82,12 +105,14 @@ eraseFunction (IR.Function name usage ty clauses) = do
   clauses <- flip mapM clauses $ \(IR.FunClause _tel patts _term _rhsTy _catchAll _unreachable) -> do
     (patts, _ty) <- erasePatterns (patts, (tys, ret))
     patts <- mapM erasePattern patts
-    -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
+    -- Not sure what's the issue here
+    -- TODO: Need the annotated term here. ref https://github.com/anomanetwork/juvix/issues/495
     -- term <- eraseTerm term
     pure (Erasure.FunClause patts undefined)
   ty <- eraseType ty
   pure (Erasure.Function name usage ty clauses)
 
+ -- | `erasePattern` elaborates IR.Term into Erasure.Term
 erasePattern ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.Pattern primTy1 primVal1 ->
@@ -102,24 +127,30 @@ erasePattern patt =
     IR.PUnit -> pure Erasure.PUnit
     IR.PVar v -> pure (Erasure.PVar v)
     IR.PDot _t -> do
-      -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
+      -- Same here, not sure what's the problem
+      -- TODO: Need the annotated term here. ref https://github.com/anomanetwork/juvix/issues/495
       -- t <- eraseTerm t
       -- pure (Erasure.PDot t)
       pure (Erasure.PDot undefined)
     IR.PPrim p -> Erasure.PPrim <$> erasePrimVal p
 
+  -- | `erasePrimTy` just uses the type within the parameterised context
+  -- Shouldn't this happen during typecheck?
 erasePrimTy ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m => primTy1 -> m primTy2
 erasePrimTy p = do
   ask @"mapPrimTy" <*> get @"nameStack" <*> pure p
     >>= either (throw @"erasureError") pure
 
+  -- | `erasePrimVal` just uses the value within the parameterised context
+  -- Shouldn't this happen during evaluation?
 erasePrimVal ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m => primVal1 -> m primVal2
 erasePrimVal p = do
   ask @"mapPrimVal" <*> get @"nameStack" <*> pure p
     >>= either (throw @"erasureError") pure
 
+ -- | `erasePatterns` rearrange patterns?
 erasePatterns ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   ([pat], ([(Usage.Usage, arg)], ret)) ->
@@ -140,6 +171,9 @@ piTypeToList ty =
       let (rest, res) = piTypeToList ret in ((usage, arg) : rest, res)
     _ -> ([], ty)
 
+  -- | `eraseTerm` erases typed terms, mostly relaying to other functions
+  -- | The clauses of interest here are Typed.Lam and Typed.Let (checking phase)
+  -- TODO add a catch-all clause for the theoretically impossible cases
 eraseTerm ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   Typed.Term' primTy1 primVal1 ->
@@ -176,6 +210,9 @@ eraseTerm (Typed.Let π b t anns) = do
       pure (Erasure.Let x b t (bindTy, exprTy))
 eraseTerm (Typed.Elim e _) = eraseElim e
 
+  -- | `eraseElim` erases typed terms, mostly relaying to other functions
+  -- | The clause of interest here is Typed.App (synthesis phase)
+  -- TODO add a catch-all clause for the theoretically impossible cases
 eraseElim ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   Typed.Elim' primTy1 primVal1 ->
@@ -199,6 +236,11 @@ eraseElim (Typed.App e s ann) = do
 eraseElim (Typed.Ann _ s _ _ _) = do
   eraseTerm s
 
+  -- | `eraseElim` erases types
+  -- | The clause of interest here is Typed.VSig, where sigmas are
+  -- | erased recursive calls.
+  -- TODO add a catch-all clause for the theoretically impossible cases
+  -- TODO probably change `Sig` to something else more reasonable
 eraseType ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.Value primTy1 primVal1 ->
@@ -211,7 +253,6 @@ eraseType (IR.VPi π a b) = do
   if π == mempty
     then eraseType b
     else -- FIXME dependency
-
       Erasure.Pi π <$> eraseType a
         <*> withName \_ -> eraseType b
 eraseType v@(IR.VLam _) = do
@@ -233,6 +274,8 @@ eraseType (IR.VNeutral n) = do
 eraseType v@(IR.VPrim _) = do
   throwEra $ Erasure.UnsupportedTypeV v
 
+ -- | `eraseTypeN` is supposed to erase multi-uses types?
+ -- Is it supposed to do this?
 eraseTypeN ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.Neutral primTy1 primVal1 ->
@@ -248,6 +291,7 @@ eraseTypeN n@(IR.NApp _ _) = do
   -- FIXME add AppT and fill this in
   throwEra $ Erasure.UnsupportedTypeN n
 
+ -- | `pushName` manipulates the stack by adding a name
 pushName ::
   (HasState "nextName" Int m, HasState "nameStack" [NameSymbol.T] m) =>
   m NameSymbol.T
@@ -257,6 +301,7 @@ pushName = do
   modify @"nameStack" (x :)
   pure $ x
 
+ -- | `popName` manipulates the stack by removing a name
 popName ::
   ( HasState "nameStack" [a] m,
     HasThrow "erasureError" (Erasure.Error primTy primVal) m
@@ -268,6 +313,7 @@ popName = do
     [] -> throw @"erasureError" $ Erasure.InternalError "name stack ran out"
     _ : ns -> put @"nameStack" ns
 
+ -- | `withName` basically pushs and pops a name within the stack
 withName ::
   ( HasState "nextName" Int m,
     HasState "nameStack" [NameSymbol.T] m,
@@ -277,12 +323,14 @@ withName ::
   m a
 withName f = do x <- pushName; f x <* popName
 
+ -- | `lookupBound` looks for a specific variable within the stack
 lookupBound ::
   HasState "nameStack" [NameSymbol.T] m =>
   IR.BoundVar ->
   m NameSymbol.T
 lookupBound x = gets @"nameStack" (`genericIndex` x)
 
+ -- | `throwEra` is a short-cut function to throw erasure errors
 throwEra ::
   HasThrow "erasureError" (Erasure.Error primTy primVal) m =>
   Erasure.Error primTy primVal ->
