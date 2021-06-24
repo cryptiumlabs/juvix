@@ -1,6 +1,8 @@
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+-- | Module providing the `HasSubst`-class, implementing substitution of terms
+-- as part of the lambda calculus.
 module Juvix.Core.IR.Evaluator.Subst where
 
 import qualified Juvix.Core.Application as App
@@ -10,14 +12,16 @@ import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 
+-- | Class of terms that support substitution.
 class HasWeak a => HasSubst ext primTy primVal a where
   substWith ::
-    -- | How many bindings have been traversed so far
+    -- | How many bindings have been traversed so far.
     IR.BoundVar ->
-    -- | Variable to substitute
+    -- | Variable to substitute.
     IR.BoundVar ->
-    -- | Expression to substitute with
+    -- | Expression to substitute with.
     IR.Elim' ext primTy primVal ->
+    -- | Term to perform substitution on.
     a ->
     a
   default substWith ::
@@ -29,6 +33,7 @@ class HasWeak a => HasSubst ext primTy primVal a where
     a
   substWith b i e = to . gsubstWith b i e . from
 
+-- | Wrapper around `substWith` for terms without free variables.
 subst' ::
   HasSubst ext primTy primVal a =>
   IR.BoundVar ->
@@ -37,6 +42,8 @@ subst' ::
   a
 subst' = substWith 0
 
+-- | Wrapper around `subst'` that starts at variable 0, the first bound
+-- variable.
 subst ::
   HasSubst ext primTy primVal a =>
   IR.Elim' ext primTy primVal ->
@@ -44,17 +51,20 @@ subst ::
   a
 subst = subst' 0
 
+-- | Class of terms that support substitution, resulting in a `Term'`.
 class HasWeak a => HasSubstTerm ext primTy primVal a where
   substTermWith ::
-    -- | How many bindings have been traversed so far
+    -- | How many bindings have been traversed so far.
     IR.BoundVar ->
-    -- | Variable to substitute
+    -- | Variable to substitute.
     IR.BoundVar ->
-    -- | Expression to substitute with
+    -- | Expression to substitute with.
     IR.Elim' ext primTy primVal ->
+    -- | Term to perform substitution on.
     a ->
     IR.Term' ext primTy primVal
 
+-- | Wrapper around `substTermWith` for terms without free variables.
 substTerm' ::
   HasSubstTerm ext primTy primVal a =>
   IR.BoundVar ->
@@ -63,6 +73,8 @@ substTerm' ::
   IR.Term' ext primTy primVal
 substTerm' = substTermWith 0
 
+-- | Wrapper around `substTerm'` that starts at variable 0, the first bound
+-- variable.
 substTerm ::
   HasSubstTerm ext primTy primVal a =>
   IR.Elim' ext primTy primVal ->
@@ -70,6 +82,7 @@ substTerm ::
   IR.Term' ext primTy primVal
 substTerm = substTerm' 0
 
+-- | Constraint alias for terms and eliminations that support substitution.
 type AllSubst ext primTy primVal =
   ( IR.TermAll (HasSubst ext primTy primVal) ext primTy primVal,
     IR.ElimAll (HasSubst ext primTy primVal) ext primTy primVal,
@@ -128,14 +141,16 @@ instance
   substWith w i e (IR.ElimX a) =
     IR.ElimX (substWith w i e a)
 
+-- | Generalised substitution for a container @f@.
 class GHasWeak f => GHasSubst ext primTy primVal f where
   gsubstWith ::
-    -- | How many bindings have been traversed so far
+    -- | How many bindings have been traversed so far.
     Natural ->
-    -- | Variable to substitute
+    -- | Variable to substitute.
     IR.BoundVar ->
-    -- | Expression to substitute with
+    -- | Expression to substitute with.
     IR.Elim' ext primTy primVal ->
+    -- | Term to perform substitution on.
     f t ->
     f t
 
@@ -270,11 +285,16 @@ instance
   substTermWith b i e (App.VarArg x) = substTermWith b i e x
   substTermWith b i e (App.TermArg t) = substTermWith b i e t
 
+-- | Perform substituiton on a term inside an `Take`.
 substTake ::
   HasSubstTerm ext primTy primVal term =>
+  -- | How many bindings have been traversed so far.
   IR.BoundVar ->
+  -- | Variable to substitute.
   IR.BoundVar ->
+  -- | Expression to substitute with.
   IR.Elim' ext primTy primVal ->
+  -- | `Take` that contains the term to perform substitution in.
   App.Take ty term ->
   IR.Term' ext primTy primVal
 substTake b i e (App.Take {term}) = substTermWith b i e term
