@@ -8,12 +8,12 @@ where
 
 import Control.Lens (set)
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Juvix.Context as Context
+import qualified Juvix.Context.NameSpace as NameSpace
 import qualified Juvix.Contextify.ToContext.Types as Type
-import qualified Juvix.Core.Common.Context as Context
-import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import Prelude (error)
 
 -- the name symbols are the modules we are opening

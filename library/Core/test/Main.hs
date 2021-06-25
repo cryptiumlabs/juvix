@@ -1,6 +1,5 @@
 module Main where
 
-import Common.Context (contextTests)
 import Conv (coreConversions)
 import Erasure (erasureTests)
 import qualified HR.Pretty
@@ -8,6 +7,7 @@ import qualified IR.Weak as Weak
 import Juvix.Library (IO)
 import qualified Test.Tasty as T
 import Typechecker (coreCheckerEval)
+import qualified Utility
 
 coreTests :: T.TestTree
 coreTests =
@@ -23,9 +23,9 @@ allCheckedTests =
     "All tests that are checked"
     [ coreTests,
       erasureTests,
-      contextTests,
       Weak.top,
-      HR.Pretty.top
+      HR.Pretty.top,
+      Utility.top
     ]
 
 main :: IO ()

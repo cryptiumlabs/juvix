@@ -1,14 +1,14 @@
 module Juvix.Contextify (fullyContextify, contextify, op, ResolveErr (..), PathError) where
 
+import qualified Juvix.Context as Context
 import qualified Juvix.Contextify.Environment as Environment
 import qualified Juvix.Contextify.Passes as Passes
 import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as ResolveOpen
 import qualified Juvix.Contextify.ToContext.Sexp as ContextSexp
 import qualified Juvix.Contextify.ToContext.Types as Contextify
-import qualified Juvix.Core.Common.Context as Context
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 
 type RunM =
   ExceptT Context.PathError IO

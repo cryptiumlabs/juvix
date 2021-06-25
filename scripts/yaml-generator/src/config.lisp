@@ -281,18 +281,33 @@ common ones to include"
    :name "StandardLibrary"
    :extra-deps (list (make-general-dependencies *capability* *prettiest*) *standard-library-extra-deps*)))
 
+(defparameter *sexp*
+  (make-stack-yaml
+   :name "Sexp"
+   :packages (list *standard-library*)
+   :extra-deps (list (make-general-dependencies *capability* *prettiest*)
+                     *standard-library-extra-deps*)))
+
+
 (defparameter *frontend*
   (make-stack-yaml
    ;; why is this one ahead again!?
    :resolver   17.9
    :name       "Frontend"
-   :packages   (list *standard-library*)
+   :packages   (list *standard-library* *sexp*)
    :extra-deps (list (make-general-dependencies *capability* *prettiest*) *standard-library-extra-deps*)))
+
+(defparameter *Context*
+  (make-stack-yaml
+   :name     "Context"
+   :packages (list *standard-library* *sexp*)
+   :extra-deps (list (make-general-dependencies *capability* *prettiest*)
+                     *standard-library-extra-deps*)))
 
 (defparameter *core*
   (make-stack-yaml
    :name       "Core"
-   :packages   (list *standard-library*)
+   :packages   (list *standard-library* *sexp*)
    :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                       *standard-library-extra-deps*
                       *eac-solver*)))
@@ -300,7 +315,7 @@ common ones to include"
 (defparameter *translate*
   (make-stack-yaml
    :name "Translate"
-   :packages   (list *core* *frontend* *standard-library*)
+   :packages   (list *core* *frontend* *standard-library* *sexp* *Context*)
    :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                      *standard-library-extra-deps*
                      *eac-solver*)))
@@ -329,9 +344,11 @@ common ones to include"
 (defparameter *Pipeline*
   (make-stack-yaml
    :packages (list *standard-library*
+                   *sexp*
                    *frontend*
                    *core*
-                   *translate*)
+                   *translate*
+                   *Context*)
    ;; hack name, for sub dirs
    :name "Pipeline"
    :extra-deps (big-dep-list)
@@ -342,7 +359,7 @@ common ones to include"
    :name "Backends/llvm"
    :resolver 17.3
    :path-to-other "../../"
-   :packages (list *standard-library* *core* *pipeline* *translate* *frontend*)
+   :packages (list *standard-library* *core* *Context* *pipeline* *translate* *frontend*)
    :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
                      *llvm-hs-deps*
 
@@ -362,7 +379,7 @@ common ones to include"
    ;; hack name, for sub dirs
    :name "Backends/Michelson"
    :path-to-other "../../"
-   :packages      (list *standard-library* *core* *pipeline*
+   :packages      (list *standard-library* *core* *pipeline* *Context*
                         ;; this is needed due to pipeline additions
                         ;; have left it unable to build. I think due to cyclic dependencies
                         *translate*
@@ -384,6 +401,7 @@ common ones to include"
    :packages (list *standard-library*
                    *frontend*
                    *core*
+                   *Context*
                    *pipeline*
                    *translate*)
    :extra-deps (big-dep-list :plonk t)
@@ -396,7 +414,10 @@ common ones to include"
                    *core*
                    *translate*
                    *michelson*
-                   *pipeline*)
+                   *pipeline*
+                   *Context*
+                   *plonk*
+                   *sexp*)
    ;; hack name, for sub dirs
    :name "EasyPipeline"
    :extra-deps (big-dep-list)
@@ -413,7 +434,9 @@ common ones to include"
                    *michelson*
                    *easy-pipeline*
                    *plonk*
-                   *llvm*)
+                   *llvm*
+                   *Context*
+                   *sexp*)
    :path-to-other "./library/"
    :extra-deps
    (cons *llvm-hs-deps* (big-dep-list))

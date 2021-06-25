@@ -13,8 +13,8 @@ module Juvix.Pipeline.Internal
 where
 
 import qualified Data.HashMap.Strict as HM
+import qualified Juvix.Context as Context
 import qualified Juvix.Core as Core
-import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.Context.Traverse as Context
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as P
@@ -22,8 +22,8 @@ import qualified Juvix.Frontend as Frontend
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Parser (ParserError)
-import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
+import qualified Juvix.Sexp as Sexp
 import qualified Juvix.ToCore.FromFrontend as FF
 
 data Error

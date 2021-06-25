@@ -12,7 +12,7 @@ module Test.Conversion.ML where
 -- import qualified Juvix.FrontendDesugar as MLPasses
 -- import qualified Juvix.FrontendDesugar.RemoveDo.Types as Target
 -- import Juvix.Library hiding (product, sum)
--- import qualified Juvix.Library.Sexp as Sexp
+-- import qualified Juvix.Sexp as Sexp
 import qualified Test.Tasty as T
 
 -- import qualified Test.Tasty.HUnit as T

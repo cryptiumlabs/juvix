@@ -18,6 +18,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.11 && < 5
 - standard-library
+- Sexp
 - text
 - parsec
 - extensible-data

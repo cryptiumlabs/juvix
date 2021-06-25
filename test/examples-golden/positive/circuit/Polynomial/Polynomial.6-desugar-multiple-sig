@@ -3,10 +3,6 @@
 ,
     ( "open" "Circuit" )
 ,
-    ( ":defsig-match" "add"
-        ( ":infix" "->" "field" ( ":infix" "->" "field" "field" ) )
-        ( () ( ":primitive" "Circuit.add" ) ) )
-,
     ( ":defsig-match" "+"
         ( ":infix" "->" "field" ( ":infix" "->" "field" "field" ) )
         ( () ( ":primitive" "Circuit.add" ) ) )
@@ -31,4 +27,6 @@
 ,
     ( "declare" "infixl" "==" 2 )
 ,
-    ( ":defsig-match" "main" "field" ( () ( "add" 2 2 ) ) ) ]
+    ( ":defsig-match" "main"
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "bool" ) )
+        ( ( "x" "y" ) ( ":infix" "^" "x" ( ":infix" "==" 3 "y" ) ) ) ) ]

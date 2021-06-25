@@ -11,8 +11,10 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.11 && < 5
 - standard-library
+- Sexp
 - core
 - frontend
+- Context
 - extensible-data
 - unordered-containers
 - stm-containers

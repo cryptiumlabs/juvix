@@ -13,7 +13,7 @@ import qualified Juvix.Desugar as Desugar
 import qualified Juvix.Frontend.Sexp as SexpTrans
 import qualified Juvix.Frontend.Types as Initial
 import Juvix.Library
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 
 op :: [Initial.TopLevel] -> [Sexp.T]
 op = Desugar.op . fmap SexpTrans.transTopLevel

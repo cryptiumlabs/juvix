@@ -1,0 +1,85 @@
+name:                Context
+version:             0.1.0.0
+github:              "heliaxdev/Juvix"
+license:             GPL-3
+author:              "Heliax AG <hello@heliax.dev>"
+maintainer:          "Heliax AG <hello@heliax.dev>"
+copyright:           "2020 Heliax AG"
+
+extra-source-files:
+- README.org
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/Context#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- standard-library
+- Sexp
+- containers
+- unordered-containers
+- stm-containers
+- lens
+- text
+
+default-extensions:
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - NoMonomorphismRestriction
+  - RankNTypes
+  - LambdaCase
+  - UnicodeSyntax
+  - GADTs
+  - DerivingVia
+  - MultiParamTypeClasses
+  - MultiWayIf
+  - DataKinds
+  - TypeApplications
+  - ConstraintKinds
+  - PatternSynonyms
+  - FlexibleContexts
+  - FlexibleInstances
+  - QuasiQuotes
+  - TemplateHaskell
+  - TypeFamilies
+  - NamedFieldPuns
+  - DisambiguateRecordFields
+  - TupleSections
+  - DeriveGeneric
+  - DeriveDataTypeable
+  - GeneralizedNewtypeDeriving
+  - StandaloneDeriving
+  - BlockArguments
+  - FunctionalDependencies
+
+ghc-options:
+  - -ferror-spans
+  - -Wall
+  - -fno-warn-orphans
+  - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
+  - -j
+  - -static
+  - -fwrite-ide-info
+
+library:
+  source-dirs: src
+
+tests:
+  Context-test:
+    main:                Main.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - Context
+    - tasty
+    - tasty-hunit

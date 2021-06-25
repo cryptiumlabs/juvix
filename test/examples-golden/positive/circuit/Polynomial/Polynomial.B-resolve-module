@@ -30,9 +30,15 @@ Rec
                 , Def
                     ( D
                         { defUsage = Nothing
-                        , defMTy = Just "TopLevel.Prelude.Circuit.field"
+                        , defMTy = Just
+                            ( ":infix" "TopLevel.Prelude.->" "TopLevel.Prelude.Circuit.field"
+                                ( ":infix" "TopLevel.Prelude.->" "TopLevel.Prelude.Circuit.field" "TopLevel.Prelude.Circuit.bool" ) )
                         , defTerm =
-                            ( ":lambda-case" ( () ( "add" 2 2 ) ) )
+                            ( ":lambda-case"
+                                (
+                                    ( "x" "y" )
+                                    ( ":infix" "^" "x"
+                                        ( ":infix" "==" 3 "y" ) ) ) )
                         , defPrecedence = Pred Left 9 } ) )
             ,
                 ( "^"
@@ -46,18 +52,6 @@ Rec
                             ( ":lambda-case"
                                 ( () ( ":primitive" "Circuit.exp" ) ) )
                         , defPrecedence = Pred Left 8 } ) )
-            ,
-                ( "add"
-                , Def
-                    ( D
-                        { defUsage = Nothing
-                        , defMTy = Just
-                            ( ":infix" "TopLevel.Prelude.->" "TopLevel.Prelude.Circuit.field"
-                                ( ":infix" "TopLevel.Prelude.->" "TopLevel.Prelude.Circuit.field" "TopLevel.Prelude.Circuit.field" ) )
-                        , defTerm =
-                            ( ":lambda-case"
-                                ( () ( ":primitive" "Circuit.add" ) ) )
-                        , defPrecedence = Pred Left 9 } ) )
             ,
                 ( "=="
                 , Def

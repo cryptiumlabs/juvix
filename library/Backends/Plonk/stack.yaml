@@ -5,6 +5,7 @@ packages:
 - ../../StandardLibrary
 - ../../Frontend
 - ../../Core
+- ../../Context
 - ../../Pipeline
 - ../../Translate
 

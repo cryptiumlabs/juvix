@@ -1,0 +1,26 @@
+mod Nested where
+
+open Prelude
+open Michelson
+
+sig (+) : nat -> nat -> nat
+let (+) = %Michelson.add
+declare infixl (+) 5
+
+sig nil : list operation
+let nil = %Michelson.nil
+
+sig make-pair : list operation -> nat -> pair (list operation) nat
+let make-pair = %Michelson.pair
+
+-- type Bar : ty = | P nat nat |  Q nat nat nat
+
+-- sig g : Bar -> nat
+-- let g (P x y) = x + y
+-- let g (Q x y z) = x + y -- + z^2
+
+
+sig main : pair nat nat -> pair (list operation) nat
+let main = \_ -> make-pair nil (g (P 3 4)) -- (norm (P 3 4))
+
+

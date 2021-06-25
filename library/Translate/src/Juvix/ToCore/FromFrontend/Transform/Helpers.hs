@@ -19,14 +19,14 @@ module Juvix.ToCore.FromFrontend.Transform.Helpers
 where
 
 import qualified Data.HashMap.Strict as HM
-import qualified Juvix.Core.Common.Context as Ctx
+import qualified Juvix.Context as Ctx
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Translate (hrToIR)
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import Juvix.ToCore.Types
 
 -- | Retrieve constant primVal from parameterization

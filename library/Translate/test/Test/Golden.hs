@@ -7,7 +7,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.Environment as Environment
 import qualified Juvix.Contextify.Passes as Contextify
-import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.Context as Context
 import qualified Juvix.Desugar.Passes as Pass
 import qualified Juvix.Frontend as Frontend
 import qualified Juvix.Frontend.Parser as Parser
@@ -18,7 +18,7 @@ import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Parser (Parser)
 import qualified Juvix.Library.Parser as J
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import Juvix.Library.Test.Golden (discoverGoldenTests, getGolden)
 import qualified System.FilePath as FP
 import Test.Tasty
