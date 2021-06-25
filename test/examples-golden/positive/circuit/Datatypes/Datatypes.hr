@@ -93,8 +93,6 @@ CoreDefsHR
         ,
             ( "Datatypes" :| [ "field" ] ) :| []
         ,
-            ( "Datatypes" :| [ "main" ] ) :| []
-        ,
             ( "Datatypes" :| [ "x" ] ) :| []
         ,
             ( "Datatypes" :| [ "^" ] ) :| []
@@ -110,6 +108,8 @@ CoreDefsHR
             ( "Datatypes" :| [ "+" ] ) :| []
         ,
             ( "Datatypes" :| [ "norm" ] ) :| []
+        ,
+            ( "Datatypes" :| [ "main" ] ) :| []
         ,
             ( "Datatypes" :| [ "t" ] ) :| []
         ,
@@ -243,49 +243,19 @@ CoreDefsHR
                                             ( App'
                                                 ( App'
                                                     ( ElimX
-                                                        ( "Datatypes" :| [ "+" ] )
+                                                        ( "Datatypes" :| [ "^" ] )
                                                     )
                                                     ( Elim'
-                                                        ( App'
-                                                            ( App'
-                                                                ( ElimX
-                                                                    ( "Datatypes" :| [ "^" ] )
-                                                                )
-                                                                ( Elim'
-                                                                    ( ElimX
-                                                                        ( "y" :| [] )
-                                                                    ) ()
-                                                                ) ()
-                                                            )
-                                                            ( Prim'
-                                                                ( PConst
-                                                                    ( P
-                                                                        ( 2 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
-                                                                    )
-                                                                ) ()
-                                                            ) ()
+                                                        ( ElimX
+                                                            ( "y" :| [] )
                                                         ) ()
                                                     ) ()
                                                 )
-                                                ( Elim'
-                                                    ( App'
-                                                        ( App'
-                                                            ( ElimX
-                                                                ( "Datatypes" :| [ "^" ] )
-                                                            )
-                                                            ( Elim'
-                                                                ( ElimX
-                                                                    ( "z" :| [] )
-                                                                ) ()
-                                                            ) ()
+                                                ( Prim'
+                                                    ( PConst
+                                                        ( P
+                                                            ( 2 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
                                                         )
-                                                        ( Prim'
-                                                            ( PConst
-                                                                ( P
-                                                                    ( 2 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
-                                                                )
-                                                            ) ()
-                                                        ) ()
                                                     ) ()
                                                 ) ()
                                             ) ()
@@ -1062,18 +1032,58 @@ CoreDefsHR
                     ( RawFunction
                         { rawFunName = "Datatypes" :| [ "main" ]
                         , rawFunUsage = GOmega
-                        , rawFunType = Elim'
-                            ( ElimX
-                                ( "Datatypes" :| [ "field" ] )
-                            ) ()
+                        , rawFunType = Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
+                            )
+                            ( Pi' Omega
+                                ( Elim'
+                                    ( ElimX
+                                        ( "Datatypes" :| [ "field" ] )
+                                    ) ()
+                                )
+                                ( Elim'
+                                    ( ElimX
+                                        ( "Datatypes" :| [ "field" ] )
+                                    ) ()
+                                )
+                                ( "" :| [] )
+                            )
+                            ( "" :| [] )
                         , rawFunClauses = RawFunClause
                             { rawClauseTel = []
-                            , rawClausePats = []
-                            , rawClauseBody = Prim'
-                                ( PConst
-                                    ( P
-                                        ( 3 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                            , rawClausePats =
+                                [ PatternX
+                                    ( "x" :| [] )
+                                , PatternX
+                                    ( "y" :| [] )
+                                ]
+                            , rawClauseBody = Elim'
+                                ( App'
+                                    ( ElimX
+                                        ( "Datatypes" :| [ "norm" ] )
                                     )
+                                    ( Elim'
+                                        ( App'
+                                            ( App'
+                                                ( ElimX
+                                                    ( "Datatypes" :| [ "P" ] )
+                                                )
+                                                ( Elim'
+                                                    ( ElimX
+                                                        ( "Datatypes" :| [ "x" ] )
+                                                    ) ()
+                                                ) ()
+                                            )
+                                            ( Elim'
+                                                ( ElimX
+                                                    ( "y" :| [] )
+                                                ) ()
+                                            ) ()
+                                        ) ()
+                                    ) ()
                                 ) ()
                             , rawClauseCatchall = False
                             } :| []

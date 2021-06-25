@@ -82,10 +82,10 @@ class HasBackend b where
 
   typecheck' ::
     ( Eq (Ty b),
-      Show (Ty b),
       Eq (Val b),
       Show (Err b),
       Show (Val b),
+      Show (Ty b),
       Show (ApplyErrorExtra (Ty b)),
       Show (ApplyErrorExtra (TypedPrim (Ty b) (Val b))),
       Show (Arg (Ty b)),

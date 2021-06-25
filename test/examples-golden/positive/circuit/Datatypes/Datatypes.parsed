@@ -415,25 +415,9 @@ Right
                                                 { infixLeft = Name
                                                     ( "y" :| [] )
                                                 , infixOp = "^" :| []
-                                                , infixRight = Infix
-                                                    ( Inf
-                                                        { infixLeft = Constant
-                                                            ( Number
-                                                                ( Integer' 2 )
-                                                            )
-                                                        , infixOp = "+" :| []
-                                                        , infixRight = Infix
-                                                            ( Inf
-                                                                { infixLeft = Name
-                                                                    ( "z" :| [] )
-                                                                , infixOp = "^" :| []
-                                                                , infixRight = Constant
-                                                                    ( Number
-                                                                        ( Integer' 2 )
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
+                                                , infixRight = Constant
+                                                    ( Number
+                                                        ( Integer' 2 )
                                                     )
                                                 }
                                             )
@@ -449,8 +433,22 @@ Right
             ( Sig
                 { signatureName = "main"
                 , signatureUsage = Nothing
-                , signatureArrowType = Name
-                    ( "field" :| [] )
+                , signatureArrowType = Infix
+                    ( Inf
+                        { infixLeft = Name
+                            ( "field" :| [] )
+                        , infixOp = "->" :| []
+                        , infixRight = Infix
+                            ( Inf
+                                { infixLeft = Name
+                                    ( "field" :| [] )
+                                , infixOp = "->" :| []
+                                , infixRight = Name
+                                    ( "field" :| [] )
+                                }
+                            )
+                        }
+                    )
                 , signatureConstraints = []
                 }
             )
@@ -458,11 +456,39 @@ Right
             ( Func
                 ( Like
                     { functionLikedName = "main"
-                    , functionLikeArgs = []
+                    , functionLikeArgs =
+                        [ ConcreteA
+                            ( MatchLogic
+                                { matchLogicContents = MatchName "x"
+                                , matchLogicNamed = Nothing
+                                }
+                            )
+                        , ConcreteA
+                            ( MatchLogic
+                                { matchLogicContents = MatchName "y"
+                                , matchLogicNamed = Nothing
+                                }
+                            )
+                        ]
                     , functionLikeBody = Body
-                        ( Constant
-                            ( Number
-                                ( Integer' 3 )
+                        ( Application
+                            ( App
+                                { applicationName = Name
+                                    ( "norm" :| [] )
+                                , applicationArgs = Parened
+                                    ( Application
+                                        ( App
+                                            { applicationName = Name
+                                                ( "P" :| [] )
+                                            , applicationArgs = Name
+                                                ( "x" :| [] ) :|
+                                                [ Name
+                                                    ( "y" :| [] )
+                                                ]
+                                            }
+                                        )
+                                    ) :| []
+                                }
                             )
                         )
                     }
