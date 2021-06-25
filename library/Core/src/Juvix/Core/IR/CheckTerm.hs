@@ -144,6 +144,8 @@ typeTerm' ::
   AnnotationT primTy primVal ->
   m (Typed.Term primTy primVal)
 typeTerm' term ann@(Annotation σ ty) =
+  -- @requireZero σ@ means types are always erased
+  -- (in type expressions like Star, Pi, etc)
   case term of
     IR.Star' i _ -> do
       requireZero σ
@@ -175,7 +177,8 @@ typeTerm' term ann@(Annotation σ ty) =
       requireZero σ
       void $ requireStar ty
       a' <- typeTerm' a ann
-      b' <- typeTerm' b ann
+      av <- evalTC a'
+      b' <- withLocal (Annotation mempty av) $ typeTerm' b ann
       pure $ Typed.Sig π a' b' ann
     IR.Pair' s t _ -> do
       (π, a, b) <- requireSig ty
@@ -375,6 +378,7 @@ useLocal π var = do
         Just ρ' -> pure (Eval.weakBy w ty, Annotation ρ' ty : ctx)
         Nothing -> throwTC (InsufficientUsage π ρ)
     go w i (b : ctx) = second (b :) <$> go (w + 1) (i - 1) ctx
+    -- TODO split @go@ into lookup and actual-work functions
 
 usePatVar ::
   ( HasPatBinds primTy primVal m,

@@ -116,7 +116,7 @@ class CanApply a where
   -- | Type to use for arguments.
   type Arg a
 
-  -- | Default to wrap 'a' into an 'Arg a'.
+  -- | Default to wrap @a@ into an @'Arg' a@.
   type Arg a = a
 
   -- | Lift a value into an argument.
@@ -139,7 +139,7 @@ class CanApply a where
   -- | Apply using a non-empty list of arguments
   apply :: a -> NonEmpty (Arg a) -> Either (ApplyError a) a
 
--- | Apply a function 'wrap' over the result of an application.
+-- | Apply a function @wrap@ over the result of an application.
 mapApplyErr ::
   ( ApplyErrorExtra a ~ ApplyErrorExtra b,
     Arg a ~ a,
@@ -160,11 +160,11 @@ mapApplyErr wrap = bimap wrap' wrap
 applyMaybe :: CanApply a => a -> NonEmpty (Arg a) -> Maybe a
 applyMaybe f xs = either (const Nothing) Just $ apply f xs
 
--- | Version of 'apply' that requires at least one argument.
+-- | Version of 'apply' for exactly one argument.
 apply1 :: CanApply a => a -> Arg a -> Either (ApplyError a) a
 apply1 f x = apply f (x :| [])
 
--- | Version of 'apply1' that requires at returns a Maybe.
+-- | Version of 'apply1' that returns a Maybe.
 apply1Maybe :: CanApply a => a -> Arg a -> Maybe a
 apply1Maybe f x = applyMaybe f (x :| [])
 
