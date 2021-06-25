@@ -976,8 +976,15 @@ ski1CompNatTy = one `ann` natT
 
 dependentPairComp :: T.TestTree
 dependentPairComp =
-  T.testGroup "Dependent pair typing" $
-    [shouldCheck Nat.t boxNat boxNatAnn]
+  T.testGroup
+    "Dependent pair typing"
+    [ shouldCheck Nat.t boxNat boxNatAnn,
+      shouldCheck All.t unitTypeUnitValuePair allAnn,
+      shouldFail All.t unitTypeNatValuePair allAnn,
+      shouldFail All.t natTypeUnitValuePair allAnn,
+      shouldCheck All.t natTypeNatValuePair allAnn,
+      shouldCheck All.t (allSig 0) (starAnn 1)
+    ]
 
 twoNatsAnn :: NatAnnotation
 twoNatsAnn = one `ann` IR.VSig one natT natT
@@ -990,6 +997,33 @@ boxNatAnn = one `ann` IR.VSig mempty (IR.VStar 0) (IR.VBound 0)
 
 boxNat :: NatTerm
 boxNat = IR.Pair natT' (nat 1)
+
+allAnn :: AllAnnotation
+allAnn = one `ann` IR.VSig mempty (IR.VStar 0) (IR.VBound 0)
+
+allNatTy :: AllTerm
+allNatTy = IR.PrimTy (All.NatTy Nat.Ty)
+
+allNat :: Natural -> AllTerm
+allNat n = IR.Prim (All.NatVal (Nat.Val n))
+
+unitTypeUnitValuePair :: AllTerm
+unitTypeUnitValuePair = IR.Pair IR.UnitTy IR.Unit
+
+unitTypeNatValuePair :: AllTerm
+unitTypeNatValuePair = IR.Pair IR.UnitTy (allNat 0)
+
+natTypeUnitValuePair :: AllTerm
+natTypeUnitValuePair = IR.Pair allNatTy IR.Unit
+
+natTypeNatValuePair :: AllTerm
+natTypeNatValuePair = IR.Pair allNatTy (allNat 0)
+
+starAnn :: Natural -> AllAnnotation
+starAnn n = zero `ann` IR.VStar n
+
+allSig :: Natural -> AllTerm
+allSig n = IR.Sig (Usage.SNat 0) (IR.Star n) (IR.Elim (IR.Bound 0))
 
 add :: NatElim
 add = IR.Ann Usage.Omega (IR.Prim Nat.Add) addTyT 0
