@@ -49,4 +49,5 @@ execTC ::
   GlobalsT primTy primVal ->
   EnvTypecheck primTy primVal a ->
   (Either (TypecheckError primTy primVal) a, EnvCtx primTy primVal)
+  -- TODO just return fst
 execTC = TC.exec

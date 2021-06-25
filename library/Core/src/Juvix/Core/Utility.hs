@@ -9,7 +9,7 @@
 -- - Pattern Variables are given to help set the mapping between
 --   patterns and symbols
 -- - =HasNamStack= talks about the mapping between names in the =HR=
---   form and the =De Brunjin= Index
+--   form and the =De Bruijn= Index
 module Juvix.Core.Utility
   ( -- * Capabilities
     HasNameStack,
