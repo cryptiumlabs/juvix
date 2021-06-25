@@ -8,6 +8,7 @@ packages:
 - ../../Context
 - ../../Translate
 - ../../Frontend
+- ../../Sexp
 
 extra-deps:
 
