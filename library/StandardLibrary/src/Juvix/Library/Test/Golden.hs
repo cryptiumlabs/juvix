@@ -9,6 +9,7 @@ module Juvix.Library.Test.Golden
     compareGolden,
     mkGoldenTest,
     discoverGoldenTests,
+    discoverGoldenTestsNoQuotes,
     expectSuccess,
     expectFailure,
   )
@@ -82,6 +83,17 @@ compareGolden golden upcoming
   where
     resultToText :: Show a => a -> Text
     resultToText = Text.pack . show
+
+
+discoverGoldenTestsNoQuotes ::
+  (FilePath -> FilePath) ->
+  [Char] ->
+  (FilePath -> IO NoQuotes) ->
+  -- | the directory in which to recursively look for golden tests
+  FilePath ->
+  IO TestTree
+discoverGoldenTestsNoQuotes withJuvixRootPath ext f p = discoverGoldenTests [".ju"] ext getGolden f (withJuvixRootPath p)
+
 
 -- | Discover golden tests.
 discoverGoldenTests ::
