@@ -13,9 +13,8 @@ import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import qualified StmContainers.Map as STM
-import Text.Read ( Read(readsPrec) )
-import System.IO.Unsafe ( unsafePerformIO )
-
+import System.IO.Unsafe (unsafePerformIO)
+import Text.Read (Read (readsPrec))
 
 data T term ty sumRep = T
   { currentNameSpace :: Record term ty sumRep,
@@ -114,10 +113,10 @@ data UsedIn = Func [Symbol] | NotUsed | Yes deriving (Show, Read, Eq, Generic)
 
 instance Show (STM.Map a b) where
   show _ = "map"
+
 instance Read (STM.Map a b) where
   -- I'm sorry :(
   readsPrec _ _ = [(unsafePerformIO $ atomically STM.new, "")]
-
 
 instance Show (STM (STM.Map a b)) where
   show _ = "STM map"

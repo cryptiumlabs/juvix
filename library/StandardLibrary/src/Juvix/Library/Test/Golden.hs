@@ -17,6 +17,7 @@ where
 import qualified Data.ByteString as ByteString (writeFile)
 import Data.String (String)
 import qualified Data.Text as Text
+import qualified Data.Text.Lazy as TLazy
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import System.Directory (createDirectoryIfMissing)
@@ -25,11 +26,9 @@ import Test.Tasty
 import qualified Test.Tasty.Silver as T
 import qualified Test.Tasty.Silver.Advanced as T
 import Text.Pretty.Simple (pShowNoColor)
-import Text.Read (Read (..))
 import qualified Text.Pretty.Simple as Pretty
-import qualified Data.Text.Lazy as TLazy
+import Text.Read (Read (..))
 import qualified Prelude (show)
-
 
 type FileExtension = String
 
@@ -155,7 +154,7 @@ expectFailure v = do
 
 printCompactParens :: Show a => a -> TLazy.Text
 printCompactParens =
-    Pretty.pShowOpt
+  Pretty.pShowOpt
     ( Pretty.defaultOutputOptionsNoColor
         { Pretty.outputOptionsCompactParens = True,
           Pretty.outputOptionsCompact = True

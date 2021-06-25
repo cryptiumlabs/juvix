@@ -11,7 +11,7 @@ module Juvix.Context.Precedence
 where
 
 import Data.Data
-import Juvix.Library (Eq, Int, Show, Read, Symbol)
+import Juvix.Library (Eq, Int, Read, Show, Symbol)
 
 data Associativity
   = Left

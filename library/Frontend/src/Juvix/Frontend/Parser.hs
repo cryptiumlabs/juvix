@@ -18,7 +18,7 @@ module Juvix.Frontend.Parser
     cond,
     prefixSymbol,
     moduleOpen,
-    moduleName
+    moduleName,
   )
 where
 

@@ -4,11 +4,10 @@ import Control.Arrow (left)
 import qualified Data.ByteString as ByteString (readFile)
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Juvix.Context as Context
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.Environment as Environment
 import qualified Juvix.Contextify.Passes as Contextify
-import qualified Juvix.Library.Feedback as Feedback
-import qualified Juvix.Context as Context
 import qualified Juvix.Desugar.Passes as Pass
 import qualified Juvix.Frontend as Frontend
 import qualified Juvix.Frontend.Parser as Parser
@@ -16,16 +15,17 @@ import qualified Juvix.Frontend.Sexp as SexpTrans
 import Juvix.Frontend.Types (ModuleOpen (..), TopLevel)
 import Juvix.Frontend.Types.Base (Header)
 import Juvix.Library
+import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Parser (Parser)
 import qualified Juvix.Library.Parser as J
-import qualified Juvix.Sexp as Sexp
 import Juvix.Library.Test.Golden
+import qualified Juvix.Sexp as Sexp
 import qualified System.FilePath as FP
 import Test.Tasty
 import qualified Text.Megaparsec as P
 import qualified Text.Megaparsec.Byte as P
-import Prelude (error, String)
+import Prelude (String, error)
 
 juvixRootPath :: FilePath
 juvixRootPath = "../../"
@@ -39,7 +39,6 @@ withJuvixStdlibPath p = juvixRootPath <> "stdlib/" <> p
 
 withJuvixExamplesPath :: FilePath -> FilePath
 withJuvixExamplesPath p = juvixRootPath <> "test/examples/" <> p
-
 {-# INLINE withJuvixExamplesPath #-}
 
 top :: IO TestTree
@@ -122,7 +121,7 @@ discoverGoldenTestsDesugar ::
   IO [TestTree]
 discoverGoldenTestsDesugar =
   discoverGoldenTestPasses
-    (\ pass -> expectSuccess . toNoQuotes (handleDiscoverFunction pass))
+    (\pass -> expectSuccess . toNoQuotes (handleDiscoverFunction pass))
     discoverDesugar
   where
     handleDiscoverFunction desugarPass filePath =
@@ -134,7 +133,7 @@ discoverGoldenTestsContext ::
   IO [TestTree]
 discoverGoldenTestsContext =
   discoverGoldenTestPasses
-    (\ contextPass -> expectSuccess . toNoQuotes (handleDiscoverFunction contextPass))
+    (\contextPass -> expectSuccess . toNoQuotes (handleDiscoverFunction contextPass))
     discoverContext
   where
     handleDiscoverFunction contextPass filePath = do
@@ -262,8 +261,10 @@ resolveModuleContext names = do
     Right ctx -> pure ctx
     Left _err -> Feedback.fail "not valid pass"
 
-resolveInfixContext :: (MonadIO m, MonadFail m) =>
-                      NonEmpty (NameSymbol.T, [Sexp.T]) -> m Environment.SexpContext
+resolveInfixContext ::
+  (MonadIO m, MonadFail m) =>
+  NonEmpty (NameSymbol.T, [Sexp.T]) ->
+  m Environment.SexpContext
 resolveInfixContext names = do
   ctx <- resolveModuleContext names
   let (infix', _) = Environment.runM (Contextify.inifixSoloPass ctx)
