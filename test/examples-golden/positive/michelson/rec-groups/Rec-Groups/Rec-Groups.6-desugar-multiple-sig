@@ -1,4 +1,0 @@
-[
-    ( "open" "Rec-Groups-Helper" )
-,
-    ( ":defsig-match" "main" "foo" ( () "foo" ) ) ]

@@ -5,9 +5,7 @@ Ann
     , term = LamM
         { capture = []
         , arguments =
-            [ "0" :| []
-            , "1" :| []
-            ]
+            [ "0" :| [], "1" :| [] ]
         , body = Ann
             { usage = Omega
             , type' = PrimTy PField
@@ -19,29 +17,15 @@ Ann
                     , term = Prim
                         ( Return
                             { retType = PrimType
-                                { getPrimType = PField :|
-                                    [ PField
-                                    , PField
-                                    ]
-                                }
-                            , retTerm = PAdd
-                            }
-                        )
-                    }
-                )
+                                { getPrimType = PField :| [ PField, PField ] }
+                            , retTerm = PAdd } ) } )
                 [ Ann
                     { usage = Omega
                     , type' = PrimTy PField
                     , term = Var
-                        ( "0" :| [] )
-                    }
+                        ( "0" :| [] ) }
                 , Ann
                     { usage = Omega
                     , type' = PrimTy PField
                     , term = Var
-                        ( "1" :| [] )
-                    }
-                ]
-            }
-        }
-    }
+                        ( "1" :| [] ) } ] } } }

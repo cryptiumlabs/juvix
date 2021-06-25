@@ -2,13 +2,9 @@ Right
     ( Header
         ( "MainMultArgs" :| [] )
         [ ModuleOpen
-            ( Open
-                ( "Prelude" :| [] )
-            )
+            ( Open ( "Prelude" :| [] ) )
         , ModuleOpen
-            ( Open
-                ( "Circuit" :| [] )
-            )
+            ( Open ( "Circuit" :| [] ) )
         , Signature
             ( Sig
                 { signatureName = "+"
@@ -24,32 +20,17 @@ Right
                                     ( "field" :| [] )
                                 , infixOp = "->" :| []
                                 , infixRight = Name
-                                    ( "field" :| [] )
-                                }
-                            )
-                        }
-                    )
-                , signatureConstraints = []
-                }
-            )
+                                    ( "field" :| [] ) } ) } )
+                , signatureConstraints = [] } )
         , Function
             ( Func
                 ( Like
                     { functionLikedName = "+"
                     , functionLikeArgs = []
                     , functionLikeBody = Body
-                        ( Primitive
-                            ( Prim
-                                ( "Circuit" :| [ "add" ] )
-                            )
-                        )
-                    }
-                )
-            )
+                        ( Primitive ( Prim ( "Circuit" :| [ "add" ] ) ) ) } ) )
         , Declaration
-            ( Infixivity
-                ( AssocL "+" 5 )
-            )
+            ( Infixivity ( AssocL "+" 5 ) )
         , Signature
             ( Sig
                 { signatureName = "main"
@@ -65,14 +46,8 @@ Right
                                     ( "field" :| [] )
                                 , infixOp = "->" :| []
                                 , infixRight = Name
-                                    ( "field" :| [] )
-                                }
-                            )
-                        }
-                    )
-                , signatureConstraints = []
-                }
-            )
+                                    ( "field" :| [] ) } ) } )
+                , signatureConstraints = [] } )
         , Function
             ( Func
                 ( Like
@@ -81,16 +56,11 @@ Right
                         [ ConcreteA
                             ( MatchLogic
                                 { matchLogicContents = MatchName "x"
-                                , matchLogicNamed = Nothing
-                                }
-                            )
+                                , matchLogicNamed = Nothing } )
                         , ConcreteA
                             ( MatchLogic
                                 { matchLogicContents = MatchName "y"
-                                , matchLogicNamed = Nothing
-                                }
-                            )
-                        ]
+                                , matchLogicNamed = Nothing } ) ]
                     , functionLikeBody = Body
                         ( Infix
                             ( Inf
@@ -98,12 +68,4 @@ Right
                                     ( "x" :| [] )
                                 , infixOp = "+" :| []
                                 , infixRight = Name
-                                    ( "y" :| [] )
-                                }
-                            )
-                        )
-                    }
-                )
-            )
-        ]
-    )
+                                    ( "y" :| [] ) } ) ) } ) ) ] )

@@ -1,8 +1,0 @@
-[
-    ( "open" "A" )
-,
-    ( "open" "B" )
-,
-    ( ":defsig-match" "fi" 3 ( () 3 ) )
-,
-    ( ":defsig-match" "main" 3 ( () "fi" ) ) ]

@@ -1,21 +1,14 @@
-"Ann
+Ann
     { usage = Omega
     , type' = Pi Omega
         ( PrimTy
             ( Application Pair
-                ( PrimTy ( Ty TNat : ) :|
-                    [ PrimTy ( Ty TNat : ) ]
-                )
-            )
-        )
+                ( PrimTy ( Ty TNat : ) :| [ PrimTy ( Ty TNat : ) ] ) ) )
         ( PrimTy
             ( Application Pair
                 ( Application List
                     ( PrimTy ( Ty TOperation : ) :| [] ) :|
-                    [ PrimTy ( Ty TNat : ) ]
-                )
-            )
-        )
+                    [ PrimTy ( Ty TNat : ) ] ) ) )
     , term = LamM
         { capture = []
         , arguments =
@@ -26,31 +19,21 @@
                 ( Application Pair
                     ( Application List
                         ( PrimTy ( Ty TOperation : ) :| [] ) :|
-                        [ PrimTy ( Ty TNat : ) ]
-                    )
-                )
+                        [ PrimTy ( Ty TNat : ) ] ) )
             , term = AppM
                 ( Ann
                     { usage = Omega
                     , type' = Pi Omega
                         ( PrimTy
                             ( Application List
-                                ( PrimTy ( Ty TOperation : ) :| [] )
-                            )
-                        )
+                                ( PrimTy ( Ty TOperation : ) :| [] ) ) )
                         ( Pi Omega
-                            ( PrimTy
-                                ( PrimTy ( Ty TNat : ) )
-                            )
+                            ( PrimTy ( PrimTy ( Ty TNat : ) ) )
                             ( PrimTy
                                 ( Application Pair
                                     ( Application List
                                         ( PrimTy ( Ty TOperation : ) :| [] ) :|
-                                        [ PrimTy ( Ty TNat : ) ]
-                                    )
-                                )
-                            )
-                        )
+                                        [ PrimTy ( Ty TNat : ) ] ) ) ) )
                     , term = Prim
                         ( Return
                             { retType = PrimType
@@ -60,31 +43,19 @@
                                     , Application Pair
                                         ( Application List
                                             ( PrimTy ( Ty TOperation : ) :| [] ) :|
-                                            [ PrimTy ( Ty TNat : ) ]
-                                        )
-                                    ]
-                                }
-                            , retTerm = Inst PAIR
-                            }
-                        )
-                    }
-                )
+                                            [ PrimTy ( Ty TNat : ) ] ) ] }
+                            , retTerm = Inst PAIR } ) } )
                 [ Ann
                     { usage = Omega
                     , type' = PrimTy
                         ( Application List
-                            ( PrimTy ( Ty TOperation : ) :| [] )
-                        )
+                            ( PrimTy ( Ty TOperation : ) :| [] ) )
                     , term = Prim
                         ( Return
                             { retType = PrimType
                                 { getPrimType = Application List
-                                    ( PrimTy ( Ty TOperation : ) :| [] ) :| []
-                                }
-                            , retTerm = Nil
-                            }
-                        )
-                    }
+                                    ( PrimTy ( Ty TOperation : ) :| [] ) :| [] }
+                            , retTerm = Nil } ) }
                 , Ann
                     { usage = Omega
                     , type' = PrimTy
@@ -93,30 +64,17 @@
                         ( Ann
                             { usage = Omega
                             , type' = Pi Omega
-                                ( PrimTy
-                                    ( PrimTy ( Ty TNat : ) )
-                                )
+                                ( PrimTy ( PrimTy ( Ty TNat : ) ) )
                                 ( Pi Omega
-                                    ( PrimTy
-                                        ( PrimTy ( Ty TNat : ) )
-                                    )
-                                    ( PrimTy
-                                        ( PrimTy ( Ty TNat : ) )
-                                    )
-                                )
+                                    ( PrimTy ( PrimTy ( Ty TNat : ) ) )
+                                    ( PrimTy ( PrimTy ( Ty TNat : ) ) ) )
                             , term = Prim
                                 ( Return
                                     { retType = PrimType
                                         { getPrimType = PrimTy ( Ty TNat : ) :|
                                             [ PrimTy ( Ty TNat : )
-                                            , PrimTy ( Ty TNat : )
-                                            ]
-                                        }
-                                    , retTerm = AddI
-                                    }
-                                )
-                            }
-                        )
+                                            , PrimTy ( Ty TNat : ) ] }
+                                    , retTerm = AddI } ) } )
                         [ Ann
                             { usage = Omega
                             , type' = PrimTy
@@ -126,10 +84,7 @@
                                     { retType = PrimType
                                         { getPrimType = PrimTy ( Ty TNat : ) :| [] }
                                     , retTerm = Constant
-                                        ( ValueInt 4 )
-                                    }
-                                )
-                            }
+                                        ( ValueInt 4 ) } ) }
                         , Ann
                             { usage = Omega
                             , type' = PrimTy
@@ -139,13 +94,4 @@
                                     { retType = PrimType
                                         { getPrimType = PrimTy ( Ty TNat : ) :| [] }
                                     , retTerm = Constant
-                                        ( ValueInt 6 )
-                                    }
-                                )
-                            }
-                        ]
-                    }
-                ]
-            }
-        }
-    }"
+                                        ( ValueInt 6 ) } ) } ] } ] } } }

@@ -1,6 +1,0 @@
-[
-    ( ":defsig-match" "ty_" () ( () ( ":primitive" "Builtin.Type" ) ) )
-,
-    ( ":defsig-match" "ty" ( "ty_" 1 ) ( () ( "ty_" 0 ) ) )
-,
-    ( ":defsig-match" "foo" "ty" ( () "ty" ) ) ]

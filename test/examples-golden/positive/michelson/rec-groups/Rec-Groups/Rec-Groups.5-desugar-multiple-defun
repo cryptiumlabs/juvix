@@ -1,6 +1,0 @@
-[
-    ( "open" "Rec-Groups-Helper" )
-,
-    ( ":defsig" "main" "foo" )
-,
-    ( ":defun-match" "main" ( () "foo" ) ) ]

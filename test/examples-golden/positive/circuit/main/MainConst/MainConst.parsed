@@ -2,35 +2,20 @@ Right
     ( Header
         ( "MainConst" :| [] )
         [ ModuleOpen
-            ( Open
-                ( "Prelude" :| [] )
-            )
+            ( Open ( "Prelude" :| [] ) )
         , ModuleOpen
-            ( Open
-                ( "Circuit" :| [] )
-            )
+            ( Open ( "Circuit" :| [] ) )
         , Signature
             ( Sig
                 { signatureName = "main"
                 , signatureUsage = Nothing
                 , signatureArrowType = Name
                     ( "field" :| [] )
-                , signatureConstraints = []
-                }
-            )
+                , signatureConstraints = [] } )
         , Function
             ( Func
                 ( Like
                     { functionLikedName = "main"
                     , functionLikeArgs = []
                     , functionLikeBody = Body
-                        ( Constant
-                            ( Number
-                                ( Integer' 3 )
-                            )
-                        )
-                    }
-                )
-            )
-        ]
-    )
+                        ( Constant ( Number ( Integer' 3 ) ) ) } ) ) ] )
