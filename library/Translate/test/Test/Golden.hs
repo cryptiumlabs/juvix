@@ -25,7 +25,7 @@ import qualified System.FilePath as FP
 import Test.Tasty
 import qualified Text.Megaparsec as P
 import qualified Text.Megaparsec.Byte as P
-import Prelude (error)
+import Prelude (error, String)
 
 juvixRootPath :: FilePath
 juvixRootPath = "../../"
@@ -53,18 +53,29 @@ top =
 -- Parse Test Frame
 --------------------------------------------------------------------------------
 
-posNegTests ::
+positiveTests ::
   (Applicative f) => TestName -> (FilePath -> f [TestTree]) -> f TestTree
-posNegTests testName discoverFunction =
+positiveTests testName discoverFunction =
   testGroup testName
     <$> sequenceA
       [ testGroup "positive"
-          <$> discoverFunction
-            (withJuvixExamplesPath "positive"),
-        testGroup "negative"
-          <$> discoverFunction
-            (withJuvixExamplesPath "negative")
+          <$> discoverFunction (withJuvixExamplesPath "positive")
       ]
+
+negativeTests ::
+  (Applicative f) => TestName -> (FilePath -> f [TestTree]) -> f TestTree
+negativeTests testName discoverFunction =
+  testGroup testName
+    <$> sequenceA
+      [ testGroup "negative"
+          <$> discoverFunction (withJuvixExamplesPath "negative")
+      ]
+
+--------------------------------------------------------------------------------
+-- Feedback
+--------------------------------------------------------------------------------
+
+type Feedback = Feedback.FeedbackT [] String IO
 
 --------------------------------------------------------------------------------
 -- Parse contracts (Golden tests)
@@ -76,13 +87,13 @@ parseContract file = do
 
 parseTests :: IO TestTree
 parseTests =
-  posNegTests "parse" (fmap (: []) . discoverGoldenTestsParse)
+  positiveTests "parse" (fmap (: []) . discoverGoldenTestsParse)
 
 desugartests :: IO TestTree
-desugartests = posNegTests "desugar" discoverGoldenTestsDesugar
+desugartests = positiveTests "desugar" discoverGoldenTestsDesugar
 
 contextTests :: IO TestTree
-contextTests = posNegTests "context" discoverGoldenTestsContext
+contextTests = positiveTests "context" discoverGoldenTestsContext
 
 -- | Discover golden tests for input files with extension @.ju@ and output
 -- files with extension @.parsed@.
@@ -110,7 +121,9 @@ discoverGoldenTestsDesugar ::
   FilePath ->
   IO [TestTree]
 discoverGoldenTestsDesugar =
-  discoverGoldenTestPasses handleDiscoverFunction discoverDesugar
+  discoverGoldenTestPasses
+    (\ pass -> expectSuccess . toNoQuotes (handleDiscoverFunction pass))
+    discoverDesugar
   where
     handleDiscoverFunction desugarPass filePath =
       desugarPass . snd <$> sexp filePath
@@ -120,14 +133,10 @@ discoverGoldenTestsContext ::
   FilePath ->
   IO [TestTree]
 discoverGoldenTestsContext =
-  undefined
-  -- discoverGoldenTestPasses (expectSuccess . toNoQuotes . handleDiscoverFunction) discoverContext
+  discoverGoldenTestPasses
+    (\ contextPass -> expectSuccess . toNoQuotes (handleDiscoverFunction contextPass))
+    discoverContext
   where
-    handleDiscoverFunction ::
-       (MonadIO m, MonadFail m) =>
-       (NonEmpty (NameSymbol.T, [Sexp.T]) -> m Environment.SexpContext) ->
-       FilePath ->
-       m (Context.Record Sexp.T Sexp.T Sexp.T)
     handleDiscoverFunction contextPass filePath = do
       let directory = FP.dropFileName filePath
       deps <- liftIO (fmap (directory <>) <$> findFileDependencies filePath)
@@ -190,8 +199,7 @@ discoverDesugar =
     (fmap show ([0 ..] :: [Integer]))
 
 discoverContext ::
-  (MonadIO m, MonadFail m) =>
-  [(NonEmpty (NameSymbol.T, [Sexp.T]) -> m Environment.SexpContext, [Char])]
+  [(NonEmpty (NameSymbol.T, [Sexp.T]) -> Feedback Environment.SexpContext, [Char])]
 discoverContext =
   discoverPrefix
     [ (contextifySexp, "contextify-sexp"),
@@ -288,7 +296,7 @@ handleContextPass desuagredSexp contextPass =
         maybeDef ->
           Feedback.fail ("Definition is not a Record:" <> show maybeDef)
 
-sexp :: (MonadIO m, MonadFail m) => FilePath -> m (NameSymbol.T, [Sexp.T])
+sexp :: FilePath -> Feedback (NameSymbol.T, [Sexp.T])
 sexp path = do
   fileRead <- liftIO $ Frontend.ofSingleFile path
   case fileRead of
