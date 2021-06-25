@@ -27,6 +27,8 @@ import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
+import qualified Data.IntMap.Strict as PM
+
 import Juvix.Library
 
 type NoExtensions ext primTy primVal =
@@ -61,23 +63,24 @@ inlineAllGlobals ::
   ) =>
   IR.Term' ext primTy primVal ->
   LookupFun ext primTy primVal ->
+  IR.PatternMap IR.GlobalName ->
   IR.Term' ext primTy primVal
-inlineAllGlobals t map =
+inlineAllGlobals t lookupFun patternMap =
   case t of
     IR.Unit' {} -> t
     IR.UnitTy' {} -> t
     IR.Pair' p1 p2 ann ->
-      IR.Pair' (inlineAllGlobals p1 map) (inlineAllGlobals p2 map) ann
+      IR.Pair' (inlineAllGlobals p1 lookupFun patternMap) (inlineAllGlobals p2 lookupFun patternMap) ann
     IR.Elim' elim ann ->
-      IR.Elim' (inlineAllGlobalsElim elim map) ann
+      IR.Elim' (inlineAllGlobalsElim elim lookupFun patternMap) ann
     IR.Sig' u t1 t2 ann ->
-      IR.Sig' u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) ann
+      IR.Sig' u (inlineAllGlobals t1 lookupFun patternMap) (inlineAllGlobals t2 lookupFun patternMap) ann
     IR.Let' u e t ann ->
-      IR.Let' u (inlineAllGlobalsElim e map) (inlineAllGlobals t map) ann
+      IR.Let' u (inlineAllGlobalsElim e lookupFun patternMap) (inlineAllGlobals t lookupFun patternMap) ann
     IR.Lam' t ann ->
-      IR.Lam' (inlineAllGlobals t map) ann
+      IR.Lam' (inlineAllGlobals t lookupFun patternMap) ann
     IR.Pi' u t1 t2 ann ->
-      IR.Pi' u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) ann
+      IR.Pi' u (inlineAllGlobals t1 lookupFun patternMap) (inlineAllGlobals t2 lookupFun patternMap) ann
     IR.Prim' {} -> t
     IR.PrimTy' {} -> t
     IR.Star' {} -> t
@@ -89,16 +92,17 @@ inlineAllGlobalsElim ::
   ) =>
   IR.Elim' ext primTy primVal ->
   LookupFun ext primTy primVal ->
+  IR.PatternMap IR.GlobalName ->
   IR.Elim' ext primTy primVal
-inlineAllGlobalsElim t map =
+inlineAllGlobalsElim t lookupFun patternMap =
   case t of
     IR.Bound' {} -> t
-    IR.Free' (IR.Global name) _ann -> fromMaybe t $ map name
-    IR.Free' {} -> t
+    IR.Free' (IR.Global name) _ann -> fromMaybe t $ lookupFun name
+    IR.Free' (IR.Pattern i) _ -> fromMaybe t $ PM.lookup i patternMap >>= lookupFun
     IR.App' elim term ann ->
-      IR.App' (inlineAllGlobalsElim elim map) (inlineAllGlobals term map) ann
+      IR.App' (inlineAllGlobalsElim elim lookupFun patternMap) (inlineAllGlobals term lookupFun patternMap) ann
     IR.Ann' u t1 t2 uni ann ->
-      IR.Ann' u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) uni ann
+      IR.Ann' u (inlineAllGlobals t1 lookupFun patternMap) (inlineAllGlobals t2 lookupFun patternMap) uni ann
     IR.ElimX {} -> t
 
 -- annotations are discarded

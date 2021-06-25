@@ -40,7 +40,8 @@ import qualified System.IO.Temp as Temp
 import qualified Text.Megaparsec as P
 import qualified Text.PrettyPrint.Leijen.Text as Pretty
 import qualified Juvix.Core.HR.Types as HR
-
+import qualified Data.HashMap.Strict as HM
+import qualified Data.IntMap.Strict as PM
 class HasBackend b where
   type Ty b = ty | ty -> b
   type Val b = val | val -> b
@@ -85,17 +86,17 @@ class HasBackend b where
       Eq (Val b),
       Show (Err b),
       Show (Val b),
-      CanApply (Ty b),
-      CanApply (TypedPrim (Ty b) (Val b)),
-      IR.HasWeak (Val b),
-      IR.HasSubstValue IR.NoExt (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
-      IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
       Show (ApplyErrorExtra (Ty b)),
       Show (ApplyErrorExtra (TypedPrim (Ty b) (Val b))),
       Show (Arg (Ty b)),
       Show (Arg (TypedPrim (Ty b) (Val b))),
+      CanApply (Ty b),
+      CanApply (TypedPrim (Ty b) (Val b)),
+      IR.HasWeak (Val b),
+      IR.HasSubstValue IR.NoExt (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
       IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (Val b) (Ty b),
       IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (Val b) (Val b),
+      IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
       IR.HasPatSubstTerm (OnlyExts.T TypeChecker.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b)
     ) =>
     Context.T Sexp.T Sexp.T Sexp.T ->
@@ -103,10 +104,13 @@ class HasBackend b where
     Ty b ->
     Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
   typecheck' ctx param ty = do
-    let res = Pipeline.contextToCore ctx param
+    let (res, state) = Pipeline.contextToCore ctx param
     case res of
       Right (FF.CoreDefs _order globals) -> do
         let globalDefs = HM.mapMaybe toCoreDef globals
+        -- Why do we convert:
+        --      RawGlobal (Ty b) (Val b) 
+        -- into RawGlobal (Ty b) (TypedPrim (Ty b) (Val b))
         let convGlobals = map (convGlobal ty) globalDefs
             newGlobals = HM.map (unsafeEvalGlobal convGlobals) convGlobals
             lookupGlobal = IR.rawLookupFun' globalDefs
@@ -117,7 +121,8 @@ class HasBackend b where
               Nothing -> do
                 Feedback.fail "Unable to convert main to lambda"
               Just (IR.Ann usage term ty _) -> do
-                let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
+                let patternMap = HM.toList (FF.patVars state) |> map swap |> PM.fromList
+                let inlinedTerm = IR.inlineAllGlobals term lookupGlobal patternMap
                 (res, _) <- liftIO $ exec (CorePipeline.coreToAnn @(Err b) inlinedTerm usage ty) param newGlobals
                 case res of
                   Right r -> do

@@ -373,8 +373,24 @@ execEnv ::
   P.Parameterisation primTy primVal ->
   Env primTy primVal a ->
   Either (Error primTy primVal) a
-execEnv ctx param (Env env) =
-  fst $ runIdentity $ runStateT (runExceptT env) initState
+execEnv ctx param env =
+  fst $ runEnv ctx param env
+
+evalEnv ::
+  Ctx.T Sexp.T Sexp.T Sexp.T ->
+  P.Parameterisation primTy primVal ->
+  Env primTy primVal a ->
+  FFState primTy primVal
+evalEnv ctx param env =
+  snd $ runEnv ctx param env
+
+runEnv ::
+  Ctx.T Sexp.T Sexp.T Sexp.T ->
+  P.Parameterisation primTy primVal ->
+  Env primTy primVal a ->
+  (Either (Error primTy primVal) a, FFState primTy primVal)
+runEnv ctx param (Env env) =
+  runIdentity $ runStateT (runExceptT env) initState
   where
     initState =
       FFState
@@ -385,6 +401,5 @@ execEnv ctx param (Env env) =
           patVars = mempty,
           nextPatVar = 0
         }
-
 throwFF :: HasThrowFF primTy primVal m => Error primTy primVal -> m a
 throwFF = throw @"fromFrontendError"

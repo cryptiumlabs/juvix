@@ -334,7 +334,7 @@ coreify ::
     )
 coreify juvix options = do
   Right ctx <- contextifyDesugar juvix options
-  pure $ Pipeline.contextToCore ctx (param options)
+  pure $ fst $ Pipeline.contextToCore ctx (param options)
 
 coreifyFile ::
   (Show primTy, Show primVal) =>
@@ -347,7 +347,7 @@ coreifyFile ::
     )
 coreifyFile juvix options = do
   Right ctx <- contextifyDesugarFile juvix options
-  pure $ Pipeline.contextToCore ctx (param options)
+  pure $ fst $ Pipeline.contextToCore ctx (param options)
 
 ----------------------------------------
 -- Coreify Examples

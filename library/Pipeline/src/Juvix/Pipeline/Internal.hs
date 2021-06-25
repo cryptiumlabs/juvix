@@ -116,9 +116,9 @@ contextToCore ::
   (Show primTy, Show primVal) =>
   Context.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
-  Either (FF.Error primTy primVal) (FF.CoreDefs primTy primVal)
+  (Either (FF.Error primTy primVal) (FF.CoreDefs primTy primVal), FF.FFState primTy primVal)
 contextToCore ctx param =
-  FF.execEnv ctx param do
+  FF.runEnv ctx param do
     newCtx <- Context.mapSumWithName ctx attachConstructor
 
     let ordered = Context.recGroups newCtx
