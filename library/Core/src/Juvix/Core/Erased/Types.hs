@@ -10,7 +10,7 @@ where
 -- import Juvix.Core.Erased.Extend
 import Juvix.Core.Erased.Types.Base
 import qualified Juvix.Core.IR.Typechecker.Types as TC
-import Juvix.Core.IR.Types.Globals
+import qualified Juvix.Core.IR.Types.Globals as IR
 import Juvix.Library hiding (Datatype, Type)
 
 data T
@@ -21,15 +21,15 @@ type TermT primTy primVal = Term (TC.TypedPrim primTy primVal)
 
 extendType "Type" [] [t|T|] (\_ -> defaultExtType)
 
-type Datatype = Datatype' T T
+type Datatype = IR.Datatype' T T
 
-type DataArg = DataArg' T
+type DataArg = IR.DataArg' T
 
-type DataCon = DataCon' T T
+type DataCon = IR.DataCon' T T
 
-type Function = Function' T
+type Function = IR.Function' T
 
-type FunClause primTy primVal = FunClause' T primTy primVal
+type FunClause primTy primVal = IR.FunClause' T primTy primVal
 
 type TypeAssignment primTy = TypeAssignment' T primTy
 
