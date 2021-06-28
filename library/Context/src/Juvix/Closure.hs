@@ -7,7 +7,7 @@ import qualified Juvix.Context as Context
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 
 -- Currently we don't really use the signature however in the future
 -- the mSig will be used to detect the types of modules we will have

@@ -32,6 +32,7 @@ dependencies:
   # Libraries
   ###########################
   - standard-library
+  - Sexp
   - frontend
   - core
   - translate

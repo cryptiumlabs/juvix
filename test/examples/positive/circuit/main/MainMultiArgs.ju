@@ -1,0 +1,12 @@
+mod MainMultArgs where
+
+open Prelude
+open Circuit
+
+sig (+) : field -> field -> field
+let (+) = %Circuit.add
+declare infixl (+) 5
+
+sig main : field -> field -> field
+let main x y = x + y 
+

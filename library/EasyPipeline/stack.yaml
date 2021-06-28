@@ -9,6 +9,8 @@ packages:
 - ../Backends/Michelson
 - ../Pipeline
 - ../Context
+- ../Backends/Plonk
+- ../Sexp
 
 extra-deps:
 

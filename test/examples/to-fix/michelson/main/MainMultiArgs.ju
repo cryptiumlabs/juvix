@@ -1,0 +1,12 @@
+mod MainMultArgs where
+
+open Prelude
+open Michelson
+
+sig (+) : nat -> nat -> nat
+let (+) = %Michelson.add
+declare infixl (+) 5
+
+sig main : nat -> nat -> nat
+let main x y = x + y 
+

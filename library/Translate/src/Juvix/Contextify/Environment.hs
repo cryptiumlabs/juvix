@@ -27,7 +27,7 @@ import qualified Juvix.Context.NameSpace as NameSpace
 import qualified Juvix.Contextify.InfixPrecedence.ShuntYard as Shunt
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import Prelude (error)
 
 data ErrorS

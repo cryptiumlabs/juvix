@@ -6,7 +6,7 @@ module Juvix.Desugar (op) where
 
 import qualified Juvix.Desugar.Passes as Pass
 import Juvix.Library
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 
 -- | @op@ fully desugares the frontend syntax from the original
 -- frontend sexp representation to a form without modules, conditions,

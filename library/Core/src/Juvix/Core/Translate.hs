@@ -6,6 +6,7 @@ module Juvix.Core.Translate
     irToHR,
     irToHRWith,
     hrPatternToIR,
+    hrPatternsToIR,
     hrPatternToIRWith,
     irPatternToHR,
     irPatternToHRWith,
@@ -22,23 +23,33 @@ import Juvix.Core.Utility
 import Juvix.Library hiding (filter)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
+-- | @hrToIR@ runs @hrToIR'@ with an empty stack, see that function for
+-- more documentation
 hrToIR :: HR.Term primTy primVal -> IR.Term primTy primVal
 hrToIR = hrToIRWith mempty
 
 -- contract: no shadowing
 -- TODO - handle this automatically by renaming shadowed vars
+
+-- | @hrToIRWith@ runs @hrToIR'@ with given @pats@. These @pats@ are
+-- used as extra arguments to the algorithm, serving as the global
+-- functions argument to the term itself.
 hrToIRWith ::
-  -- | pattern var <-> name mapping from outer scopes
-  IR.PatternMap NameSymbol.T ->
+  -- | name <-> pattern var mapping from outer scopes
+  HashMap NameSymbol.T IR.PatternVar ->
   HR.Term primTy primVal ->
   IR.Term primTy primVal
 hrToIRWith pats term =
   hrToIR' term
-    |> exec pats mempty
+    |> execSymToPat pats mempty
     |> fst
 
+-- | @hrToIR'@ transforms an HR term into an IR term. The is achieved
+-- by pushing binder variables to the stack. Inside @hrToIR'@ we call
+-- @hrElimToIR'@ for @Elim@'s that lookup the index of stack to get the
+-- correct de Bruijn index.
 hrToIR' ::
-  HasNameStack m =>
+  (HasNameStack m, HasSymToPat m) =>
   HR.Term primTy primVal ->
   m (IR.Term primTy primVal)
 hrToIR' = \case
@@ -66,16 +77,25 @@ hrToIR' = \case
     pure (IR.Let π l b)
   HR.Elim e -> IR.Elim |<< hrElimToIR' e
 
+-- | @hrElimToIR'@ is the @Elim@ form of the algorithm
+-- @hrToIR'@. Namely this is responsible for looking up the index of
+-- the given bound variable to be the de Bruijn index. Names which are
+-- not found are either treated as @Global@ or @Pattern@ variables,
+-- with the latter referring to the function arguments to the term
 hrElimToIR' ::
-  HasNameStack m =>
+  (HasNameStack m, HasSymToPat m) =>
   HR.Elim primTy primVal ->
   m (IR.Elim primTy primVal)
 hrElimToIR' = \case
   HR.Var n -> do
     maybeIndex <- lookupName n
-    pure $ case maybeIndex of
-      Just ind -> IR.Bound (fromIntegral ind)
-      Nothing -> IR.Free (IR.Global n)
+    case maybeIndex of
+      Just ind -> pure $ IR.Bound (fromIntegral ind)
+      Nothing -> do
+        symTable <- get @"symToPat"
+        maybe (IR.Global n) IR.Pattern (symTable HM.!? n)
+          |> IR.Free
+          |> pure
   HR.App f x -> do
     f <- hrElimToIR' f
     x <- hrToIR' x
@@ -85,9 +105,14 @@ hrElimToIR' = \case
     x <- hrToIR' x
     pure (IR.Ann u t x l)
 
+-- | @irToHR@ runs @irToHR'@ with an empty stack, see that function for
+-- more documentation
 irToHR :: IR.Term primTy primVal -> HR.Term primTy primVal
 irToHR = irToHRWith mempty
 
+-- | @irToHRWith@ runs @irToHR'@ with given @pats@ These @pats@ are
+-- used as extra arguments to the algorithm, serving as the global
+-- functions argument to the term itself.
 irToHRWith ::
   -- | pattern var <-> name mapping from outer scopes
   IR.PatternMap NameSymbol.T ->
@@ -95,6 +120,11 @@ irToHRWith ::
   HR.Term primTy primVal
 irToHRWith pats t = fst $ exec pats (varsTerm t) $ irToHR' t
 
+-- | @irToHR'@ transforms an IR term into an HR one. works like
+-- @hrToIR'@ but in reverse. Namely we have binders introduce a newly
+-- generated name to the stack. Inside of @irToHR'@ we then call
+-- @irElimToHR'@ for @Elim's@ that lookup the de Bruijn index to get
+-- the correct generated name
 irToHR' ::
   (HasNames m, HasPatToSym m) =>
   IR.Term primTy primVal ->
@@ -126,6 +156,9 @@ irToHR' = \case
       pure (HR.Let π n l b)
   IR.Elim e -> HR.Elim |<< irElimToHR' e
 
+-- | @irElimToHR'@ is the @Elim@ form of the algoirthm
+-- @irToHR'@. Namely this is responsible for relating the de Bruijn
+-- index with the generated name.
 irElimToHR' ::
   (HasNames m, HasPatToSym m) =>
   IR.Elim primTy primVal ->
@@ -150,18 +183,26 @@ irElimToHR' = \case
     x <- irToHR' x
     pure (HR.Ann u t x l)
 
+-- | @hrPatternsToIR@ works like @hrPatternToIR@ but for a list of variables
+hrPatternsToIR ::
+  Traversable t =>
+  t (HR.Pattern primTy primVal) ->
+  (t (IR.Pattern primTy primVal), HashMap NameSymbol.T IR.PatternVar)
+hrPatternsToIR pats =
+  mapAccumL (swap ... hrPatternToIRWith) mempty pats |> swap
+
 hrPatternToIR ::
   HR.Pattern primTy primVal ->
   (IR.Pattern primTy primVal, HashMap NameSymbol.T IR.PatternVar)
 hrPatternToIR = hrPatternToIRWith mempty
 
 hrPatternToIRWith ::
-  IR.PatternMap NameSymbol.T ->
+  HashMap NameSymbol.T IR.PatternVar ->
   HR.Pattern primTy primVal ->
   (IR.Pattern primTy primVal, HashMap NameSymbol.T IR.PatternVar)
 hrPatternToIRWith pats pat =
   hrPatternToIR' pat
-    |> exec pats mempty
+    |> execSymToPat pats mempty
     |> second symToPat
 
 hrPatternToIR' ::
@@ -233,6 +274,8 @@ varsPattern = \case
   IR.PDot t -> varsTerm t
   IR.PPrim _ -> mempty
 
+-- TODO ∷ the patterns are nice, however this doesn't reflect in the
+-- nextPatVar. If we add a max key function that could fix it
 exec ::
   -- | Existing mapping of names to pattern variables, if any
   IR.PatternMap NameSymbol.T ->
@@ -244,11 +287,19 @@ exec pats avoid (M env) =
   runState env $
     Env
       { nameSupply = filter (`notElem` avoid) names,
-        nextPatVar = 0,
+        nextPatVar =
+          case PM.lookupMax pats of
+            Nothing -> 0
+            Just (k, _) -> succ k,
         nameStack = [],
         patToSym = pats,
         symToPat = PM.toList pats |> map swap |> HM.fromList
       }
+
+-- | @execSymToPat@ works like exec but takes the symtoPat map instead of the patToSym map
+execSymToPat ::
+  HashMap NameSymbol.T IR.PatternVar -> HashSet NameSymbol.T -> M a -> (a, Env)
+execSymToPat pats = exec (HM.toList pats |> map swap |> PM.fromList)
 
 -- TODO separate states for h→i and i→h maybe??
 data Env = Env

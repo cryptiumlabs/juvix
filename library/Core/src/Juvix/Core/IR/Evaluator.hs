@@ -267,7 +267,7 @@ toLambda _ = Nothing
 
 -- | Translate a `RawGlobal'` function definition into an elimination term.
 toLambdaR ::
-  forall ext ext' primTy primVal.
+  forall ext' ext primTy primVal.
   ( EvalPatSubst ext' primTy primVal,
     NoExtensions ext primTy primVal
   ) =>

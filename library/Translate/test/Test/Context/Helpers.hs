@@ -9,7 +9,7 @@ import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Sexp as SexpTrans
 import qualified Juvix.Frontend.Types.Base as Frontend
 import Juvix.Library
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 
 ----------------------------------------------------------------------
 -- Give me sexp terms helpers

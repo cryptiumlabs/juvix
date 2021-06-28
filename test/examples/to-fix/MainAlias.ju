@@ -1,0 +1,18 @@
+mod MainAlias where
+
+open Prelude
+open Circuit
+
+sig (+) : field -> field -> field
+let (+) = %Circuit.add
+declare infixl (+) 5
+
+sig fi : field -> field
+let fi x = x + 3 
+
+-- Fails with:
+-- Exception: FatalError {fatalErrorMessage = "Unable to find variable \"MainAlias\" :| [\"+\"] in fromList [(\"0\" :| [],InputWire 0)]"}
+
+sig main : field -> field
+let main = fi
+

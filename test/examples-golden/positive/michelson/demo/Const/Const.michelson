@@ -1,0 +1,6 @@
+"parameter nat;
+storage nat;
+code { { PUSH nat 10;
+         NIL operation;
+         PAIR;
+         DIP { DROP } } };"

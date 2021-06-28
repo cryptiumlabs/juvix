@@ -12,8 +12,8 @@ import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
+import qualified Juvix.Sexp as Sexp
 import Text.Show (Show (..))
 
 type ReduceEff primTy primVal m =

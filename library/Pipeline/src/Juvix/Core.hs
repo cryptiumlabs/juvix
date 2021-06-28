@@ -21,7 +21,7 @@ import qualified Juvix.FrontendDesugar as Desugar
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.PrettyPrint as PP
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 
 data Error
   = ContextErr Contextify.ResolveErr

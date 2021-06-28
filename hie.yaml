@@ -36,6 +36,11 @@ cradle:
     - path: ./library/Context/test
       component: "Context:test:Context-test"
 
+    - path: ./library/Sexp/src
+      component: "Sexp"
+    - path: ./library/Sexp/test
+      component: "Sexp:test:Sexp-test"
+
     - path: ./library/Translate/src
       component: "translate"
     - path: ./library/Translate/test
