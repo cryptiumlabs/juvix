@@ -195,16 +195,21 @@ evalElim ::
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalElim g e = evalElimWith g rejectExts $ OnlyExts.onlyExtsE e
 
--- | Translate a term into an elimination.
+-- | Translate a function term into an elimination.
+-- The arguments to this function are basically the components of a function.
 -- TODO generalise the @IR.NoExt@s
 toLambda' ::
   forall ext' ext primTy primVal.
   ( EvalPatSubst ext' primTy primVal,
     NoExtensions ext primTy primVal
   ) =>
+  -- | Usage information of the function.
   IR.GlobalUsage ->
+  -- | The type of the function.
   IR.Term primTy primVal ->
+  -- | List of arguments to the function.
   [IR.Pattern' ext primTy primVal] ->
+  -- | The body of the function.
   IR.Term' ext primTy primVal ->
   Maybe (IR.Elim' (OnlyExts.T ext') primTy primVal)
 toLambda' π' ty' pats rhs = do

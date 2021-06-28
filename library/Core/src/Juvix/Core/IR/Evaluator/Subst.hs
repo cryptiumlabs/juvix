@@ -33,7 +33,7 @@ class HasWeak a => HasSubst ext primTy primVal a where
     a
   substWith b i e = to . gsubstWith b i e . from
 
--- | Wrapper around `substWith` for terms without free variables.
+-- | Wrapper around `substWith` for toplevel terms without free variables.
 subst' ::
   HasSubst ext primTy primVal a =>
   IR.BoundVar ->
@@ -51,7 +51,7 @@ subst ::
   a
 subst = subst' 0
 
--- | Class of terms that support substitution, resulting in a `Term'`.
+-- | Class of terms that support substitution, resulting in a `IR.Term'`.
 class HasWeak a => HasSubstTerm ext primTy primVal a where
   substTermWith ::
     -- | How many bindings have been traversed so far.
@@ -64,7 +64,7 @@ class HasWeak a => HasSubstTerm ext primTy primVal a where
     a ->
     IR.Term' ext primTy primVal
 
--- | Wrapper around `substTermWith` for terms without free variables.
+-- | Wrapper around `substTermWith` for toplevel terms without free variables.
 substTerm' ::
   HasSubstTerm ext primTy primVal a =>
   IR.BoundVar ->
@@ -141,7 +141,7 @@ instance
   substWith w i e (IR.ElimX a) =
     IR.ElimX (substWith w i e a)
 
--- | Generalised substitution for a container @f@.
+-- | Generic substitution for @f@.
 class GHasWeak f => GHasSubst ext primTy primVal f where
   gsubstWith ::
     -- | How many bindings have been traversed so far.
