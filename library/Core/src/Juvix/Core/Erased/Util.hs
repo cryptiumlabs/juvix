@@ -5,6 +5,8 @@ import Juvix.Core.Erased.Types
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
+-- | Return the list of variable names that are not bound, 
+-- i.e. those that are free
 free :: Term primVal -> [NameSymbol.T]
 free = Set.toList . go Set.empty
   where
