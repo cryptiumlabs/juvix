@@ -44,6 +44,8 @@
 % TODO: Questions!
 % - Where does Context fit?
 \section{Pipeline}
+
+\usetikzlibrary{fit}
 \begin{tikzpicture}[node distance={14mm}, thick, main/.style = {draw, rectangle}] 
 \node[main] (1) {Juvix source code}; 
 \node[main] (2) [below of=1] {ML AST}; 
@@ -53,10 +55,11 @@
 \node[main] (6) [below of=5] {Desugared Context of S-expression}; 
 \node[main] (7) [below of=6] {Core HR}; 
 \node[main] (8) [below of=7] {Core IR}; 
-\node[main] (9) [below of=8] {Core Type Checked}; 
-\node[main] (10) [below of=9] {Core IR NoExt}; 
-\node[main] (11) [below of=10] {Core Erased}; 
-\node[main] (12) [below of=11] {Erased Term ???}; 
+% \node[main] (9) [below of=8] {Core Typed Term}; 
+% \node[main] (10) [below of=9] {Core IR NoExt}; 
+% TODO: From here, it's already type checked
+\node[main] (11) [below of=8] {Core Erased}; 
+\node[main] (12) [below of=11] {Erased Ann Term}; 
 \node[main] (13) [below of=12] {Erased Term No Return}; 
 \node[main] (14) [below of=13] {Backend}; 
 \draw[->] (1) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Frontend/src/Juvix/Frontend/Parser.hs}{Frontend: Juvix.Frontend.Parser.hs (parse)}} (2); 
@@ -65,13 +68,17 @@
 \draw[->] (4) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/ToCore/FromFrontend.hs}{Translate: Juvix.Contextify.hs (contextify)}} (5); 
 \draw[->] (5) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/ToCore/FromFrontend.hs}{???}} (6); 
 \draw[->] (6) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/ToCore/FromFrontend.hs}{Translate: Juvix.ToCore.FromFrontend.hs}} (7); 
-\draw[->] (7) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.Translate.hs}} (8); 
-\draw[->] (8) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Typecheck}} (9);
-\draw[->] (9) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.CoreToAnn.hs (eval)}} (10);
-\draw[->] (10) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.Erasure.hs (erase)}} (11);
+\draw[->] (7) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.Translate.hs (hrToIR)}} (8); 
+% \draw[->] (8) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.IR.Typechecker.hs (typeCheckDeclaration)}} (9);
+% \draw[->] (9) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.CoreToAnn.hs (eval)}} (10);
+\draw[->] (8) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.Erasure.hs (erase)}} (11);
 \draw[->] (11) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.ErasedAnn.Conversion.hs (convertTerm)}} (12);
 \draw[->] (12) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.Compile.hs (toRaw)}} (13);
 \draw[->] (13) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{To Backend}} (14);
+\node[draw,dotted,fit=(3) (4) (5) (6)] {};
+\node[draw,dotted,fit=(7) (8)] {};
+\node[draw,dotted,fit=(11) (12) (13)] {};
+
 
 
 \end{tikzpicture} 
@@ -260,7 +267,35 @@ extPattern =
       }
 \end{lstlisting}
 
-\section{HR-Ann}
+% \section{HR-Ann}
+
+% The goal of HRAnn is to extend HR terms with annotations. Annotations come in three flavors:
+% \begin{enumerate}
+%   \item Annotations
+%   These are only applied to Elim
+%   \item Bind Annotations
+
+%   \item Let Annotations
+%   \item App Annotations
+%   We annotate its two arguments: functions and arguments
+% \end{enumerate}
+
+% We extend only Lambda, Pi, Sigma, Let and Elim. Why?
+
+\section{Erased}
+
+% Erased and HRAnn are deeply related.
+% Where does it fit in the pipeline?
+% Why is it there? What is its purpose?
+% How does it work?
+
+
+
+
+
+Erased doesn't extend from IR types any more, but from its own types file. In contrast to previous steps in the pipeline, it distinguishes between terms and types.
+
+% TODO: usage?
 
 
 
