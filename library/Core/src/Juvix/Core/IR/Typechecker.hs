@@ -22,53 +22,53 @@ import qualified Juvix.Core.IR.Types.Globals as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype)
 
--- | type check datatype and function declarations
-typeCheckDeclaration ::
-  ( Eq primTy,
-    Eq primVal,
-    Show primTy,
-    Show primVal,
-    Show extT,
-    ShowExt extT primTy primVal,
-    Eval.CanEval extT IR.NoExt primTy primVal,
-    Eval.EvalPatSubst IR.NoExt primTy primVal,
-    Eval.EvalPatSubst IR.NoExt primTy (TypedPrim primTy primVal),
-    Eval.NoExtensions extT primTy (TypedPrim primTy primVal),
-    Eval.NoExtensions extT primTy primVal,
-    CanTC' extT primTy primVal m,
-    Param.CanApply (TypedPrim primTy primVal),
-    HasReader "globals" (GlobalsT' IR.NoExt extT primTy primVal) m
-  ) =>
-  -- | Telescope containing a list of
-  -- (name, usage, ty (of type Value') and the extension)
-  IR.Telescope IR.NoExt extT primTy primVal ->
-  -- | Raw telescope containing ty (of type Term')
-  IR.RawTelescope extT primTy primVal ->
-  -- | The targeted parameterisation
-  Param.Parameterisation primTy primVal ->
-  -- | A list of datatype declarations to be checked
-  [IR.RawDatatype' extT primTy primVal] ->
-  -- | A list of function declarations to be checked
-  [IR.RawFunction' extT primTy primVal] ->
-  -- | A list of Globals to be added to the global state
-  Env.TypeCheck IR.NoExt primTy primVal m [IR.RawGlobal' extT primTy primVal]
-typeCheckDeclaration _tel _rtel _param [] [] =
-  return []
--- type checking datatype declarations
-typeCheckDeclaration tel rtel param dts fns =
-  case dts of
-    (hdd@(IR.RawDatatype name lpos args _levels cons) : tld) ->
-      do
-        globals <- lift $ ask @"globals"
-        -- check the first datatype's args
-        _ <- lift $ checkDataType tel name param args
-        -- recurse the rest of the datatypes
-        rest <- typeCheckDeclaration tel rtel param tld fns
-        -- check all the constructors of the first datatype
-        checkedCons <- typeCheckAllCons param tel lpos rtel globals cons
-        -- when successful, return the datatype and the datacons
-        -- to the list of globals
-        return $ IR.RawGDatatype hdd : rest <> checkedCons
-    [] -> do
-      -- TODO functions, etc
-      return []
+-- -- | type check datatype and function declarations
+-- typeCheckDeclaration ::
+--   ( Eq primTy,
+--     Eq primVal,
+--     Show primTy,
+--     Show primVal,
+--     Show extT,
+--     ShowExt extT primTy primVal,
+--     Eval.CanEval extT IR.NoExt primTy primVal,
+--     Eval.EvalPatSubst IR.NoExt primTy primVal,
+--     Eval.EvalPatSubst IR.NoExt primTy (TypedPrim primTy primVal),
+--     Eval.NoExtensions extT primTy (TypedPrim primTy primVal),
+--     Eval.NoExtensions extT primTy primVal,
+--     CanTC' extT primTy primVal m,
+--     Param.CanApply (TypedPrim primTy primVal),
+--     HasReader "globals" (GlobalsT' IR.NoExt extT primTy primVal) m
+--   ) =>
+--   -- | Telescope containing a list of
+--   -- (name, usage, ty (of type Value') and the extension)
+--   IR.Telescope IR.NoExt extT primTy primVal ->
+--   -- | Raw telescope containing ty (of type Term')
+--   IR.RawTelescope extT primTy primVal ->
+--   -- | The targeted parameterisation
+--   Param.Parameterisation primTy primVal ->
+--   -- | A list of datatype declarations to be checked
+--   [IR.RawDatatype' extT primTy primVal] ->
+--   -- | A list of function declarations to be checked
+--   [IR.RawFunction' extT primTy primVal] ->
+--   -- | A list of Globals to be added to the global state
+--   Env.TypeCheck IR.NoExt primTy primVal m [IR.RawGlobal' extT primTy primVal]
+-- typeCheckDeclaration _tel _rtel _param [] [] =
+--   return []
+-- -- type checking datatype declarations
+-- typeCheckDeclaration tel rtel param dts fns =
+--   case dts of
+--     (hdd@(IR.RawDatatype name lpos args _levels cons) : tld) ->
+--       do
+--         globals <- lift $ ask @"globals"
+--         -- check the first datatype's args
+--         _ <- lift $ checkDataType tel name param args
+--         -- recurse the rest of the datatypes
+--         rest <- typeCheckDeclaration tel rtel param tld fns
+--         -- check all the constructors of the first datatype
+--         checkedCons <- typeCheckAllCons param tel lpos rtel globals cons
+--         -- when successful, return the datatype and the datacons
+--         -- to the list of globals
+--         return $ IR.RawGDatatype hdd : rest <> checkedCons
+--     [] -> do
+--       -- TODO functions, etc
+--       return []
