@@ -30,8 +30,7 @@ class HasWeak a where
     a
   weakBy' b i = to . gweakBy' b i . from
 
--- | Perform weakening on a toplevel term, i.e. start with the first bound
--- variable.
+-- | Perform weakening on a term, starting with the closest binder.
 weakBy :: HasWeak a => Natural -> a -> a
 weakBy b = weakBy' b 0
 
@@ -149,7 +148,7 @@ instance
   weakBy' b i (IR.NeutralX a) =
     IR.NeutralX (weakBy' b i a)
 
--- | Generalised weakening / shifting (renumbering of free variables) of de
+-- | Generic weakening / shifting (renumbering of free variables) of de
 -- Bruijn terms.
 class GHasWeak f where
   gweakBy' ::
