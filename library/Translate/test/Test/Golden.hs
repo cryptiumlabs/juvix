@@ -100,7 +100,7 @@ discoverGoldenTestsParse ::
   -- | the directory in which to recursively look for golden tests
   FilePath ->
   IO TestTree
-discoverGoldenTestsParse = discoverGoldenTests [".ju"] ".parsed" getGolden parseContract
+discoverGoldenTestsParse = discoverGoldenTestsCompact [".ju"] ".parsed" getGolden parseContract
 
 discoverGoldenTestPasses ::
   (Eq a, Show a, Read a) => (t -> FilePath -> IO a) -> [(t, [Char])] -> FilePath -> IO [TestTree]
@@ -108,7 +108,7 @@ discoverGoldenTestPasses handleDiscoverFunction discoverPasses filePath =
   traverse callGolden discoverPasses
   where
     callGolden (passFunction, name) =
-      discoverGoldenTests
+      discoverGoldenTestsCompact
         [".ju"]
         ("." <> name)
         getGolden
@@ -121,7 +121,7 @@ discoverGoldenTestsDesugar ::
   IO [TestTree]
 discoverGoldenTestsDesugar =
   discoverGoldenTestPasses
-    (\pass -> expectSuccess . toNoQuotes (handleDiscoverFunction pass))
+    (\pass -> expectSuccess . toNoQuotesCompact (handleDiscoverFunction pass))
     discoverDesugar
   where
     handleDiscoverFunction desugarPass filePath =
@@ -133,7 +133,7 @@ discoverGoldenTestsContext ::
   IO [TestTree]
 discoverGoldenTestsContext =
   discoverGoldenTestPasses
-    (\contextPass -> expectSuccess . toNoQuotes (handleDiscoverFunction contextPass))
+    (\contextPass -> expectSuccess . toNoQuotesCompact (handleDiscoverFunction contextPass))
     discoverContext
   where
     handleDiscoverFunction contextPass filePath = do

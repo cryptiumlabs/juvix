@@ -1649,9 +1649,22 @@ _TODO_
   + [[Library]]
 ***** Test
 ****** Golden <<Library/Test/Golden>>
+@Juvix.Library.Test.Golden@ defines testing functionality for golden
+  style tests
+- Golden tests revolve around testing files we have saved on
+  disk. Namely we wish to take that file and do some transformation
+  and save the result to compare it for regression testing.
+- There are many useful sub components of this module
+- The =Compact= tag to a few of the functions represents golden
+  test functions that display the results in different ways. Often
+  we use the =Compact= variant for S-expression showing as it's
+  much clearer to see what the expressions mean.
 - _Relies on_
   + [[Library]]
   + [[Feedback]]
+******* NoQuotes
+This structure allows us to have golden tests that are based around
+show instances instead of normal read instances.
 ** test
 *** Main <<StandardLibrary/test/Main>>
 - _Relies on_
@@ -1978,11 +1991,10 @@ done with no extra information needed. Thus we export the following passes
   + [[Juvix/Sexp]]
 **** Golden <<Translate/test/Test/Golden>>
 - _Relies on_
+  + [[Juvix/Context]]
   + [[Juvix/Contextify]]
   + [[Contextify/Environment]]
   + [[Contextify/Passes]]
-  + [[Feedback]]
-  + [[Juvix/Context]]
   + [[Desugar/Passes]]
   + [[Juvix/Frontend]]
   + [[Frontend/Parser]]
@@ -1990,11 +2002,12 @@ done with no extra information needed. Thus we export the following passes
   + [[Frontend/Types]]
   + [[Frontend/Types/Base]]
   + [[Library]]
+  + [[Feedback]]
   + [[NameSymbol]]
   + [[Library/Parser]]
   + [[Library/Parser]]
-  + [[Juvix/Sexp]]
   + [[Library/Test/Golden]]
+  + [[Juvix/Sexp]]
 **** Context
 ***** Environment <<Context/Environment>>
 - _Relies on_
