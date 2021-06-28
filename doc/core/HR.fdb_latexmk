@@ -1,7 +1,7 @@
 # Fdb version 3
-["pdflatex"] 1624884493 "/Users/acentelles/Dropbox/heliax/juvix/doc/core/HR.tex" "/Users/acentelles/Dropbox/heliax/juvix/doc/core/HR.pdf" "HR" 1624884494
-  "/Users/acentelles/Dropbox/heliax/juvix/doc/core/HR.aux" 1624884494 1239 4e74a07b582adcaa57a4538e415f898e ""
-  "/Users/acentelles/Dropbox/heliax/juvix/doc/core/HR.tex" 1624884491 13833 38535ce28c50b7d9817aa47c8fb21a52 ""
+["pdflatex"] 1624885034 "/Users/acentelles/Dropbox/heliax/juvix/doc/core/HR.tex" "/Users/acentelles/Dropbox/heliax/juvix/doc/core/HR.pdf" "HR" 1624885036
+  "/Users/acentelles/Dropbox/heliax/juvix/doc/core/HR.aux" 1624885036 1239 4e74a07b582adcaa57a4538e415f898e ""
+  "/Users/acentelles/Dropbox/heliax/juvix/doc/core/HR.tex" 1624885034 13885 c5be365586d0297ae237a597e08e7b2f ""
   "/usr/local/texlive/2020/texmf-dist/fonts/enc/dvips/libertine/lbtn_25tcsq.enc" 1490131464 2921 8ca0eb0831f9bc5da080d3697cfe67bf ""
   "/usr/local/texlive/2020/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.enc" 1490131464 2933 9ad527ce78d7c5fa0a642dead095f172 ""
   "/usr/local/texlive/2020/texmf-dist/fonts/enc/dvips/libertine/lbtn_7grukw.enc" 1490131464 2934 a4a9158faed2e9e89c771b4e3b7fc12f ""
@@ -261,15 +261,15 @@
   "/usr/local/texlive/2020/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1586288239 4811913 0be9a7e86c70a26e5e3042966bcd7097 ""
   "/usr/local/texlive/2020/texmf-var/web2c/pdftex/pdflatex.fmt" 1614983457 2432471 1c02885ae453c812ab36787d9721f2c2 ""
   "/usr/local/texlive/2020/texmf.cnf" 1586288231 577 d60164b4589a341208aff7a667fbbdcb ""
-  "HR.aux" 1624884494 1239 4e74a07b582adcaa57a4538e415f898e "pdflatex"
-  "HR.out" 1624884494 332 5c4ad2338ce9d478b8d37c512f4c6c1a "pdflatex"
-  "HR.tex" 1624884491 13833 38535ce28c50b7d9817aa47c8fb21a52 ""
-  "HR.toc" 1624884494 234 cb11364c5e5f2aff1347609af9938ca8 "pdflatex"
+  "HR.aux" 1624885036 1239 4e74a07b582adcaa57a4538e415f898e "pdflatex"
+  "HR.out" 1624885036 332 5c4ad2338ce9d478b8d37c512f4c6c1a "pdflatex"
+  "HR.tex" 1624885034 13885 c5be365586d0297ae237a597e08e7b2f ""
+  "HR.toc" 1624885036 234 cb11364c5e5f2aff1347609af9938ca8 "pdflatex"
   (generated)
-  "HR.log"
+  "HR.out"
   "/Users/acentelles/Dropbox/heliax/juvix/doc/core/HR.log"
   "HR.aux"
-  "HR.pdf"
   "HR.toc"
-  "HR.out"
+  "HR.log"
   "/Users/acentelles/Dropbox/heliax/juvix/doc/core/HR.pdf"
+  "HR.pdf"
