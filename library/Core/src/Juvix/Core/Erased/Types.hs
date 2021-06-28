@@ -33,6 +33,3 @@ type FunClause primTy primVal = IR.FunClause' T primTy primVal
 
 type TypeAssignment primTy = TypeAssignment' T primTy
 
-data EvaluationError primVal
-  = PrimitiveApplicationError primVal primVal
-  deriving (Show, Eq, Generic)
