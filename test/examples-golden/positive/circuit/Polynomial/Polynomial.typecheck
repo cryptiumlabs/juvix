@@ -5,7 +5,9 @@ Ann
     , term = LamM
         { capture = []
         , arguments =
-            [ "0" :| [], "1" :| [] ]
+            [ "0" :| []
+            , "1" :| []
+            ]
         , body = Ann
             { usage = Omega
             , type' = PrimTy PBool
@@ -17,8 +19,16 @@ Ann
                     , term = Prim
                         ( Return
                             { retType = PrimType
-                                { getPrimType = PField :| [ PField, PBool ] }
-                            , retTerm = PEq } ) } )
+                                { getPrimType = PField :|
+                                    [ PField
+                                    , PBool
+                                    ]
+                                }
+                            , retTerm = PEq
+                            }
+                        )
+                    }
+                )
                 [ Ann
                     { usage = Omega
                     , type' = PrimTy PField
@@ -31,13 +41,21 @@ Ann
                                 ( Return
                                     { retType = PrimType
                                         { getPrimType = PField :|
-                                            [ PField, PField ] }
-                                    , retTerm = PExp } ) } )
+                                            [ PField
+                                            , PField
+                                            ]
+                                        }
+                                    , retTerm = PExp
+                                    }
+                                )
+                            }
+                        )
                         [ Ann
                             { usage = Omega
                             , type' = PrimTy PField
                             , term = Var
-                                ( "0" :| [] ) }
+                                ( "0" :| [] )
+                            }
                         , Ann
                             { usage = Omega
                             , type' = PrimTy PField
@@ -47,9 +65,20 @@ Ann
                                         { getPrimType = PField :| [] }
                                     , retTerm = PConst
                                         ( P
-                                            ( 3 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 ) ) } ) } ] }
+                                            ( 3 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                                        )
+                                    }
+                                )
+                            }
+                        ]
+                    }
                 , Ann
                     { usage = Omega
                     , type' = PrimTy PField
                     , term = Var
-                        ( "1" :| [] ) } ] } } }
+                        ( "1" :| [] )
+                    }
+                ]
+            }
+        }
+    }
