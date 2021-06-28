@@ -713,6 +713,7 @@ the substitution functions (`substTerm` and `substElim`).
   + [[Core/Parameterisation]]
   + [[Library]]
 ******* PatSubst
+Provides the `HasPatSubst`-class for pattern substitution.
 - _Relies on_
   + [[Application]]
   + [[Evaluator/Weak]]
@@ -723,6 +724,8 @@ the substitution functions (`substTerm` and `substElim`).
   + [[Library]]
   + [[Library/Usage]]
 ******* Subst <<Evaluator/Subst>>
+Module providing the `HasSubst`-class, implementing substitution of terms
+as part of the lambda calculus.
 - _Relies on_
   + [[Application]]
   + [[Evaluator/Weak]]
@@ -731,6 +734,8 @@ the substitution functions (`substTerm` and `substElim`).
   + [[Library]]
   + [[Library/Usage]]
 ******* SubstV
+Module providing the `HasSubstV`-class, implementing substitution of
+values.
 - _Relies on_
   + [[Application]]
   + [[Evaluator/Types]]
@@ -741,6 +746,7 @@ the substitution functions (`substTerm` and `substElim`).
   + [[Library]]
   + [[Library/Usage]]
 ******* Types <<Evaluator/Types>>
+The types as used by the evaluator.
 - _Relies on_
   + [[Core/HR/Pretty]]
   + [[Typechecker/Types]]
@@ -751,6 +757,8 @@ the substitution functions (`substTerm` and `substElim`).
   + [[Library]]
   + [[PrettyPrint]]
 ******* Weak <<Evaluator/Weak>>
+Provides weakening / shifting of de Bruijn indices, that is the
+renumbering of free variables in terms.
 - _Relies on_
   + [[Application]]
   + [[IR/Types]]
@@ -1613,21 +1621,6 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Desugar]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[Library]]
-  + [[Library/Sexp]]
 **** Contextify <<Juvix/Contextify>>
 - _Relies on_
   + [[Juvix/Context]]
@@ -1749,6 +1742,21 @@ done with no extra information needed. Thus we export the following passes
   + [[Library/Sexp]]
   + [[Structure]]
   + [[Lens]]
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Desugar]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
+  + [[Library/Sexp]]
 **** Sexp
 ***** Structure
 Hardeing S-expressions into a more readable form. Here we use a
