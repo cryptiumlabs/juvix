@@ -1,6 +1,8 @@
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+-- | Module providing the `HasSubstV`-class, implementing substitution of
+-- values.
 module Juvix.Core.IR.Evaluator.SubstV where
 
 import Data.Foldable (foldr1) -- on NonEmpty
@@ -13,11 +15,16 @@ import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 
+-- | Class of values that support substitution, allows failure using @Either@.
 class HasWeak a => HasSubstV extV primTy primVal a where
   substVWith ::
+    -- | How many bindings have been traversed so far.
     Natural ->
+    -- | Variable to substitute.
     IR.BoundVar ->
+    -- | Value to substitute with.
     IR.Value' extV primTy primVal ->
+    -- | Term to perform substitution on.
     a ->
     Either (Error extV extT primTy primVal) a
   default substVWith ::
@@ -31,6 +38,7 @@ class HasWeak a => HasSubstV extV primTy primVal a where
     Either (Error extV extT primTy primVal) a
   substVWith b i e = fmap to . gsubstVWith b i e . from
 
+-- | Wrapper around `substWith` for toplevel terms without free variables.
 substV' ::
   HasSubstV extV primTy primVal a =>
   IR.BoundVar ->
@@ -39,6 +47,7 @@ substV' ::
   Either (Error extV extT primTy primVal) a
 substV' = substVWith 0
 
+-- | Wrapper around `substV'` that starts at variable 0, the first bound
 substV ::
   HasSubstV extV primTy primVal a =>
   IR.Value' extV primTy primVal ->
@@ -46,14 +55,20 @@ substV ::
   Either (Error extV extT primTy primVal) a
 substV = substV' 0
 
+-- | Class of terms that support substitution, resulting in a `IR.Value'`.
 class HasWeak a => HasSubstValue extV primTy primVal a where
   substValueWith ::
+    -- | How many bindings have been traversed so far.
     Natural ->
+    -- | Variable to substitute.
     IR.BoundVar ->
+    -- | Value to substitute with.
     IR.Value' extV primTy primVal ->
+    -- | Term to perform substitution on.
     a ->
     Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
 
+-- | Wrapper around `substValueWith` for toplevel terms without free variables.
 substValue' ::
   HasSubstValue extV primTy primVal a =>
   IR.BoundVar ->
@@ -62,6 +77,8 @@ substValue' ::
   Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
 substValue' = substValueWith 0
 
+-- | Wrapper around `substValue'` that starts at variable 0, the first bound
+-- variable.
 substValue ::
   HasSubstValue extV primTy primVal a =>
   IR.Value' extV primTy primVal ->
@@ -69,6 +86,7 @@ substValue ::
   Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
 substValue = substValue' 0
 
+-- | Constraint alias for values and neutrals that support substitution.
 type AllSubstV extV primTy primVal =
   ( IR.ValueAll (HasSubstV extV primTy primVal) extV primTy primVal,
     IR.NeutralAll (HasSubstV extV primTy primVal) extV primTy primVal,
@@ -119,6 +137,7 @@ instance
   substVWith w i e (IR.ValueX a) =
     IR.ValueX <$> substVWith w i e a
 
+-- | Perform substitution on a `IR.Neutral'` and a `IR.XVNeutral`.
 -- (not quite an instance of @HasSubstValue@ because of the @XVNeutral@ stuff)
 substNeutralWith ::
   ( AllSubstV extV primTy primVal,
@@ -127,10 +146,15 @@ substNeutralWith ::
     Monoid (IR.XVPrimTy extV primTy primVal),
     Monoid (IR.XVPrim extV primTy primVal)
   ) =>
+  -- | How many bindings have been traversed so far.
   Natural ->
+  -- | Variable to substitute.
   IR.BoundVar ->
+  -- | Value to substitute with.
   IR.Value' extV primTy primVal ->
+  -- | Neutral to perform substitution on.
   IR.Neutral' extV primTy primVal ->
+  -- | Extended Neutral to perform substitution on.
   IR.XVNeutral extV primTy primVal ->
   Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
 -- not Neutral'!!!
@@ -153,6 +177,7 @@ substNeutralWith w i e (IR.NeutralX a) b =
   IR.VNeutral' <$> (IR.NeutralX <$> substVWith w i e a)
     <*> substVWith w i e b
 
+-- | Apply two values.
 vapp ::
   forall extV extT primTy primVal.
   ( AllSubstV extV primTy primVal,
@@ -161,7 +186,9 @@ vapp ::
     Monoid (IR.XVPrimTy extV primTy primVal),
     Monoid (IR.XVPrim extV primTy primVal)
   ) =>
+  -- | Function value.
   IR.Value' extV primTy primVal ->
+  -- | Argument to the function.
   IR.Value' extV primTy primVal ->
   -- | the annotation to use if the result is another application node
   -- (if it isn't, then this annotation is unused)
@@ -209,11 +236,16 @@ vapp s t ann =
         Just y ->
           Param.apply1 p y |> bimap (CannotApply s t . err) (\r -> con r mempty)
 
+-- | Generic substitution for @f@.
 class GHasWeak f => GHasSubstV extV primTy primVal f where
   gsubstVWith ::
+    -- | How many bindings have been traversed so far.
     Natural ->
+    -- | Variable to substitute.
     IR.BoundVar ->
+    -- | Value to substitute with.
     IR.Value' extV primTy primVal ->
+    -- | Term to perform substitution on.
     f t ->
     Either (Error extV extT primTy primVal) (f t)
 
@@ -383,6 +415,7 @@ instance
   substValueWith _ _ _ ret@(App.Return {}) =
     pure $ IR.VPrim ret
 
+-- | Transform an `App.Arg` into a `IR.Value`.
 argToValue ::
   App.Arg (Param.PrimType primTy) primVal ->
   IR.Value primTy (Param.TypedPrim primTy primVal)
