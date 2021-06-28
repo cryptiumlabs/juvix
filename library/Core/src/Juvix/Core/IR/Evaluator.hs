@@ -29,6 +29,7 @@ import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 
+-- | Constraint for terms and eliminations without extensions.
 type NoExtensions ext primTy primVal =
   ( IR.TermX ext primTy primVal ~ Void,
     IR.ElimX ext primTy primVal ~ Void
