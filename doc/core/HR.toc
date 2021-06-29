@@ -1,4 +1,0 @@
-\contentsline {section}{Contents}{1}{section*.1}%
-\contentsline {section}{\numberline {1}Pipeline}{2}{section.1}%
-\contentsline {section}{\numberline {2}HR}{3}{section.2}%
-\contentsline {section}{\numberline {3}Erased}{5}{section.3}%
