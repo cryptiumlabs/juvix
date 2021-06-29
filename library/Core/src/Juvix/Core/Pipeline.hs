@@ -1,4 +1,5 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Juvix.Core.Pipeline
   ( coreToAnn,
