@@ -109,7 +109,7 @@ inlineAllGlobalsElim t map =
     IR.ElimX {} -> t
 
 -- | Evaluate a term with extensions, discards annotations but keeps the
--- extentions.
+-- extensions.
 evalTermWith ::
   CanEval extT extG primTy primVal =>
   -- | Lookup function for globals that may be present in the term.
@@ -147,7 +147,7 @@ evalTermWith g exts (IR.TermX a) =
   tExtFun exts g a
 
 -- | Evaluate an elimination with extensions, discards annotations but keeps
--- the extentions.
+-- the extensions.
 evalElimWith ::
   CanEval extT extG primTy primVal =>
   -- | Lookup function for globals that may be present in the elimination.
@@ -175,7 +175,7 @@ evalElimWith g exts (IR.ElimX a) =
   eExtFun exts g a
 
 -- | Evaluate a term with extensions, discards annotations but keeps the
--- extentions.
+-- extensions.
 evalTerm ::
   CanEval extT extG primTy primVal =>
   -- | Lookup function for globals that may be present in the term.
