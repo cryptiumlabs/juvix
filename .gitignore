@@ -41,10 +41,10 @@ tmp/
 *.liquid
 
 # tex
-.aux
-.fbd_latexmk
-.fls
-.log
-.out
-.synctex.gz
-.toc
+*.aux
+*.fbd_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
