@@ -1,10 +1,10 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.IR.Types.Globals where
+module Juvix.Core.Base.Globals where
 
 import Data.Kind (Constraint)
-import Juvix.Core.IR.Types.Base
+import Juvix.Core.Base.Types
 import Juvix.Library hiding (Pos)
 import Juvix.Library.HashMap (HashMap)
 import Juvix.Library.Usage (Usage)

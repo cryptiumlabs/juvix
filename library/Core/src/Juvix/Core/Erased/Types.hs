@@ -8,7 +8,7 @@ where
 
 import Juvix.Core.Erased.Types.Base
 import qualified Juvix.Core.IR.Typechecker.Types as TC
-import qualified Juvix.Core.IR.Types.Globals as Core
+import qualified Juvix.Core.Base.Globals as Core
 
 data T
 

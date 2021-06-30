@@ -6,7 +6,7 @@ module Juvix.Core.IR.Evaluator.Subst where
 import qualified Juvix.Core.Application as App
 import Juvix.Core.IR.Evaluator.Weak
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.Base.Types as IR
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 

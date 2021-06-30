@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.IR.Types.Base where
+module Juvix.Core.Base.Types where
 
 import Extensible (extensible)
 import Juvix.Library hiding (Pos)

@@ -11,8 +11,8 @@ where
 
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR as IR
-import Juvix.Core.IR.Types.Base (Elim', Term', XPi)
-import Juvix.Core.IR.Types.Globals
+import Juvix.Core.Base.Types (Elim', Term', XPi)
+import Juvix.Core.Base.Globals
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback

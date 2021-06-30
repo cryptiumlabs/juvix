@@ -10,8 +10,8 @@ import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import Juvix.Core.IR.Typechecker.Error
 import Juvix.Core.IR.Typechecker.Types
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.IR.Types.Base as IR
-import Juvix.Core.IR.Types.Globals (Pos)
+import qualified Juvix.Core.Base.Types as IR
+import Juvix.Core.Base.Globals (Pos)
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype, Pos)
 import qualified Juvix.Library.Usage as Usage

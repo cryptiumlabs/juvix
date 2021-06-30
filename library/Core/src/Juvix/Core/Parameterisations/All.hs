@@ -11,7 +11,7 @@ where
 import Data.Bitraversable
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Evaluator as E
-import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.Base.Types as IR
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Parameterisations.Naturals as Naturals
 import qualified Juvix.Core.Parameterisations.Unit as Unit

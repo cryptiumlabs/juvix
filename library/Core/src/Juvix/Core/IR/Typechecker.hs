@@ -18,7 +18,7 @@ import Juvix.Core.IR.Typechecker.Env as Env
 import Juvix.Core.IR.Typechecker.Error as Error
 import Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.IR.Types.Globals as IR
+import qualified Juvix.Core.Base.Globals as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype)
 

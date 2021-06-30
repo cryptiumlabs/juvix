@@ -5,7 +5,7 @@ module Juvix.Core.IR.TransformExt where
 
 import Data.Coerce
 import Juvix.Core.IR.Types (Elim, NoExt, Term)
-import Juvix.Core.IR.Types.Base
+import Juvix.Core.Base.Types
 import Juvix.Library hiding (Coerce)
 
 data ExtTransformTEF f ext1 ext2 primTy primVal = ExtTransformTEF

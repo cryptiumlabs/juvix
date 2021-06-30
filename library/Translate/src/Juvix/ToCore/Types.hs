@@ -7,7 +7,7 @@ import Data.HashMap.Strict (HashMap)
 import qualified Juvix.Context as Ctx
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.Base.Types as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.LineNum as LineNum

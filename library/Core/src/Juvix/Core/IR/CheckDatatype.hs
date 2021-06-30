@@ -8,8 +8,8 @@ where
 import Juvix.Core.IR.CheckTerm
 import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Types (NoExt, pattern VStar)
-import Juvix.Core.IR.Types.Base as IR
-import Juvix.Core.IR.Types.Globals as IR
+import Juvix.Core.Base.Types as IR
+import Juvix.Core.Base.Globals as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 

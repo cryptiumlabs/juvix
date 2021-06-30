@@ -29,8 +29,8 @@ module Juvix.Core.IR.Types
   )
 where
 
-import Juvix.Core.IR.Types.Base
-import Juvix.Core.IR.Types.Globals
+import Juvix.Core.Base.Types
+import Juvix.Core.Base.Globals
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
