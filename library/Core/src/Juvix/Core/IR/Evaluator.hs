@@ -6,7 +6,14 @@
 -- the value application function (vapp) and
 -- the substitution functions (substTerm and substElim).
 module Juvix.Core.IR.Evaluator
-  ( module Juvix.Core.IR.Evaluator,
+  ( inlineAllGlobals,
+    evalTerm,
+    NoExtensions,
+    CanEval,
+    EvalPatSubst,
+    toLambdaR,
+    lookupFun,
+    rawLookupFun',
     module Juvix.Core.IR.Evaluator.Types,
     module Juvix.Core.IR.Evaluator.Weak,
     module Juvix.Core.IR.Evaluator.Subst,
