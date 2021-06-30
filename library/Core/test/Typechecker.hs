@@ -4,6 +4,7 @@
 module Typechecker where
 
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.IR.CheckTerm as TC
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
@@ -337,7 +338,7 @@ evaluations =
       shouldEval (IR.Elim identityAppINat1) (natV 1),
       shouldEval (IR.Elim identityAppI) videntity,
       shouldEval (IR.Elim kApp1_2) (natV 1),
-      shouldEval' typGlobals (IR.Elim (IR.Free (IR.Global "ty"))) (IR.VStar 0),
+      shouldEval' typGlobals (IR.Elim (IR.Free (Core.Global "ty"))) (IR.VStar 0),
       shouldEval' typGlobals (name "tz") (vname "tz"),
       shouldEval' typGlobals (name "B") (vname "A"),
       shouldEval' typGlobals (name "C") (vname "A")
@@ -347,8 +348,8 @@ evaluations =
     sub52 = IR.Elim $ sub `IR.App` nat 5 `IR.App` nat 2
     sub = IR.Ann Usage.Omega (IR.Prim Nat.Sub) addTyT 0
     videntity = IR.VLam $ IR.VBound 0
-    name = IR.Elim . IR.Free . IR.Global
-    vname = IR.VFree . IR.Global
+    name = IR.Elim . IR.Free . Core.Global
+    vname = IR.VFree . Core.Global
 
 skiCont :: T.TestTree
 skiCont =
@@ -886,36 +887,36 @@ twoCompTy = one `ann` IR.VPi two (IR.VPi one natT natT) (IR.VPi one natT natT)
 typGlobals :: IR.Globals Unit.Ty (TypedPrim Unit.Ty Unit.Val)
 typGlobals =
   Map.fromList
-    [ ("A", IR.GAbstract (IR.Abstract "A" IR.GZero (IR.VStar 0))),
+    [ ("A", Core.GAbstract (Core.Abstract "A" Core.GZero (IR.VStar 0))),
       ( "F",
-        IR.GAbstract
-          ( IR.Abstract
+        Core.GAbstract
+          ( Core.Abstract
               "F"
-              IR.GZero
+              Core.GZero
               (IR.VPi mempty (IR.VStar 1) (IR.VStar 1))
           )
       ),
-      def "ty" IR.GZero (IR.VStar 1) (IR.Star 0),
+      def "ty" Core.GZero (IR.VStar 1) (IR.Star 0),
       def
         "B"
-        IR.GZero
+        Core.GZero
         (IR.VStar 0)
-        (IR.Elim (IR.Free (IR.Global "A"))),
+        (IR.Elim (IR.Free (Core.Global "A"))),
       def
         "C"
-        IR.GZero
+        Core.GZero
         (IR.VStar 0)
-        (IR.Elim (IR.Free (IR.Global "B")))
+        (IR.Elim (IR.Free (Core.Global "B")))
     ]
   where
     def name π ty rhs =
       ( name,
-        IR.GFunction $
-          IR.Function
+        Core.GFunction $
+          Core.Function
             { funName = name,
               funUsage = π,
               funType = ty,
-              funClauses = [IR.FunClause [] [] rhs Nothing False Nothing]
+              funClauses = [Core.FunClause [] [] rhs Nothing False Nothing]
             }
       )
 
@@ -923,13 +924,13 @@ aTerm :: IR.Term primTy primVal
 aTerm = IR.Elim aElim
 
 aElim :: IR.Elim primTy primVal
-aElim = IR.Free (IR.Global "A")
+aElim = IR.Free (Core.Global "A")
 
 fTerm :: IR.Term primTy primVal
 fTerm = IR.Elim fElim
 
 fElim :: IR.Elim primTy primVal
-fElim = IR.Free (IR.Global "F")
+fElim = IR.Free (Core.Global "F")
 
 faTerm :: IR.Term primTy primVal
 faTerm = IR.Elim faElim
