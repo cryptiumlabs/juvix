@@ -1,8 +1,8 @@
 module FromFrontend where
 
 import qualified Easy
-import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Base.Types as Core
+import qualified Juvix.Core.IR.Types as IR
 import Juvix.Library
 import qualified Juvix.ToCore.Types as Types
 import qualified Test.Tasty as T

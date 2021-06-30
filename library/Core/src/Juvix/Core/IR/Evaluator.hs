@@ -17,6 +17,7 @@ where
 
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.IntMap as IntMap
+import qualified Juvix.Core.Base.Types as Core
 import Juvix.Core.IR.Evaluator.PatSubst
 import Juvix.Core.IR.Evaluator.Subst
 import Juvix.Core.IR.Evaluator.SubstV
@@ -25,7 +26,6 @@ import Juvix.Core.IR.Evaluator.Weak
 import Juvix.Core.IR.TransformExt
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 

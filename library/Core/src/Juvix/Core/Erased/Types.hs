@@ -6,9 +6,9 @@ module Juvix.Core.Erased.Types
   )
 where
 
+import qualified Juvix.Core.Base.Types as Core
 import Juvix.Core.Erased.Types.Base
 import qualified Juvix.Core.IR.Typechecker.Types as TC
-import qualified Juvix.Core.Base.Types as Core
 
 data T
 

@@ -20,11 +20,11 @@ import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
 import qualified Juvix.Backends.Michelson.DSL.Untyped as DSLU
 import qualified Juvix.Core.Application as App
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.IR.Evaluator as Eval
-import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)

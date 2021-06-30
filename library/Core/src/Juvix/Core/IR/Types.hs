@@ -1,7 +1,7 @@
 -- | Quantitative type implementation inspired by
 --   Atkey 2018 and McBride 2016.
 module Juvix.Core.IR.Types
-  ( module Juvix.Core.IR.Types
+  ( module Juvix.Core.IR.Types,
   )
 where
 

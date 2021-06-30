@@ -3,9 +3,9 @@
 module Juvix.Core.IR.TransformExt.OnlyExts where
 
 import Extensible hiding (Type)
+import qualified Juvix.Core.Base.Types as Core
 import Juvix.Core.IR.TransformExt
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.Base.Types as Core
 import Juvix.Library
 
 data T (ext :: Type)

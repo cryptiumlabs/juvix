@@ -5,9 +5,9 @@ module Juvix.ToCore.Types where
 
 import Data.HashMap.Strict (HashMap)
 import qualified Juvix.Context as Ctx
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.LineNum as LineNum

@@ -12,8 +12,8 @@ module Juvix.Core.Parameterisations.Unit
   )
 where
 
-import qualified Juvix.Core.IR.Evaluator as E
 import qualified Juvix.Core.Base.Types as Core
+import qualified Juvix.Core.IR.Evaluator as E
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding ((<|>))
 

@@ -5,10 +5,10 @@ module Juvix.Core.IR.CheckDatatype
   )
 where
 
+import Juvix.Core.Base.Types as Core
 import Juvix.Core.IR.CheckTerm hiding (T)
 import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Types (T, pattern VStar)
-import Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 
