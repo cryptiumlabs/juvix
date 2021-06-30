@@ -43,16 +43,17 @@
 \node[main] (13) [below of=12] {Erased AnnTerm (without Return)}; 
 \node[main] (14) [below of=13] {Backend}; 
 \draw[->] (1) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Frontend/src/Juvix/Frontend/Parser.hs}{Frontend: Juvix.Frontend.Parser.hs (parse)}} (2); 
-\draw[->] (2) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/ToCore/FromFrontend.hs}{???}} (3); 
-\draw[->] (3) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/ToCore/FromFrontend.hs}{Translate: Juvix.Desugar.hs (op)}} (4); 
-\draw[->] (4) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/ToCore/FromFrontend.hs}{Translate: Juvix.Contextify.hs (contextify)}} (5); 
-\draw[->] (5) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/ToCore/FromFrontend.hs}{???}} (6); 
+\draw[->] (2) -- node[midway, right] {\href{}{???}} (3); 
+\draw[->] (3) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/Desugar.hs}{Translate: Juvix.Desugar.hs (op)}} (4); 
+\draw[->] (4) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/Contextify.hs}{Translate: Juvix.Contextify.hs (contextify)}} (5); 
+\draw[->] (5) -- node[midway, right] {\href{}{???}} (6); 
 \draw[->] (6) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/ToCore/FromFrontend.hs}{Translate: Juvix.ToCore.FromFrontend.hs}} (7); 
 \draw[->] (7) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.Translate.hs (hrToIR)}} (8); 
-\draw[->] (8) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.Erasure.hs (erase)}} (11);
-\draw[->] (11) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.ErasedAnn.Conversion.hs (convertTerm)}} (12);
-\draw[->] (12) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.Pipeline.hs (toRaw)}} (13);
-\draw[->] (13) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{To Backend}} (14);
+\draw[->] (8) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Erasure/Algorithm.hs}{Core: Juvix.Core.Erasure.Algorithm.hs (erase)}} (11);
+\draw[->] (11) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/ErasedAnn/Conversion.hs}{Core: Juvix.Core.ErasedAnn.Conversion.hs (convertTerm)}} (12);
+% TODO: Move toRaw to Erased module
+\draw[->] (12) -- node[midway, right] {\href{}{Core: Juvix.Core.Pipeline.hs (toRaw)}} (13);
+\draw[->] (13) -- node[midway, right] {\href{}{To Backend}} (14);
 \node[draw,dotted,fit=(3) (4) (5) (6), label={[xshift=0mm]left:{S-expressions}}] {};
 \node[draw,dotted,fit=(7) (8), label={[xshift=0mm]left:{Terms == Types}}] {};
 \node[draw,dotted,fit=(11) (12) (13), label={[xshift=0mm]left:{Typechecked}}] {};
