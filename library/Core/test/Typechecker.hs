@@ -189,12 +189,12 @@ shouldEval' ::
     Eq primVal,
     CanApply primVal,
     CanApply primTy,
-    Eq (Eval.Error IR.NoExt IR.NoExt primTy primVal),
-    Show (Eval.Error IR.NoExt IR.NoExt primTy primVal),
-    Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primTy,
-    Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primVal,
-    Eval.HasSubstValue IR.NoExt primTy primVal primTy,
-    Eval.HasSubstValue IR.NoExt primTy primVal primVal,
+    Eq (Eval.Error IR.T IR.T primTy primVal),
+    Show (Eval.Error IR.T IR.T primTy primVal),
+    Eval.HasPatSubstTerm (OnlyExts.T IR.T) primTy primVal primTy,
+    Eval.HasPatSubstTerm (OnlyExts.T IR.T) primTy primVal primVal,
+    Eval.HasSubstValue IR.T primTy primVal primTy,
+    Eval.HasSubstValue IR.T primTy primVal primVal,
     Eval.HasWeak primVal
   ) =>
   IR.Globals primTy primVal ->
@@ -213,12 +213,12 @@ shouldEval ::
     Eq primVal,
     CanApply primVal,
     CanApply primTy,
-    Eq (Eval.Error IR.NoExt IR.NoExt primTy primVal),
-    Show (Eval.Error IR.NoExt IR.NoExt primTy primVal),
-    Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primTy,
-    Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primVal,
-    Eval.HasSubstValue IR.NoExt primTy primVal primTy,
-    Eval.HasSubstValue IR.NoExt primTy primVal primVal,
+    Eq (Eval.Error IR.T IR.T primTy primVal),
+    Show (Eval.Error IR.T IR.T primTy primVal),
+    Eval.HasPatSubstTerm (OnlyExts.T IR.T) primTy primVal primTy,
+    Eval.HasPatSubstTerm (OnlyExts.T IR.T) primTy primVal primVal,
+    Eval.HasSubstValue IR.T primTy primVal primTy,
+    Eval.HasSubstValue IR.T primTy primVal primVal,
     Eval.HasWeak primVal
   ) =>
   IR.Term primTy primVal ->

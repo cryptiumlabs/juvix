@@ -42,7 +42,7 @@ isMain (Core.RawGFunction (Core.RawFunction (_ :| ["main"]) _ _ _)) = True
 isMain _ = False
 
 unsafeEvalGlobal ::
-  ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
+  ( IR.CanEval IR.T IR.T primTy primVal,
     Debug primTy primVal
   ) =>
   IR.RawGlobals primTy primVal ->
@@ -84,7 +84,7 @@ argReturn ty arg@Core.RawDataArg {rawArgType} =
   arg {Core.rawArgType = baseToReturn ty rawArgType}
 
 argEval ::
-  ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
+  ( IR.CanEval IR.T IR.T primTy primVal,
     Debug primTy primVal
   ) =>
   IR.RawGlobals primTy primVal ->
@@ -101,7 +101,7 @@ conReturn ty con@Core.RawDataCon {rawConType, rawConDef} =
   con {Core.rawConType = baseToReturn ty rawConType, Core.rawConDef = funReturn ty <$> rawConDef}
 
 conEval ::
-  ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
+  ( IR.CanEval IR.T IR.T primTy primVal,
     Debug primTy primVal
   ) =>
   IR.RawGlobals primTy primVal ->
@@ -118,7 +118,7 @@ funReturn ty (Core.RawFunction name usage term clauses) =
   Core.RawFunction name usage (baseToReturn ty term) (funClauseReturn ty <$> clauses)
 
 funEval ::
-  ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
+  ( IR.CanEval IR.T IR.T primTy primVal,
     Debug primTy primVal
   ) =>
   IR.RawGlobals primTy primVal ->
@@ -135,7 +135,7 @@ funClauseReturn ty (Core.RawFunClause tel patts term catchall) =
   Core.RawFunClause (telescopeReturn ty tel) (map (pattEval ty) patts) (baseToReturn ty term) catchall
 
 funClauseEval ::
-  ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
+  ( IR.CanEval IR.T IR.T primTy primVal,
     Debug primTy primVal
   ) =>
   IR.RawGlobals primTy primVal ->
@@ -152,19 +152,19 @@ funClauseEval globals (Core.RawFunClause tel patts rhs catchall) =
 
 telescopeReturn ::
   ty ->
-  Core.RawTelescope IR.NoExt ty val ->
-  Core.RawTelescope IR.NoExt ty (Param.TypedPrim ty val)
+  Core.RawTelescope IR.T ty val ->
+  Core.RawTelescope IR.T ty (Param.TypedPrim ty val)
 telescopeReturn ty = fmap f
   where
     f t@Core.RawTeleEle {rawTy, rawExtension} = t {Core.rawTy = baseToReturn ty rawTy, Core.rawExtension = rawExtension}
 
 telescopeEval ::
-  ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
+  ( IR.CanEval IR.T IR.T primTy primVal,
     Debug primTy primVal
   ) =>
   IR.RawGlobals primTy primVal ->
-  Core.RawTelescope IR.NoExt primTy primVal ->
-  Core.Telescope IR.NoExt IR.NoExt primTy primVal
+  Core.RawTelescope IR.T primTy primVal ->
+  Core.Telescope IR.T IR.T primTy primVal
 telescopeEval globals ts = f <$> ts
   where
     f rawT@Core.RawTeleEle {..} =
@@ -191,8 +191,8 @@ pattEval ty patt =
 
 baseToReturn ::
   ty ->
-  Term' IR.NoExt ty val ->
-  Term' IR.NoExt ty (Param.TypedPrim ty val)
+  Term' IR.T ty val ->
+  Term' IR.T ty (Param.TypedPrim ty val)
 baseToReturn ty t =
   case t of
     IR.Star u -> IR.Star u
@@ -209,8 +209,8 @@ baseToReturn ty t =
 
 elimToReturn ::
   ty ->
-  Elim' IR.NoExt ty val ->
-  Elim' IR.NoExt ty (Param.TypedPrim ty val) -- ty' --(TypedPrim ty val)
+  Elim' IR.T ty val ->
+  Elim' IR.T ty (Param.TypedPrim ty val) -- ty' --(TypedPrim ty val)
 elimToReturn ty e =
   case e of
     IR.Bound b -> IR.Bound b
@@ -219,7 +219,7 @@ elimToReturn ty e =
     IR.Ann u a b c -> IR.Ann u (baseToReturn ty a) (baseToReturn ty b) c
 
 unsafeEval ::
-  ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
+  ( IR.CanEval IR.T IR.T primTy primVal,
     Debug primTy primVal
   ) =>
   IR.RawGlobals primTy primVal ->

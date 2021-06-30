@@ -256,7 +256,7 @@ pushLocal ann = modify @"bound" (ann :)
 
 popLocal ::
   ( HasBound primTy primVal m,
-    HasThrowTC' IR.NoExt ext primTy primVal m
+    HasThrowTC' IR.T ext primTy primVal m
   ) =>
   m ()
 popLocal = do
@@ -270,7 +270,7 @@ popLocal = do
 
 withLocal ::
   ( HasBound primTy primVal m,
-    HasThrowTC' IR.NoExt ext primTy primVal m
+    HasThrowTC' IR.T ext primTy primVal m
   ) =>
   AnnotationT primTy primVal ->
   m a ->
@@ -278,7 +278,7 @@ withLocal ::
 withLocal ann m = pushLocal ann *> m <* popLocal
 
 requireZero ::
-  HasThrowTC' IR.NoExt ext primTy primVal m =>
+  HasThrowTC' IR.T ext primTy primVal m =>
   Usage.T ->
   m ()
 requireZero π =
@@ -286,14 +286,14 @@ requireZero π =
     throwTC (InsufficientUsage π (Usage.SNat 0))
 
 requireStar ::
-  HasThrowTC' IR.NoExt ext primTy primVal m =>
+  HasThrowTC' IR.T ext primTy primVal m =>
   Typed.ValueT primTy primVal ->
   m Core.Universe
 requireStar (IR.VStar j) = pure j
 requireStar ty = throwTC (ShouldBeStar ty)
 
 requireUniverseLT ::
-  HasThrowTC' IR.NoExt ext primTy primVal m =>
+  HasThrowTC' IR.T ext primTy primVal m =>
   Core.Universe ->
   Core.Universe ->
   m ()
@@ -325,28 +325,28 @@ type TyParts primTy primVal =
   (Usage.T, Typed.ValueT primTy primVal, Typed.ValueT primTy primVal)
 
 requirePi ::
-  HasThrowTC' IR.NoExt ext primTy primVal m =>
+  HasThrowTC' IR.T ext primTy primVal m =>
   Typed.ValueT primTy primVal ->
   m (TyParts primTy primVal)
 requirePi (IR.VPi π a b) = pure (π, a, b)
 requirePi ty = throwTC (ShouldBeFunctionType ty)
 
 requireSig ::
-  HasThrowTC' IR.NoExt ext primTy primVal m =>
+  HasThrowTC' IR.T ext primTy primVal m =>
   Typed.ValueT primTy primVal ->
   m (TyParts primTy primVal)
 requireSig (IR.VSig π a b) = pure (π, a, b)
 requireSig ty = throwTC (ShouldBePairType ty)
 
 requireUnitTy ::
-  HasThrowTC' IR.NoExt ext primTy primVal m =>
+  HasThrowTC' IR.T ext primTy primVal m =>
   Typed.ValueT primTy primVal ->
   m ()
 requireUnitTy IR.VUnitTy = pure ()
 requireUnitTy ty = throwTC (ShouldBeUnitType ty)
 
 requireSubtype ::
-  (Eq primTy, Eq primVal, HasThrowTC' IR.NoExt ext primTy primVal m) =>
+  (Eq primTy, Eq primVal, HasThrowTC' IR.T ext primTy primVal m) =>
   Core.Elim' ext primTy primVal ->
   Typed.ValueT primTy primVal ->
   Typed.ValueT primTy primVal ->
@@ -356,7 +356,7 @@ requireSubtype subj exp got =
 
 useLocal ::
   ( HasBound primTy primVal m,
-    HasThrowTC' IR.NoExt ext primTy primVal m,
+    HasThrowTC' IR.T ext primTy primVal m,
     Eval.HasWeak primTy,
     Eval.HasWeak primVal
   ) =>
@@ -378,7 +378,7 @@ useLocal π var = do
 
 usePatVar ::
   ( HasPatBinds primTy primVal m,
-    HasThrowTC' IR.NoExt ext primTy primVal m
+    HasThrowTC' IR.T ext primTy primVal m
   ) =>
   Usage.T ->
   Core.PatternVar ->
@@ -398,13 +398,13 @@ usePatVar π var = do
 
 liftEval ::
   HasThrowTC' extV extT primTy primVal m =>
-  Either (Eval.Error IR.NoExt T primTy (TypedPrim primTy primVal)) a ->
+  Either (Eval.Error IR.T T primTy (TypedPrim primTy primVal)) a ->
   m a
 liftEval = either (throwTC . EvalError) pure
 
 substApp ::
   ( HasParam primTy primVal m,
-    HasThrowTC' IR.NoExt extT primTy primVal m,
+    HasThrowTC' IR.T extT primTy primVal m,
     HasGlobals primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal),
@@ -419,7 +419,7 @@ substApp ty arg = do
   liftEval $ Eval.substV arg' ty
 
 evalTC ::
-  ( HasThrowTC' IR.NoExt ext primTy primVal m,
+  ( HasThrowTC' IR.T ext primTy primVal m,
     HasGlobals primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal),

@@ -66,12 +66,12 @@ data Error extV extT primTy primVal
   | UnsupportedTermExt (Core.TermX extT primTy primVal)
   | UnsupportedElimExt (Core.ElimX extT primTy primVal)
 
-type instance PP.Ann (Error IR.NoExt TC.T _ _) = HR.PPAnn
+type instance PP.Ann (Error IR.T TC.T _ _) = HR.PPAnn
 
 -- TODO generalise
 instance
   ApplyErrorPretty primTy primVal =>
-  PP.PrettyText (Error IR.NoExt TC.T primTy primVal)
+  PP.PrettyText (Error IR.T TC.T primTy primVal)
   where
   prettyT = \case
     CannotApply {fun, arg, paramErr} ->
@@ -118,12 +118,12 @@ deriving instance
 type TermExtFun extG extT primTy primVal =
   LookupFun extG primTy primVal ->
   Core.TermX extT primTy primVal ->
-  Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
+  Either (Error IR.T extT primTy primVal) (IR.Value primTy primVal)
 
 type ElimExtFun extG extT primTy primVal =
   LookupFun extG primTy primVal ->
   Core.ElimX extT primTy primVal ->
-  Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
+  Either (Error IR.T extT primTy primVal) (IR.Value primTy primVal)
 
 data ExtFuns extG extT primTy primVal = ExtFuns
   { tExtFun :: TermExtFun extG extT primTy primVal,

@@ -20,18 +20,18 @@ data EnvCtx' ext primTy primVal = EnvCtx
   }
   deriving (Generic)
 
-type EnvCtx = EnvCtx' IR.NoExt
+type EnvCtx = EnvCtx' IR.T
 
 type EnvAlias ext primTy primVal =
   ExceptT
-    (TypecheckError' IR.NoExt ext primTy primVal)
+    (TypecheckError' IR.T ext primTy primVal)
     (State (EnvCtx' ext primTy primVal))
 
 newtype EnvTypecheck' ext primTy primVal a
   = EnvTyp (EnvAlias ext primTy primVal a)
   deriving (Functor, Applicative, Monad)
   deriving
-    ( HasThrow "typecheckError" (TypecheckError' IR.NoExt ext primTy primVal)
+    ( HasThrow "typecheckError" (TypecheckError' IR.T ext primTy primVal)
     )
     via MonadError (EnvAlias ext primTy primVal)
   deriving
@@ -40,12 +40,12 @@ newtype EnvTypecheck' ext primTy primVal a
     )
     via ReaderField "globals" (EnvAlias ext primTy primVal)
 
-type EnvTypecheck = EnvTypecheck' IR.NoExt
+type EnvTypecheck = EnvTypecheck' IR.T
 
 type HasGlobals primTy primVal = HasReader "globals" (GlobalsT primTy primVal)
 
 type PrimSubstValue1 primTy primVal a =
-  Eval.HasSubstValue IR.NoExt primTy (TypedPrim primTy primVal) a
+  Eval.HasSubstValue IR.T primTy (TypedPrim primTy primVal) a
 
 type PrimSubstValue primTy primVal =
   ( PrimSubstValue1 primTy primVal primTy,
@@ -61,14 +61,14 @@ type PrimPatSubstTerm primTy primVal =
   )
 
 type CanTC' ext primTy primVal m =
-  ( HasThrowTC' IR.NoExt ext primTy primVal m,
+  ( HasThrowTC' IR.T ext primTy primVal m,
     HasGlobals primTy primVal m,
     PrimSubstValue primTy primVal,
     PrimPatSubstTerm primTy primVal,
     Eval.HasWeak primVal
   )
 
-type CanTC primTy primVal m = CanTC' IR.NoExt primTy primVal m
+type CanTC primTy primVal m = CanTC' IR.T primTy primVal m
 
 exec ::
   GlobalsT primTy primVal ->
@@ -89,7 +89,7 @@ lookupCtx gam x = do
   pure $ Annotation π (Eval.weakBy (x + 1) ty)
 
 lookupGlobal ::
-  (HasGlobals primTy primVal m, HasThrowTC' IR.NoExt ext primTy primVal m) =>
+  (HasGlobals primTy primVal m, HasThrowTC' IR.T ext primTy primVal m) =>
   Core.GlobalName ->
   m (ValueT primTy primVal, Core.GlobalUsage)
 lookupGlobal x = do
@@ -122,7 +122,7 @@ data InnerState' (ext :: Type) primTy primVal = InnerState
   }
   deriving (Generic)
 
-type InnerState = InnerState' IR.NoExt
+type InnerState = InnerState' IR.T
 
 type InnerTCAlias ext primTy primVal =
   StateT (InnerState' ext primTy primVal)
@@ -151,10 +151,10 @@ newtype InnerTCT ext primTy primVal m a
 deriving via
   Lift (InnerTCAlias ext primTy primVal m)
   instance
-    HasThrow "typecheckError" (TypecheckError' IR.NoExt ext primTy primVal) m =>
+    HasThrow "typecheckError" (TypecheckError' IR.T ext primTy primVal) m =>
     HasThrow
       "typecheckError"
-      (TypecheckError' IR.NoExt ext primTy primVal)
+      (TypecheckError' IR.T ext primTy primVal)
       (InnerTCT ext primTy primVal m)
 
 deriving via
@@ -178,7 +178,7 @@ deriving via
 type InnerTC' ext primTy primVal =
   InnerTCT ext primTy primVal (EnvTypecheck' ext primTy primVal)
 
-type InnerTC primTy primVal = InnerTC' IR.NoExt primTy primVal
+type InnerTC primTy primVal = InnerTC' IR.T primTy primVal
 
 type HasParam primTy primVal =
   HasReader "param" (Param.Parameterisation primTy primVal)
@@ -194,7 +194,7 @@ type CanInnerTC' ext primTy primVal m =
     HasBound primTy primVal m
   )
 
-type CanInnerTC primTy primVal m = CanInnerTC' IR.NoExt primTy primVal m
+type CanInnerTC primTy primVal m = CanInnerTC' IR.T primTy primVal m
 
 execInner ::
   Monad m =>

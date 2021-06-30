@@ -51,8 +51,8 @@ type CanEval extT extG primTy primVal =
     EvalPatSubst extT primTy primVal,
     -- no extensions (only annotations) allowed in global context
     NoExtensions extG primTy primVal,
-    HasSubstValue IR.NoExt primTy primVal primTy,
-    HasSubstValue IR.NoExt primTy primVal primVal
+    HasSubstValue IR.T primTy primVal primTy,
+    HasSubstValue IR.T primTy primVal primVal
   )
 
 inlineAllGlobals ::
@@ -107,7 +107,7 @@ evalTermWith ::
   LookupFun extG primTy primVal ->
   ExtFuns extG extT primTy primVal ->
   Core.Term' (OnlyExts.T extT) primTy primVal ->
-  Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
+  Either (Error IR.T extT primTy primVal) (IR.Value primTy primVal)
 evalTermWith _ _ (Core.Star' u _) =
   pure $ IR.VStar u
 evalTermWith _ _ (Core.PrimTy' p _) =
@@ -140,7 +140,7 @@ evalElimWith ::
   LookupFun extG primTy primVal ->
   ExtFuns extG extT primTy primVal ->
   Core.Elim' (OnlyExts.T extT) primTy primVal ->
-  Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
+  Either (Error IR.T extT primTy primVal) (IR.Value primTy primVal)
 evalElimWith _ _ (Core.Bound' i _) =
   pure $ IR.VBound i
 evalElimWith g exts (Core.Free' x _)
@@ -162,17 +162,17 @@ evalTerm ::
   CanEval extT extG primTy primVal =>
   LookupFun extG primTy primVal ->
   Core.Term' extT primTy primVal ->
-  Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
+  Either (Error IR.T extT primTy primVal) (IR.Value primTy primVal)
 evalTerm g t = evalTermWith g rejectExts $ OnlyExts.onlyExtsT t
 
 evalElim ::
   CanEval extT extG primTy primVal =>
   LookupFun extG primTy primVal ->
   Core.Elim' extT primTy primVal ->
-  Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
+  Either (Error IR.T extT primTy primVal) (IR.Value primTy primVal)
 evalElim g e = evalElimWith g rejectExts $ OnlyExts.onlyExtsE e
 
--- TODO generalise the @IR.NoExt@s
+-- TODO generalise the @IR.T@s
 toLambda' ::
   forall ext' ext primTy primVal.
   ( EvalPatSubst ext' primTy primVal,
@@ -224,7 +224,7 @@ toLambda ::
   ( EvalPatSubst ext' primTy primVal,
     NoExtensions ext primTy primVal
   ) =>
-  Core.Global' IR.NoExt ext primTy primVal ->
+  Core.Global' IR.T ext primTy primVal ->
   Maybe (Core.Elim' (OnlyExts.T ext') primTy primVal)
 toLambda (Core.GFunction (Core.Function {funUsage = π, funType = ty, funClauses}))
   | Core.FunClause _ pats rhs _ _ _ :| [] <- funClauses =
@@ -249,7 +249,7 @@ lookupFun ::
   ( EvalPatSubst ext' primTy primVal,
     NoExtensions ext primTy primVal
   ) =>
-  Core.Globals' IR.NoExt ext primTy primVal ->
+  Core.Globals' IR.T ext primTy primVal ->
   LookupFun (OnlyExts.T ext') primTy primVal
 lookupFun globals x =
   HashMap.lookup x globals >>= toLambda
@@ -265,13 +265,13 @@ rawLookupFun globals x =
   HashMap.lookup x globals >>= toLambdaR
 
 lookupFun' ::
-  EvalPatSubst IR.NoExt primTy primVal =>
+  EvalPatSubst IR.T primTy primVal =>
   IR.Globals primTy primVal ->
-  LookupFun IR.NoExt primTy primVal
-lookupFun' globals x = lookupFun @IR.NoExt globals x >>| extForgetE
+  LookupFun IR.T primTy primVal
+lookupFun' globals x = lookupFun @IR.T globals x >>| extForgetE
 
 rawLookupFun' ::
-  EvalPatSubst IR.NoExt primTy primVal =>
+  EvalPatSubst IR.T primTy primVal =>
   IR.RawGlobals primTy primVal ->
-  LookupFun IR.NoExt primTy primVal
-rawLookupFun' globals x = rawLookupFun @IR.NoExt globals x >>| extForgetE
+  LookupFun IR.T primTy primVal
+rawLookupFun' globals x = rawLookupFun @IR.T globals x >>| extForgetE

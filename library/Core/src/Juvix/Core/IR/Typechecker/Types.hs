@@ -34,7 +34,7 @@ data Annotation' ext primTy primVal = Annotation
   }
   deriving (Generic)
 
-type Annotation = Annotation' IR.NoExt
+type Annotation = Annotation' IR.T
 
 deriving instance
   (Eq (Core.Value' ext primTy primVal)) =>
@@ -59,7 +59,7 @@ deriving instance
   (Show (Core.Value' ext primTy primVal)) =>
   Show (BindAnnotation' ext primTy primVal)
 
-type BindAnnotation = BindAnnotation' IR.NoExt
+type BindAnnotation = BindAnnotation' IR.T
 
 Core.extendTerm "Term'" [] [t|T|] $
   \primTy primVal ->
@@ -96,67 +96,67 @@ type Elim primTy primVal = Elim' primTy (P.TypedPrim primTy primVal)
 type GlobalT' extV extT primTy primVal =
   Core.Global' extV extT primTy (P.TypedPrim primTy primVal)
 
-type GlobalT primTy primVal = GlobalT' IR.NoExt IR.NoExt primTy primVal
+type GlobalT primTy primVal = GlobalT' IR.T IR.T primTy primVal
 
 type DatatypeT' ext primTy primVal =
   Core.Datatype' ext primTy (P.TypedPrim primTy primVal)
 
-type DatatypeT primTy primVal = DatatypeT' IR.NoExt primTy primVal
+type DatatypeT primTy primVal = DatatypeT' IR.T primTy primVal
 
 type DataArgT' ext primTy primVal =
   Core.DataArg' ext primTy (P.TypedPrim primTy primVal)
 
-type DataArgT primTy primVal = DataArgT' IR.NoExt primTy primVal
+type DataArgT primTy primVal = DataArgT' IR.T primTy primVal
 
 type DataConT' ext primTy primVal =
   Core.DataCon' ext primTy (P.TypedPrim primTy primVal)
 
-type DataConT primTy primVal = DataConT' IR.NoExt primTy primVal
+type DataConT primTy primVal = DataConT' IR.T primTy primVal
 
 type FunctionT' extV extT primTy primVal =
   Core.Function' extV extT primTy (P.TypedPrim primTy primVal)
 
-type FunctionT primTy primVal = FunctionT' IR.NoExt IR.NoExt primTy primVal
+type FunctionT primTy primVal = FunctionT' IR.T IR.T primTy primVal
 
 type FunClauseT' extT primTy primVal =
   Core.FunClause' extT primTy (P.TypedPrim primTy primVal)
 
-type FunClauseT primTy primVal = FunClauseT' IR.NoExt primTy primVal
+type FunClauseT primTy primVal = FunClauseT' IR.T primTy primVal
 
 type PatternT' ext primTy primVal =
   Core.Pattern' ext primTy (P.TypedPrim primTy primVal)
 
-type PatternT primTy primVal = PatternT' IR.NoExt primTy primVal
+type PatternT primTy primVal = PatternT' IR.T primTy primVal
 
 type AbstractT' extV primTy primVal =
   Core.Abstract' extV primTy (P.TypedPrim primTy primVal)
 
-type AbstractT primTy primVal = AbstractT' IR.NoExt primTy primVal
+type AbstractT primTy primVal = AbstractT' IR.T primTy primVal
 
 type GlobalsT' extV extT primTy primVal =
   Core.Globals' extV extT primTy (P.TypedPrim primTy primVal)
 
-type GlobalsT primTy primVal = GlobalsT' IR.NoExt IR.NoExt primTy primVal
+type GlobalsT primTy primVal = GlobalsT' IR.T IR.T primTy primVal
 
 type ValueT' ext primTy primVal =
   Core.Value' ext primTy (P.TypedPrim primTy primVal)
 
-type ValueT primTy primVal = ValueT' IR.NoExt primTy primVal
+type ValueT primTy primVal = ValueT' IR.T primTy primVal
 
 type NeutralT' ext primTy primVal =
   Core.Neutral' ext primTy (P.TypedPrim primTy primVal)
 
-type NeutralT primTy primVal = NeutralT' IR.NoExt primTy primVal
+type NeutralT primTy primVal = NeutralT' IR.T primTy primVal
 
 type AnnotationT' ext primTy primVal =
   Annotation' ext primTy (P.TypedPrim primTy primVal)
 
-type AnnotationT primTy primVal = AnnotationT' IR.NoExt primTy primVal
+type AnnotationT primTy primVal = AnnotationT' IR.T primTy primVal
 
 type BindAnnotationT' ext primTy primVal =
   BindAnnotation' ext primTy (P.TypedPrim primTy primVal)
 
-type BindAnnotationT primTy primVal = BindAnnotationT' IR.NoExt primTy primVal
+type BindAnnotationT primTy primVal = BindAnnotationT' IR.T primTy primVal
 
 getTermAnn :: Term' primTy primVal -> Annotation primTy primVal
 getTermAnn (Star _ ann) = ann

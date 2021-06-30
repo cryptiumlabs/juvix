@@ -10,49 +10,49 @@ import Juvix.Library hiding (show)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 
-data NoExt deriving (Data, Show)
+data T deriving (Data, Show)
 
-extendTerm "Term" [] [t|NoExt|] $ \_ _ -> defaultExtTerm
+extendTerm "Term" [] [t|T|] $ \_ _ -> defaultExtTerm
 
-extendElim "Elim" [] [t|NoExt|] $ \_ _ -> defaultExtElim
+extendElim "Elim" [] [t|T|] $ \_ _ -> defaultExtElim
 
-extendValue "Value" [] [t|NoExt|] $ \_ _ -> defaultExtValue
+extendValue "Value" [] [t|T|] $ \_ _ -> defaultExtValue
 
-extendNeutral "Neutral" [] [t|NoExt|] $ \_ _ -> defaultExtNeutral
+extendNeutral "Neutral" [] [t|T|] $ \_ _ -> defaultExtNeutral
 
-extendPattern "Pattern" [] [t|NoExt|] $ \_ _ -> defaultExtPattern
+extendPattern "Pattern" [] [t|T|] $ \_ _ -> defaultExtPattern
 
-type Datatype = Datatype' NoExt NoExt
+type Datatype = Datatype' T T
 
-type RawDatatype = RawDatatype' NoExt
+type RawDatatype = RawDatatype' T
 
-type DataArg = DataArg' NoExt
+type DataArg = DataArg' T
 
-type RawDataArg = RawDataArg' NoExt
+type RawDataArg = RawDataArg' T
 
-type DataCon = DataCon' NoExt NoExt
+type DataCon = DataCon' T T
 
-type RawDataCon = RawDataCon' NoExt
+type RawDataCon = RawDataCon' T
 
-type Function = Function' NoExt NoExt
+type Function = Function' T T
 
-type RawFunction = RawFunction' NoExt
+type RawFunction = RawFunction' T
 
-type FunClause = FunClause' NoExt NoExt
+type FunClause = FunClause' T T
 
-type RawFunClause = RawFunClause' NoExt
+type RawFunClause = RawFunClause' T
 
-type Abstract = Abstract' NoExt
+type Abstract = Abstract' T
 
-type RawAbstract = RawAbstract' NoExt
+type RawAbstract = RawAbstract' T
 
-type Global = Global' NoExt NoExt
+type Global = Global' T T
 
-type RawGlobal = RawGlobal' NoExt
+type RawGlobal = RawGlobal' T
 
-type Globals primTy primVal = Globals' NoExt NoExt primTy primVal
+type Globals primTy primVal = Globals' T T primTy primVal
 
-type RawGlobals primTy primVal = RawGlobals' NoExt primTy primVal
+type RawGlobals primTy primVal = RawGlobals' T primTy primVal
 
 -- Quotation: takes a value back to a term
 quote0 :: Value primTy primVal -> Term primTy primVal

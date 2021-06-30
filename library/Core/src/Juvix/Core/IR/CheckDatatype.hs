@@ -5,16 +5,16 @@ module Juvix.Core.IR.CheckDatatype
   )
 where
 
-import Juvix.Core.IR.CheckTerm
+import Juvix.Core.IR.CheckTerm hiding (T)
 import qualified Juvix.Core.IR.Evaluator as Eval
-import Juvix.Core.IR.Types (NoExt, pattern VStar)
+import Juvix.Core.IR.Types (T, pattern VStar)
 import Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 
 -- | check all constructors of a datatype
 typeCheckAllCons ::
-  ( HasThrowTC' NoExt extT primTy primVal m,
+  ( HasThrowTC' T extT primTy primVal m,
     Eq primTy,
     Eq primVal,
     Show primTy,
@@ -25,28 +25,28 @@ typeCheckAllCons ::
     Param.CanApply (TypedPrim primTy primVal),
     Eval.NoExtensions extT primTy (TypedPrim primTy primVal),
     Eval.NoExtensions extT primTy primVal,
-    Eval.CanEval extT NoExt primTy primVal,
-    Eval.EvalPatSubst NoExt primTy primVal,
-    Eval.EvalPatSubst NoExt primTy (TypedPrim primTy primVal)
+    Eval.CanEval extT T primTy primVal,
+    Eval.EvalPatSubst T primTy primVal,
+    Eval.EvalPatSubst T primTy (TypedPrim primTy primVal)
   ) =>
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
   -- |
-  Telescope NoExt extT primTy primVal ->
+  Telescope T extT primTy primVal ->
   -- | Positivity of its parameters
   [Core.Pos] ->
   RawTelescope extT primTy primVal ->
   -- | a hashmap of global names and their info
-  GlobalsT' NoExt extT primTy primVal ->
+  GlobalsT' T extT primTy primVal ->
   -- | The constructors to be checked
   [RawDataCon' extT primTy primVal] ->
-  TypeCheck NoExt primTy primVal m [Core.RawGlobal' extT primTy primVal]
+  TypeCheck T primTy primVal m [Core.RawGlobal' extT primTy primVal]
 typeCheckAllCons param tel pos rtel globals =
   mapM (typeCheckConstructor param tel pos rtel globals)
 
 typeCheckConstructor ::
   forall extT primTy primVal m.
-  ( HasThrowTC' NoExt extT primTy primVal m,
+  ( HasThrowTC' T extT primTy primVal m,
     Eq primTy,
     Eq primVal,
     Show primTy,
@@ -57,28 +57,28 @@ typeCheckConstructor ::
     Param.CanApply (TypedPrim primTy primVal),
     Eval.NoExtensions extT primTy (TypedPrim primTy primVal),
     Eval.NoExtensions extT primTy primVal,
-    Eval.CanEval extT NoExt primTy primVal,
-    Eval.EvalPatSubst NoExt primTy primVal,
-    Eval.EvalPatSubst NoExt primTy (TypedPrim primTy primVal)
+    Eval.CanEval extT T primTy primVal,
+    Eval.EvalPatSubst T primTy primVal,
+    Eval.EvalPatSubst T primTy (TypedPrim primTy primVal)
   ) =>
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
-  Telescope NoExt extT primTy primVal ->
+  Telescope T extT primTy primVal ->
   -- | Positivity of its parameters
   [Core.Pos] ->
   RawTelescope extT primTy primVal ->
   -- | a hashmap of global names and their info
-  GlobalsT' NoExt extT primTy primVal ->
+  GlobalsT' T extT primTy primVal ->
   -- | The constructor to be checked
   RawDataCon' extT primTy primVal ->
-  TypeCheck NoExt primTy primVal m (Core.RawGlobal' extT primTy primVal)
+  TypeCheck T primTy primVal m (Core.RawGlobal' extT primTy primVal)
 typeCheckConstructor param tel _lpos rtel globals con = do
   let cname = Core.rawConName con
       conTy = Core.rawConType con
       (name, t) = teleToType rtel conTy
   -- FIXME replace 'lift' with whatever capability does
   typechecked <- lift $ typeTerm param t (Annotation mempty (VStar 0))
-  evaled <- lift $ liftEval $ Eval.evalTerm (Eval.lookupFun @NoExt globals) typechecked
+  evaled <- lift $ liftEval $ Eval.evalTerm (Eval.lookupFun @T globals) typechecked
   checkConType tel param evaled
   let (_, target) = typeToTele (name, t)
   -- FIXME replace 'lift'
@@ -126,20 +126,20 @@ typeToTele (n, t) = ttt (n, t) []
 -- | checkDataType checks the datatype by checking all arguments.
 -- The data constructors are checked by another function.
 checkDataType ::
-  ( Eval.CanEval NoExt extT primTy primVal,
+  ( Eval.CanEval T extT primTy primVal,
     Eq primTy,
     Eq primVal,
     Show primTy,
     Show primVal,
     Show extT,
     ShowExt extT primTy primVal,
-    Core.ValueAll Eq NoExt primTy primVal,
-    Core.NeutralAll Eq NoExt primTy primVal,
+    Core.ValueAll Eq T primTy primVal,
+    Core.NeutralAll Eq T primTy primVal,
     CanTC' extT primTy primVal m,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   -- | an env that contains the parameters of the datatype
-  Telescope NoExt extT primTy primVal ->
+  Telescope T extT primTy primVal ->
   -- | name of the datatype
   GlobalName ->
   Param.Parameterisation primTy primVal ->
@@ -151,20 +151,20 @@ checkDataType tel dtName param =
 
 -- | checkDataTypeArg checks an argument of the datatype
 checkDataTypeArg ::
-  ( Eval.CanEval NoExt extT primTy primVal,
+  ( Eval.CanEval T extT primTy primVal,
     Eq primTy,
     Eq primVal,
     Show primTy,
     Show primVal,
     Show extT,
     ShowExt extT primTy primVal,
-    Core.ValueAll Eq NoExt primTy primVal,
-    Core.NeutralAll Eq NoExt primTy primVal,
+    Core.ValueAll Eq T primTy primVal,
+    Core.NeutralAll Eq T primTy primVal,
     CanTC' extT primTy primVal m,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   -- | an env that contains the parameters of the datatype
-  Telescope NoExt extT primTy primVal ->
+  Telescope T extT primTy primVal ->
   -- | name of the datatype
   GlobalName ->
   -- | targeted backend/parameterisation
@@ -181,20 +181,20 @@ checkDataTypeArg _ _ _ arg = throwTC $ DatatypeError arg
 
 -- | type check a constructor
 checkConType ::
-  ( Eval.CanEval NoExt extT primTy primVal,
+  ( Eval.CanEval T extT primTy primVal,
     Eq primTy,
     Eq primVal,
-    Core.ValueAll Eq NoExt primTy primVal,
-    Core.NeutralAll Eq NoExt primTy primVal,
+    Core.ValueAll Eq T primTy primVal,
+    Core.NeutralAll Eq T primTy primVal,
     CanTC' extT primTy primVal m,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   -- | an env that contains the parameters of the datatype
-  Telescope NoExt extT primTy primVal ->
+  Telescope T extT primTy primVal ->
   Param.Parameterisation primTy primVal ->
   -- | the expression that is left to be checked.
-  Core.Value' NoExt primTy (TypedPrim primTy primVal) ->
-  TypeCheck NoExt primTy primVal m ()
+  Core.Value' T primTy (TypedPrim primTy primVal) ->
+  TypeCheck T primTy primVal m ()
 checkConType tel param e =
   case e of
     -- the constructor could be a function type
@@ -210,7 +210,7 @@ checkConType tel param e =
 -- | check that the data type and the parameter arguments
 -- are written down like declared in telescope
 checkDeclared ::
-  (HasThrow "typecheckError" (TypecheckError' NoExt extT primTy primVal) m) =>
+  (HasThrow "typecheckError" (TypecheckError' T extT primTy primVal) m) =>
   GlobalName ->
   RawTelescope extT primTy primVal ->
   Core.Term' extT primTy primVal ->
@@ -229,7 +229,7 @@ checkDeclared name tel tg =
 
 -- check parameters
 checkParams ::
-  (HasThrow "typecheckError" (TypecheckError' NoExt extT primTy primVal) m) =>
+  (HasThrow "typecheckError" (TypecheckError' T extT primTy primVal) m) =>
   RawTelescope extT primTy primVal ->
   Core.Term' extT primTy primVal ->
   m ()

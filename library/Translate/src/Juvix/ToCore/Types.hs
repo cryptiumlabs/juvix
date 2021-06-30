@@ -258,14 +258,14 @@ deriving instance
   ) =>
   Data (CoreSig ext primTy primVal)
 
-type CoreSigIR = CoreSig IR.NoExt
+type CoreSigIR = CoreSig IR.T
 
 type CoreSigHR = CoreSig HR.T
 
 type CoreSigs' ext primTy primVal =
   HashMap Core.GlobalName (CoreSig ext primTy primVal)
 
-type CoreSigsIR primTy primVal = CoreSigs' IR.NoExt primTy primVal
+type CoreSigsIR primTy primVal = CoreSigs' IR.T primTy primVal
 
 type CoreSigsHR primTy primVal = CoreSigs' HR.T primTy primVal
 

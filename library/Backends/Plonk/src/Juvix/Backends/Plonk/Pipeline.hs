@@ -38,23 +38,23 @@ instance
     CanApply (Param.TypedPrim (Types.PrimTy f) (Types.PrimVal f)),
     CanApply (Types.PrimTy f),
     IR.HasPatSubstTerm
-      (OnlyExts.T IR.NoExt)
+      (OnlyExts.T IR.T)
       (Types.PrimTy f)
       (Param.TypedPrim (Types.PrimTy f) (Types.PrimVal f))
       (Types.PrimTy f),
     IR.HasWeak (Types.PrimVal f),
     IR.HasSubstValue
-      IR.NoExt
+      IR.T
       (Types.PrimTy f)
       (Param.TypedPrim (Types.PrimTy f) (Types.PrimVal f))
       (Types.PrimTy f),
     IR.HasPatSubstTerm
-      (OnlyExts.T IR.NoExt)
+      (OnlyExts.T IR.T)
       (Types.PrimTy f)
       (Types.PrimVal f)
       (Types.PrimTy f),
     IR.HasPatSubstTerm
-      (OnlyExts.T IR.NoExt)
+      (OnlyExts.T IR.T)
       (Types.PrimTy f)
       (Types.PrimVal f)
       (Types.PrimVal f),

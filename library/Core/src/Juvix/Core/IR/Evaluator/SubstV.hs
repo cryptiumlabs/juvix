@@ -361,16 +361,16 @@ instance
     where
       pi s t = Core.VPi' Usage.Omega s (weak t) mempty
 
--- TODO generalise @IR.NoExt@
+-- TODO generalise @IR.T@
 instance
   ( HasWeak primTy,
     HasWeak primVal,
-    HasSubstValue IR.NoExt primTy (Param.TypedPrim primTy primVal) primTy,
+    HasSubstValue IR.T primTy (Param.TypedPrim primTy primVal) primTy,
     Param.CanApply primTy,
     Param.CanApply (Param.TypedPrim primTy primVal)
   ) =>
   HasSubstValue
-    IR.NoExt
+    IR.T
     primTy
     (Param.TypedPrim primTy primVal)
     (Param.TypedPrim primTy primVal)

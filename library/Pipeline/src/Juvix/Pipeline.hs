@@ -77,14 +77,14 @@ class HasBackend b where
       CanApply (Ty b),
       CanApply (TypedPrim (Ty b) (Val b)),
       IR.HasWeak (Val b),
-      IR.HasSubstValue IR.NoExt (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
-      IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
+      IR.HasSubstValue IR.T (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
+      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
       Show (ApplyErrorExtra (Ty b)),
       Show (ApplyErrorExtra (TypedPrim (Ty b) (Val b))),
       Show (Arg (Ty b)),
       Show (Arg (TypedPrim (Ty b) (Val b))),
-      IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (Val b) (Ty b),
-      IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (Val b) (Val b),
+      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (Val b) (Ty b),
+      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (Val b) (Val b),
       IR.HasPatSubstTerm (OnlyExts.T TypeChecker.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b)
     ) =>
     Context.T Sexp.T Sexp.T Sexp.T ->
@@ -102,7 +102,7 @@ class HasBackend b where
         case HM.elems $ HM.filter isMain globalDefs of
           [] -> Feedback.fail $ "No main function found in " <> show globalDefs
           [f@(Core.RawGFunction _)] ->
-            case TransformExt.extForgetE <$> IR.toLambdaR @IR.NoExt f of
+            case TransformExt.extForgetE <$> IR.toLambdaR @IR.T f of
               Nothing -> do
                 Feedback.fail "Unable to convert main to lambda"
               Just (IR.Ann usage term ty _) -> do

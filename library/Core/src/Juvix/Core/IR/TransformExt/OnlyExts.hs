@@ -65,7 +65,7 @@ injectT = extTransformT injector
 injectE :: IR.Elim primTy primVal -> Core.Elim' (T ext) primTy primVal
 injectE = extTransformE injector
 
-injector :: ExtTransformTE IR.NoExt (T ext) primTy primVal
+injector :: ExtTransformTE IR.T (T ext) primTy primVal
 injector =
   ExtTransformTE
     { etStar = identity,

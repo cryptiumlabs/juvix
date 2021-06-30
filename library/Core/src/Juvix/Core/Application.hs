@@ -90,8 +90,8 @@ data DeBruijn
     FreeVar Core.GlobalName
   deriving (Show, Eq, Generic)
 
-instance IsParamVar IR.NoExt where
-  type ParamVar IR.NoExt = DeBruijn
+instance IsParamVar IR.T where
+  type ParamVar IR.T = DeBruijn
   freeVar _ = Just . FreeVar
   boundVar _ = Just . BoundVar
 
@@ -104,7 +104,7 @@ data Arg' ext ty term
   deriving (Generic, Functor, Foldable, Traversable)
 
 -- | Simplification for 'Arg'' without any extensions.
-type Arg = Arg' IR.NoExt
+type Arg = Arg' IR.T
 
 -- | Pattern synonym for bound arguments in DeBruijn terms.
 pattern BoundArg ::

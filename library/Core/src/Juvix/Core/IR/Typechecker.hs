@@ -30,18 +30,18 @@ typeCheckDeclaration ::
     Show primVal,
     Show extT,
     ShowExt extT primTy primVal,
-    Eval.CanEval extT IR.NoExt primTy primVal,
-    Eval.EvalPatSubst IR.NoExt primTy primVal,
-    Eval.EvalPatSubst IR.NoExt primTy (Param.TypedPrim primTy primVal),
+    Eval.CanEval extT IR.T primTy primVal,
+    Eval.EvalPatSubst IR.T primTy primVal,
+    Eval.EvalPatSubst IR.T primTy (Param.TypedPrim primTy primVal),
     Eval.NoExtensions extT primTy (Param.TypedPrim primTy primVal),
     Eval.NoExtensions extT primTy primVal,
     Env.CanTC' extT primTy primVal m,
     Param.CanApply (Param.TypedPrim primTy primVal),
-    HasReader "globals" (Typed.GlobalsT' IR.NoExt extT primTy primVal) m
+    HasReader "globals" (Typed.GlobalsT' IR.T extT primTy primVal) m
   ) =>
   -- | Telescope containing a list of
   -- (name, usage, ty (of type Value') and the extension)
-  Core.Telescope IR.NoExt extT primTy primVal ->
+  Core.Telescope IR.T extT primTy primVal ->
   -- | Raw telescope containing ty (of type Term')
   Core.RawTelescope extT primTy primVal ->
   -- | The targeted parameterisation
@@ -51,7 +51,7 @@ typeCheckDeclaration ::
   -- | A list of function declarations to be checked
   [Core.RawFunction' extT primTy primVal] ->
   -- | A list of Globals to be added to the global state
-  Env.TypeCheck IR.NoExt primTy primVal m [Core.RawGlobal' extT primTy primVal]
+  Env.TypeCheck IR.T primTy primVal m [Core.RawGlobal' extT primTy primVal]
 typeCheckDeclaration _tel _rtel _param [] [] =
   return []
 -- type checking datatype declarations

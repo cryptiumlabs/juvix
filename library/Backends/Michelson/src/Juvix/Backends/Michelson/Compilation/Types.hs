@@ -118,7 +118,7 @@ type Arg' ext = App.Arg' ext (P.PrimType PrimTy) RawPrimVal
 
 type PrimVal' ext = Return' ext
 
-type PrimValIR = PrimVal' IR.NoExt
+type PrimValIR = PrimVal' IR.T
 
 type PrimValHR = PrimVal' CoreErased.T
 

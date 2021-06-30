@@ -73,7 +73,7 @@ data TypecheckError' extV extT primTy primVal
       { pattern_ :: Core.Pattern' extT primTy primVal
       }
   | EvalError
-      { evalErr :: Eval.Error IR.NoExt T primTy (P.TypedPrim primTy primVal)
+      { evalErr :: Eval.Error IR.T T primTy (P.TypedPrim primTy primVal)
       }
   | -- | datatype typechecking errors
     DatatypeError
@@ -92,7 +92,7 @@ data TypecheckError' extV extT primTy primVal
         tel :: Core.RawTelescope extT primTy primVal
       }
 
-type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
+type TypecheckError = TypecheckError' IR.T IR.T
 
 deriving instance
   ( Eq primTy,
@@ -128,7 +128,7 @@ deriving instance
   ) =>
   Show (TypecheckError' extV extT primTy primVal)
 
-type instance PP.Ann (TypecheckError' IR.NoExt IR.NoExt _ _) = HR.PPAnn
+type instance PP.Ann (TypecheckError' IR.T IR.T _ _) = HR.PPAnn
 
 type Doc = HR.Doc
 
@@ -137,7 +137,7 @@ instance
   ( HR.PrimPretty primTy primVal,
     Eval.ApplyErrorPretty primTy (P.TypedPrim primTy primVal)
   ) =>
-  PP.PrettyText (TypecheckError' IR.NoExt IR.NoExt primTy primVal)
+  PP.PrettyText (TypecheckError' IR.T IR.T primTy primVal)
   where
   prettyT = \case
     TypeMismatch term exp got ->
@@ -246,7 +246,7 @@ type HasThrowTC' extV extT primTy primVal m =
   HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m
 
 type HasThrowTC primTy primVal m =
-  HasThrowTC' IR.NoExt IR.NoExt primTy primVal m
+  HasThrowTC' IR.T IR.T primTy primVal m
 
 throwTC ::
   HasThrowTC' extV extT primTy primVal m =>

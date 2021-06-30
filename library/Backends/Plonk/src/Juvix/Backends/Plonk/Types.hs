@@ -63,7 +63,7 @@ data PrimTy f
 
 type Return' ext f = App.Return' ext (P.PrimType (PrimTy f)) (PrimVal f)
 
-type ReturnIR f = Return' IR.NoExt f
+type ReturnIR f = Return' IR.T f
 
 type ReturnHR f = Return' CoreErased.T f
 
@@ -71,13 +71,13 @@ type Take f = App.Take (P.PrimType (PrimTy f)) (PrimVal f)
 
 type Arg' ext f = App.Arg' ext (P.PrimType (PrimTy f)) (PrimVal f)
 
-type ArgIR f = Arg' IR.NoExt f
+type ArgIR f = Arg' IR.T f
 
 type ArgHR f = Arg' CoreErased.T f
 
 type PrimVal' ext f = Return' ext f
 
-type PrimValIR f = PrimVal' IR.NoExt f
+type PrimValIR f = PrimVal' IR.T f
 
 type PrimValHR f = PrimVal' CoreErased.T f
 
