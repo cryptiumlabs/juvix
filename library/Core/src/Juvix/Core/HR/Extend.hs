@@ -4,6 +4,7 @@ import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
+-- | Extend binders, i.e Lam, Pi, Sig, Let with a human readable name (NameSymbol)
 extTerm :: p1 -> p2 -> IR.ExtTerm
 extTerm =
   \_primTy _primVal ->
@@ -24,6 +25,7 @@ extElim =
     IR.defaultExtElim
       { IR.typeBound = Nothing,
         IR.typeFree = Nothing,
+        -- | Extend with extra constructor Var that was not existing before
         IR.typeElimX = [("Var", [[t|NameSymbol.T|]])]
       }
 
