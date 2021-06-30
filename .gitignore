@@ -42,7 +42,7 @@ tmp/
 
 # tex
 *.aux
-*.fbd_latexmk
+*.fdb_latexmk
 *.fls
 *.log
 *.out

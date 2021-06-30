@@ -59,8 +59,8 @@
 % \node[main] (10) [below of=9] {Core IR NoExt}; 
 % TODO: From here, it's already type checked
 \node[main] (11) [below of=8] {Core Erased}; 
-\node[main] (12) [below of=11] {Erased Ann Term}; 
-\node[main] (13) [below of=12] {Erased Term No Return}; 
+\node[main] (12) [below of=11] {Erased AnnTerm (with Return)}; 
+\node[main] (13) [below of=12] {Erased AnnTerm (without Return)}; 
 \node[main] (14) [below of=13] {Backend}; 
 \draw[->] (1) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Frontend/src/Juvix/Frontend/Parser.hs}{Frontend: Juvix.Frontend.Parser.hs (parse)}} (2); 
 \draw[->] (2) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/ToCore/FromFrontend.hs}{???}} (3); 
@@ -78,8 +78,6 @@
 \node[draw,dotted,fit=(3) (4) (5) (6)] {};
 \node[draw,dotted,fit=(7) (8)] {};
 \node[draw,dotted,fit=(11) (12) (13)] {};
-
-
 
 \end{tikzpicture} 
 
