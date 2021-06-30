@@ -1,7 +1,10 @@
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.IR.Evaluator.Subst where
+module Juvix.Core.IR.Evaluator.Subst
+  (
+  )
+where
 
 import qualified Juvix.Core.Application as App
 import Juvix.Core.IR.Evaluator.Weak
