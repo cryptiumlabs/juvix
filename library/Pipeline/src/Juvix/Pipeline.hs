@@ -18,6 +18,7 @@ import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.IR.TransformExt as TransformExt
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
@@ -100,7 +101,7 @@ class HasBackend b where
             lookupGlobal = IR.rawLookupFun' globalDefs
         case HM.elems $ HM.filter isMain globalDefs of
           [] -> Feedback.fail $ "No main function found in " <> show globalDefs
-          [f@(IR.RawGFunction _)] ->
+          [f@(Core.RawGFunction _)] ->
             case TransformExt.extForgetE <$> IR.toLambdaR @IR.NoExt f of
               Nothing -> do
                 Feedback.fail "Unable to convert main to lambda"

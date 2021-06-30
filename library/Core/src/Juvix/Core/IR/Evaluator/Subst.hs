@@ -5,41 +5,40 @@ module Juvix.Core.IR.Evaluator.Subst where
 
 import qualified Juvix.Core.Application as App
 import Juvix.Core.IR.Evaluator.Weak
-import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.Base.Types as IR
+import qualified Juvix.Core.Base.Types as Core
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 
 class HasWeak a => HasSubst ext primTy primVal a where
   substWith ::
     -- | How many bindings have been traversed so far
-    IR.BoundVar ->
+    Core.BoundVar ->
     -- | Variable to substitute
-    IR.BoundVar ->
+    Core.BoundVar ->
     -- | Expression to substitute with
-    IR.Elim' ext primTy primVal ->
+    Core.Elim' ext primTy primVal ->
     a ->
     a
   default substWith ::
     (Generic a, GHasSubst ext primTy primVal (Rep a)) =>
     Natural ->
-    IR.BoundVar ->
-    IR.Elim' ext primTy primVal ->
+    Core.BoundVar ->
+    Core.Elim' ext primTy primVal ->
     a ->
     a
   substWith b i e = to . gsubstWith b i e . from
 
 subst' ::
   HasSubst ext primTy primVal a =>
-  IR.BoundVar ->
-  IR.Elim' ext primTy primVal ->
+  Core.BoundVar ->
+  Core.Elim' ext primTy primVal ->
   a ->
   a
 subst' = substWith 0
 
 subst ::
   HasSubst ext primTy primVal a =>
-  IR.Elim' ext primTy primVal ->
+  Core.Elim' ext primTy primVal ->
   a ->
   a
 subst = subst' 0
@@ -47,95 +46,95 @@ subst = subst' 0
 class HasWeak a => HasSubstTerm ext primTy primVal a where
   substTermWith ::
     -- | How many bindings have been traversed so far
-    IR.BoundVar ->
+    Core.BoundVar ->
     -- | Variable to substitute
-    IR.BoundVar ->
+    Core.BoundVar ->
     -- | Expression to substitute with
-    IR.Elim' ext primTy primVal ->
+    Core.Elim' ext primTy primVal ->
     a ->
-    IR.Term' ext primTy primVal
+    Core.Term' ext primTy primVal
 
 substTerm' ::
   HasSubstTerm ext primTy primVal a =>
-  IR.BoundVar ->
-  IR.Elim' ext primTy primVal ->
+  Core.BoundVar ->
+  Core.Elim' ext primTy primVal ->
   a ->
-  IR.Term' ext primTy primVal
+  Core.Term' ext primTy primVal
 substTerm' = substTermWith 0
 
 substTerm ::
   HasSubstTerm ext primTy primVal a =>
-  IR.Elim' ext primTy primVal ->
+  Core.Elim' ext primTy primVal ->
   a ->
-  IR.Term' ext primTy primVal
+  Core.Term' ext primTy primVal
 substTerm = substTerm' 0
 
 type AllSubst ext primTy primVal =
-  ( IR.TermAll (HasSubst ext primTy primVal) ext primTy primVal,
-    IR.ElimAll (HasSubst ext primTy primVal) ext primTy primVal,
+  ( Core.TermAll (HasSubst ext primTy primVal) ext primTy primVal,
+    Core.ElimAll (HasSubst ext primTy primVal) ext primTy primVal,
     HasSubstTerm ext primTy primVal primTy,
     HasSubstTerm ext primTy primVal primVal
   )
 
 instance
   AllSubst ext primTy primVal =>
-  HasSubst ext primTy primVal (IR.Term' ext primTy primVal)
+  HasSubst ext primTy primVal (Core.Term' ext primTy primVal)
   where
-  substWith w i e (IR.Star' u a) =
-    IR.Star' u (substWith w i e a)
-  substWith w i e (IR.PrimTy' t _) =
+  substWith w i e (Core.Star' u a) =
+    Core.Star' u (substWith w i e a)
+  substWith w i e (Core.PrimTy' t _) =
     -- FIXME annotation?
     substTermWith w i e t
-  substWith w i e (IR.Prim' p _) =
+  substWith w i e (Core.Prim' p _) =
     -- FIXME annotation?
     substTermWith w i e p
-  substWith w i e (IR.Pi' π s t a) =
-    IR.Pi' π (substWith w i e s) (substWith (succ w) (succ i) e t) (substWith w i e a)
-  substWith w i e (IR.Lam' t a) =
-    IR.Lam' (substWith (succ w) (succ i) e t) (substWith w i e a)
-  substWith w i e (IR.Sig' π s t a) =
-    IR.Sig' π (substWith w i e s) (substWith (succ w) (succ i) e t) (substWith w i e a)
-  substWith w i e (IR.Pair' s t a) =
-    IR.Pair' (substWith w i e s) (substWith w i e t) (substWith w i e a)
-  substWith w i e (IR.UnitTy' a) =
-    IR.UnitTy' (substWith w i e a)
-  substWith w i e (IR.Unit' a) =
-    IR.Unit' (substWith w i e a)
-  substWith w i e (IR.Let' π l b a) =
-    IR.Let' π (substWith w i e l) (substWith (succ w) (succ i) e b) (substWith w i e a)
-  substWith w i e (IR.Elim' t a) =
-    IR.Elim' (substWith w i e t) (substWith w i e a)
-  substWith w i e (IR.TermX a) =
-    IR.TermX (substWith w i e a)
+  substWith w i e (Core.Pi' π s t a) =
+    Core.Pi' π (substWith w i e s) (substWith (succ w) (succ i) e t) (substWith w i e a)
+  substWith w i e (Core.Lam' t a) =
+    Core.Lam' (substWith (succ w) (succ i) e t) (substWith w i e a)
+  substWith w i e (Core.Sig' π s t a) =
+    Core.Sig' π (substWith w i e s) (substWith (succ w) (succ i) e t) (substWith w i e a)
+  substWith w i e (Core.Pair' s t a) =
+    Core.Pair' (substWith w i e s) (substWith w i e t) (substWith w i e a)
+  substWith w i e (Core.UnitTy' a) =
+    Core.UnitTy' (substWith w i e a)
+  substWith w i e (Core.Unit' a) =
+    Core.Unit' (substWith w i e a)
+  substWith w i e (Core.Let' π l b a) =
+    Core.Let' π (substWith w i e l) (substWith (succ w) (succ i) e b) (substWith w i e a)
+  substWith w i e (Core.Elim' t a) =
+    Core.Elim' (substWith w i e t) (substWith w i e a)
+  substWith w i e (Core.TermX a) =
+    Core.TermX (substWith w i e a)
 
 instance
   AllSubst ext primTy primVal =>
-  HasSubst ext primTy primVal (IR.Elim' ext primTy primVal)
+  HasSubst ext primTy primVal (Core.Elim' ext primTy primVal)
   where
-  substWith w i e (IR.Bound' j a) =
+  substWith w i e (Core.Bound' j a) =
     case compare j i of
-      LT -> IR.Bound' j a'
+      LT -> Core.Bound' j a'
       EQ -> weakBy w e
-      GT -> IR.Bound' (pred j) a'
+      GT -> Core.Bound' (pred j) a'
     where
       a' = substWith w i e a
-  substWith w i e (IR.Free' x a) =
-    IR.Free' x (substWith w i e a)
-  substWith w i e (IR.App' f s a) =
-    IR.App' (substWith w i e f) (substWith w i e s) (substWith w i e a)
-  substWith w i e (IR.Ann' π s t l a) =
-    IR.Ann' π (substWith w i e s) (substWith w i e t) l (substWith w i e a)
-  substWith w i e (IR.ElimX a) =
-    IR.ElimX (substWith w i e a)
+  substWith w i e (Core.Free' x a) =
+    Core.Free' x (substWith w i e a)
+  substWith w i e (Core.App' f s a) =
+    Core.App' (substWith w i e f) (substWith w i e s) (substWith w i e a)
+  substWith w i e (Core.Ann' π s t l a) =
+    Core.Ann' π (substWith w i e s) (substWith w i e t) l (substWith w i e a)
+  substWith w i e (Core.ElimX a) =
+    Core.ElimX (substWith w i e a)
 
 class GHasWeak f => GHasSubst ext primTy primVal f where
   gsubstWith ::
     -- | How many bindings have been traversed so far
     Natural ->
     -- | Variable to substitute
-    IR.BoundVar ->
+    Core.BoundVar ->
     -- | Expression to substitute with
-    IR.Elim' ext primTy primVal ->
+    Core.Elim' ext primTy primVal ->
     f t ->
     f t
 
@@ -235,22 +234,22 @@ instance
 
 instance
   AllSubst ext primTy primVal =>
-  HasSubstTerm ext primTy primVal (IR.Term' ext primTy primVal)
+  HasSubstTerm ext primTy primVal (Core.Term' ext primTy primVal)
   where
   substTermWith = substWith
 
 instance
   ( AllSubst ext primTy primVal,
-    Monoid (IR.XBound ext primTy primVal),
-    Monoid (IR.XFree ext primTy primVal),
-    Monoid (IR.XElim ext primTy primVal)
+    Monoid (Core.XBound ext primTy primVal),
+    Monoid (Core.XFree ext primTy primVal),
+    Monoid (Core.XElim ext primTy primVal)
   ) =>
   HasSubstTerm ext primTy primVal App.DeBruijn
   where
   substTermWith b i e (App.BoundVar j) =
-    IR.Elim' (substWith b i e (IR.Bound' j mempty)) mempty
+    Core.Elim' (substWith b i e (Core.Bound' j mempty)) mempty
   substTermWith _ _ _ (App.FreeVar x) =
-    IR.Elim' (IR.Free' (IR.Global x) mempty) mempty
+    Core.Elim' (Core.Free' (Core.Global x) mempty) mempty
 
 instance
   ( HasWeak ty,
@@ -272,9 +271,9 @@ instance
 
 substTake ::
   HasSubstTerm ext primTy primVal term =>
-  IR.BoundVar ->
-  IR.BoundVar ->
-  IR.Elim' ext primTy primVal ->
+  Core.BoundVar ->
+  Core.BoundVar ->
+  Core.Elim' ext primTy primVal ->
   App.Take ty term ->
-  IR.Term' ext primTy primVal
+  Core.Term' ext primTy primVal
 substTake b i e (App.Take {term}) = substTermWith b i e term

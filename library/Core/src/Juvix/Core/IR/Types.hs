@@ -1,36 +1,11 @@
 -- | Quantitative type implementation inspired by
 --   Atkey 2018 and McBride 2016.
 module Juvix.Core.IR.Types
-  ( module Juvix.Core.IR.Types,
-    Name (..),
-    GlobalUsage (..),
-    GlobalName,
-    PatternVar,
-    PatternSet,
-    PatternMap,
-    BoundVar,
-    Universe,
-    RawDatatype' (..),
-    Datatype' (..),
-    RawDataArg' (..),
-    DataArg' (..),
-    RawDataCon' (..),
-    DataCon' (..),
-    RawFunction' (..),
-    Function' (..),
-    RawFunClause' (..),
-    FunClause' (..),
-    RawAbstract' (..),
-    Abstract' (..),
-    RawGlobal' (..),
-    Global' (..),
-    RawGlobals',
-    Globals',
+  ( module Juvix.Core.IR.Types
   )
 where
 
 import Juvix.Core.Base.Types
-import Juvix.Core.Base.Globals
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage

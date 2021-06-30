@@ -10,10 +10,9 @@ import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import Juvix.Core.IR.Typechecker.Error
 import Juvix.Core.IR.Typechecker.Types
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.Base.Types as IR
-import Juvix.Core.Base.Globals (Pos)
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.Parameterisation as Param
-import Juvix.Library hiding (Datatype, Pos)
+import Juvix.Library hiding (Datatype)
 import qualified Juvix.Library.Usage as Usage
 
 data EnvCtx' ext primTy primVal = EnvCtx
@@ -83,7 +82,7 @@ type Context primTy primVal = [AnnotationT primTy primVal]
 lookupCtx ::
   (Eval.HasWeak primTy, Eval.HasWeak primVal) =>
   Context primTy primVal ->
-  IR.BoundVar ->
+  Core.BoundVar ->
   Maybe (AnnotationT primTy primVal)
 lookupCtx gam x = do
   Annotation π ty <- atMay gam (fromIntegral x)
@@ -91,24 +90,24 @@ lookupCtx gam x = do
 
 lookupGlobal ::
   (HasGlobals primTy primVal m, HasThrowTC' IR.NoExt ext primTy primVal m) =>
-  IR.GlobalName ->
-  m (ValueT primTy primVal, IR.GlobalUsage)
+  Core.GlobalName ->
+  m (ValueT primTy primVal, Core.GlobalUsage)
 lookupGlobal x = do
   mdefn <- asks @"globals" $ HashMap.lookup x
   case mdefn of
     Just defn -> pure $ makeGAnn defn
     Nothing -> throwTC (UnboundGlobal x)
   where
-    makeGAnn (IR.GDatatype (IR.Datatype {dataArgs, dataLevel})) =
-      (foldr makePi (IR.VStar' dataLevel mempty) dataArgs, IR.GZero)
-    makeGAnn (IR.GDataCon (IR.DataCon {conType})) =
-      (conType, IR.GOmega)
-    makeGAnn (IR.GFunction (IR.Function {funType, funUsage})) =
+    makeGAnn (Core.GDatatype (Core.Datatype {dataArgs, dataLevel})) =
+      (foldr makePi (Core.VStar' dataLevel mempty) dataArgs, Core.GZero)
+    makeGAnn (Core.GDataCon (Core.DataCon {conType})) =
+      (conType, Core.GOmega)
+    makeGAnn (Core.GFunction (Core.Function {funType, funUsage})) =
       (funType, funUsage)
-    makeGAnn (IR.GAbstract (IR.Abstract {absUsage, absType})) =
+    makeGAnn (Core.GAbstract (Core.Abstract {absUsage, absType})) =
       (absType, absUsage)
-    makePi (IR.DataArg {argUsage, argType}) res =
-      IR.VPi' argUsage argType res mempty
+    makePi (Core.DataArg {argUsage, argType}) res =
+      Core.VPi' argUsage argType res mempty
 
 type UContext = [Usage.T]
 
@@ -212,7 +211,7 @@ execInner' (InnerTC m) = runStateT m
 
 -- | A map of global names to signatures
 type Signature ext primTy primVal =
-  Map.Map IR.GlobalName (SigDef ext primTy primVal)
+  Map.Map Core.GlobalName (SigDef ext primTy primVal)
 
 type InnerTCSig ext primTy primVal =
   StateT (Signature ext primTy primVal)
@@ -221,15 +220,15 @@ type InnerTCSig ext primTy primVal =
 data SigDef ext primTy primVal
   = -- | function constant to its type, clauses
     FunSig
-      (IR.Value' ext primTy primVal)
+      (Core.Value' ext primTy primVal)
       ( Either
-          (NonEmpty (IR.RawFunClause' ext primTy primVal))
-          (NonEmpty (IR.FunClause' ext ext primTy primVal))
+          (NonEmpty (Core.RawFunClause' ext primTy primVal))
+          (NonEmpty (Core.FunClause' ext ext primTy primVal))
       )
   | -- | constructor constant to its type
-    ConSig (IR.Value' ext primTy primVal)
+    ConSig (Core.Value' ext primTy primVal)
   | -- | data type constant to # parameters, positivity of parameters, type
-    DataSig Int [Pos] (IR.Value' ext primTy primVal)
+    DataSig Int [Core.Pos] (Core.Value' ext primTy primVal)
 
 -- Return type of all type-checking functions.
 -- state monad for global signature

@@ -7,6 +7,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Generics.SYB as SYB
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Translate (hrToIR)
 import Juvix.Library
@@ -68,7 +69,7 @@ transformAllPatVarsE = \case
   IR.Ann π s a ℓ ->
     IR.Ann π <$> transformAllPatVars s <*> transformAllPatVars a <*> pure ℓ
 
-transformPatVar :: HasPatVars m => IR.Name -> m IR.Name
-transformPatVar orig@(IR.Global name) =
-  gets @"patVars" $ maybe orig IR.Pattern . HM.lookup name
+transformPatVar :: HasPatVars m => Core.Name -> m Core.Name
+transformPatVar orig@(Core.Global name) =
+  gets @"patVars" $ maybe orig Core.Pattern . HM.lookup name
 transformPatVar orig = pure orig

@@ -5,7 +5,7 @@ module Juvix.Core.IR.TransformExt.OnlyExts where
 import Extensible hiding (Type)
 import Juvix.Core.IR.TransformExt
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.Base.Types as IR
+import qualified Juvix.Core.Base.Types as Core
 import Juvix.Library
 
 data T (ext :: Type)
@@ -13,28 +13,28 @@ data T (ext :: Type)
 do
   ext' <- newName "ext"
   let ext = varT ext'
-  decsT <- IR.extendTerm
+  decsT <- Core.extendTerm
     "Term"
     [ext']
     [t|T $ext|]
     \primTy primVal ->
-      IR.defaultExtTerm
-        { IR.typeTermX = [("TermX", [[t|IR.TermX $ext $primTy $primVal|]])]
+      Core.defaultExtTerm
+        { Core.typeTermX = [("TermX", [[t|Core.TermX $ext $primTy $primVal|]])]
         }
-  decsE <- IR.extendElim
+  decsE <- Core.extendElim
     "Elim"
     [ext']
     [t|T $ext|]
     \primTy primVal ->
-      IR.defaultExtElim
-        { IR.typeElimX = [("ElimX", [[t|IR.ElimX $ext $primTy $primVal|]])]
+      Core.defaultExtElim
+        { Core.typeElimX = [("ElimX", [[t|Core.ElimX $ext $primTy $primVal|]])]
         }
   pure $ decsT <> decsE
 
-onlyExtsT :: IR.Term' ext primTy primVal -> IR.Term' (T ext) primTy primVal
+onlyExtsT :: Core.Term' ext primTy primVal -> Core.Term' (T ext) primTy primVal
 onlyExtsT = extTransformT transformer
 
-onlyExtsE :: IR.Elim' ext primTy primVal -> IR.Elim' (T ext) primTy primVal
+onlyExtsE :: Core.Elim' ext primTy primVal -> Core.Elim' (T ext) primTy primVal
 onlyExtsE = extTransformE transformer
 
 transformer :: ExtTransformTE ext (T ext) primTy primVal
@@ -59,10 +59,10 @@ transformer =
       etElimX = identity
     }
 
-injectT :: IR.Term primTy primVal -> IR.Term' (T ext) primTy primVal
+injectT :: IR.Term primTy primVal -> Core.Term' (T ext) primTy primVal
 injectT = extTransformT injector
 
-injectE :: IR.Elim primTy primVal -> IR.Elim' (T ext) primTy primVal
+injectE :: IR.Elim primTy primVal -> Core.Elim' (T ext) primTy primVal
 injectE = extTransformE injector
 
 injector :: ExtTransformTE IR.NoExt (T ext) primTy primVal

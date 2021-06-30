@@ -20,6 +20,7 @@ import Data.Bifoldable
 import Data.Bitraversable
 import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.Base.Types as Core
 import Juvix.Library
 import qualified Juvix.Library.PrettyPrint as PP
 import qualified Juvix.Library.Usage as Usage
@@ -71,22 +72,22 @@ instance Bitraversable (Return' ext) where
     Return a s ->
       Return <$> f a <*> g s
 
--- | The representation of variables used in IR.Term' ext
+-- | The representation of variables used in Core.Term' ext
 class IsParamVar ext where
   type ParamVar ext :: Type
 
   -- Create a reference to a free variable.
-  freeVar :: Proxy ext -> IR.GlobalName -> Maybe (ParamVar ext)
+  freeVar :: Proxy ext -> Core.GlobalName -> Maybe (ParamVar ext)
 
   -- Create a reference to a bound variable.
-  boundVar :: Proxy ext -> IR.BoundVar -> Maybe (ParamVar ext)
+  boundVar :: Proxy ext -> Core.BoundVar -> Maybe (ParamVar ext)
 
 -- | Representation of De Bruijn indexing.
 data DeBruijn
   = -- | Reference to a bound variable.
-    BoundVar IR.BoundVar
+    BoundVar Core.BoundVar
   | -- | Reference to a free variable.
-    FreeVar IR.GlobalName
+    FreeVar Core.GlobalName
   deriving (Show, Eq, Generic)
 
 instance IsParamVar IR.NoExt where
@@ -107,12 +108,12 @@ type Arg = Arg' IR.NoExt
 
 -- | Pattern synonym for bound arguments in DeBruijn terms.
 pattern BoundArg ::
-  (ParamVar ext ~ DeBruijn) => IR.BoundVar -> Arg' ext ty term
+  (ParamVar ext ~ DeBruijn) => Core.BoundVar -> Arg' ext ty term
 pattern BoundArg i = VarArg (BoundVar i)
 
 -- | Pattern synonym for free arguments in DeBruijn terms.
 pattern FreeArg ::
-  (ParamVar ext ~ DeBruijn) => IR.GlobalName -> Arg' ext ty term
+  (ParamVar ext ~ DeBruijn) => Core.GlobalName -> Arg' ext ty term
 pattern FreeArg x = VarArg (FreeVar x)
 
 {-# COMPLETE TermArg, BoundArg, FreeArg #-}

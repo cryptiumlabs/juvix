@@ -22,7 +22,7 @@ import qualified Juvix.Core.Erased.Types.Base as Erased
 import qualified Juvix.Core.HR.Pretty as HR
 import Juvix.Core.IR.TransformExt
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
-import Juvix.Core.IR.Types (GlobalName, GlobalUsage, PatternVar)
+import Juvix.Core.Base.Types (GlobalName, GlobalUsage, PatternVar)
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Core.Translate

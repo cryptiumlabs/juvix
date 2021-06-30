@@ -4,6 +4,7 @@ import Data.List (genericIndex)
 import Juvix.Core.Erasure.Types (eraseAnn, exec)
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import Juvix.Library hiding (empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -33,25 +34,25 @@ eraseGlobal ::
   m (Erasure.Global primTy2 primVal2)
 eraseGlobal g =
   case g of
-    IR.GDatatype g -> Erasure.GDatatype |<< eraseDatatype g
-    IR.GDataCon c -> Erasure.GDataCon |<< eraseDataCon c
-    IR.GFunction f -> Erasure.GFunction |<< eraseFunction f
+    Core.GDatatype g -> Erasure.GDatatype |<< eraseDatatype g
+    Core.GDataCon c -> Erasure.GDataCon |<< eraseDataCon c
+    Core.GFunction f -> Erasure.GFunction |<< eraseFunction f
     -- TODO: Need the annotated term here. ref
     -- https://github.com/metastatedev/juvix/issues/495
-    IR.GAbstract a -> Erasure.GAbstract |<< eraseAbstract a
+    Core.GAbstract a -> Erasure.GAbstract |<< eraseAbstract a
 
 eraseAbstract ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.Abstract primTy1 primVal1 ->
   m (Erasure.Abstract primTy2)
-eraseAbstract (IR.Abstract name usage ty) =
+eraseAbstract (Core.Abstract name usage ty) =
   Erasure.Abstract name usage <$> eraseType ty
 
 eraseDatatype ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.Datatype primTy1 primVal1 ->
   m (Erasure.Datatype primTy2 primVal2)
-eraseDatatype (IR.Datatype name _pos args level cons) = do
+eraseDatatype (Core.Datatype name _pos args level cons) = do
   args <- mapM eraseDataArg args
   cons <- mapM eraseDataCon cons
   pure (Erasure.Datatype name args level cons)
@@ -60,7 +61,7 @@ eraseDataArg ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.DataArg primTy1 primVal1 ->
   m (Erasure.DataArg primTy2)
-eraseDataArg (IR.DataArg name usage ty) = do
+eraseDataArg (Core.DataArg name usage ty) = do
   ty <- eraseType ty
   pure (Erasure.DataArg name usage ty)
 
@@ -68,7 +69,7 @@ eraseDataCon ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.DataCon primTy1 primVal1 ->
   m (Erasure.DataCon primTy2 primVal2)
-eraseDataCon (IR.DataCon name ty def) = do
+eraseDataCon (Core.DataCon name ty def) = do
   ty <- eraseType ty
   def <- traverse eraseFunction def
   pure (Erasure.DataCon name ty def)
@@ -77,9 +78,9 @@ eraseFunction ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.Function primTy1 primVal1 ->
   m (Erasure.Function primTy2 primVal2)
-eraseFunction (IR.Function name usage ty clauses) = do
+eraseFunction (Core.Function name usage ty clauses) = do
   let (tys, ret) = piTypeToList (IR.quote ty)
-  clauses <- flip mapM clauses $ \(IR.FunClause _tel patts _term _rhsTy _catchAll _unreachable) -> do
+  clauses <- flip mapM clauses $ \(Core.FunClause _tel patts _term _rhsTy _catchAll _unreachable) -> do
     (patts, _ty) <- erasePatterns (patts, (tys, ret))
     patts <- mapM erasePattern patts
     -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
@@ -183,9 +184,9 @@ eraseElim ::
 eraseElim (Typed.Bound x ann) = do
   Erasure.Var <$> lookupBound x
     <*> eraseType (IR.annType ann)
-eraseElim (Typed.Free (IR.Global x) ann) = do
+eraseElim (Typed.Free (Core.Global x) ann) = do
   Erasure.Var x <$> eraseType (IR.annType ann)
-eraseElim e@(Typed.Free (IR.Pattern _) _) = do
+eraseElim e@(Typed.Free (Core.Pattern _) _) = do
   -- FIXME ??????
   throwEra $ Erasure.UnsupportedTermE e
 eraseElim (Typed.App e s ann) = do
@@ -239,9 +240,9 @@ eraseTypeN ::
   m (Erasure.Type primTy2)
 eraseTypeN (IR.NBound x) = do
   Erasure.SymT <$> lookupBound x
-eraseTypeN (IR.NFree (IR.Global x)) = do
+eraseTypeN (IR.NFree (Core.Global x)) = do
   pure $ Erasure.SymT x
-eraseTypeN n@(IR.NFree (IR.Pattern _)) = do
+eraseTypeN n@(IR.NFree (Core.Pattern _)) = do
   -- FIXME ??????
   throwEra $ Erasure.UnsupportedTypeN n
 eraseTypeN n@(IR.NApp _ _) = do
@@ -279,7 +280,7 @@ withName f = do x <- pushName; f x <* popName
 
 lookupBound ::
   HasState "nameStack" [NameSymbol.T] m =>
-  IR.BoundVar ->
+  Core.BoundVar ->
   m NameSymbol.T
 lookupBound x = gets @"nameStack" (`genericIndex` x)
 

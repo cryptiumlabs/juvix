@@ -24,7 +24,7 @@ import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.IR.Evaluator as Eval
-import qualified Juvix.Core.Base.Types as IR
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
@@ -355,19 +355,19 @@ instance Eval.HasWeak PrimTy where weakBy' _ _ t = t
 instance Eval.HasWeak RawPrimVal where weakBy' _ _ t = t
 
 instance
-  Monoid (IR.XVPrimTy ext PrimTy primVal) =>
+  Monoid (Core.XVPrimTy ext PrimTy primVal) =>
   Eval.HasSubstValue ext PrimTy primVal PrimTy
   where
-  substValueWith _ _ _ t = pure $ IR.VPrimTy' t mempty
+  substValueWith _ _ _ t = pure $ Core.VPrimTy' t mempty
 
 instance
-  Monoid (IR.XPrimTy ext PrimTy primVal) =>
+  Monoid (Core.XPrimTy ext PrimTy primVal) =>
   Eval.HasPatSubstTerm ext PrimTy primVal PrimTy
   where
-  patSubstTerm' _ _ t = pure $ IR.PrimTy' t mempty
+  patSubstTerm' _ _ t = pure $ Core.PrimTy' t mempty
 
 instance
-  Monoid (IR.XPrim ext primTy RawPrimVal) =>
+  Monoid (Core.XPrim ext primTy RawPrimVal) =>
   Eval.HasPatSubstTerm ext primTy RawPrimVal RawPrimVal
   where
-  patSubstTerm' _ _ t = pure $ IR.Prim' t mempty
+  patSubstTerm' _ _ t = pure $ Core.Prim' t mempty

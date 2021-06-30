@@ -29,12 +29,12 @@ where
 
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.HR.Pretty as HR
-import Juvix.Core.IR.Types (BoundVar, GlobalName, NoExt)
+import Juvix.Core.Base.Types (BoundVar, GlobalName)
+import Juvix.Core.IR.Types (NoExt)
 import Juvix.Library
 import Juvix.Library.HashMap (HashMap)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.PrettyPrint as PP
-import Prelude (String)
 
 -- | @[A, B, ..., Z]@ represents the type
 -- @π A -> ρ B -> ... -> Z@ for any usages @π@, @ρ@
