@@ -13,6 +13,7 @@ module Juvix.Core.IR.Evaluator
     EvalPatSubst,
     toLambdaR,
     lookupFun,
+    lookupFun',
     rawLookupFun',
     module Juvix.Core.IR.Evaluator.Types,
     module Juvix.Core.IR.Evaluator.Weak,
