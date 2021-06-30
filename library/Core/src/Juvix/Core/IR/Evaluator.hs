@@ -2,9 +2,9 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 -- |
--- This includes the evaluators (evalTerm and evalElim),
+-- This includes the evaluators (evalTerm and evalElimWith),
 -- the value application function (vapp) and
--- the substitution functions (substTerm and substElim).
+-- the substitution functions (substV).
 module Juvix.Core.IR.Evaluator
   ( inlineAllGlobals,
     evalTerm,
