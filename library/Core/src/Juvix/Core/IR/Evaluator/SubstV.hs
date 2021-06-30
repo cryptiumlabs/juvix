@@ -1,7 +1,12 @@
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.IR.Evaluator.SubstV where
+module Juvix.Core.IR.Evaluator.SubstV
+  ( HasSubstValue (..),
+    substV,
+    vapp,
+  )
+where
 
 import Data.Foldable (foldr1) -- on NonEmpty
 import qualified Juvix.Core.Application as App
