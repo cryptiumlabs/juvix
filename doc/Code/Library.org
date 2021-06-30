@@ -635,7 +635,7 @@ name streams, and aliases for capabilities over these structures.
   + [[NameSymbol]]
   + [[PrettyPrint]]
   + [[Library/Usage]]
-****** Subst <<HR/Subst>>
+****** Subst
 - Runs a substitution algorithm over core
 - _Relies on_
   + [[HR/Types]]
@@ -706,7 +706,6 @@ the value application function (vapp) and
 the substitution functions (substTerm and substElim).
 - _Relies on_
   + [[PatSubst]]
-  + [[Evaluator/Subst]]
   + [[SubstV]]
   + [[Evaluator/Types]]
   + [[Evaluator/Weak]]
@@ -724,14 +723,6 @@ the substitution functions (substTerm and substElim).
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
-  + [[Library]]
-  + [[Library/Usage]]
-******* Subst <<Evaluator/Subst>>
-- _Relies on_
-  + [[Application]]
-  + [[Evaluator/Weak]]
-  + [[IR/Types]]
-  + [[IR/Types/Base]]
   + [[Library]]
   + [[Library/Usage]]
 ******* SubstV
