@@ -625,9 +625,9 @@ name streams, and aliases for capabilities over these structures.
   + [[Library/Usage]]
 ****** Types <<HR/Types>>
 - _Relies on_
-  + [[Library]]
   + [[Extend]]
   + [[IR/Types/Base]]
+  + [[Library]]
 ***** IR <<Core/IR>>
 - _Relies on_
   + [[CheckTerm]]
