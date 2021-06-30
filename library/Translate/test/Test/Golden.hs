@@ -96,15 +96,15 @@ contextTests = positiveTests "context" discoverGoldenTestsContext
 
 -- | Discover golden tests for input files with extension @.ju@ and output
 -- files with extension @.parsed@.
-discoverGoldenTestsParse, discoverGoldenTestsParseNonCompact ::
-  -- | the directory in which to recursively look for golden tests
-  FilePath ->
-  IO TestTree
+discoverGoldenTestsParse,
+  discoverGoldenTestsParseNonCompact ::
+    -- | the directory in which to recursively look for golden tests
+    FilePath ->
+    IO TestTree
 discoverGoldenTestsParse =
   discoverGoldenTestsCompact [".ju"] ".parsed" getGolden parseContract
 discoverGoldenTestsParseNonCompact =
   discoverGoldenTests [".ju"] ".parsed" getGolden parseContract
-
 
 discoverGoldenTestPasses ::
   (Eq a, Show a, Read a) => (t -> FilePath -> IO a) -> [(t, [Char])] -> FilePath -> IO [TestTree]
