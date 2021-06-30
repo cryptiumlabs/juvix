@@ -1,7 +1,12 @@
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.IR.Evaluator.PatSubst where
+module Juvix.Core.IR.Evaluator.PatSubst
+  ( HasPatSubst (..),
+    patSubst,
+    HasPatSubstTerm (..),
+  )
+where
 
 import Data.Foldable (foldr1) -- on NonEmpty
 import qualified Data.IntMap as IntMap
