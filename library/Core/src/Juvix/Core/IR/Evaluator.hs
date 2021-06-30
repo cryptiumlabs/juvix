@@ -17,7 +17,6 @@ module Juvix.Core.IR.Evaluator
     rawLookupFun',
     module Juvix.Core.IR.Evaluator.Types,
     module Juvix.Core.IR.Evaluator.Weak,
-    module Juvix.Core.IR.Evaluator.Subst,
     module Juvix.Core.IR.Evaluator.SubstV,
     module Juvix.Core.IR.Evaluator.PatSubst,
   )
@@ -26,7 +25,6 @@ where
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.IntMap as IntMap
 import Juvix.Core.IR.Evaluator.PatSubst
-import Juvix.Core.IR.Evaluator.Subst
 import Juvix.Core.IR.Evaluator.SubstV
 import Juvix.Core.IR.Evaluator.Types
 import Juvix.Core.IR.Evaluator.Weak
@@ -172,13 +170,6 @@ evalTerm ::
   IR.Term' extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalTerm g t = evalTermWith g rejectExts $ OnlyExts.onlyExtsT t
-
-evalElim ::
-  CanEval extT extG primTy primVal =>
-  LookupFun extG primTy primVal ->
-  IR.Elim' extT primTy primVal ->
-  Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
-evalElim g e = evalElimWith g rejectExts $ OnlyExts.onlyExtsE e
 
 -- TODO generalise the @IR.NoExt@s
 toLambda' ::

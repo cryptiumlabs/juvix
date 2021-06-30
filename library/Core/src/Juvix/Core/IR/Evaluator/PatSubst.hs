@@ -57,13 +57,6 @@ class HasWeak a => HasPatSubstTerm extT primTy primVal a where
     a ->
     Either IR.PatternVar (IR.Term' extT primTy primVal)
 
-patSubstTerm ::
-  (HasPatSubstTerm extT primTy primVal a) =>
-  IR.PatternMap (IR.Elim' extT primTy primVal) ->
-  a ->
-  Either IR.PatternVar (IR.Term' extT primTy primVal)
-patSubstTerm = patSubstTerm' 0
-
 type AllPatSubst ext primTy primVal =
   ( IR.TermAll (HasPatSubst ext primTy primVal) ext primTy primVal,
     IR.ElimAll (HasPatSubst ext primTy primVal) ext primTy primVal,

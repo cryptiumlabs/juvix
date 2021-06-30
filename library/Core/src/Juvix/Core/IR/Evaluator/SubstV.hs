@@ -59,21 +59,6 @@ class HasWeak a => HasSubstValue extV primTy primVal a where
     a ->
     Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
 
-substValue' ::
-  HasSubstValue extV primTy primVal a =>
-  IR.BoundVar ->
-  IR.Value' extV primTy primVal ->
-  a ->
-  Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
-substValue' = substValueWith 0
-
-substValue ::
-  HasSubstValue extV primTy primVal a =>
-  IR.Value' extV primTy primVal ->
-  a ->
-  Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
-substValue = substValue' 0
-
 type AllSubstV extV primTy primVal =
   ( IR.ValueAll (HasSubstV extV primTy primVal) extV primTy primVal,
     IR.NeutralAll (HasSubstV extV primTy primVal) extV primTy primVal,
