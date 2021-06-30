@@ -2,9 +2,13 @@ Right
     ( Header
         ( "IdentityUnit" :| [] )
         [ ModuleOpen
-            ( Open ( "Prelude" :| [] ) )
+            ( Open
+                ( "Prelude" :| [] )
+            )
         , ModuleOpen
-            ( Open ( "Michelson" :| [] ) )
+            ( Open
+                ( "Michelson" :| [] )
+            )
         , Signature
             ( Sig
                 { signatureName = "make-pair"
@@ -16,7 +20,9 @@ Right
                                 { applicationName = Name
                                     ( "list" :| [] )
                                 , applicationArgs = Name
-                                    ( "operation" :| [] ) :| [] } )
+                                    ( "operation" :| [] ) :| []
+                                }
+                            )
                         , infixOp = "->" :| []
                         , infixRight = Infix
                             ( Inf
@@ -33,10 +39,22 @@ Right
                                                     { applicationName = Name
                                                         ( "list" :| [] )
                                                     , applicationArgs = Name
-                                                        ( "operation" :| [] ) :| [] } ) ) :|
+                                                        ( "operation" :| [] ) :| []
+                                                    }
+                                                )
+                                            ) :|
                                             [ Name
-                                                ( "unit-t" :| [] ) ] } ) } ) } )
-                , signatureConstraints = [] } )
+                                                ( "unit-t" :| [] )
+                                            ]
+                                        }
+                                    )
+                                }
+                            )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
@@ -44,7 +62,13 @@ Right
                     , functionLikeArgs = []
                     , functionLikeBody = Body
                         ( Primitive
-                            ( Prim ( "Michelson" :| [ "pair" ] ) ) ) } ) )
+                            ( Prim
+                                ( "Michelson" :| [ "pair" ] )
+                            )
+                        )
+                    }
+                )
+            )
         , Signature
             ( Sig
                 { signatureName = "nil"
@@ -54,8 +78,12 @@ Right
                         { applicationName = Name
                             ( "list" :| [] )
                         , applicationArgs = Name
-                            ( "operation" :| [] ) :| [] } )
-                , signatureConstraints = [] } )
+                            ( "operation" :| [] ) :| []
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
@@ -63,7 +91,13 @@ Right
                     , functionLikeArgs = []
                     , functionLikeBody = Body
                         ( Primitive
-                            ( Prim ( "Michelson" :| [ "nil" ] ) ) ) } ) )
+                            ( Prim
+                                ( "Michelson" :| [ "nil" ] )
+                            )
+                        )
+                    }
+                )
+            )
         , Signature
             ( Sig
                 { signatureName = "car"
@@ -76,11 +110,19 @@ Right
                                     ( "pair" :| [] )
                                 , applicationArgs = Name
                                     ( "unit-t" :| [] ) :|
-                                    [ Name ( "unit-t" :| [] ) ] } )
+                                    [ Name
+                                        ( "unit-t" :| [] )
+                                    ]
+                                }
+                            )
                         , infixOp = "->" :| []
                         , infixRight = Name
-                            ( "unit-t" :| [] ) } )
-                , signatureConstraints = [] } )
+                            ( "unit-t" :| [] )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
@@ -88,7 +130,13 @@ Right
                     , functionLikeArgs = []
                     , functionLikeBody = Body
                         ( Primitive
-                            ( Prim ( "Michelson" :| [ "car" ] ) ) ) } ) )
+                            ( Prim
+                                ( "Michelson" :| [ "car" ] )
+                            )
+                        )
+                    }
+                )
+            )
         , Signature
             ( Sig
                 { signatureName = "main"
@@ -101,7 +149,11 @@ Right
                                     ( "pair" :| [] )
                                 , applicationArgs = Name
                                     ( "unit-t" :| [] ) :|
-                                    [ Name ( "unit-t" :| [] ) ] } )
+                                    [ Name
+                                        ( "unit-t" :| [] )
+                                    ]
+                                }
+                            )
                         , infixOp = "->" :| []
                         , infixRight = Application
                             ( App
@@ -113,9 +165,20 @@ Right
                                             { applicationName = Name
                                                 ( "list" :| [] )
                                             , applicationArgs = Name
-                                                ( "operation" :| [] ) :| [] } ) ) :|
-                                    [ Name ( "unit-t" :| [] ) ] } ) } )
-                , signatureConstraints = [] } )
+                                                ( "operation" :| [] ) :| []
+                                            }
+                                        )
+                                    ) :|
+                                    [ Name
+                                        ( "unit-t" :| [] )
+                                    ]
+                                }
+                            )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
@@ -126,7 +189,8 @@ Right
                             ( Lamb
                                 { lambdaArgs = MatchLogic
                                     { matchLogicContents = MatchName "ps"
-                                    , matchLogicNamed = Nothing } :| []
+                                    , matchLogicNamed = Nothing
+                                    } :| []
                                 , lambdaBody = Application
                                     ( App
                                         { applicationName = Name
@@ -139,4 +203,18 @@ Right
                                                         { applicationName = Name
                                                             ( "car" :| [] )
                                                         , applicationArgs = Name
-                                                            ( "ps" :| [] ) :| [] } ) ) ] } ) } ) ) } ) ) ] )
+                                                            ( "ps" :| [] ) :| []
+                                                        }
+                                                    )
+                                                )
+                                            ]
+                                        }
+                                    )
+                                }
+                            )
+                        )
+                    }
+                )
+            )
+        ]
+    )

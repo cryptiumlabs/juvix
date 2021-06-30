@@ -2,9 +2,13 @@ Right
     ( Header
         ( "ConstAddPrim" :| [] )
         [ ModuleOpen
-            ( Open ( "Prelude" :| [] ) )
+            ( Open
+                ( "Prelude" :| [] )
+            )
         , ModuleOpen
-            ( Open ( "LLVM" :| [] ) )
+            ( Open
+                ( "LLVM" :| [] )
+            )
         , Signature
             ( Sig
                 { signatureName = "addint"
@@ -20,22 +24,37 @@ Right
                                     ( "int" :| [] )
                                 , infixOp = "->" :| []
                                 , infixRight = Name
-                                    ( "int" :| [] ) } ) } )
-                , signatureConstraints = [] } )
+                                    ( "int" :| [] )
+                                }
+                            )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
                     { functionLikedName = "addint"
                     , functionLikeArgs = []
                     , functionLikeBody = Body
-                        ( Primitive ( Prim ( "LLVM" :| [ "add" ] ) ) ) } ) )
+                        ( Primitive
+                            ( Prim
+                                ( "LLVM" :| [ "add" ] )
+                            )
+                        )
+                    }
+                )
+            )
         , Signature
             ( Sig
                 { signatureName = "main"
                 , signatureUsage = Nothing
                 , signatureArrowType = Name
                     ( "int" :| [] )
-                , signatureConstraints = [] } )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
@@ -47,7 +66,19 @@ Right
                                 { applicationName = Name
                                     ( "addint" :| [] )
                                 , applicationArgs = Constant
-                                    ( Number ( Integer' 4 ) ) :|
+                                    ( Number
+                                        ( Integer' 4 )
+                                    ) :|
                                     [ Constant
                                         ( Number
-                                            ( Integer' 6 ) ) ] } ) ) } ) ) ] )
+                                            ( Integer' 6 )
+                                        )
+                                    ]
+                                }
+                            )
+                        )
+                    }
+                )
+            )
+        ]
+    )

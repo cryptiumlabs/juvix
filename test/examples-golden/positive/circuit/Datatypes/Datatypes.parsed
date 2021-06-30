@@ -2,16 +2,22 @@ Right
     ( Header
         ( "Datatypes" :| [] )
         [ ModuleOpen
-            ( Open ( "Prelude" :| [] ) )
+            ( Open
+                ( "Prelude" :| [] )
+            )
         , ModuleOpen
-            ( Open ( "Circuit" :| [] ) )
+            ( Open
+                ( "Circuit" :| [] )
+            )
         , Signature
             ( Sig
                 { signatureName = "field"
                 , signatureUsage = Nothing
                 , signatureArrowType = Name
                     ( "ty" :| [] )
-                , signatureConstraints = [] } )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
@@ -19,7 +25,13 @@ Right
                     , functionLikeArgs = []
                     , functionLikeBody = Body
                         ( Primitive
-                            ( Prim ( "Circuit" :| [ "field" ] ) ) ) } ) )
+                            ( Prim
+                                ( "Circuit" :| [ "field" ] )
+                            )
+                        )
+                    }
+                )
+            )
         , Signature
             ( Sig
                 { signatureName = "+"
@@ -35,17 +47,32 @@ Right
                                     ( "field" :| [] )
                                 , infixOp = "->" :| []
                                 , infixRight = Name
-                                    ( "field" :| [] ) } ) } )
-                , signatureConstraints = [] } )
+                                    ( "field" :| [] )
+                                }
+                            )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
                     { functionLikedName = "+"
                     , functionLikeArgs = []
                     , functionLikeBody = Body
-                        ( Primitive ( Prim ( "Circuit" :| [ "add" ] ) ) ) } ) )
+                        ( Primitive
+                            ( Prim
+                                ( "Circuit" :| [ "add" ] )
+                            )
+                        )
+                    }
+                )
+            )
         , Declaration
-            ( Infixivity ( AssocL "+" 5 ) )
+            ( Infixivity
+                ( AssocL "+" 5 )
+            )
         , Signature
             ( Sig
                 { signatureName = "^"
@@ -61,17 +88,32 @@ Right
                                     ( "field" :| [] )
                                 , infixOp = "->" :| []
                                 , infixRight = Name
-                                    ( "field" :| [] ) } ) } )
-                , signatureConstraints = [] } )
+                                    ( "field" :| [] )
+                                }
+                            )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
                     { functionLikedName = "^"
                     , functionLikeArgs = []
                     , functionLikeBody = Body
-                        ( Primitive ( Prim ( "Circuit" :| [ "exp" ] ) ) ) } ) )
+                        ( Primitive
+                            ( Prim
+                                ( "Circuit" :| [ "exp" ] )
+                            )
+                        )
+                    }
+                )
+            )
         , Declaration
-            ( Infixivity ( AssocL "^" 8 ) )
+            ( Infixivity
+                ( AssocL "^" 8 )
+            )
         , Signature
             ( Sig
                 { signatureName = "*"
@@ -87,17 +129,32 @@ Right
                                     ( "field" :| [] )
                                 , infixOp = "->" :| []
                                 , infixRight = Name
-                                    ( "field" :| [] ) } ) } )
-                , signatureConstraints = [] } )
+                                    ( "field" :| [] )
+                                }
+                            )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
                     { functionLikedName = "*"
                     , functionLikeArgs = []
                     , functionLikeBody = Body
-                        ( Primitive ( Prim ( "Circuit" :| [ "mul" ] ) ) ) } ) )
+                        ( Primitive
+                            ( Prim
+                                ( "Circuit" :| [ "mul" ] )
+                            )
+                        )
+                    }
+                )
+            )
         , Declaration
-            ( Infixivity ( AssocL "*" 7 ) )
+            ( Infixivity
+                ( AssocL "*" 7 )
+            )
         , Signature
             ( Sig
                 { signatureName = "=="
@@ -113,31 +170,55 @@ Right
                                     ( "field" :| [] )
                                 , infixOp = "->" :| []
                                 , infixRight = Name
-                                    ( "bool" :| [] ) } ) } )
-                , signatureConstraints = [] } )
+                                    ( "bool" :| [] )
+                                }
+                            )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
                     { functionLikedName = "=="
                     , functionLikeArgs = []
                     , functionLikeBody = Body
-                        ( Primitive ( Prim ( "Circuit" :| [ "eq" ] ) ) ) } ) )
+                        ( Primitive
+                            ( Prim
+                                ( "Circuit" :| [ "eq" ] )
+                            )
+                        )
+                    }
+                )
+            )
         , Declaration
-            ( Infixivity ( AssocL "==" 2 ) )
+            ( Infixivity
+                ( AssocL "==" 2 )
+            )
         , Signature
             ( Sig
                 { signatureName = "x"
                 , signatureUsage = Nothing
                 , signatureArrowType = Name
                     ( "field" :| [] )
-                , signatureConstraints = [] } )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
                     { functionLikedName = "x"
                     , functionLikeArgs = []
                     , functionLikeBody = Body
-                        ( Constant ( Number ( Integer' 3 ) ) ) } ) )
+                        ( Constant
+                            ( Number
+                                ( Integer' 3 )
+                            )
+                        )
+                    }
+                )
+            )
         , Type
             ( Typ
                 { typeUsage = Nothing
@@ -154,7 +235,10 @@ Right
                                     [ Name
                                         ( "field" :| [] )
                                     , Name
-                                        ( "field" :| [] ) ] ) } :|
+                                        ( "field" :| [] )
+                                    ]
+                                )
+                            } :|
                             [ S
                                 { sumConstructor = "Q"
                                 , sumValue = Just
@@ -164,7 +248,15 @@ Right
                                         , Name
                                             ( "field" :| [] )
                                         , Name
-                                            ( "field" :| [] ) ] ) } ] ) } } )
+                                            ( "field" :| [] )
+                                        ]
+                                    )
+                                }
+                            ]
+                        )
+                    }
+                }
+            )
         , Signature
             ( Sig
                 { signatureName = "t"
@@ -175,8 +267,12 @@ Right
                             ( "field" :| [] )
                         , infixOp = "->" :| []
                         , infixRight = Name
-                            ( "field" :| [] ) } )
-                , signatureConstraints = [] } )
+                            ( "field" :| [] )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
@@ -185,7 +281,10 @@ Right
                         [ ConcreteA
                             ( MatchLogic
                                 { matchLogicContents = MatchName "x"
-                                , matchLogicNamed = Nothing } ) ]
+                                , matchLogicNamed = Nothing
+                                }
+                            )
+                        ]
                     , functionLikeBody = Body
                         ( Infix
                             ( Inf
@@ -193,7 +292,15 @@ Right
                                     ( "x" :| [] )
                                 , infixOp = "+" :| []
                                 , infixRight = Constant
-                                    ( Number ( Integer' 5 ) ) } ) ) } ) )
+                                    ( Number
+                                        ( Integer' 5 )
+                                    )
+                                }
+                            )
+                        )
+                    }
+                )
+            )
         , Signature
             ( Sig
                 { signatureName = "norm"
@@ -204,8 +311,12 @@ Right
                             ( "Bar" :| [] )
                         , infixOp = "->" :| []
                         , infixRight = Name
-                            ( "field" :| [] ) } )
-                , signatureConstraints = [] } )
+                            ( "field" :| [] )
+                        }
+                    )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
@@ -217,11 +328,17 @@ Right
                                     ( "P" :| [] )
                                     [ MatchLogic
                                         { matchLogicContents = MatchName "x"
-                                        , matchLogicNamed = Nothing }
+                                        , matchLogicNamed = Nothing
+                                        }
                                     , MatchLogic
                                         { matchLogicContents = MatchName "y"
-                                        , matchLogicNamed = Nothing } ]
-                                , matchLogicNamed = Nothing } ) ]
+                                        , matchLogicNamed = Nothing
+                                        }
+                                    ]
+                                , matchLogicNamed = Nothing
+                                }
+                            )
+                        ]
                     , functionLikeBody = Body
                         ( Infix
                             ( Inf
@@ -231,7 +348,9 @@ Right
                                 , infixRight = Infix
                                     ( Inf
                                         { infixLeft = Constant
-                                            ( Number ( Integer' 2 ) )
+                                            ( Number
+                                                ( Integer' 2 )
+                                            )
                                         , infixOp = "+" :| []
                                         , infixRight = Infix
                                             ( Inf
@@ -240,7 +359,18 @@ Right
                                                 , infixOp = "^" :| []
                                                 , infixRight = Constant
                                                     ( Number
-                                                        ( Integer' 2 ) ) } ) } ) } ) ) } ) )
+                                                        ( Integer' 2 )
+                                                    )
+                                                }
+                                            )
+                                        }
+                                    )
+                                }
+                            )
+                        )
+                    }
+                )
+            )
         , Function
             ( Func
                 ( Like
@@ -252,14 +382,21 @@ Right
                                     ( "Q" :| [] )
                                     [ MatchLogic
                                         { matchLogicContents = MatchName "x"
-                                        , matchLogicNamed = Nothing }
+                                        , matchLogicNamed = Nothing
+                                        }
                                     , MatchLogic
                                         { matchLogicContents = MatchName "y"
-                                        , matchLogicNamed = Nothing }
+                                        , matchLogicNamed = Nothing
+                                        }
                                     , MatchLogic
                                         { matchLogicContents = MatchName "z"
-                                        , matchLogicNamed = Nothing } ]
-                                , matchLogicNamed = Nothing } ) ]
+                                        , matchLogicNamed = Nothing
+                                        }
+                                    ]
+                                , matchLogicNamed = Nothing
+                                }
+                            )
+                        ]
                     , functionLikeBody = Body
                         ( Infix
                             ( Inf
@@ -269,7 +406,9 @@ Right
                                 , infixRight = Infix
                                     ( Inf
                                         { infixLeft = Constant
-                                            ( Number ( Integer' 2 ) )
+                                            ( Number
+                                                ( Integer' 2 )
+                                            )
                                         , infixOp = "+" :| []
                                         , infixRight = Infix
                                             ( Inf
@@ -280,7 +419,8 @@ Right
                                                     ( Inf
                                                         { infixLeft = Constant
                                                             ( Number
-                                                                ( Integer' 2 ) )
+                                                                ( Integer' 2 )
+                                                            )
                                                         , infixOp = "+" :| []
                                                         , infixRight = Infix
                                                             ( Inf
@@ -289,18 +429,44 @@ Right
                                                                 , infixOp = "^" :| []
                                                                 , infixRight = Constant
                                                                     ( Number
-                                                                        ( Integer' 2 ) ) } ) } ) } ) } ) } ) ) } ) )
+                                                                        ( Integer' 2 )
+                                                                    )
+                                                                }
+                                                            )
+                                                        }
+                                                    )
+                                                }
+                                            )
+                                        }
+                                    )
+                                }
+                            )
+                        )
+                    }
+                )
+            )
         , Signature
             ( Sig
                 { signatureName = "main"
                 , signatureUsage = Nothing
                 , signatureArrowType = Name
                     ( "field" :| [] )
-                , signatureConstraints = [] } )
+                , signatureConstraints = []
+                }
+            )
         , Function
             ( Func
                 ( Like
                     { functionLikedName = "main"
                     , functionLikeArgs = []
                     , functionLikeBody = Body
-                        ( Constant ( Number ( Integer' 3 ) ) ) } ) ) ] )
+                        ( Constant
+                            ( Number
+                                ( Integer' 3 )
+                            )
+                        )
+                    }
+                )
+            )
+        ]
+    )
