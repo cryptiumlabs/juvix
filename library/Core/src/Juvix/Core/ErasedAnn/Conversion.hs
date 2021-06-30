@@ -11,6 +11,7 @@ import qualified Juvix.Library.Usage as Usage
 free :: forall primTy primVal. E.Term primTy primVal -> [NameSymbol.T]
 free = Erased.free . E.eraseAnn
 
+-- | Take a typed term and some usage, and annotate the return term with that usage
 convertTerm :: E.Term primTy primVal -> Usage.T -> AnnTerm primTy primVal
 convertTerm term usage =
   let ty = E.getType term

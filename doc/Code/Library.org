@@ -44,7 +44,7 @@ Module that implements the backend parameters for the Michelson backend.
   + [[ErasedAnn]]
   + [[Prim]]
   + [[Core/HR/Pretty]]
-  + [[IR/Evaluator]]
+  + [[Evaluator]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
@@ -261,7 +261,7 @@ Surface language
   + [[Plonk/Types]]
   + [[Application]]
   + [[ErasedAnn/Types]]
-  + [[IR/Evaluator]]
+  + [[Evaluator]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
@@ -364,7 +364,7 @@ Parameterization and application of the LLVM backend primitives.
 - _Relies on_
   + [[Primitive]]
   + [[Application]]
-  + [[IR/Evaluator]]
+  + [[Evaluator]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
@@ -518,19 +518,8 @@ name streams, and aliases for capabilities over these structures.
   + [[NameSymbol]]
 ***** Erased
 - _Relies on_
-  + [[Erased/Evaluator]]
   + [[Erased/Types]]
   + [[Util]]
-****** Evaluator <<Erased/Evaluator>>
-- _Relies on_
-  + [[Erased/Types]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
-****** Extend <<Erased/Extend>>
-- _Relies on_
-  + [[HRAnn/Extend]]
-  + [[IR/Types/Base]]
 ****** Util
 - _Relies on_
   + [[Erased/Types]]
@@ -541,7 +530,6 @@ name streams, and aliases for capabilities over these structures.
   + [[Erased/Types/Base]]
   + [[Typechecker/Types]]
   + [[Globals]]
-  + [[Library]]
 ******* Base <<Erased/Types/Base>>
 - _Relies on_
   + [[IR/Types]]
@@ -623,7 +611,7 @@ name streams, and aliases for capabilities over these structures.
 - _Relies on_
   + [[Core/HR/Pretty]]
   + [[HR/Types]]
-****** Extend <<HR/Extend>>
+****** Extend
 - _Relies on_
   + [[IR/Types/Base]]
   + [[Library]]
@@ -635,42 +623,15 @@ name streams, and aliases for capabilities over these structures.
   + [[NameSymbol]]
   + [[PrettyPrint]]
   + [[Library/Usage]]
-****** Subst
-- Runs a substitution algorithm over core
-- _Relies on_
-  + [[HR/Types]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
-  + [[Library/Usage]]
 ****** Types <<HR/Types>>
 - _Relies on_
-  + [[HR/Extend]]
-  + [[IR/Types/Base]]
-***** HRAnn
-- _Relies on_
-  + [[HRAnn/Erasure]]
-  + [[HRAnn/Types]]
-****** Erasure <<HRAnn/Erasure>>
-- _Relies on_
-  + [[HR/Types]]
-  + [[HRAnn/Types]]
-  + [[TransformExt]]
-  + [[Library]]
-****** Extend <<HRAnn/Extend>>
-- _Relies on_
+  + [[Extend]]
   + [[IR/Types/Base]]
   + [[Library]]
-  + [[NameSymbol]]
-  + [[Library/Usage]]
-****** Types <<HRAnn/Types>>
-- _Relies on_
-  + [[HRAnn/Extend]]
-  + [[IR/Types/Base]]
 ***** IR <<Core/IR>>
 - _Relies on_
   + [[CheckTerm]]
-  + [[IR/Evaluator]]
+  + [[Evaluator]]
   + [[IR/Typechecker]]
   + [[IR/Typechecker]]
   + [[IR/Types]]
@@ -679,7 +640,7 @@ name streams, and aliases for capabilities over these structures.
 Datatype declarations are typechecked here. Usages are passed along.
 - _Relies on_
   + [[CheckTerm]]
-  + [[IR/Evaluator]]
+  + [[Evaluator]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Globals]]
@@ -691,7 +652,7 @@ This file contains the functions and aux functions to typecheck terms.
 datatype and function declarations.
 - _Relies on_
   + [[Application]]
-  + [[IR/Evaluator]]
+  + [[Evaluator]]
   + [[Typechecker/Env]]
   + [[Error]]
   + [[Typechecker/Types]]
@@ -700,7 +661,7 @@ datatype and function declarations.
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Library/Usage]]
-****** Evaluator <<IR/Evaluator>>
+****** Evaluator
 This includes the evaluators (evalTerm and evalElimWith),
 the value application function (vapp) and
 the substitution functions (substV).
@@ -776,7 +737,7 @@ Typechecked declarations are added to the signature.
 - _Relies on_
   + [[CheckDatatype]]
   + [[CheckTerm]]
-  + [[IR/Evaluator]]
+  + [[Evaluator]]
   + [[Typechecker/Env]]
   + [[Error]]
   + [[Typechecker/Types]]
@@ -786,7 +747,7 @@ Typechecked declarations are added to the signature.
   + [[Library]]
 ******* Env <<Typechecker/Env>>
 - _Relies on_
-  + [[IR/Evaluator]]
+  + [[Evaluator]]
   + [[OnlyExts]]
   + [[Error]]
   + [[Typechecker/Types]]
@@ -800,7 +761,7 @@ Typechecked declarations are added to the signature.
 - _Relies on_
   + [[Application]]
   + [[Core/HR/Pretty]]
-  + [[IR/Evaluator]]
+  + [[Evaluator]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
@@ -841,25 +802,11 @@ Quantitative type implementation inspired by
   + [[Library]]
   + [[HashMap]]
   + [[Library/Usage]]
-***** IRAnn
-- _Relies on_
-  + [[IRAnn/Erasure]]
-  + [[IRAnn/Types]]
-****** Erasure <<IRAnn/Erasure>>
-- _Relies on_
-  + [[TransformExt]]
-  + [[IR/Types]]
-  + [[IRAnn/Types]]
-****** Types <<IRAnn/Types>>
-- _Relies on_
-  + [[IR/Types/Base]]
-  + [[Library]]
-  + [[Library/Usage]]
 ***** Parameterisations
 ****** All
 - _Relies on_
   + [[Application]]
-  + [[IR/Evaluator]]
+  + [[Evaluator]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Naturals]]
@@ -869,14 +816,14 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Application]]
   + [[Core/HR/Pretty]]
-  + [[IR/Evaluator]]
+  + [[Evaluator]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[PrettyPrint]]
 ****** Unit
 - _Relies on_
-  + [[IR/Evaluator]]
+  + [[Evaluator]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
@@ -907,7 +854,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[Core/IR]]
   + [[CheckTerm]]
-  + [[IR/Evaluator]]
+  + [[Evaluator]]
   + [[OnlyExts]]
   + [[Core/Parameterisation]]
   + [[All]]
@@ -933,7 +880,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 **** Weak <<IR/Weak>>
 Tests that weak works as expected
 - _Relies on_
-  + [[IR/Evaluator]]
+  + [[Evaluator]]
   + [[IR/Types]]
   + [[Library]]
 * EasyPipeline
@@ -1714,21 +1661,6 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Library]]
   + [[NameSymbol]]
   + [[Juvix/Sexp]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Desugar]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[Library]]
-  + [[Juvix/Sexp]]
 **** Contextify <<Juvix/Contextify>>
 - _Relies on_
   + [[Juvix/Context]]
@@ -1852,6 +1784,21 @@ done with no extra information needed. Thus we export the following passes
   + [[Structure/Frontend]]
   + [[Lens]]
   + [[Transition]]
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Desugar]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
+  + [[Juvix/Sexp]]
 **** ToCore
 ***** Types <<ToCore/Types>>
 - _Relies on_
