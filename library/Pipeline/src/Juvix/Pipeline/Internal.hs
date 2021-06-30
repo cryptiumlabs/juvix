@@ -81,25 +81,25 @@ contextToHR ::
   (Show primTy, Show primVal) =>
   Context.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
-  Either (FF.Error primTy primVal) (FF.CoreDefsHR primTy primVal)
+  (Either (FF.Error primTy primVal) (FF.CoreDefsHR primTy primVal), FF.FFStateHR primTy primVal)
 contextToHR ctx param =
-  FF.execEnv ctx param do
+  FF.runEnv ctx param do
     newCtx <- Context.mapSumWithName ctx attachConstructor
 
     let ordered = Context.recGroups newCtx
 
     for_ ordered \grp -> do
-      traverse_ addSig grp
+      traverse_ addSigHR grp
 
     -- TODO: Cleanup
     defs <- foldM (\acc grp -> do
       foldM (\m (Context.Entry x feDef) -> do
           dfs <- FF.transformDefHR x feDef
-          pure $ foldl' (\m' def -> HM.insert (defNameHR def) def m') m dfs
+          pure $ foldl' (\m' def -> HM.insert (defName def) def m') m dfs
           ) acc grp
       ) mempty ordered
 
-    pure $ FF.CoreDefsHR {FF.defsHR = defs, FF.orderHR = fmap Context.name <$> ordered}
+    pure $ FF.CoreDefs {FF.defs = defs, FF.order = fmap Context.name <$> ordered}
   where
     -- Attaches the sum constructor with a data constructor filling
     attachConstructor s@Context.Sum {sumTDef, sumTName} dataCons c =
@@ -112,11 +112,12 @@ contextToHR ctx param =
         |> Context.SumCon
         |> pure
 
+-- TODO: Write contextToCore in terms of contextToHR
 contextToCore ::
   (Show primTy, Show primVal) =>
   Context.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
-  (Either (FF.Error primTy primVal) (FF.CoreDefs primTy primVal), FF.FFState primTy primVal)
+  (Either (FF.Error primTy primVal) (FF.CoreDefs primTy primVal), FF.FFStateIR primTy primVal)
 contextToCore ctx param =
   FF.runEnv ctx param do
     newCtx <- Context.mapSumWithName ctx attachConstructor
@@ -143,7 +144,7 @@ contextToCore ctx param =
         |> Context.SumCon
         |> pure
 
-addSig ::
+addSigHR ::
   ( Show primTy,
     Show primVal,
     HasThrow "fromFrontendError" (FF.Error primTy primVal) m,
@@ -153,17 +154,33 @@ addSig ::
   ) =>
   Context.Entry Sexp.T Sexp.T Sexp.T ->
   m ()
-addSig (Context.Entry x feDef) = do
+addSigHR (Context.Entry x feDef) = do
   sigs <- FF.transformSig x feDef
   for_ sigs $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
+
+
+
+addSig ::
+  ( Show primTy,
+    Show primVal,
+    HasThrow "fromFrontendError" (FF.Error primTy primVal) m,
+    HasReader "param" (P.Parameterisation primTy primVal) m,
+    HasState "coreSigs" (FF.CoreSigsIR primTy primVal) m,
+    HasState "patVars" (HM.HashMap IR.GlobalName IR.PatternVar) m
+  ) =>
+  Context.Entry Sexp.T Sexp.T Sexp.T ->
+  m ()
+addSig (Context.Entry x feDef) = do
+  sigs <- FF.transformSig x feDef
+  for_ sigs $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x . FF.hrToIRSig 
 
 addDef ::
   ( Show primTy,
     Show primVal,
     HasThrow "fromFrontendError" (FF.Error primTy primVal) m,
     HasReader "param" (P.Parameterisation primTy primVal) m,
-    HasState "core" (HM.HashMap NameSymbol.T (FF.CoreDef primTy primVal)) m,
-    HasState "coreSigs" (FF.CoreSigsHR primTy primVal) m,
+    HasState "core" (HM.HashMap NameSymbol.T (FF.CoreDefIR primTy primVal)) m,
+    HasState "coreSigs" (FF.CoreSigsIR primTy primVal) m,
     HasState "nextPatVar" IR.PatternVar m,
     HasState "patVars" (HM.HashMap IR.GlobalName IR.PatternVar) m
   ) =>
@@ -174,7 +191,23 @@ addDef (Context.Entry x feDef) = do
   for_ defs \def -> do
     modify @"core" $ HM.insert (defName def) def
 
-defName :: FF.CoreDef primTy primVal -> NameSymbol.T
+addDefHR ::
+  ( Show primTy,
+    Show primVal,
+    HasThrow "fromFrontendError" (FF.Error primTy primVal) m,
+    HasReader "param" (P.Parameterisation primTy primVal) m,
+    HasState "core" (HM.HashMap NameSymbol.T (FF.CoreDefHR primTy primVal)) m,
+    HasState "coreSigs" (FF.CoreSigsHR primTy primVal) m,
+    HasState "nextPatVar" IR.PatternVar m,
+    HasState "patVars" (HM.HashMap IR.GlobalName IR.PatternVar) m
+  ) =>
+  Context.Entry Sexp.T Sexp.T Sexp.T ->
+  m ()
+addDefHR (Context.Entry x feDef) = do
+  defs <- FF.transformDefHR x feDef
+  for_ defs \def -> do
+    modify @"core" $ HM.insert (defName def) def
+defName :: FF.CoreDef ext primTy primVal -> NameSymbol.T
 defName = \case
   FF.CoreDef (IR.RawGDatatype IR.RawDatatype {rawDataName = x}) -> x
   FF.CoreDef (IR.RawGDataCon IR.RawDataCon {rawConName = x}) -> x
@@ -182,11 +215,5 @@ defName = \case
   FF.CoreDef (IR.RawGAbstract IR.RawAbstract {rawAbsName = x}) -> x
   FF.SpecialDef x _ -> x
 
-defNameHR :: FF.CoreDefHR primTy primVal -> NameSymbol.T
-defNameHR = \case
-  FF.CoreDefHR (IR.RawGDatatype IR.RawDatatype {rawDataName = x}) -> x
-  FF.CoreDefHR (IR.RawGDataCon IR.RawDataCon {rawConName = x}) -> x
-  FF.CoreDefHR (IR.RawGFunction IR.RawFunction {rawFunName = x}) -> x
-  FF.CoreDefHR (IR.RawGAbstract IR.RawAbstract {rawAbsName = x}) -> x
-  FF.SpecialDefHR x _ -> x
+
 

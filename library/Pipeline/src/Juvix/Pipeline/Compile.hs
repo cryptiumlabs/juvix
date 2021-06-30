@@ -4,7 +4,7 @@ module Juvix.Pipeline.Compile
   ( Pipeline,
     toCoreDef,
     isMain,
-    convGlobal,
+    typePrims,
     unsafeEvalGlobal,
   )
 where
@@ -32,8 +32,8 @@ type Debug primTy primVal =
 
 toCoreDef ::
   Alternative f =>
-  CoreDef primTy primVal ->
-  f (IR.RawGlobal primTy primVal)
+  CoreDef ext primTy primVal ->
+  f (IR.RawGlobal' ext primTy primVal)
 toCoreDef (CoreDef g) = pure g
 toCoreDef _ = empty
 
@@ -41,6 +41,7 @@ isMain :: RawGlobal' ext primTy primVal -> Bool
 isMain (IR.RawGFunction (IR.RawFunction (_ :| ["main"]) _ _ _)) = True
 isMain _ = False
 
+-- | Evaluate terms of a global definition
 unsafeEvalGlobal ::
   ( IR.CanEval IR.NoExt IR.NoExt primTy primVal,
     Debug primTy primVal
@@ -60,12 +61,13 @@ unsafeEvalGlobal globals g =
     RawGAbstract (RawAbstract n u t) ->
       GAbstract $ Abstract n u (unsafeEval globals t)
 
-convGlobal ::
+-- | Type primitive values of a global definition
+typePrims ::
   (Show ty, Show val) =>
   ty ->
   IR.RawGlobal ty val ->
   IR.RawGlobal ty (Param.TypedPrim ty val)
-convGlobal ty g =
+typePrims ty g =
   case g of
     RawGDatatype (RawDatatype n pos a l cons) ->
       RawGDatatype (RawDatatype n pos (argReturn ty <$> a) l (conReturn ty <$> cons))

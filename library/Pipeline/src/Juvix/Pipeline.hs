@@ -79,6 +79,11 @@ class HasBackend b where
     Right defs -> pure defs
 
   
+  -- toIR: in terms of HR 
+  -- = f toHR
+  
+  -- toErased
+  --  = f toiR
 
   typecheck' ::
     ( Eq (Ty b),
@@ -105,15 +110,18 @@ class HasBackend b where
     Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
   typecheck' ctx param ty = do
     let (res, state) = Pipeline.contextToCore ctx param
+
+    -- Pipeline.
     case res of
       Right (FF.CoreDefs _order globals) -> do
+        -- Filter out Special Defs
         let globalDefs = HM.mapMaybe toCoreDef globals
-        -- Why do we convert:
+            lookupGlobal = IR.rawLookupFun' globalDefs
+        -- Type primitive values, i.e.
         --      RawGlobal (Ty b) (Val b) 
         -- into RawGlobal (Ty b) (TypedPrim (Ty b) (Val b))
-        let convGlobals = map (convGlobal ty) globalDefs
-            newGlobals = HM.map (unsafeEvalGlobal convGlobals) convGlobals
-            lookupGlobal = IR.rawLookupFun' globalDefs
+        let typedGlobals = map (typePrims ty) globalDefs
+            evaluatedGlobals = HM.map (unsafeEvalGlobal typedGlobals) typedGlobals
         case HM.elems $ HM.filter isMain globalDefs of
           [] -> Feedback.fail $ "No main function found in " <> show globalDefs
           [f@(IR.RawGFunction _)] ->
@@ -123,7 +131,7 @@ class HasBackend b where
               Just (IR.Ann usage term ty _) -> do
                 let patternMap = HM.toList (FF.patVars state) |> map swap |> PM.fromList
                 let inlinedTerm = IR.inlineAllGlobals term lookupGlobal patternMap
-                (res, _) <- liftIO $ exec (CorePipeline.coreToAnn @(Err b) inlinedTerm usage ty) param newGlobals
+                (res, _) <- liftIO $ exec (CorePipeline.coreToAnn @(Err b) inlinedTerm usage ty) param evaluatedGlobals
                 case res of
                   Right r -> do
                     pure r

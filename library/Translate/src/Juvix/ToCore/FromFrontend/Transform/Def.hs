@@ -31,8 +31,8 @@ transformDefHR ::
 transformDefHR x def = do
   sig <- lookupSig Nothing x
   case sig of
-    Just (SpecialSig s) -> pure [SpecialDefHR x s]
-    _ -> map CoreDefHR <$> transformNormalDef q x def
+    Just (SpecialSig s) -> pure [SpecialDef x s]
+    _ -> map CoreDef <$> transformNormalDef q x def
     where
     q = NameSymbol.mod x
     transformNormalDef q x (Ctx.TypeDeclar dec) =
@@ -94,6 +94,8 @@ transformDefHR x def = do
         clauseBody <- transformTermHR q body
         pure $ IR.RawFunClause [] pattsHR clauseBody False
     transformClause _ _ = error "malformed tansformClause"
+
+-- TODO: Define transformDef in terms of transformDefHR
 transformDef ::
   ( ReduceEff primTy primVal m,
     HasNextPatVar m,
@@ -103,7 +105,7 @@ transformDef ::
   ) =>
   NameSymbol.T ->
   Ctx.Definition Sexp.T Sexp.T Sexp.T ->
-  m [CoreDef primTy primVal]
+  m [CoreDefIR primTy primVal]
 transformDef x def = do
   sig <- lookupSig Nothing x
   case sig of

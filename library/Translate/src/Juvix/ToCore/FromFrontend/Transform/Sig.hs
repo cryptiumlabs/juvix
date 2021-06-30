@@ -7,8 +7,7 @@ import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
 import Juvix.ToCore.FromFrontend.Transform.HR (transformTermHR)
 import Juvix.ToCore.FromFrontend.Transform.Helpers
-  ( ReduceEff,
-    conDefName,
+  ( conDefName,
     eleToSymbol,
     getSpecialSig,
   )
@@ -20,22 +19,11 @@ import Juvix.ToCore.FromFrontend.Transform.Usage
     transformUsage,
   )
 import Juvix.ToCore.Types
-  ( CoreSig (..),
-    CoreSigHR,
-    Error (..),
-    HasCoreSigs,
-    HasParam,
-    HasPatVars,
-    HasThrowFF,
-    Special (..),
-    throwFF,
-  )
-
 transformSig ::
   ( HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m,
+    HasCoreSigs ext primTy primVal m,
     Show primTy,
     Show primVal
   ) =>

@@ -11,6 +11,7 @@ import qualified Juvix.Library.Usage as Usage
 free :: forall primTy primVal. E.Term primTy primVal -> [NameSymbol.T]
 free = Erased.free . E.eraseAnn
 
+-- | We take a term without annotations and some usage and append that usage to the return type
 convertTerm :: E.Term primTy primVal -> Usage.T -> AnnTerm primTy primVal
 convertTerm term usage =
   let ty = E.getType term
@@ -53,6 +54,7 @@ convertTerm term usage =
           where
             a' = convertTerm a usage
 
+-- TODO: Aren't these types the same?
 convertType :: E.Type primTy -> Type primTy
 convertType ty =
   case ty of
