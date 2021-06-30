@@ -1,6 +1,14 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.IR.Evaluator.Types where
+module Juvix.Core.IR.Evaluator.Types
+  ( ApplyError (..),
+    ApplyErrorPretty,
+    Error (..),
+    ExtFuns (..),
+    rejectExts,
+    LookupFun,
+  )
+where
 
 import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.IR.Typechecker.Types as TC
