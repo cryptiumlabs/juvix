@@ -4,10 +4,10 @@
 module Typechecker where
 
 import qualified Juvix.Core.Base as Core
+import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.CheckTerm as TC
 import qualified Juvix.Core.IR.Evaluator as Eval
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Parameterisations.All as All
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
@@ -49,14 +49,72 @@ type AllValueT = IR.ValueT All.Ty All.Val
 
 type AllAnnotation = IR.AnnotationT All.Ty All.Val
 
-assertIsRight :: (HasCallStack, Show a) => Either a b -> T.Assertion
-assertIsRight (Right _) = pure ()
-assertIsRight (Left l) =
+-- | The Bool parameter means "expect right".
+assertEitherIsAsExpected ::
+  (HasCallStack, Show a, Show b) =>
+  Bool ->
+  Either a b ->
+  T.Assertion
+assertEitherIsAsExpected True (Right _) = pure ()
+assertEitherIsAsExpected True (Left l) =
   T.assertFailure $
     "expected a Right, got\n\t"
       ++ "Left ("
       ++ show l
       ++ ")"
+assertEitherIsAsExpected False (Right r) =
+  T.assertFailure $
+    "expected a Left, got\n\t"
+      ++ "Right ("
+      ++ show r
+      ++ ")"
+assertEitherIsAsExpected False (Left _) = pure ()
+
+assertIsRight :: (HasCallStack, Show a, Show b) => Either a b -> T.Assertion
+assertIsRight = assertEitherIsAsExpected True
+
+assertIsLeft :: (HasCallStack, Show a, Show b) => Either a b -> T.Assertion
+assertIsLeft = assertEitherIsAsExpected False
+
+-- unit test generator for typeTerm
+assertCheckResultWith ::
+  ( HasCallStack,
+    Show primTy,
+    Show primVal,
+    Eq primTy,
+    Eq primVal,
+    CanApply (TypedPrim primTy primVal),
+    CanApply primTy,
+    Eq (Arg primTy),
+    Show (Arg primTy),
+    Eq (Arg (TypedPrim primTy primVal)),
+    Show (Arg (TypedPrim primTy primVal)),
+    Eq (ApplyErrorExtra primTy),
+    Show (ApplyErrorExtra primTy),
+    Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
+    Show (ApplyErrorExtra (TypedPrim primTy primVal)),
+    TC.PrimSubstValue primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
+    Eval.HasWeak primVal
+  ) =>
+  Bool ->
+  Parameterisation primTy primVal ->
+  IR.GlobalsT primTy primVal ->
+  IR.Context primTy primVal ->
+  IR.Term primTy primVal ->
+  IR.AnnotationT primTy primVal ->
+  T.TestTree
+assertCheckResultWith expectSuccess param globals ctx term ann =
+  -- TODO: take out the logs and put them in an IO monad.
+  let (res, _) = TC.exec globals $ TC.typeTermWith param mempty ctx term ann
+   in T.testCase
+        ( show term
+            <> " should "
+            <> (if expectSuccess then "check" else "fail")
+            <> " as type "
+            <> show ann
+        )
+        $ assertEitherIsAsExpected expectSuccess res
 
 -- unit test generator for typeTerm
 shouldCheckWith ::
@@ -85,15 +143,64 @@ shouldCheckWith ::
   IR.Term primTy primVal ->
   IR.AnnotationT primTy primVal ->
   T.TestTree
-shouldCheckWith param globals ctx term ann =
-  -- TODO: take out the logs and put them in an IO monad.
-  let (res, _) = TC.exec globals $ TC.typeTermWith param mempty ctx term ann
-   in T.testCase
-        ( show term
-            <> " should check as type "
-            <> show ann
-        )
-        $ assertIsRight res
+shouldCheckWith = assertCheckResultWith True
+
+-- unit test generator for typeTerm
+shouldFailWith ::
+  ( HasCallStack,
+    Show primTy,
+    Show primVal,
+    Eq primTy,
+    Eq primVal,
+    CanApply (TypedPrim primTy primVal),
+    CanApply primTy,
+    Eq (Arg primTy),
+    Show (Arg primTy),
+    Eq (Arg (TypedPrim primTy primVal)),
+    Show (Arg (TypedPrim primTy primVal)),
+    Eq (ApplyErrorExtra primTy),
+    Show (ApplyErrorExtra primTy),
+    Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
+    Show (ApplyErrorExtra (TypedPrim primTy primVal)),
+    TC.PrimSubstValue primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
+    Eval.HasWeak primVal
+  ) =>
+  Parameterisation primTy primVal ->
+  IR.GlobalsT primTy primVal ->
+  IR.Context primTy primVal ->
+  IR.Term primTy primVal ->
+  IR.AnnotationT primTy primVal ->
+  T.TestTree
+shouldFailWith = assertCheckResultWith False
+
+assertCheckResult ::
+  ( HasCallStack,
+    Show primTy,
+    Show primVal,
+    Eq primTy,
+    Eq primVal,
+    CanApply (TypedPrim primTy primVal),
+    CanApply primTy,
+    Eq (Arg primTy),
+    Show (Arg primTy),
+    Eq (Arg (TypedPrim primTy primVal)),
+    Show (Arg (TypedPrim primTy primVal)),
+    Eq (ApplyErrorExtra primTy),
+    Show (ApplyErrorExtra primTy),
+    Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
+    Show (ApplyErrorExtra (TypedPrim primTy primVal)),
+    TC.PrimSubstValue primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
+    Eval.HasWeak primVal
+  ) =>
+  Bool ->
+  Parameterisation primTy primVal ->
+  IR.Term primTy primVal ->
+  IR.AnnotationT primTy primVal ->
+  T.TestTree
+assertCheckResult expectSuccess param =
+  assertCheckResultWith expectSuccess param mempty []
 
 shouldCheck ::
   ( HasCallStack,
@@ -119,7 +226,33 @@ shouldCheck ::
   IR.Term primTy primVal ->
   IR.AnnotationT primTy primVal ->
   T.TestTree
-shouldCheck param = shouldCheckWith param mempty []
+shouldCheck = assertCheckResult True
+
+shouldFail ::
+  ( HasCallStack,
+    Show primTy,
+    Show primVal,
+    Eq primTy,
+    Eq primVal,
+    CanApply (TypedPrim primTy primVal),
+    CanApply primTy,
+    Eq (Arg primTy),
+    Show (Arg primTy),
+    Eq (Arg (TypedPrim primTy primVal)),
+    Show (Arg (TypedPrim primTy primVal)),
+    Eq (ApplyErrorExtra primTy),
+    Show (ApplyErrorExtra primTy),
+    Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
+    Show (ApplyErrorExtra (TypedPrim primTy primVal)),
+    TC.PrimSubstValue primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
+    Eval.HasWeak primVal
+  ) =>
+  Parameterisation primTy primVal ->
+  IR.Term primTy primVal ->
+  IR.AnnotationT primTy primVal ->
+  T.TestTree
+shouldFail = assertCheckResult False
 
 -- unit test generator for typeElim
 shouldInferWith ::
@@ -272,7 +405,8 @@ natComp =
     "Nat Computational typing"
     [ shouldCheck Nat.t natT' (mempty `ann` IR.VStar 0),
       shouldCheck Nat.t (nat 1) (Usage.Omega `ann` natT),
-      shouldCheck Nat.t (IR.Prim Nat.Add) (Usage.Omega `ann` addTy)
+      shouldCheck Nat.t (IR.Prim Nat.Add) (Usage.Omega `ann` addTy),
+      shouldFail Nat.t (IR.Prim Nat.Add) (Usage.Omega `ann` natT)
     ]
 
 dependentFunctionComp :: T.TestTree
@@ -367,6 +501,7 @@ subtype =
       shouldCheckWith Unit.t typGlobals [] fTerm $ mempty `ann` typ2typ 1 1,
       shouldCheckWith Unit.t typGlobals [] fTerm $ mempty `ann` typ2typ 0 1,
       shouldCheckWith Unit.t typGlobals [] fTerm $ mempty `ann` typ2typ 1 2,
+      shouldFailWith Unit.t typGlobals [] aTerm $ mempty `ann` typ2typ 1 2,
       shouldInferWith Unit.t typGlobals [] faElim $ mempty `ann` IR.VStar 1
     ]
   where
@@ -842,8 +977,15 @@ ski1CompNatTy = one `ann` natT
 
 dependentPairComp :: T.TestTree
 dependentPairComp =
-  T.testGroup "Dependent pair typing" $
-    [shouldCheck Nat.t boxNat boxNatAnn]
+  T.testGroup
+    "Dependent pair typing"
+    [ shouldCheck Nat.t boxNat boxNatAnn,
+      shouldCheck All.t unitTypeUnitValuePair allAnn,
+      shouldFail All.t unitTypeNatValuePair allAnn,
+      shouldFail All.t natTypeUnitValuePair allAnn,
+      shouldCheck All.t natTypeNatValuePair allAnn,
+      shouldCheck All.t (allSig 0) (starAnn 1)
+    ]
 
 twoNatsAnn :: NatAnnotation
 twoNatsAnn = one `ann` IR.VSig one natT natT
@@ -856,6 +998,33 @@ boxNatAnn = one `ann` IR.VSig mempty (IR.VStar 0) (IR.VBound 0)
 
 boxNat :: NatTerm
 boxNat = IR.Pair natT' (nat 1)
+
+allAnn :: AllAnnotation
+allAnn = one `ann` IR.VSig mempty (IR.VStar 0) (IR.VBound 0)
+
+allNatTy :: AllTerm
+allNatTy = IR.PrimTy (All.NatTy Nat.Ty)
+
+allNat :: Natural -> AllTerm
+allNat n = IR.Prim (All.NatVal (Nat.Val n))
+
+unitTypeUnitValuePair :: AllTerm
+unitTypeUnitValuePair = IR.Pair IR.UnitTy IR.Unit
+
+unitTypeNatValuePair :: AllTerm
+unitTypeNatValuePair = IR.Pair IR.UnitTy (allNat 0)
+
+natTypeUnitValuePair :: AllTerm
+natTypeUnitValuePair = IR.Pair allNatTy IR.Unit
+
+natTypeNatValuePair :: AllTerm
+natTypeNatValuePair = IR.Pair allNatTy (allNat 0)
+
+starAnn :: Natural -> AllAnnotation
+starAnn n = zero `ann` IR.VStar n
+
+allSig :: Natural -> AllTerm
+allSig n = IR.Sig (Usage.SNat 0) (IR.Star n) (IR.Elim (IR.Bound 0))
 
 add :: NatElim
 add = IR.Ann Usage.Omega (IR.Prim Nat.Add) addTyT 0

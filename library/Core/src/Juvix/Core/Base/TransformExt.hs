@@ -1,11 +1,10 @@
 {-# LANGUAGE ViewPatterns #-}
 
 -- | Transformations between different extensions.
-module Juvix.Core.IR.TransformExt where
+module Juvix.Core.Base.TransformExt where
 
 import Data.Coerce
 import Juvix.Core.Base.Types
-import Juvix.Core.IR.Types (Elim, T, Term)
 import Juvix.Library hiding (Coerce)
 
 data ExtTransformTEF f ext1 ext2 primTy primVal = ExtTransformTEF
@@ -148,11 +147,30 @@ extTransformE ::
   Elim' ext2 primTy primVal
 extTransformE fs t = runIdentity $ extTransformEF fs t
 
+type ForgotExt ext primTy primVal =
+  ( XStar ext primTy primVal ~ (),
+    XPrimTy ext primTy primVal ~ (),
+    XPrim ext primTy primVal ~ (),
+    XPi ext primTy primVal ~ (),
+    XSig ext primTy primVal ~ (),
+    XPair ext primTy primVal ~ (),
+    XUnitTy ext primTy primVal ~ (),
+    XUnit ext primTy primVal ~ (),
+    XLam ext primTy primVal ~ (),
+    XLet ext primTy primVal ~ (),
+    XElim ext primTy primVal ~ (),
+    XBound ext primTy primVal ~ (),
+    XFree ext primTy primVal ~ (),
+    XApp ext primTy primVal ~ (),
+    XAnn ext primTy primVal ~ ()
+  )
+
 forgetter ::
   ( TermX ext primTy primVal ~ Void,
-    ElimX ext primTy primVal ~ Void
+    ElimX ext primTy primVal ~ Void,
+    ForgotExt ext' primTy primVal
   ) =>
-  ExtTransformTE ext T primTy primVal
+  ExtTransformTE ext ext' primTy primVal
 forgetter =
   ExtTransformTE
     { etStar = const (),
@@ -176,18 +194,20 @@ forgetter =
 
 extForgetT ::
   ( TermX ext primTy primVal ~ Void,
-    ElimX ext primTy primVal ~ Void
+    ElimX ext primTy primVal ~ Void,
+    ForgotExt ext' primTy primVal
   ) =>
   Term' ext primTy primVal ->
-  Term primTy primVal
+  Term' ext' primTy primVal
 extForgetT = extTransformT forgetter
 
 extForgetE ::
   ( TermX ext primTy primVal ~ Void,
-    ElimX ext primTy primVal ~ Void
+    ElimX ext primTy primVal ~ Void,
+    ForgotExt ext' primTy primVal
   ) =>
   Elim' ext primTy primVal ->
-  Elim primTy primVal
+  Elim' ext' primTy primVal
 extForgetE = extTransformE forgetter
 
 compose ::

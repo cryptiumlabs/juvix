@@ -17,21 +17,23 @@ where
 
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.IntMap as IntMap
+import Juvix.Core.Base.TransformExt
+import qualified Juvix.Core.Base.TransformExt as TransformExt
+import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.Base.Types as Core
 import Juvix.Core.IR.Evaluator.PatSubst
 import Juvix.Core.IR.Evaluator.Subst
 import Juvix.Core.IR.Evaluator.SubstV
 import Juvix.Core.IR.Evaluator.Types
 import Juvix.Core.IR.Evaluator.Weak
-import Juvix.Core.IR.TransformExt
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 
 type NoExtensions ext primTy primVal =
   ( Core.TermX ext primTy primVal ~ Void,
-    Core.ElimX ext primTy primVal ~ Void
+    Core.ElimX ext primTy primVal ~ Void,
+    TransformExt.ForgotExt ext primTy primVal
   )
 
 type EvalPatSubst ext primTy primVal =
@@ -208,16 +210,18 @@ singleVar (Core.PVar' p _) = pure p
 singleVar _ = empty
 
 toOnlyExtsT ::
-  NoExtensions ext1 primTy primVal =>
+  ( NoExtensions ext1 primTy primVal
+  ) =>
   Core.Term' ext1 primTy primVal ->
   Core.Term' (OnlyExts.T ext2) primTy primVal
-toOnlyExtsT = extTransformT $ OnlyExts.injector `compose` forgetter
+toOnlyExtsT = extTransformT $ OnlyExts.injector
 
 toOnlyExtsE ::
-  NoExtensions ext1 primTy primVal =>
+  ( NoExtensions ext1 primTy primVal
+  ) =>
   Core.Elim' ext1 primTy primVal ->
   Core.Elim' (OnlyExts.T ext2) primTy primVal
-toOnlyExtsE = extTransformE $ OnlyExts.injector `compose` forgetter
+toOnlyExtsE = extTransformE $ OnlyExts.injector
 
 toLambda ::
   forall ext ext' primTy primVal.

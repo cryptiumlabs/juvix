@@ -14,9 +14,9 @@ import qualified Juvix.Backends.Plonk.Compiler as Compiler
 import qualified Juvix.Backends.Plonk.Dot as Dot
 import qualified Juvix.Backends.Plonk.Parameterization as Parameterization
 import qualified Juvix.Backends.Plonk.Types as Types
-import qualified Juvix.Core.Erased.Ann.Types as CoreErased
+import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
+import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
@@ -88,8 +88,8 @@ instance
 
 compileCircuit ::
   (Integral f, Show f) =>
-  CoreErased.AnnTerm
+  ErasedAnn.AnnTerm
     (Types.PrimTy f)
-    (CoreErased.TypedPrim (Types.PrimTy f) (Types.PrimVal f)) ->
+    (ErasedAnn.TypedPrim (Types.PrimTy f) (Types.PrimVal f)) ->
   Circuit.ArithCircuit f
 compileCircuit term = Builder.execCircuitBuilder . Compiler.compileTermWithWire $ ErasedAnn.toRaw term

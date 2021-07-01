@@ -1,11 +1,10 @@
 -- | A transformation that discards all annotations on term/elim nodes, but
 -- keeps the extensions.
-module Juvix.Core.IR.TransformExt.OnlyExts where
+module Juvix.Core.Base.TransformExt.OnlyExts where
 
 import Extensible hiding (Type)
+import Juvix.Core.Base.TransformExt
 import qualified Juvix.Core.Base.Types as Core
-import Juvix.Core.IR.TransformExt
-import qualified Juvix.Core.IR.Types as IR
 import Juvix.Library
 
 data T (ext :: Type)
@@ -59,13 +58,30 @@ transformer =
       etElimX = identity
     }
 
-injectT :: IR.Term primTy primVal -> Core.Term' (T ext) primTy primVal
+injectT ::
+  ( Core.TermX ext' primTy primVal ~ Void,
+    Core.ElimX ext' primTy primVal ~ Void,
+    ForgotExt ext' primTy primVal
+  ) =>
+  Core.Term' ext' primTy primVal ->
+  Core.Term' (T ext) primTy primVal
 injectT = extTransformT injector
 
-injectE :: IR.Elim primTy primVal -> Core.Elim' (T ext) primTy primVal
+injectE ::
+  ( Core.TermX ext' primTy primVal ~ Void,
+    Core.ElimX ext' primTy primVal ~ Void,
+    ForgotExt ext' primTy primVal
+  ) =>
+  Core.Elim' ext' primTy primVal ->
+  Core.Elim' (T ext) primTy primVal
 injectE = extTransformE injector
 
-injector :: ExtTransformTE IR.T (T ext) primTy primVal
+injector ::
+  ( Core.TermX ext' primTy primVal ~ Void,
+    Core.ElimX ext' primTy primVal ~ Void,
+    ForgotExt ext' primTy primVal
+  ) =>
+  ExtTransformTE ext' (T ext) primTy primVal
 injector =
   ExtTransformTE
     { etStar = identity,
