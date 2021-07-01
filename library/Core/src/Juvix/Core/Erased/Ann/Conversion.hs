@@ -1,31 +1,31 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Juvix.Core.Erased.Ann.Conversion (
-  irToErasedAnn, 
-  toRaw,
-  Comp,
-  CompConstraints',
-  CompConstraints
-) where
+module Juvix.Core.Erased.Ann.Conversion
+  ( irToErasedAnn,
+    toRaw,
+    Comp,
+    CompConstraints',
+    CompConstraints,
+  )
+where
 
 import Data.List ((\\))
-import qualified Juvix.Core.Erased as Erased
-import qualified Juvix.Core.Erased.Algorithm.Types as E
-import Juvix.Core.Erased.Ann.Types
-import Juvix.Library hiding (Type)
-import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Usage as Usage
-
 import qualified Juvix.Core.Application as App
-import qualified Juvix.Core.Erased.Ann.Types as ErasedAnn
-import qualified Juvix.Core.Erased.Ann.Prim as ErasedAnn
+import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.Erased.Algorithm as Erasure
+import qualified Juvix.Core.Erased.Algorithm.Types as E
+import qualified Juvix.Core.Erased.Ann.Prim as ErasedAnn
+import Juvix.Core.Erased.Ann.Types
+import qualified Juvix.Core.Erased.Ann.Types as ErasedAnn
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.Core.Types as Types
+import Juvix.Library hiding (Type)
+import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Usage as Usage
 
 type Comp ty val err res =
   forall m.
@@ -232,4 +232,3 @@ convertType ty =
     E.Pi u a r -> Pi u (convertType a) (convertType r)
     E.Sig u a b -> Sig u (convertType a) (convertType b)
     E.UnitTy -> UnitTy
-

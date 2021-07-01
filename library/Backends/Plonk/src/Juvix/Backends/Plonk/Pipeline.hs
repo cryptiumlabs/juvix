@@ -15,6 +15,7 @@ import qualified Juvix.Backends.Plonk.Dot as Dot
 import qualified Juvix.Backends.Plonk.Parameterization as Parameterization
 import qualified Juvix.Backends.Plonk.Types as Types
 import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import qualified Juvix.Core.Erased.Ann.Types as ErasedAnn
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
@@ -23,7 +24,6 @@ import Juvix.Core.Parameterisation
     TypedPrim,
   )
 import qualified Juvix.Core.Parameterisation as Param
-import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import Juvix.Library
 import Juvix.Pipeline as Pipeline
 import qualified Text.PrettyPrint.Leijen.Text as Pretty
