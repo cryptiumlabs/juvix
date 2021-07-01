@@ -5,7 +5,7 @@ module Test.Pipeline (top) where
 import qualified Juvix.Backends.Michelson as Michelson
 import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.Pipeline as P
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (bool, identity, log)
 import qualified Juvix.Library.Usage as Usage
@@ -24,7 +24,7 @@ type RawMichelsonTerm = RawMichelson IR.Term
 type RawMichelsonElim = RawMichelson IR.Elim
 
 type MichelsonCompConstraints m =
-  P.CompConstraints' Michelson.PrimTy Michelson.RawPrimVal Michelson.CompilationError m
+  ErasedAnn.CompConstraints' Michelson.PrimTy Michelson.RawPrimVal Michelson.CompilationError m
 
 type MichelsonComp res =
   forall m.

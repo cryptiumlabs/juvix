@@ -3,7 +3,6 @@
 module Juvix.Core
   ( module Juvix.Core.Erased.Algorithm,
     module Juvix.Core.Translate,
-    module Juvix.Core.Pipeline,
     module Juvix.Core.Types,
     module Juvix.Core,
   )
@@ -13,7 +12,6 @@ import qualified Juvix.Context as Context
 import qualified Juvix.Contextify as Contextify
 import Juvix.Core.Erased.Algorithm (erase, eraseAnn)
 import qualified Juvix.Core.HR.Pretty as HR
-import Juvix.Core.Pipeline
 import Juvix.Core.Translate
 import Juvix.Core.Types
 import qualified Juvix.Frontend.Types as Initial

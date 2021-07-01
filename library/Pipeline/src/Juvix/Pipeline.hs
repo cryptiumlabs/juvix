@@ -26,7 +26,6 @@ import Juvix.Core.Parameterisation
     TypedPrim,
   )
 import qualified Juvix.Core.Parameterisation as Param
-import qualified Juvix.Core.Pipeline as CorePipeline
 import qualified Juvix.Core.Types as Core
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
@@ -106,7 +105,7 @@ class HasBackend b where
                 Feedback.fail "Unable to convert main to lambda"
               Just (IR.Ann usage term ty _) -> do
                 let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-                (res, _) <- liftIO $ exec (CorePipeline.coreToAnn @(Err b) inlinedTerm usage ty) param newGlobals
+                (res, _) <- liftIO $ exec (ErasedAnn.irToErasedAnn @(Err b) inlinedTerm usage ty) param newGlobals
                 case res of
                   Right r -> do
                     pure r

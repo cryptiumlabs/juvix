@@ -23,7 +23,7 @@ import Juvix.Core.Parameterisation
     TypedPrim,
   )
 import qualified Juvix.Core.Parameterisation as Param
-import qualified Juvix.Core.Pipeline as CorePipeline
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import Juvix.Library
 import Juvix.Pipeline as Pipeline
 import qualified Text.PrettyPrint.Leijen.Text as Pretty
@@ -92,4 +92,4 @@ compileCircuit ::
     (Types.PrimTy f)
     (CoreErased.TypedPrim (Types.PrimTy f) (Types.PrimVal f)) ->
   Circuit.ArithCircuit f
-compileCircuit term = Builder.execCircuitBuilder . Compiler.compileTermWithWire $ CorePipeline.toRaw term
+compileCircuit term = Builder.execCircuitBuilder . Compiler.compileTermWithWire $ ErasedAnn.toRaw term
