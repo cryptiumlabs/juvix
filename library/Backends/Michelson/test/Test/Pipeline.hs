@@ -88,13 +88,13 @@ tests =
 
 coreToMichelson :: MichelsonComp (Either Michelson.CompilationError Michelson.EmptyInstr)
 coreToMichelson term usage ty = do
-  ann <- P.coreToAnn term usage ty
-  pure $ fst $ Michelson.compileExpr $ P.toRaw ann
+  ann <- ErasedAnn.irToErasedAnn term usage ty
+  pure $ fst $ Michelson.compileExpr $ ErasedAnn.toRaw ann
 
 coreToMichelsonContract :: MichelsonComp (Either Michelson.CompilationError (Michelson.Contract' Michelson.ExpandedOp, Michelson.SomeContract))
 coreToMichelsonContract term usage ty = do
-  ann <- P.coreToAnn term usage ty
-  pure $ fst $ Michelson.compileContract $ P.toRaw ann
+  ann <- ErasedAnn.irToErasedAnn term usage ty
+  pure $ fst $ Michelson.compileContract $ ErasedAnn.toRaw ann
 
 exec ::
   EnvExec primTy primVal Michelson.CompilationError a ->
