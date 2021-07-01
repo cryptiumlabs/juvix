@@ -10,6 +10,7 @@ import qualified Data.Scientific as S
 import Juvix.Backends.Plonk (FFAnnTerm, FFType, PrimVal (..))
 import qualified Juvix.Backends.Plonk as P
 import qualified Juvix.Core as Core
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import Juvix.Library hiding (Type, exp)
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Pipeline as Pipeline
@@ -90,7 +91,7 @@ compile fin = do
   t <- liftIO $ readFile fin
   parsed <- Pipeline.parseExplicit (P.BPlonk :: P.BPlonk Fr) t ["../../../stdlib/Prelude.ju", "../../../stdlib/Circuit.ju"]
   s <- Pipeline.typecheck @(P.BPlonk Fr) parsed
-  pure $ Core.toRaw s
+  pure $ ErasedAnn.toRaw s
 
 compileOr :: Pipeline.Pipeline (FFAnnTerm Fr)
 compileOr = compile "test/Test/Example/Juvix/Or.ju"
