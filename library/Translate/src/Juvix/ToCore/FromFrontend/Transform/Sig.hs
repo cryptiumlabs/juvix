@@ -2,6 +2,7 @@ module Juvix.ToCore.FromFrontend.Transform.Sig (transformSig) where
 
 import qualified Juvix.Context as Ctx
 import Juvix.Library
+import qualified Juvix.Core.HR as HR
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Sexp as Sexp
@@ -33,9 +34,9 @@ import Juvix.ToCore.Types
 
 transformSig ::
   ( HasPatVars m,
-    HasThrowFF primTy primVal m,
+    HasThrowFF HR.T primTy primVal m,
     HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m,
+    HasCoreSigs HR.T primTy primVal m,
     Show primTy,
     Show primVal
   ) =>

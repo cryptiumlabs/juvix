@@ -29,7 +29,7 @@ import Prelude (error)
 -- N.B. doesn't deal with pattern variables since HR doesn't have them.
 -- 'transformTermIR' does that.
 transformTermHR ::
-  (Show primTy, Show primVal, ReduceEff primTy primVal m) =>
+  (Show primTy, Show primVal, ReduceEff HR.T primTy primVal m) =>
   NameSymbol.Mod ->
   Sexp.T ->
   m (HR.Term primTy primVal)
@@ -127,7 +127,7 @@ pattern NamedArgTerm x ty <-
 transformApplication ::
   ( Show primVal,
     Show primTy,
-    ReduceEff primTy primVal m
+    ReduceEff HR.T primTy primVal m
   ) =>
   NameSymbol.Mod ->
   Sexp.T ->

@@ -15,11 +15,10 @@ import qualified Data.Text.IO as T
 import Debug.Pretty.Simple (pTraceShowM)
 import qualified Juvix.Context as Context
 import qualified Juvix.Core.Application as CoreApp
-import qualified Juvix.Core.Base as Core
-import qualified Juvix.Core.Base.TransformExt as TransformExt
-import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.IR.TransformExt as TransformExt
+import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
@@ -29,16 +28,18 @@ import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Types as Core
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
+import qualified Juvix.Sexp as Sexp
 import Juvix.Pipeline.Compile
 import Juvix.Pipeline.Internal
 import qualified Juvix.Pipeline.Internal as Pipeline
 import Juvix.Pipeline.Types
-import qualified Juvix.Sexp as Sexp
-import Juvix.ToCore.FromFrontend as FF (CoreDefs (..))
+import qualified Juvix.ToCore.FromFrontend as FF
 import qualified System.IO.Temp as Temp
 import qualified Text.Megaparsec as P
 import qualified Text.PrettyPrint.Leijen.Text as Pretty
-
+import qualified Juvix.Core.HR.Types as HR
+import qualified Data.HashMap.Strict as HM
+import qualified Data.IntMap.Strict as PM
 class HasBackend b where
   type Ty b = ty | ty -> b
   type Val b = val | val -> b
@@ -66,23 +67,39 @@ class HasBackend b where
 
   typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
 
+  toHR ::
+    (Show (Ty b), Show (Val b)) =>
+    Context.T Sexp.T Sexp.T Sexp.T ->
+    Param.Parameterisation (Ty b) (Val b) ->
+    Pipeline (FF.CoreDefsHR (Ty b) (Val b))
+  toHR ctx param = case Pipeline.contextToHR ctx param of
+    Left err -> Feedback.fail $ show err
+    Right defs -> pure defs
+
+  
+  -- toIR: in terms of HR 
+  -- = f toHR
+  
+  -- toErased
+  --  = f toIR
+
   typecheck' ::
     ( Eq (Ty b),
-      Show (Ty b),
       Eq (Val b),
       Show (Err b),
       Show (Val b),
-      CanApply (Ty b),
-      CanApply (TypedPrim (Ty b) (Val b)),
-      IR.HasWeak (Val b),
-      IR.HasSubstValue IR.T (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
-      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
+      Show (Ty b),
       Show (ApplyErrorExtra (Ty b)),
       Show (ApplyErrorExtra (TypedPrim (Ty b) (Val b))),
       Show (Arg (Ty b)),
       Show (Arg (TypedPrim (Ty b) (Val b))),
-      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (Val b) (Ty b),
-      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (Val b) (Val b),
+      CanApply (Ty b),
+      CanApply (TypedPrim (Ty b) (Val b)),
+      IR.HasWeak (Val b),
+      IR.HasSubstValue IR.NoExt (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
+      IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (Val b) (Ty b),
+      IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (Val b) (Val b),
+      IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
       IR.HasPatSubstTerm (OnlyExts.T TypeChecker.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b)
     ) =>
     Context.T Sexp.T Sexp.T Sexp.T ->
@@ -90,22 +107,34 @@ class HasBackend b where
     Ty b ->
     Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
   typecheck' ctx param ty = do
-    let res = Pipeline.contextToCore ctx param
+    let (res, state) = Pipeline.contextToCore ctx param
+
+    -- Pipeline.
     case res of
       Right (FF.CoreDefs _order globals) -> do
+        -- Filter out Special Defs
         let globalDefs = HM.mapMaybe toCoreDef globals
-        let convGlobals = map (convGlobal ty) globalDefs
-            newGlobals = HM.map (unsafeEvalGlobal convGlobals) convGlobals
             lookupGlobal = IR.rawLookupFun' globalDefs
+        -- Type primitive values, i.e.
+        --      RawGlobal (Ty b) (Val b) 
+        -- into RawGlobal (Ty b) (TypedPrim (Ty b) (Val b))
+        let typedGlobals = map (typePrims ty) globalDefs
+            evaluatedGlobals = HM.map (unsafeEvalGlobal typedGlobals) typedGlobals
         case HM.elems $ HM.filter isMain globalDefs of
           [] -> Feedback.fail $ "No main function found in " <> show globalDefs
-          [f@(Core.RawGFunction _)] ->
-            case TransformExt.extForgetE <$> IR.toLambdaR @IR.T f of
+          [f@(IR.RawGFunction _)] ->
+            case TransformExt.extForgetE <$> IR.toLambdaR @IR.NoExt f of
               Nothing -> do
                 Feedback.fail "Unable to convert main to lambda"
               Just (IR.Ann usage term ty _) -> do
+<<<<<<< Updated upstream
                 let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
                 (res, _) <- liftIO $ exec (ErasedAnn.irToErasedAnn @(Err b) inlinedTerm usage ty) param newGlobals
+=======
+                let patternMap = HM.toList (FF.patVars state) |> map swap |> PM.fromList
+                let inlinedTerm = IR.inlineAllGlobals term lookupGlobal patternMap
+                (res, _) <- liftIO $ exec (CorePipeline.coreToAnn @(Err b) inlinedTerm usage ty) param evaluatedGlobals
+>>>>>>> Stashed changes
                 case res of
                   Right r -> do
                     pure r
