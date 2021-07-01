@@ -27,7 +27,6 @@ import Juvix.Core.Base.TransformExt
 import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.Base.TransformExt as TransformExt
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 
@@ -215,14 +214,14 @@ toOnlyExtsT ::
    ) =>
   Core.Term' ext1 primTy primVal ->
   Core.Term' (OnlyExts.T ext2) primTy primVal
-toOnlyExtsT = extTransformT $ OnlyExts.injector -- `compose` forgetter
+toOnlyExtsT = extTransformT $ OnlyExts.injector
 
 toOnlyExtsE ::
   (NoExtensions ext1 primTy primVal
   ) =>
   Core.Elim' ext1 primTy primVal ->
   Core.Elim' (OnlyExts.T ext2) primTy primVal
-toOnlyExtsE = extTransformE $ OnlyExts.injector -- `compose` forgetter
+toOnlyExtsE = extTransformE $ OnlyExts.injector
 
 toLambda ::
   forall ext ext' primTy primVal.
