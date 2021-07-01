@@ -1,7 +1,11 @@
-module Juvix.Core.Erased.Algorithm (
-  erase, eraseAnn, eraseGlobal, exec,
-  module Erasure
-  ) where
+module Juvix.Core.Erased.Algorithm
+  ( erase,
+    eraseAnn,
+    eraseGlobal,
+    exec,
+    module Erasure,
+  )
+where
 
 import Data.List (genericIndex)
 import qualified Juvix.Core.Base.Types as Core

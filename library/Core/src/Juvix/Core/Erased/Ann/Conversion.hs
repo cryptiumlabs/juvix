@@ -2,8 +2,8 @@ module Juvix.Core.Erased.Ann.Conversion where
 
 import Data.List ((\\))
 import qualified Juvix.Core.Erased as Erased
-import Juvix.Core.Erased.Ann.Types
 import qualified Juvix.Core.Erased.Algorithm.Types as E
+import Juvix.Core.Erased.Ann.Types
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage

@@ -9,6 +9,7 @@ where
 import qualified Data.HashMap.Strict as HM
 import qualified Extensible as Ext
 import Juvix.Core.Base.Types (GlobalName, GlobalUsage, PatternVar)
+import qualified Juvix.Core.Erased.Base.Types as Erased
 import Juvix.Core.Erased.Types as Type
   ( Type,
     pattern Pi,
@@ -19,7 +20,6 @@ import Juvix.Core.Erased.Types as Type
     pattern UnitTy,
   )
 import qualified Juvix.Core.Erased.Types as Erased
-import qualified Juvix.Core.Erased.Base.Types as Erased
 import qualified Juvix.Core.HR.Pretty as HR
 import Juvix.Core.IR.TransformExt
 import qualified Juvix.Core.IR.Typechecker.Types as Typed

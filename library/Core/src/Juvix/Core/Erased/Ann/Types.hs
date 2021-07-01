@@ -1,8 +1,8 @@
 module Juvix.Core.Erased.Ann.Types where
 
 import Juvix.Core.Application (IsParamVar (..))
-import Juvix.Core.Parameterisation (TypedPrim')
 import Juvix.Core.Base.Types (Universe)
+import Juvix.Core.Parameterisation (TypedPrim')
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage

@@ -11,9 +11,9 @@ module Juvix.Core.Pipeline
 where
 
 import qualified Juvix.Core.Application as App
-import qualified Juvix.Core.Erased.Ann as ErasedAnn
 -- import qualified Juvix.Core.Erased.Ann.Prim as Prim
 import qualified Juvix.Core.Erased.Algorithm as Erasure
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker as TC
