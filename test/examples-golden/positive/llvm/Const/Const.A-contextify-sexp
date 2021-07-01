@@ -1,0 +1,16 @@
+Rec
+    { recordContents = T
+        { public = fromList
+            [
+                ( "main"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just "int"
+                        , defTerm =
+                            ( ":lambda-case" ( () 10 ) )
+                        , defPrecedence = Pred Left 9 } ) ) ]
+        , private = fromList [] }
+    , recordMTy = Nothing
+    , recordOpenList = []
+    , recordQualifiedMap = map }

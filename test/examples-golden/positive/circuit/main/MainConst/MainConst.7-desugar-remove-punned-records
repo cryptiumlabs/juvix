@@ -1,0 +1,6 @@
+[
+    ( "open" "Prelude" )
+,
+    ( "open" "Circuit" )
+,
+    ( ":defsig-match" "main" "field" ( () 3 ) ) ]

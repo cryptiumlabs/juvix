@@ -1,0 +1,58 @@
+[
+    ( "open" "Prelude" )
+,
+    ( "open" "Michelson" )
+,
+    ( "type" "Storage" ()
+        ( ":record-d" "value" "nat" "valu" "nat" )
+    )
+,
+    ( ":defsig" "foo"
+        ( ":infix" "->" "nat"
+            ( ":infix" "->" "storage" "storage" )
+        )
+    )
+,
+    ( ":defun" "foo"
+        ( "va"
+            ( ":record" ( "value" ) ( "valu" ) )
+        )
+        ( ":record"
+            ( "value"
+                ( "add" "valu" "va" )
+            )
+            ( "valu"
+                ( "add" "value" "va" )
+            )
+        )
+    )
+,
+    ( ":defsig" "add-storage"
+        ( ":infix" "->" "storage" "nat" )
+    )
+,
+    ( ":defun" "add-storage"
+        (
+            ( ":record" ( "value" ) ( "valu" ) )
+        )
+        ( "add" "value" "valu" )
+    )
+,
+    ( ":defsig" "default"
+        ( ":infix" "->" "nat"
+            ( ":infix" "->" "storage" "storage" )
+        )
+    )
+,
+    ( ":defun" "default"
+        ( "addnat" "storage" )
+        ( "pair"
+            ( ":paren"
+                ( "add-storage" "storage" )
+            )
+            ( ":paren"
+                ( "foo" "input" "storage" )
+            )
+        )
+    )
+]

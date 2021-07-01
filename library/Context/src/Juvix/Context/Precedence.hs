@@ -11,16 +11,16 @@ module Juvix.Context.Precedence
 where
 
 import Data.Data
-import Juvix.Library (Eq, Int, Show, Symbol)
+import Juvix.Library (Eq, Int, Read, Show, Symbol)
 
 data Associativity
   = Left
   | Right
   | NonAssoc
-  deriving (Eq, Show, Data)
+  deriving (Eq, Show, Read, Data)
 
 data Precedence = Pred Associativity Int
-  deriving (Eq, Show, Data)
+  deriving (Eq, Show, Read, Data)
 
 default' :: Precedence
 default' = Pred Left 9

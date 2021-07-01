@@ -1,0 +1,32 @@
+[
+    ( "open" "Prelude" )
+,
+    ( ":defun" "string" ()
+        ( ":primitive" "Michelson.string" )
+    )
+,
+    ( ":defun" "pair" ()
+        ( ":primitive" "Michelson.pair" )
+    )
+,
+    ( ":defun" "unit" ()
+        ( ":primitive" "Param.unit" )
+    )
+,
+    ( ":defun" "storage" () "unit" )
+,
+    ( ":defsig" "default"
+        ( ":infix" "->" "string"
+            ( ":infix" "->" "storage" "storage" )
+        )
+    )
+,
+    ( ":defun" "default"
+        ( "para" "storage" )
+        ( "pair" ( ":list" ) "storage" )
+    )
+,
+    ( ":defsig" "init-storage" "storage" )
+,
+    ( ":defun" "init-storage" () "unit" )
+]

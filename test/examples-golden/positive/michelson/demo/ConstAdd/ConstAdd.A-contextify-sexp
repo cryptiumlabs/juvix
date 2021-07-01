@@ -1,0 +1,64 @@
+Rec
+    { recordContents = T
+        { public = fromList
+            [
+                ( "make-pair"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->"
+                                ( "list" "operation" )
+                                ( ":infix" "->" "nat"
+                                    ( "pair"
+                                        ( ":paren"
+                                            ( "list" "operation" ) ) "nat" ) ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Michelson.pair" ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "main"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->"
+                                ( "pair" "nat" "nat" )
+                                ( "pair"
+                                    ( ":paren"
+                                        ( "list" "operation" ) ) "nat" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( ()
+                                    ( ":lambda" ( "ps" )
+                                        ( "make-pair" "nil"
+                                            ( ":paren" ( "add" 4 6 ) ) ) ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "add"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "nat"
+                                ( ":infix" "->" "nat" "nat" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Michelson.add" ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "nil"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( "list" "operation" )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Michelson.nil" ) ) )
+                        , defPrecedence = Pred Left 9 } ) ) ]
+        , private = fromList [] }
+    , recordMTy = Nothing
+    , recordOpenList = []
+    , recordQualifiedMap = map }

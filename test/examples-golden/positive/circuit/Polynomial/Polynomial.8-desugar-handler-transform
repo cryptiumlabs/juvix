@@ -1,0 +1,32 @@
+[
+    ( "open" "Prelude" )
+,
+    ( "open" "Circuit" )
+,
+    ( ":defsig-match" "+"
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "field" ) )
+        ( () ( ":primitive" "Circuit.add" ) ) )
+,
+    ( "declare" "infixl" "+" 5 )
+,
+    ( ":defsig-match" "^"
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "field" ) )
+        ( () ( ":primitive" "Circuit.exp" ) ) )
+,
+    ( "declare" "infixl" "^" 8 )
+,
+    ( ":defsig-match" "*"
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "field" ) )
+        ( () ( ":primitive" "Circuit.mul" ) ) )
+,
+    ( "declare" "infixl" "*" 7 )
+,
+    ( ":defsig-match" "=="
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "bool" ) )
+        ( () ( ":primitive" "Circuit.eq" ) ) )
+,
+    ( "declare" "infixl" "==" 2 )
+,
+    ( ":defsig-match" "main"
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "bool" ) )
+        ( ( "x" "y" ) ( ":infix" "^" "x" ( ":infix" "==" 3 "y" ) ) ) ) ]

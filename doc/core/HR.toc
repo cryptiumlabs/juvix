@@ -1,3 +1,0 @@
-\contentsline {section}{Contents}{1}{section*.1}%
-\contentsline {section}{\numberline {1}HR}{2}{section.1}%
-\contentsline {section}{\numberline {2}HR-Ann}{4}{section.2}%
