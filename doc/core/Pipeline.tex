@@ -46,7 +46,7 @@
 \draw[->] (6) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Erasure/Algorithm.hs}{Core: Juvix.Core.Erased.Algorithm.hs (erase)}} (7);
 \draw[->] (7) -- node[midway, right] {\href{}{To Backend}} (8);
 \node[draw,dotted,fit=(3) (4), label={[xshift=0mm]left:{S-expressions}}] {};
-\node[draw,dotted,fit=(5) (6), label={[xshift=0mm]left:{Terms == Types}}] {};
+\node[draw,dotted,fit=(5) (6), label={[xshift=0mm]left:{Extend from Core.Base}}] {};
 \node[draw,dotted,fit=(7) , label={[xshift=0mm]left:{Typechecked}}] {};
 
 \end{tikzpicture} 
@@ -258,13 +258,15 @@ extPattern =
 
 \node[draw,dotted,fit=(2) (3) (4), label={[xshift=0mm]left:{Erased}}] {};
 \end{tikzpicture} 
+
+
 Erased doesn't extend from IR types any more, but from its own types file. In contrast to previous steps in the pipeline, it distinguishes between terms and types.
 
 At this point, terms have already been typechecked.
 
 \subsubsection{Ann}
 
-We retrieve the usage of a term and annotate the term with it. Certain backends can use the knowledge of a usage's term to optimise their compilation.
+We retrieve the usage of a term and annotate the term with it. Certain backends can use the knowledge of a usage's term to optimise compilation.
 
 \section{Backends}
 \subsection{LLVM}
