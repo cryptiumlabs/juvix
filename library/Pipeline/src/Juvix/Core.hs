@@ -1,7 +1,7 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
 module Juvix.Core
-  ( module Juvix.Core.Erasure,
+  ( module Juvix.Core.Erased.Algorithm,
     module Juvix.Core.Translate,
     module Juvix.Core.Pipeline,
     module Juvix.Core.Types,
@@ -11,7 +11,7 @@ where
 
 import qualified Juvix.Context as Context
 import qualified Juvix.Contextify as Contextify
-import Juvix.Core.Erasure (erase, eraseAnn)
+import Juvix.Core.Erased.Algorithm (erase, eraseAnn)
 import qualified Juvix.Core.HR.Pretty as HR
 import Juvix.Core.Pipeline
 import Juvix.Core.Translate

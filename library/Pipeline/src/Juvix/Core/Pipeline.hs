@@ -11,9 +11,9 @@ module Juvix.Core.Pipeline
 where
 
 import qualified Juvix.Core.Application as App
-import qualified Juvix.Core.ErasedAnn as ErasedAnn
-import qualified Juvix.Core.ErasedAnn.Prim as Prim
-import qualified Juvix.Core.Erasure as Erasure
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
+-- import qualified Juvix.Core.Erased.Ann.Prim as Prim
+import qualified Juvix.Core.Erased.Algorithm as Erasure
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker as TC
@@ -154,7 +154,7 @@ toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
     takeToTerm (App.Take {usage, type', term}) =
       ErasedAnn.Ann
         { usage,
-          type' = Prim.fromPrimType type',
+          type' = ErasedAnn.fromPrimType type',
           term = ErasedAnn.Prim term
         }
     argsToTerms ts xs = go (toList ts) xs

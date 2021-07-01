@@ -19,8 +19,7 @@ module Juvix.Backends.Plonk.Types
 where
 
 import qualified Juvix.Core.Application as App
-import Juvix.Core.ErasedAnn
-import qualified Juvix.Core.ErasedAnn.Types as CoreErased
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (Type)
@@ -65,7 +64,7 @@ type Return' ext f = App.Return' ext (P.PrimType (PrimTy f)) (PrimVal f)
 
 type ReturnIR f = Return' IR.T f
 
-type ReturnHR f = Return' CoreErased.T f
+type ReturnHR f = Return' ErasedAnn.T f
 
 type Take f = App.Take (P.PrimType (PrimTy f)) (PrimVal f)
 
@@ -73,19 +72,19 @@ type Arg' ext f = App.Arg' ext (P.PrimType (PrimTy f)) (PrimVal f)
 
 type ArgIR f = Arg' IR.T f
 
-type ArgHR f = Arg' CoreErased.T f
+type ArgHR f = Arg' ErasedAnn.T f
 
 type PrimVal' ext f = Return' ext f
 
 type PrimValIR f = PrimVal' IR.T f
 
-type PrimValHR f = PrimVal' CoreErased.T f
+type PrimValHR f = PrimVal' ErasedAnn.T f
 
-type FFType f = Type (PrimTy f)
+type FFType f = ErasedAnn.Type (PrimTy f)
 
-type FFTerm f = Term (PrimTy f) (PrimVal f)
+type FFTerm f = ErasedAnn.Term (PrimTy f) (PrimVal f)
 
-type FFAnnTerm f = AnnTerm (PrimTy f) (PrimVal f)
+type FFAnnTerm f = ErasedAnn.AnnTerm (PrimTy f) (PrimVal f)
 
 newtype CompilationError f
   = NotYetImplemented Text

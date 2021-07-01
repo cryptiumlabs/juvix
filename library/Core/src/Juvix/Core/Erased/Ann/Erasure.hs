@@ -1,8 +1,8 @@
-module Juvix.Core.ErasedAnn.Erasure where
+module Juvix.Core.Erased.Ann.Erasure where
 
 import qualified Juvix.Core.Erased.Types as E
-import Juvix.Core.ErasedAnn.Types (AnnTerm (..))
-import qualified Juvix.Core.ErasedAnn.Types as Types
+import Juvix.Core.Erased.Ann.Types (AnnTerm (..))
+import qualified Juvix.Core.Erased.Ann.Types as Types
 import Juvix.Library
 
 eraseTerm :: Types.Term primTy primVal -> E.Term primVal

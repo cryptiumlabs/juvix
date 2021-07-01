@@ -16,8 +16,7 @@ import Debug.Pretty.Simple (pTraceShowM)
 import qualified Juvix.Context as Context
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.Base as Core
-import qualified Juvix.Core.ErasedAnn as ErasedAnn
-import qualified Juvix.Core.ErasedAnn.Types as CoreErased
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt as TransformExt
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts

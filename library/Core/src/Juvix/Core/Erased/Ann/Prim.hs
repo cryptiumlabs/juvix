@@ -1,4 +1,4 @@
-module Juvix.Core.ErasedAnn.Prim
+module Juvix.Core.Erased.Ann.Prim
   ( fromAnn,
     toAnn,
     fromPrimType,
@@ -6,7 +6,7 @@ module Juvix.Core.ErasedAnn.Prim
 where
 
 import qualified Juvix.Core.Application as App
-import qualified Juvix.Core.ErasedAnn.Types as Types
+import qualified Juvix.Core.Erased.Ann.Types as Types
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage

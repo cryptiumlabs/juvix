@@ -1,13 +1,13 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module Juvix.Core.ErasedAnn.Pretty
+module Juvix.Core.Erased.Ann.Pretty
   ( PPAnn (..),
     PrimPretty1,
   )
 where
 
-import Juvix.Core.ErasedAnn.Types
+import Juvix.Core.Erased.Ann.Types
 import Juvix.Core.HR.Pretty (PPAnn, PPAnn' (..), PrimPretty1)
 import qualified Juvix.Core.HR.Pretty as HR
 import Juvix.Library hiding (Type)

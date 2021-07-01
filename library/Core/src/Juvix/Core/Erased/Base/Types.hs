@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.Erased.Types.Base where
+module Juvix.Core.Erased.Base.Types where
 
 import Extensible
 import Juvix.Core.Base.Types (Universe)

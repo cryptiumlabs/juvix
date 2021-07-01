@@ -2,7 +2,7 @@ module Juvix.Backends.Michelson.Pipeline (BMichelson (..), compileMichelson) whe
 
 import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
-import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
+import qualified Juvix.Core.Erased.Ann.Types as ErasedAnn
 import qualified Juvix.Core.Pipeline as CorePipeline
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback

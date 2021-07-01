@@ -4,7 +4,7 @@
 module Test.Golden where
 
 import qualified Juvix.Backends.Michelson as Michelson
-import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
+import qualified Juvix.Core.Erased.Ann.Types as ErasedAnn
 import qualified Juvix.Core.Pipeline as Core
 import Juvix.Library
 import Juvix.Library.Test.Golden

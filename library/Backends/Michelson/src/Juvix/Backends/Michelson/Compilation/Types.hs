@@ -23,7 +23,7 @@ module Juvix.Backends.Michelson.Compilation.Types
 where
 
 import qualified Juvix.Core.Application as App
-import qualified Juvix.Core.ErasedAnn.Types as CoreErased
+import qualified Juvix.Core.Erased.Ann.Types as CoreErased
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (Type)

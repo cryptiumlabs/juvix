@@ -5,7 +5,7 @@ module Test.Golden where
 
 import qualified Data.ByteString as ByteString (readFile)
 import qualified Juvix.Backends.LLVM as LLVM
-import qualified Juvix.Core.ErasedAnn as ErasedAnn
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import qualified Juvix.Core.Pipeline as Core
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback

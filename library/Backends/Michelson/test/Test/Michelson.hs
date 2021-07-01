@@ -7,7 +7,7 @@ import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpret
 import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import Juvix.Backends.Michelson.Optimisation
-import qualified Juvix.Core.ErasedAnn as J
+import qualified Juvix.Core.Erased.Ann as J
 import Juvix.Library hiding (Type, show)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Usage
