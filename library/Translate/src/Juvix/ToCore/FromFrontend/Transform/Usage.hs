@@ -1,5 +1,6 @@
 module Juvix.ToCore.FromFrontend.Transform.Usage (transformUsage, transformGUsage) where
 
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Base as Core
 import Juvix.Library

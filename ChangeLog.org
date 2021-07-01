@@ -1,4 +1,6 @@
 * Changelog for Juvix
+** 0.1.1.8
+- Add Golden tests for desugar and contextify passes
 ** 0.1.1.7
 - Add Michelson golden tests
 - Allow golden tests to be compared with their Show instance

@@ -27,6 +27,7 @@ dependencies:
 - lens
 - text
 - megaparsec
+- bytestring
 
 default-extensions:
   - NoImplicitPrelude

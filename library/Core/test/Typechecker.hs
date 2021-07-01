@@ -3,6 +3,7 @@
 -- | Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 module Typechecker where
 
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.IR.CheckTerm as TC

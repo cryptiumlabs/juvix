@@ -41,11 +41,11 @@ Module that implements the backend parameters for the Michelson backend.
   + [[Interpret]]
   + [[Untyped]]
   + [[Application]]
+  + [[Base/Types]]
   + [[ErasedAnn]]
   + [[Prim]]
   + [[Core/HR/Pretty]]
   + [[Evaluator]]
-  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
@@ -260,9 +260,9 @@ Surface language
 - _Relies on_
   + [[Plonk/Types]]
   + [[Application]]
+  + [[Base/Types]]
   + [[ErasedAnn/Types]]
   + [[Evaluator]]
-  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
@@ -364,8 +364,8 @@ Parameterization and application of the LLVM backend primitives.
 - _Relies on_
   + [[Primitive]]
   + [[Application]]
+  + [[Base/Types]]
   + [[Evaluator]]
-  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
 ******* Pipeline <<LLVM/Pipeline>>
@@ -463,6 +463,7 @@ temporary lexical bindings as our code encounters binders.
 ***** Application
 Types to support partial application and polymorphic primitives.
 - _Relies on_
+  + [[Base/Types]]
   + [[Core/HR/Pretty]]
   + [[IR/Types]]
   + [[Library]]
@@ -478,6 +479,7 @@ which provides concrete sets of primitives and a primitive type-checking
 relation.
 - _Relies on_
   + [[Application]]
+  + [[Base/Types]]
   + [[Core/HR/Pretty]]
   + [[IR/Types]]
   + [[Library]]
@@ -486,6 +488,7 @@ relation.
   + [[PrettyPrint]]
 ***** Translate
 - _Relies on_
+  + [[Base/Types]]
   + [[HR/Types]]
   + [[IR/Types]]
   + [[Core/Utility]]
@@ -513,9 +516,27 @@ name streams, and aliases for capabilities over these structures.
 - =HasNamStack= talks about the mapping between names in the =HR=
   form and the =De Brunjin= Index
 - _Relies on_
-  + [[IR/Types]]
+  + [[Base/Types]]
   + [[Library]]
   + [[NameSymbol]]
+***** Base <<Core/Base>>
+- _Relies on_
+  + [[Base/Types]]
+****** Types <<Base/Types>>
+- _Relies on_
+  + [[Base/Types/Base]]
+  + [[Globals]]
+******* Base <<Base/Types/Base>>
+- _Relies on_
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Usage]]
+******* Globals
+- _Relies on_
+  + [[Base/Types/Base]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[Library/Usage]]
 ***** Erased
 - _Relies on_
   + [[Erased/Types]]
@@ -527,12 +548,12 @@ name streams, and aliases for capabilities over these structures.
   + [[NameSymbol]]
 ****** Types <<Erased/Types>>
 - _Relies on_
+  + [[Base/Types]]
   + [[Erased/Types/Base]]
   + [[Typechecker/Types]]
-  + [[Globals]]
 ******* Base <<Erased/Types/Base>>
 - _Relies on_
-  + [[IR/Types]]
+  + [[Base/Types]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
@@ -573,7 +594,7 @@ name streams, and aliases for capabilities over these structures.
 ****** Types <<ErasedAnn/Types>>
 - _Relies on_
   + [[Application]]
-  + [[IR/Types]]
+  + [[Base/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[NameSymbol]]
@@ -584,6 +605,7 @@ name streams, and aliases for capabilities over these structures.
   + [[Erasure/Types]]
 ****** Algorithm
 - _Relies on_
+  + [[Base/Types]]
   + [[Erasure/Types]]
   + [[Erasure/Types]]
   + [[Core/IR]]
@@ -593,13 +615,13 @@ name streams, and aliases for capabilities over these structures.
   + [[Library/Usage]]
 ****** Types <<Erasure/Types>>
 - _Relies on_
+  + [[Base/Types]]
   + [[Erased/Types]]
   + [[Erased/Types]]
   + [[Erased/Types/Base]]
   + [[Core/HR/Pretty]]
   + [[TransformExt]]
   + [[Typechecker/Types]]
-  + [[IR/Types]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Translate]]
@@ -613,7 +635,7 @@ name streams, and aliases for capabilities over these structures.
   + [[HR/Types]]
 ****** Extend
 - _Relies on_
-  + [[IR/Types/Base]]
+  + [[Base/Types]]
   + [[Library]]
   + [[NameSymbol]]
 ****** Pretty <<Core/HR/Pretty>>
@@ -625,9 +647,9 @@ name streams, and aliases for capabilities over these structures.
   + [[Library/Usage]]
 ****** Types <<HR/Types>>
 - _Relies on_
-  + [[Library]]
+  + [[Base/Types]]
   + [[Extend]]
-  + [[IR/Types/Base]]
+  + [[Library]]
 ***** IR <<Core/IR>>
 - _Relies on_
   + [[CheckTerm]]
@@ -639,11 +661,10 @@ name streams, and aliases for capabilities over these structures.
 ****** CheckDatatype
 Datatype declarations are typechecked here. Usages are passed along.
 - _Relies on_
+  + [[Base/Types]]
   + [[CheckTerm]]
   + [[Evaluator]]
   + [[IR/Types]]
-  + [[IR/Types/Base]]
-  + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]
 ****** CheckTerm
@@ -652,20 +673,29 @@ This file contains the functions and aux functions to typecheck terms.
 datatype and function declarations.
 - _Relies on_
   + [[Application]]
+  + [[Base/Types]]
   + [[Evaluator]]
   + [[Typechecker/Env]]
   + [[Error]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
+  + [[Library/Usage]]
+****** Types <<IR/Types>>
+Quantitative type implementation inspired by
+  Atkey 2018 and McBride 2016.
+- _Relies on_
+  + [[Base/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
   + [[Library/Usage]]
 ****** Evaluator
 This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
 the substitution functions (substTerm and substElim).
 - _Relies on_
+  + [[Base/Types]]
   + [[PatSubst]]
   + [[Subst]]
   + [[SubstV]]
@@ -674,43 +704,41 @@ the substitution functions (substTerm and substElim).
   + [[TransformExt]]
   + [[OnlyExts]]
   + [[IR/Types]]
-  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
 ******* PatSubst
 - _Relies on_
   + [[Application]]
+  + [[Base/Types]]
   + [[Evaluator/Weak]]
   + [[OnlyExts]]
   + [[IR/Types]]
-  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Library/Usage]]
 ******* Subst
 - _Relies on_
   + [[Application]]
+  + [[Base/Types]]
   + [[Evaluator/Weak]]
-  + [[IR/Types]]
-  + [[IR/Types/Base]]
   + [[Library]]
   + [[Library/Usage]]
 ******* SubstV
 - _Relies on_
   + [[Application]]
+  + [[Base/Types]]
   + [[Evaluator/Types]]
   + [[Evaluator/Weak]]
   + [[IR/Types]]
-  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Library/Usage]]
 ******* Types <<Evaluator/Types>>
 - _Relies on_
+  + [[Base/Types]]
   + [[Core/HR/Pretty]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Translate]]
   + [[Library]]
@@ -718,24 +746,23 @@ the substitution functions (substTerm and substElim).
 ******* Weak <<Evaluator/Weak>>
 - _Relies on_
   + [[Application]]
-  + [[IR/Types]]
-  + [[IR/Types/Base]]
+  + [[Base/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Library/Usage]]
 ****** TransformExt
 Transformations between different extensions.
 - _Relies on_
+  + [[Base/Types]]
   + [[IR/Types]]
-  + [[IR/Types/Base]]
   + [[Library]]
 ******* OnlyExts
 A transformation that discards all annotations on term/elim nodes, but
 keeps the extensions.
 - _Relies on_
+  + [[Base/Types]]
   + [[TransformExt]]
   + [[IR/Types]]
-  + [[IR/Types/Base]]
   + [[Library]]
 ****** Typechecker <<IR/Typechecker>>
 This file contains the functions and aux functions to typecheck
@@ -744,6 +771,7 @@ Datatype declarations are typechecked by @checkDataType@ in CheckDataType.hs.
 Function declarations are typechecked by @typeCheckFuns@ in CheckFunction.hs.
 Typechecked declarations are added to the signature.
 - _Relies on_
+  + [[Base/Types]]
   + [[CheckDatatype]]
   + [[CheckTerm]]
   + [[Evaluator]]
@@ -751,30 +779,27 @@ Typechecked declarations are added to the signature.
   + [[Error]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]
 ******* Env <<Typechecker/Env>>
 - _Relies on_
+  + [[Base/Types]]
   + [[Evaluator]]
   + [[OnlyExts]]
   + [[Error]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[IR/Types/Base]]
-  + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Library/Usage]]
 ******* Error
 - _Relies on_
   + [[Application]]
+  + [[Base/Types]]
   + [[Core/HR/Pretty]]
   + [[Evaluator]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[IR/Types/Base]]
-  + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Translate]]
   + [[Library]]
@@ -783,40 +808,17 @@ Typechecked declarations are added to the signature.
 ******* Types <<Typechecker/Types>>
 - _Relies on_
   + [[Application]]
-  + [[Core/HR/Pretty]]
+  + [[Base/Types]]
   + [[IR/Types]]
-  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
-  + [[Translate]]
   + [[Library]]
-  + [[PrettyPrint]]
-  + [[Library/Usage]]
-****** Types <<IR/Types>>
-Quantitative type implementation inspired by
-  Atkey 2018 and McBride 2016.
-- _Relies on_
-  + [[IR/Types/Base]]
-  + [[Globals]]
-  + [[Library]]
-  + [[NameSymbol]]
-  + [[Library/Usage]]
-******* Base <<IR/Types/Base>>
-- _Relies on_
-  + [[Library]]
-  + [[NameSymbol]]
-  + [[Library/Usage]]
-******* Globals
-- _Relies on_
-  + [[IR/Types/Base]]
-  + [[Library]]
-  + [[HashMap]]
   + [[Library/Usage]]
 ***** Parameterisations
 ****** All
 - _Relies on_
   + [[Application]]
+  + [[Base/Types]]
   + [[Evaluator]]
-  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Naturals]]
   + [[Unit]]
@@ -824,21 +826,22 @@ Quantitative type implementation inspired by
 ****** Naturals
 - _Relies on_
   + [[Application]]
+  + [[Base/Types]]
   + [[Core/HR/Pretty]]
   + [[Evaluator]]
-  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[PrettyPrint]]
 ****** Unit
 - _Relies on_
+  + [[Base/Types]]
   + [[Evaluator]]
-  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
 ** test
 *** Conv
 - _Relies on_
+  + [[Core/Base]]
   + [[Core/HR]]
   + [[Core/IR]]
   + [[Translate]]
@@ -861,6 +864,7 @@ Quantitative type implementation inspired by
 *** Typechecker <<test/Typechecker>>
 Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
+  + [[Core/Base]]
   + [[Core/IR]]
   + [[CheckTerm]]
   + [[Evaluator]]
@@ -939,6 +943,7 @@ with any stage of the compiler while modifying the source code.
 ** test
 *** FromFrontend <<test/FromFrontend>>
 - _Relies on_
+  + [[Base/Types]]
   + [[IR/Types]]
   + [[Library]]
   + [[ToCore/Types]]
@@ -1357,6 +1362,7 @@ Can be added to via core translation
 - _Relies on_
   + [[Juvix/Context]]
   + [[Application]]
+  + [[Core/Base]]
   + [[ErasedAnn]]
   + [[ErasedAnn/Types]]
   + [[Core/IR]]
@@ -1378,9 +1384,9 @@ Can be added to via core translation
 ***** Compile
 - _Relies on_
   + [[Application]]
+  + [[Core/Base]]
+  + [[Base/Types]]
   + [[Core/IR]]
-  + [[IR/Types/Base]]
-  + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Feedback]]
@@ -1389,6 +1395,7 @@ Can be added to via core translation
 - _Relies on_
   + [[Juvix/Context]]
   + [[Core]]
+  + [[Base/Types]]
   + [[Traverse]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
@@ -1596,9 +1603,22 @@ _TODO_
   + [[Library]]
 ***** Test
 ****** Golden <<Library/Test/Golden>>
+@Juvix.Library.Test.Golden@ defines testing functionality for golden
+  style tests
+- Golden tests revolve around testing files we have saved on
+  disk. Namely we wish to take that file and do some transformation
+  and save the result to compare it for regression testing.
+- There are many useful sub components of this module
+- The =Compact= tag to a few of the functions represents golden
+  test functions that display the results in different ways. Often
+  we use the =Compact= variant for S-expression showing as it's
+  much clearer to see what the expressions mean.
 - _Relies on_
   + [[Library]]
   + [[Feedback]]
+******* NoQuotes
+This structure allows us to have golden tests that are based around
+show instances instead of normal read instances.
 ** test
 *** Main <<StandardLibrary/test/Main>>
 - _Relies on_
@@ -1812,9 +1832,9 @@ done with no extra information needed. Thus we export the following passes
 ***** Types <<ToCore/Types>>
 - _Relies on_
   + [[Juvix/Context]]
+  + [[Base/Types]]
   + [[Core/HR]]
   + [[Core/IR]]
-  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[LineNum]]
@@ -1832,6 +1852,7 @@ done with no extra information needed. Thus we export the following passes
 ******* Def
 - _Relies on_
   + [[Juvix/Context]]
+  + [[Core/Base]]
   + [[Core/HR]]
   + [[Core/IR]]
   + [[Translate]]
@@ -1841,7 +1862,6 @@ done with no extra information needed. Thus we export the following passes
   + [[Juvix/Sexp]]
   + [[Transform/HR]]
   + [[Transform/Helpers]]
-  + [[Transform/IR]]
   + [[ToCore/Types]]
 ******* HR <<Transform/HR>>
 - _Relies on_
@@ -1857,6 +1877,7 @@ done with no extra information needed. Thus we export the following passes
 ******* Helpers <<Transform/Helpers>>
 - _Relies on_
   + [[Juvix/Context]]
+  + [[Core/Base]]
   + [[Core/HR]]
   + [[Core/IR]]
   + [[Core/Parameterisation]]
@@ -1867,6 +1888,7 @@ done with no extra information needed. Thus we export the following passes
   + [[ToCore/Types]]
 ******* IR <<Transform/IR>>
 - _Relies on_
+  + [[Core/Base]]
   + [[Core/HR]]
   + [[Core/IR]]
   + [[Core/Parameterisation]]
@@ -1903,6 +1925,7 @@ done with no extra information needed. Thus we export the following passes
   + [[ToCore/Types]]
 ******* Usage <<Transform/Usage>>
 - _Relies on_
+  + [[Core/Base]]
   + [[Core/IR]]
   + [[Library]]
   + [[NameSymbol]]
@@ -1925,11 +1948,23 @@ done with no extra information needed. Thus we export the following passes
   + [[Juvix/Sexp]]
 **** Golden <<Translate/test/Test/Golden>>
 - _Relies on_
+  + [[Juvix/Context]]
+  + [[Juvix/Contextify]]
+  + [[Contextify/Environment]]
+  + [[Contextify/Passes]]
+  + [[Desugar/Passes]]
+  + [[Juvix/Frontend]]
   + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
   + [[Frontend/Types]]
   + [[Frontend/Types/Base]]
   + [[Library]]
+  + [[Feedback]]
+  + [[NameSymbol]]
+  + [[Library/Parser]]
+  + [[Library/Parser]]
   + [[Library/Test/Golden]]
+  + [[Juvix/Sexp]]
 **** Context
 ***** Environment <<Context/Environment>>
 - _Relies on_

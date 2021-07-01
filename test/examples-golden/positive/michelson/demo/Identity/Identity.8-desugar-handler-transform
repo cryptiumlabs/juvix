@@ -1,0 +1,27 @@
+[
+    ( "open" "Prelude" )
+,
+    ( "open" "Michelson" )
+,
+    ( ":defsig-match" "make-pair"
+        ( ":infix" "->"
+            ( "list" "operation" )
+            ( ":infix" "->" "int"
+                ( "pair" ( ":paren" ( "list" "operation" ) ) "int" ) ) )
+        ( () ( ":primitive" "Michelson.pair" ) ) )
+,
+    ( ":defsig-match" "nil"
+        ( "list" "operation" )
+        ( () ( ":primitive" "Michelson.nil" ) ) )
+,
+    ( ":defsig-match" "car"
+        ( ":infix" "->" ( "pair" "int" "int" ) "int" )
+        ( () ( ":primitive" "Michelson.car" ) ) )
+,
+    ( ":defsig-match" "main"
+        ( ":infix" "->"
+            ( "pair" "int" "int" )
+            ( "pair" ( ":paren" ( "list" "operation" ) ) "int" ) )
+        ( ()
+            ( ":lambda" ( "params" )
+                ( "make-pair" "nil" ( ":paren" ( "car" "params" ) ) ) ) ) ) ]

@@ -1,0 +1,38 @@
+[
+    ( "open" "Prelude" )
+,
+    ( "open" "Circuit" )
+,
+    ( ":defsig" "+"
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "field" ) ) )
+,
+    ( ":defun-match" "+" ( () ( ":primitive" "Circuit.add" ) ) )
+,
+    ( "declare" "infixl" "+" 5 )
+,
+    ( ":defsig" "^"
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "field" ) ) )
+,
+    ( ":defun-match" "^" ( () ( ":primitive" "Circuit.exp" ) ) )
+,
+    ( "declare" "infixl" "^" 8 )
+,
+    ( ":defsig" "*"
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "field" ) ) )
+,
+    ( ":defun-match" "*" ( () ( ":primitive" "Circuit.mul" ) ) )
+,
+    ( "declare" "infixl" "*" 7 )
+,
+    ( ":defsig" "=="
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "bool" ) ) )
+,
+    ( ":defun-match" "==" ( () ( ":primitive" "Circuit.eq" ) ) )
+,
+    ( "declare" "infixl" "==" 2 )
+,
+    ( ":defsig" "main"
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "bool" ) ) )
+,
+    ( ":defun-match" "main"
+        ( ( "x" "y" ) ( ":infix" "^" "x" ( ":infix" "==" 3 "y" ) ) ) ) ]

@@ -2,10 +2,10 @@
 
 module Juvix.Core.IR.Evaluator.Types where
 
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.IR.Typechecker.Types as TC
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Core.Translate
 import Juvix.Library

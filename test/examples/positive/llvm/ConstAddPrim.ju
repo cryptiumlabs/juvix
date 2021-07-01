@@ -4,7 +4,7 @@
 mod ConstAddPrim where
 
 open Prelude
-open Prelude.LLVM
+open LLVM
 
 sig addint : int -> int -> int
 let addint = %LLVM.add

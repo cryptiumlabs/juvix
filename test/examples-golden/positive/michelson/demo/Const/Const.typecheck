@@ -1,4 +1,4 @@
-"Ann
+Ann
     { usage = Omega
     , type' = Pi Omega
         ( PrimTy
@@ -101,4 +101,4 @@
                 ]
             }
         }
-    }"
+    }

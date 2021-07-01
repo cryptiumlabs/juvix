@@ -4,7 +4,6 @@
 module Juvix.Core.Base.TransformExt where
 
 import Data.Coerce
--- import Juvix.Core.IR.Types (Elim, T, Term)
 import Juvix.Core.Base.Types
 import Juvix.Library hiding (Coerce)
 

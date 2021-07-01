@@ -5,12 +5,12 @@ module Juvix.Core.IR.Typechecker.Env where
 import Control.Monad.Trans
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Map as Map
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
 import Juvix.Core.IR.Typechecker.Error
 import Juvix.Core.IR.Typechecker.Types
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype)
 import qualified Juvix.Library.Usage as Usage

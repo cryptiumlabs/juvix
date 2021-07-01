@@ -13,6 +13,8 @@ import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import qualified StmContainers.Map as STM
+import System.IO.Unsafe (unsafePerformIO)
+import Text.Read (Read (readsPrec))
 
 data T term ty sumRep = T
   { currentNameSpace :: Record term ty sumRep,
@@ -20,7 +22,7 @@ data T term ty sumRep = T
     topLevelMap :: HashMap.T Symbol (Definition term ty sumRep),
     reverseLookup :: ReverseLookup
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Read, Eq, Generic)
 
 type NameSpace term ty sumRep = NameSpace.T (Definition term ty sumRep)
 
@@ -51,7 +53,7 @@ data Definition term ty sumRep
     -- we should search the currentNameSpace from here
     CurrentNameSpace
   | SumCon (SumT term ty)
-  deriving (Show, Generic, Eq)
+  deriving (Show, Read, Generic, Eq)
 
 data Def term ty = D
   { defUsage :: Maybe Usage.T,
@@ -59,13 +61,13 @@ data Def term ty = D
     defTerm :: term,
     defPrecedence :: Precedence
   }
-  deriving (Show, Generic, Eq, Data)
+  deriving (Show, Read, Generic, Eq, Data)
 
 data SumT term ty = Sum
   { sumTDef :: Maybe (Def term ty),
     sumTName :: Symbol
   }
-  deriving (Show, Generic, Eq, Data)
+  deriving (Show, Read, Generic, Eq, Data)
 
 data Record term ty sumRep = Rec
   { recordContents :: NameSpace.T (Definition term ty sumRep),
@@ -75,22 +77,22 @@ data Record term ty sumRep = Rec
     recordOpenList :: [Open.TName NameSymbol.T],
     recordQualifiedMap :: SymbolMap
   }
-  deriving (Show, Generic, Eq)
+  deriving (Show, Read, Generic, Eq)
 
 newtype Information
   = Prec Precedence
-  deriving (Show, Generic, Eq, Data)
+  deriving (Show, Read, Generic, Eq, Data)
 
 newtype PathError
   = VariableShared NameSymbol.T
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data WhoUses = Who
   { impExplict :: Open.T,
     modName :: NameSymbol.T,
     symbolMap :: SymbolMap
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Read, Eq, Generic)
 
 type SymbolMap = STM.Map Symbol SymbolInfo
 
@@ -105,12 +107,16 @@ data SymbolInfo = SymInfo
     -- | mod is the module where the symbol is coming from
     mod :: NameSymbol.T
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Read, Eq, Generic)
 
-data UsedIn = Func [Symbol] | NotUsed | Yes deriving (Show, Eq, Generic)
+data UsedIn = Func [Symbol] | NotUsed | Yes deriving (Show, Read, Eq, Generic)
 
 instance Show (STM.Map a b) where
   show _ = "map"
+
+instance Read (STM.Map a b) where
+  -- I'm sorry :(
+  readsPrec _ _ = [(unsafePerformIO $ atomically STM.new, "")]
 
 instance Show (STM (STM.Map a b)) where
   show _ = "STM map"

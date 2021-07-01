@@ -1,0 +1,6 @@
+[
+    ( "open" "Prelude" )
+,
+    ( "open" "LLVM" )
+,
+    ( ":defsig-match" "main" "int" ( () 10 ) ) ]

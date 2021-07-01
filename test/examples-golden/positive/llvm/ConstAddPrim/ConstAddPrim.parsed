@@ -7,7 +7,7 @@ Right
             )
         , ModuleOpen
             ( Open
-                ( "Prelude" :| [ "LLVM" ] )
+                ( "LLVM" :| [] )
             )
         , Signature
             ( Sig

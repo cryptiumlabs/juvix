@@ -17,6 +17,7 @@ import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import Data.HashSet (HashSet)
 import qualified Data.IntMap.Strict as PM
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.HR.Types as HR
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Base.Types as Core

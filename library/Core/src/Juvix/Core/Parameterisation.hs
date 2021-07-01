@@ -28,8 +28,8 @@ module Juvix.Core.Parameterisation
 where
 
 import qualified Juvix.Core.Application as App
-import qualified Juvix.Core.HR.Pretty as HR
 import Juvix.Core.Base.Types (BoundVar, GlobalName)
+import qualified Juvix.Core.HR.Pretty as HR
 import Juvix.Core.IR.Types (T)
 import Juvix.Library
 import Juvix.Library.HashMap (HashMap)
