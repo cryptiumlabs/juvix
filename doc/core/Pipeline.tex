@@ -32,35 +32,36 @@
 \node[main] (1) {Juvix source code}; 
 \node[main] (2) [below of=1] {ML AST}; 
 \node[main] (3) [below of=2] {S-expression AST}; 
-\node[main] (4) [below of=3] {Desugared S-expression}; 
-\node[main] (5) [below of=4] {Context of S-expression}; 
-\node[main] (6) [below of=5] {Desugared Context of S-expression}; 
-\node[main] (7) [below of=6] {Core HR}; 
-\node[main] (8) [below of=7] {Core IR}; 
+\node[main] (4) [below of=3] {S-expression Desugared}; 
+\node[main] (5) [below of=4] {Core HR}; 
+\node[main] (6) [below of=5] {Core IR}; 
 % TODO: From here, it's already type checked. Make it explicit
-\node[main] (11) [below of=8] {Core Erased}; 
-\node[main] (12) [below of=11] {Erased AnnTerm (with Return)}; 
-\node[main] (13) [below of=12] {Erased AnnTerm (without Return)}; 
-\node[main] (14) [below of=13] {Backend}; 
+\node[main] (7) [below of=6] {Core Erased};  
+\node[main] (8) [below of=7] {Backend}; 
 \draw[->] (1) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Frontend/src/Juvix/Frontend/Parser.hs}{Frontend: Juvix.Frontend.Parser.hs (parse)}} (2); 
-\draw[->] (2) -- node[midway, right] {\href{}{???}} (3); 
-\draw[->] (3) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/Desugar.hs}{Translate: Juvix.Desugar.hs (op)}} (4); 
-\draw[->] (4) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/Contextify.hs}{Translate: Juvix.Contextify.hs (contextify)}} (5); 
-\draw[->] (5) -- node[midway, right] {\href{}{???}} (6); 
-\draw[->] (6) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/ToCore/FromFrontend.hs}{Translate: Juvix.ToCore.FromFrontend.hs}} (7); 
-\draw[->] (7) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.Translate.hs (hrToIR)}} (8); 
-\draw[->] (8) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Erasure/Algorithm.hs}{Core: Juvix.Core.Erasure.Algorithm.hs (erase)}} (11);
-\draw[->] (11) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/ErasedAnn/Conversion.hs}{Core: Juvix.Core.ErasedAnn.Conversion.hs (convertTerm)}} (12);
-% TODO: Move toRaw to Erased module
-\draw[->] (12) -- node[midway, right] {\href{}{Core: Juvix.Core.Pipeline.hs (toRaw)}} (13);
-\draw[->] (13) -- node[midway, right] {\href{}{To Backend}} (14);
-\node[draw,dotted,fit=(3) (4) (5) (6), label={[xshift=0mm]left:{S-expressions}}] {};
-\node[draw,dotted,fit=(7) (8), label={[xshift=0mm]left:{Terms == Types}}] {};
-\node[draw,dotted,fit=(11) (12) (13), label={[xshift=0mm]left:{Typechecked}}] {};
+\draw[->] (2) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/Desugar.hs}{Translate: Juvix.FrontendDesugar.hs (op)}} (3); 
+\draw[->] (3) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/Contextify.hs}{Translate: Juvix.Contextify.hs (op)}} (4); 
+\draw[->] (4) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/ToCore/FromFrontend.hs}{Translate: Juvix.ToCore.FromFrontend.hs}} (5); 
+\draw[->] (5) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.Translate.hs (hrToIR)}} (6); 
+\draw[->] (6) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Erasure/Algorithm.hs}{Core: Juvix.Core.Erased.Algorithm.hs (erase)}} (7);
+\draw[->] (7) -- node[midway, right] {\href{}{To Backend}} (8);
+\node[draw,dotted,fit=(3) (4), label={[xshift=0mm]left:{S-expressions}}] {};
+\node[draw,dotted,fit=(5) (6), label={[xshift=0mm]left:{Terms == Types}}] {};
+\node[draw,dotted,fit=(7) , label={[xshift=0mm]left:{Typechecked}}] {};
 
 \end{tikzpicture} 
 
-\section{HR}
+\newpage
+
+\section{S-Expressions}
+
+TODO
+
+
+
+\section{Core}
+
+\subsection{HR}
 \begin{tikzpicture}[node distance={15mm}, thick, main/.style = {draw, rectangle}] 
 \node[main] (1) {Desugared context of S-expressions}; 
 \node[main] (2) [below of=1] {Core HR}; 
@@ -238,15 +239,35 @@ extPattern =
       }
 \end{lstlisting}
 
-\section{Erased}
+\subsection{Erased}
 
 
+\usetikzlibrary{fit}
+\begin{tikzpicture}[node distance={14mm}, thick, main/.style = {draw, rectangle}] 
+\node[main] (1) {Core IR}; 
+\node[main] (2) [below of=1] {Erased}; 
+\node[main] (3) [below of=2] {Erased AnnTerm (with Return)}; 
+\node[main] (4) [below of=3] {Erased AnnTerm (without Return)}; 
+\node[main] (5) [below of=4] {Backend}; 
+\draw[->] (1) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Erased/Algorithm.hs}{Core: Juvix.Core.Erased.Algorithm.hs (erase)}} (2);
+\draw[->] (2) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/ErasedAnn/Conversion.hs}{Core: Juvix.Core.Erased.Ann.Conversion.hs (convertTerm)}} (3);
+% TODO: Move toRaw to Erased module
+\draw[->] (3) -- node[midway, right] {\href{}{Core: Juvix.Core.Pipeline.hs (toRaw)}} (4);
+\draw[->] (4) -- node[midway, right] {\href{}{To Backend}} (5);
+% \node[draw,dotted,fit=(11) (12) (13), label={[xshift=0mm]left:{Typechecked}}] {};
+
+\node[draw,dotted,fit=(2) (3) (4), label={[xshift=0mm]left:{Erased}}] {};
+\end{tikzpicture} 
 Erased doesn't extend from IR types any more, but from its own types file. In contrast to previous steps in the pipeline, it distinguishes between terms and types.
 
 At this point, terms have already been typechecked.
 
-\subsection{ErasedAnn}
+\subsubsection{Ann}
 
 We retrieve the usage of a term and annotate the term with it. Certain backends can use the knowledge of a usage's term to optimise their compilation.
 
+\section{Backends}
+\subsection{LLVM}
+\subsection{Michelson}
+\subsection{Plonk}
 \end{document}
