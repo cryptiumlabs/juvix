@@ -15,9 +15,9 @@ where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Core.Application as App
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.IR.Evaluator as E
-import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (natVal, (<|>))
 import qualified Juvix.Library.PrettyPrint as PP

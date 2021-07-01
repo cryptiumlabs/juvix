@@ -21,7 +21,6 @@ import Data.Bitraversable
 import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.Base.Types as Core
 import Juvix.Library
 import qualified Juvix.Library.PrettyPrint as PP
 import qualified Juvix.Library.Usage as Usage

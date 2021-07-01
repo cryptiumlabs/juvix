@@ -466,6 +466,7 @@ Types to support partial application and polymorphic primitives.
   + [[Base/Types]]
   + [[Core/HR/Pretty]]
   + [[IR/Types]]
+  + [[Base/Types]]
   + [[Library]]
   + [[PrettyPrint]]
   + [[Library/Usage]]
@@ -491,6 +492,7 @@ relation.
   + [[Base/Types]]
   + [[HR/Types]]
   + [[IR/Types]]
+  + [[Base/Types]]
   + [[Core/Utility]]
   + [[Library]]
   + [[NameSymbol]]
@@ -522,6 +524,18 @@ name streams, and aliases for capabilities over these structures.
 ***** Base <<Core/Base>>
 - _Relies on_
   + [[Base/Types]]
+****** TransformExt
+Transformations between different extensions.
+- _Relies on_
+  + [[Base/Types]]
+  + [[Library]]
+******* OnlyExts
+A transformation that discards all annotations on term/elim nodes, but
+keeps the extensions.
+- _Relies on_
+  + [[TransformExt]]
+  + [[Base/Types]]
+  + [[Library]]
 ****** Types <<Base/Types>>
 - _Relies on_
   + [[Base/Types/Base]]
@@ -609,6 +623,7 @@ name streams, and aliases for capabilities over these structures.
   + [[Erasure/Types]]
   + [[Erasure/Types]]
   + [[Core/IR]]
+  + [[Base/Types]]
   + [[Typechecker/Types]]
   + [[Library]]
   + [[NameSymbol]]
@@ -703,6 +718,7 @@ the substitution functions (substTerm and substElim).
   + [[Evaluator/Weak]]
   + [[TransformExt]]
   + [[OnlyExts]]
+  + [[TransformExt]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
@@ -750,20 +766,6 @@ the substitution functions (substTerm and substElim).
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Library/Usage]]
-****** TransformExt
-Transformations between different extensions.
-- _Relies on_
-  + [[Base/Types]]
-  + [[IR/Types]]
-  + [[Library]]
-******* OnlyExts
-A transformation that discards all annotations on term/elim nodes, but
-keeps the extensions.
-- _Relies on_
-  + [[Base/Types]]
-  + [[TransformExt]]
-  + [[IR/Types]]
-  + [[Library]]
 ****** Typechecker <<IR/Typechecker>>
 This file contains the functions and aux functions to typecheck
 datatype and function declarations.
@@ -817,8 +819,8 @@ Typechecked declarations are added to the signature.
 ****** All
 - _Relies on_
   + [[Application]]
-  + [[Base/Types]]
   + [[Evaluator]]
+  + [[Base/Types]]
   + [[Core/Parameterisation]]
   + [[Naturals]]
   + [[Unit]]
@@ -826,16 +828,16 @@ Typechecked declarations are added to the signature.
 ****** Naturals
 - _Relies on_
   + [[Application]]
-  + [[Base/Types]]
   + [[Core/HR/Pretty]]
   + [[Evaluator]]
+  + [[Base/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[PrettyPrint]]
 ****** Unit
 - _Relies on_
-  + [[Base/Types]]
   + [[Evaluator]]
+  + [[Base/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
 ** test
@@ -844,6 +846,7 @@ Typechecked declarations are added to the signature.
   + [[Core/Base]]
   + [[Core/HR]]
   + [[Core/IR]]
+  + [[Core/Base]]
   + [[Translate]]
   + [[Library]]
 *** Erasure <<test/Erasure>>
@@ -866,6 +869,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[Core/Base]]
   + [[Core/IR]]
+  + [[Core/Base]]
   + [[CheckTerm]]
   + [[Evaluator]]
   + [[OnlyExts]]
@@ -945,6 +949,7 @@ with any stage of the compiler while modifying the source code.
 - _Relies on_
   + [[Base/Types]]
   + [[IR/Types]]
+  + [[Base/Types]]
   + [[Library]]
   + [[ToCore/Types]]
 *** Spec <<EasyPipeline/test/Spec>>
@@ -1366,6 +1371,7 @@ Can be added to via core translation
   + [[ErasedAnn]]
   + [[ErasedAnn/Types]]
   + [[Core/IR]]
+  + [[Core/Base]]
   + [[TransformExt]]
   + [[OnlyExts]]
   + [[Typechecker/Types]]
@@ -1384,9 +1390,9 @@ Can be added to via core translation
 ***** Compile
 - _Relies on_
   + [[Application]]
+  + [[Core/IR]]
   + [[Core/Base]]
   + [[Base/Types]]
-  + [[Core/IR]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Feedback]]
@@ -1398,6 +1404,7 @@ Can be added to via core translation
   + [[Base/Types]]
   + [[Traverse]]
   + [[IR/Types]]
+  + [[Base/Types]]
   + [[Core/Parameterisation]]
   + [[Juvix/Frontend]]
   + [[Library]]
@@ -1855,6 +1862,7 @@ done with no extra information needed. Thus we export the following passes
   + [[Core/Base]]
   + [[Core/HR]]
   + [[Core/IR]]
+  + [[Core/Base]]
   + [[Translate]]
   + [[Translate]]
   + [[Library]]
@@ -1880,6 +1888,7 @@ done with no extra information needed. Thus we export the following passes
   + [[Core/Base]]
   + [[Core/HR]]
   + [[Core/IR]]
+  + [[Core/Base]]
   + [[Core/Parameterisation]]
   + [[Translate]]
   + [[Library]]
@@ -1888,18 +1897,14 @@ done with no extra information needed. Thus we export the following passes
   + [[ToCore/Types]]
 ******* IR <<Transform/IR>>
 - _Relies on_
-  + [[Core/Base]]
-  + [[Core/HR]]
   + [[Core/IR]]
-  + [[Core/Parameterisation]]
   + [[Translate]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Usage]]
   + [[Juvix/Sexp]]
   + [[Transform/HR]]
+  + [[Core/Base]]
   + [[Transform/Helpers]]
-  + [[Transform/Usage]]
   + [[ToCore/Types]]
 ******* Sig
 - _Relies on_
@@ -1927,6 +1932,7 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Core/Base]]
   + [[Core/IR]]
+  + [[Core/Base]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Usage]]

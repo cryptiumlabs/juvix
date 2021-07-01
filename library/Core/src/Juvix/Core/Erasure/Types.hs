@@ -8,6 +8,7 @@ where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Extensible as Ext
+import Juvix.Core.Base.TransformExt
 import Juvix.Core.Base.Types (GlobalName, GlobalUsage, PatternVar)
 import Juvix.Core.Erased.Types as Type
   ( Type,
@@ -21,7 +22,6 @@ import Juvix.Core.Erased.Types as Type
 import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.Erased.Types.Base as Erased
 import qualified Juvix.Core.HR.Pretty as HR
-import Juvix.Core.Base.TransformExt
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param

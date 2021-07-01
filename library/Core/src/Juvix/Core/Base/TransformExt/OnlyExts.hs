@@ -58,25 +58,29 @@ transformer =
       etElimX = identity
     }
 
-injectT :: 
+injectT ::
   ( Core.TermX ext' primTy primVal ~ Void,
     Core.ElimX ext' primTy primVal ~ Void,
     ForgotExt ext' primTy primVal
-  ) => Core.Term' ext' primTy primVal -> Core.Term' (T ext) primTy primVal
+  ) =>
+  Core.Term' ext' primTy primVal ->
+  Core.Term' (T ext) primTy primVal
 injectT = extTransformT injector
 
 injectE ::
   ( Core.TermX ext' primTy primVal ~ Void,
     Core.ElimX ext' primTy primVal ~ Void,
     ForgotExt ext' primTy primVal
-  ) =>  Core.Elim' ext' primTy primVal -> Core.Elim' (T ext) primTy primVal
+  ) =>
+  Core.Elim' ext' primTy primVal ->
+  Core.Elim' (T ext) primTy primVal
 injectE = extTransformE injector
 
-injector :: 
+injector ::
   ( Core.TermX ext' primTy primVal ~ Void,
     Core.ElimX ext' primTy primVal ~ Void,
     ForgotExt ext' primTy primVal
-  ) => 
+  ) =>
   ExtTransformTE ext' (T ext) primTy primVal
 injector =
   ExtTransformTE

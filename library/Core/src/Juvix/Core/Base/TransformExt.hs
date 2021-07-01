@@ -147,9 +147,8 @@ extTransformE ::
   Elim' ext2 primTy primVal
 extTransformE fs t = runIdentity $ extTransformEF fs t
 
-
-type ForgotExt ext primTy primVal = (
-    XStar ext primTy primVal ~ (),
+type ForgotExt ext primTy primVal =
+  ( XStar ext primTy primVal ~ (),
     XPrimTy ext primTy primVal ~ (),
     XPrim ext primTy primVal ~ (),
     XPi ext primTy primVal ~ (),
@@ -165,6 +164,7 @@ type ForgotExt ext primTy primVal = (
     XApp ext primTy primVal ~ (),
     XAnn ext primTy primVal ~ ()
   )
+
 forgetter ::
   ( TermX ext primTy primVal ~ Void,
     ElimX ext primTy primVal ~ Void,

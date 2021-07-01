@@ -14,9 +14,9 @@ import qualified Juvix.Backends.Plonk.Compiler as Compiler
 import qualified Juvix.Backends.Plonk.Dot as Dot
 import qualified Juvix.Backends.Plonk.Parameterization as Parameterization
 import qualified Juvix.Backends.Plonk.Types as Types
+import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),

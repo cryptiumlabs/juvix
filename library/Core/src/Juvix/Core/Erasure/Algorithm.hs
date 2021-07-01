@@ -5,7 +5,6 @@ import qualified Juvix.Core.Base.Types as Core
 import Juvix.Core.Erasure.Types (eraseAnn, exec)
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import Juvix.Library hiding (empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol

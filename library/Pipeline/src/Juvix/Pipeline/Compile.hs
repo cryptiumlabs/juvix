@@ -10,9 +10,9 @@ module Juvix.Pipeline.Compile
 where
 
 import qualified Juvix.Core.Application as CoreApp
-import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Base as Core
 import Juvix.Core.Base.Types (Elim', Term', XPi)
+import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback

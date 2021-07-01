@@ -3,7 +3,6 @@ module Conv where
 import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.Translate as Trans
 import Juvix.Library
 import qualified Test.Tasty as T

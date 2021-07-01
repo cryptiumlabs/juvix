@@ -3,13 +3,13 @@
 module Juvix.ToCore.FromFrontend.Transform.IR (transformTermIR) where
 
 import qualified Data.HashMap.Strict as HM
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Translate (hrToIR)
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Sexp as Sexp
 import Juvix.ToCore.FromFrontend.Transform.HR
-import qualified Juvix.Core.Base as Core
 import Juvix.ToCore.FromFrontend.Transform.Helpers
   ( ReduceEff,
     getParamConstant,
