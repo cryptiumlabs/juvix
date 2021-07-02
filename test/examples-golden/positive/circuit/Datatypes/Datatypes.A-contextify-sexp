@@ -1,0 +1,128 @@
+Rec
+    { recordContents = T
+        { public = fromList
+            [
+                ( "*"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "field"
+                                ( ":infix" "->" "field" "field" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Circuit.mul" ) ) )
+                        , defPrecedence = Pred Left 7 } ) )
+            ,
+                ( "field"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just "ty"
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Circuit.field" ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "P", SumCon ( Sum { sumTDef = Nothing, sumTName = "Bar" } ) )
+            ,
+                ( "+"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "field"
+                                ( ":infix" "->" "field" "field" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Circuit.add" ) ) )
+                        , defPrecedence = Pred Left 5 } ) )
+            ,
+                ( "main"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just "field"
+                        , defTerm =
+                            ( ":lambda-case" ( () 3 ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "^"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "field"
+                                ( ":infix" "->" "field" "field" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Circuit.exp" ) ) )
+                        , defPrecedence = Pred Left 8 } ) )
+            ,
+                ( "norm"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "Bar" "field" )
+                        , defTerm =
+                            ( ":lambda-case"
+                                (
+                                    ( ( "P" "x" "y" ) )
+                                    ( ":infix" "^" "x"
+                                        ( ":infix" "+" 2
+                                            ( ":infix" "^" "y" 2 ) ) ) )
+                                (
+                                    ( ( "Q" "x" "y" "z" ) )
+                                    ( ":infix" "^" "x"
+                                        ( ":infix" "+" 2
+                                            ( ":infix" "^" "y"
+                                                ( ":infix" "+" 2
+                                                    ( ":infix" "^" "z" 2 ) ) ) ) ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "Q", SumCon ( Sum { sumTDef = Nothing, sumTName = "Bar" } ) )
+            ,
+                ( "t"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "field" "field" )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( ( "x" ) ( ":infix" "+" "x" 5 ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "x"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just "field"
+                        , defTerm =
+                            ( ":lambda-case" ( () 3 ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "=="
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "field"
+                                ( ":infix" "->" "field" "bool" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Circuit.eq" ) ) )
+                        , defPrecedence = Pred Left 2 } ) )
+            ,
+                ( "Bar"
+                , TypeDeclar
+                    { definitionRepr =
+                        (
+                            ( "Bar" ":type" "ty" ) ()
+                            ( "P" "field" "field" )
+                            ( "Q" "field" "field" "field" ) ) } ) ]
+        , private = fromList [] }
+    , recordMTy = Nothing
+    , recordOpenList = []
+    , recordQualifiedMap = map }

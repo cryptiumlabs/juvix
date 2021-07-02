@@ -8,8 +8,6 @@ import qualified Juvix.Desugar as DesugarS
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Sexp as SexpTrans
 import qualified Juvix.Frontend.Types as AST
--- import qualified Juvix.FrontendContextualise as Contextualize
--- import qualified Juvix.FrontendDesugar as Desugar
 import Juvix.Library
 import qualified Juvix.Library.Parser.Internal as Internal
 import qualified Juvix.Sexp as Sexp

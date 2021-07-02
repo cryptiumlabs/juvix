@@ -1,6 +1,7 @@
 module FromFrontend where
 
 import qualified Easy
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.IR.Types as IR
 import Juvix.Library
 import qualified Juvix.ToCore.Types as Types
@@ -42,7 +43,7 @@ patternVarTests =
       Right x <- Easy.coreify "sig foo : int let foo x = x" Easy.defMichelson
       pure (grabSingleBody (Easy.lookupCoreFunction x Easy.defMichelson "foo"))
     rawPatternShouldBe =
-      IR.Elim (IR.Free (IR.Pattern 0))
+      IR.Elim (IR.Free (Core.Pattern 0))
     rawPatternAdd = do
       Right x <-
         Easy.coreify
@@ -57,18 +58,18 @@ patternVarTests =
       IR.Elim
         ( IR.App
             ( IR.App
-                (IR.Free (IR.Global "Prelude.Michelson.Alias.+"))
-                (IR.Elim (IR.Free (IR.Pattern 0)))
+                (IR.Free (Core.Global "Prelude.Michelson.Alias.+"))
+                (IR.Elim (IR.Free (Core.Pattern 0)))
             )
-            (IR.Elim (IR.Free (IR.Pattern 1)))
+            (IR.Elim (IR.Free (Core.Pattern 1)))
         )
 
 grabSingleBody
   ( Just
       ( Types.CoreDef
-          ( IR.RawGFunction
-              IR.RawFunction
-                { IR.rawFunClauses = IR.RawFunClause {IR.rawClauseBody = body} :| []
+          ( Core.RawGFunction
+              Core.RawFunction
+                { Core.rawFunClauses = Core.RawFunClause {Core.rawClauseBody = body} :| []
                 }
             )
         )

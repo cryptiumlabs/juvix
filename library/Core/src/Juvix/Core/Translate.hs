@@ -17,6 +17,7 @@ import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import Data.HashSet (HashSet)
 import qualified Data.IntMap.Strict as PM
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.HR.Types as HR
 import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.Utility
@@ -36,7 +37,7 @@ hrToIR = hrToIRWith mempty
 -- functions argument to the term itself.
 hrToIRWith ::
   -- | name <-> pattern var mapping from outer scopes
-  HashMap NameSymbol.T IR.PatternVar ->
+  HashMap NameSymbol.T Core.PatternVar ->
   HR.Term primTy primVal ->
   IR.Term primTy primVal
 hrToIRWith pats term =
@@ -93,7 +94,7 @@ hrElimToIR' = \case
       Just ind -> pure $ IR.Bound (fromIntegral ind)
       Nothing -> do
         symTable <- get @"symToPat"
-        maybe (IR.Global n) IR.Pattern (symTable HM.!? n)
+        maybe (Core.Global n) Core.Pattern (symTable HM.!? n)
           |> IR.Free
           |> pure
   HR.App f x -> do
@@ -115,7 +116,7 @@ irToHR = irToHRWith mempty
 -- functions argument to the term itself.
 irToHRWith ::
   -- | pattern var <-> name mapping from outer scopes
-  IR.PatternMap NameSymbol.T ->
+  Core.PatternMap NameSymbol.T ->
   IR.Term primTy primVal ->
   HR.Term primTy primVal
 irToHRWith pats t = fst $ exec pats (varsTerm t) $ irToHR' t
@@ -164,8 +165,8 @@ irElimToHR' ::
   IR.Elim primTy primVal ->
   m (HR.Elim primTy primVal)
 irElimToHR' = \case
-  IR.Free (IR.Global n) -> pure $ HR.Var n
-  IR.Free (IR.Pattern p) ->
+  IR.Free (Core.Global n) -> pure $ HR.Var n
+  IR.Free (Core.Pattern p) ->
     -- FIXME maybe an error for a failed lookup?
     -- but hrToIR is mostly for printing so maybe it's better to get /something/
     HR.Var . fromMaybe def <$> getPatToSym p
@@ -187,19 +188,19 @@ irElimToHR' = \case
 hrPatternsToIR ::
   Traversable t =>
   t (HR.Pattern primTy primVal) ->
-  (t (IR.Pattern primTy primVal), HashMap NameSymbol.T IR.PatternVar)
+  (t (IR.Pattern primTy primVal), HashMap NameSymbol.T Core.PatternVar)
 hrPatternsToIR pats =
   mapAccumL (swap ... hrPatternToIRWith) mempty pats |> swap
 
 hrPatternToIR ::
   HR.Pattern primTy primVal ->
-  (IR.Pattern primTy primVal, HashMap NameSymbol.T IR.PatternVar)
+  (IR.Pattern primTy primVal, HashMap NameSymbol.T Core.PatternVar)
 hrPatternToIR = hrPatternToIRWith mempty
 
 hrPatternToIRWith ::
-  HashMap NameSymbol.T IR.PatternVar ->
+  HashMap NameSymbol.T Core.PatternVar ->
   HR.Pattern primTy primVal ->
-  (IR.Pattern primTy primVal, HashMap NameSymbol.T IR.PatternVar)
+  (IR.Pattern primTy primVal, HashMap NameSymbol.T Core.PatternVar)
 hrPatternToIRWith pats pat =
   hrPatternToIR' pat
     |> execSymToPat pats mempty
@@ -219,13 +220,13 @@ hrPatternToIR' = \case
 
 irPatternToHR ::
   IR.Pattern primTy primVal ->
-  (HR.Pattern primTy primVal, IR.PatternMap NameSymbol.T)
+  (HR.Pattern primTy primVal, Core.PatternMap NameSymbol.T)
 irPatternToHR = irPatternToHRWith mempty
 
 irPatternToHRWith ::
-  IR.PatternMap NameSymbol.T ->
+  Core.PatternMap NameSymbol.T ->
   IR.Pattern primTy primVal ->
-  (HR.Pattern primTy primVal, IR.PatternMap NameSymbol.T)
+  (HR.Pattern primTy primVal, Core.PatternMap NameSymbol.T)
 irPatternToHRWith pats pat =
   irPatternToHR' pat
     |> exec pats (varsPattern pat)
@@ -260,8 +261,8 @@ varsTerm = \case
 varsElim :: IR.Elim primTy primVal -> HashSet NameSymbol.T
 varsElim = \case
   IR.Bound _ -> mempty
-  IR.Free (IR.Global x) -> [x]
-  IR.Free (IR.Pattern _) -> mempty
+  IR.Free (Core.Global x) -> [x]
+  IR.Free (Core.Pattern _) -> mempty
   IR.App f s -> varsElim f <> varsTerm s
   IR.Ann _ t a _ -> varsTerm t <> varsTerm a
 
@@ -278,7 +279,7 @@ varsPattern = \case
 -- nextPatVar. If we add a max key function that could fix it
 exec ::
   -- | Existing mapping of names to pattern variables, if any
-  IR.PatternMap NameSymbol.T ->
+  Core.PatternMap NameSymbol.T ->
   -- | Names/pattern vars to avoid.
   HashSet NameSymbol.T ->
   M a ->
@@ -298,16 +299,16 @@ exec pats avoid (M env) =
 
 -- | @execSymToPat@ works like exec but takes the symtoPat map instead of the patToSym map
 execSymToPat ::
-  HashMap NameSymbol.T IR.PatternVar -> HashSet NameSymbol.T -> M a -> (a, Env)
+  HashMap NameSymbol.T Core.PatternVar -> HashSet NameSymbol.T -> M a -> (a, Env)
 execSymToPat pats = exec (HM.toList pats |> map swap |> PM.fromList)
 
 -- TODO separate states for h→i and i→h maybe??
 data Env = Env
   { nameSupply :: Stream NameSymbol.T,
     nameStack :: [NameSymbol.T],
-    nextPatVar :: IR.PatternVar,
-    symToPat :: HashMap NameSymbol.T IR.PatternVar,
-    patToSym :: IR.PatternMap NameSymbol.T
+    nextPatVar :: Core.PatternVar,
+    symToPat :: HashMap NameSymbol.T Core.PatternVar,
+    patToSym :: Core.PatternMap NameSymbol.T
   }
   deriving (Generic)
 
@@ -325,20 +326,20 @@ newtype M a = M (State Env a)
     )
     via ReaderField "nameStack" (State Env)
   deriving
-    ( HasSource "nextPatVar" IR.PatternVar,
-      HasSink "nextPatVar" IR.PatternVar,
-      HasState "nextPatVar" IR.PatternVar
+    ( HasSource "nextPatVar" Core.PatternVar,
+      HasSink "nextPatVar" Core.PatternVar,
+      HasState "nextPatVar" Core.PatternVar
     )
     via StateField "nextPatVar" (State Env)
   deriving
-    ( HasSource "symToPat" (HashMap NameSymbol.T IR.PatternVar),
-      HasSink "symToPat" (HashMap NameSymbol.T IR.PatternVar),
-      HasState "symToPat" (HashMap NameSymbol.T IR.PatternVar)
+    ( HasSource "symToPat" (HashMap NameSymbol.T Core.PatternVar),
+      HasSink "symToPat" (HashMap NameSymbol.T Core.PatternVar),
+      HasState "symToPat" (HashMap NameSymbol.T Core.PatternVar)
     )
     via StateField "symToPat" (State Env)
   deriving
-    ( HasSource "patToSym" (IR.PatternMap NameSymbol.T),
-      HasSink "patToSym" (IR.PatternMap NameSymbol.T),
-      HasState "patToSym" (IR.PatternMap NameSymbol.T)
+    ( HasSource "patToSym" (Core.PatternMap NameSymbol.T),
+      HasSink "patToSym" (Core.PatternMap NameSymbol.T),
+      HasState "patToSym" (Core.PatternMap NameSymbol.T)
     )
     via StateField "patToSym" (State Env)

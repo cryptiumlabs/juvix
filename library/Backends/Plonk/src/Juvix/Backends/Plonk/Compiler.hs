@@ -15,7 +15,7 @@ import Juvix.Backends.Plonk.Builder as P
 import Juvix.Backends.Plonk.Circuit as P
 import Juvix.Backends.Plonk.IR as P
 import Juvix.Backends.Plonk.Types as P
-import qualified Juvix.Core.ErasedAnn.Types as Ann
+import qualified Juvix.Core.Erased.Ann.Types as Ann
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 

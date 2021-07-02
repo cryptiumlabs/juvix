@@ -10,12 +10,11 @@ module Juvix.Core.IR.Typechecker.Error
 where
 
 import qualified Juvix.Core.Application as App
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Typechecker.Types
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.IR.Types.Base as IR
-import qualified Juvix.Core.IR.Types.Globals as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Translate
 import Juvix.Library
@@ -24,11 +23,11 @@ import qualified Juvix.Library.Usage as Usage
 
 data TypecheckError' extV extT primTy primVal
   = TypeMismatch
-      { typeSubject :: IR.Elim' extT primTy primVal,
+      { typeSubject :: Core.Elim' extT primTy primVal,
         typeExpected, typeGot :: ValueT' extV primTy primVal
       }
   | UniverseMismatch
-      { universeLower, universeHigher :: IR.Universe
+      { universeLower, universeHigher :: Core.Universe
       }
   | ShouldBeStar
       { typeActual :: ValueT' extV primTy primVal
@@ -49,13 +48,13 @@ data TypecheckError' extV extT primTy primVal
       { usageNeeded, usageActual :: Usage.T
       }
   | UnboundLocal
-      { unboundIndex :: IR.BoundVar
+      { unboundIndex :: Core.BoundVar
       }
   | UnboundGlobal
-      { unboundGlobal :: IR.GlobalName
+      { unboundGlobal :: Core.GlobalName
       }
   | UnboundPatVar
-      { unboundPatVar :: IR.PatternVar
+      { unboundPatVar :: Core.PatternVar
       }
   | NotPrimTy
       { typeActual :: ValueT' extV primTy primVal
@@ -65,35 +64,35 @@ data TypecheckError' extV extT primTy primVal
         primTy :: P.PrimType primTy
       }
   | UnsupportedTermExt
-      { termExt :: IR.TermX extT primTy primVal
+      { termExt :: Core.TermX extT primTy primVal
       }
   | UnsupportedElimExt
-      { elimExt :: IR.ElimX extT primTy primVal
+      { elimExt :: Core.ElimX extT primTy primVal
       }
   | PartiallyAppliedConstructor
-      { pattern_ :: IR.Pattern' extT primTy primVal
+      { pattern_ :: Core.Pattern' extT primTy primVal
       }
   | EvalError
-      { evalErr :: Eval.Error IR.NoExt T primTy (P.TypedPrim primTy primVal)
+      { evalErr :: Eval.Error IR.T T primTy (P.TypedPrim primTy primVal)
       }
   | -- | datatype typechecking errors
     DatatypeError
-      { invalidType :: IR.Term' extT primTy primVal
+      { invalidType :: Core.Term' extT primTy primVal
       }
   | ConTypeError
-      { invalidConTy :: IR.Value' extV primTy (P.TypedPrim primTy primVal)
+      { invalidConTy :: Core.Value' extV primTy (P.TypedPrim primTy primVal)
       }
   | ParamError
-      { expectedN :: IR.GlobalName,
-        exp :: IR.Term' extT primTy primVal
+      { expectedN :: Core.GlobalName,
+        exp :: Core.Term' extT primTy primVal
       }
   | DeclError
-      { tg :: IR.Term' extT primTy primVal,
-        name :: IR.GlobalName,
-        tel :: IR.RawTelescope extT primTy primVal
+      { tg :: Core.Term' extT primTy primVal,
+        name :: Core.GlobalName,
+        tel :: Core.RawTelescope extT primTy primVal
       }
 
-type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
+type TypecheckError = TypecheckError' IR.T IR.T
 
 deriving instance
   ( Eq primTy,
@@ -102,13 +101,13 @@ deriving instance
     Eq (P.Arg (P.TypedPrim primTy primVal)),
     Eq (P.ApplyErrorExtra primTy),
     Eq (P.ApplyErrorExtra (P.TypedPrim primTy primVal)),
-    IR.ValueAll Eq extV primTy (P.TypedPrim primTy primVal),
-    IR.NeutralAll Eq extV primTy (P.TypedPrim primTy primVal),
-    IR.TermAll Eq extT primTy primVal,
-    Eq (IR.TermX extT primTy (P.TypedPrim primTy primVal)),
-    IR.ElimAll Eq extT primTy primVal,
-    Eq (IR.ElimX extT primTy (P.TypedPrim primTy primVal)),
-    IR.PatternAll Eq extT primTy primVal
+    Core.ValueAll Eq extV primTy (P.TypedPrim primTy primVal),
+    Core.NeutralAll Eq extV primTy (P.TypedPrim primTy primVal),
+    Core.TermAll Eq extT primTy primVal,
+    Eq (Core.TermX extT primTy (P.TypedPrim primTy primVal)),
+    Core.ElimAll Eq extT primTy primVal,
+    Eq (Core.ElimX extT primTy (P.TypedPrim primTy primVal)),
+    Core.PatternAll Eq extT primTy primVal
   ) =>
   Eq (TypecheckError' extV extT primTy primVal)
 
@@ -119,17 +118,17 @@ deriving instance
     Show (P.Arg (P.TypedPrim primTy primVal)),
     Show (P.ApplyErrorExtra primTy),
     Show (P.ApplyErrorExtra (P.TypedPrim primTy primVal)),
-    IR.ValueAll Show extV primTy (P.TypedPrim primTy primVal),
-    IR.NeutralAll Show extV primTy (P.TypedPrim primTy primVal),
-    IR.TermAll Show extT primTy primVal,
-    Show (IR.TermX extT primTy (P.TypedPrim primTy primVal)),
-    IR.ElimAll Show extT primTy primVal,
-    Show (IR.ElimX extT primTy (P.TypedPrim primTy primVal)),
-    IR.PatternAll Show extT primTy primVal
+    Core.ValueAll Show extV primTy (P.TypedPrim primTy primVal),
+    Core.NeutralAll Show extV primTy (P.TypedPrim primTy primVal),
+    Core.TermAll Show extT primTy primVal,
+    Show (Core.TermX extT primTy (P.TypedPrim primTy primVal)),
+    Core.ElimAll Show extT primTy primVal,
+    Show (Core.ElimX extT primTy (P.TypedPrim primTy primVal)),
+    Core.PatternAll Show extT primTy primVal
   ) =>
   Show (TypecheckError' extV extT primTy primVal)
 
-type instance PP.Ann (TypecheckError' IR.NoExt IR.NoExt _ _) = HR.PPAnn
+type instance PP.Ann (TypecheckError' IR.T IR.T _ _) = HR.PPAnn
 
 type Doc = HR.Doc
 
@@ -138,7 +137,7 @@ instance
   ( HR.PrimPretty primTy primVal,
     Eval.ApplyErrorPretty primTy (P.TypedPrim primTy primVal)
   ) =>
-  PP.PrettyText (TypecheckError' IR.NoExt IR.NoExt primTy primVal)
+  PP.PrettyText (TypecheckError' IR.T IR.T primTy primVal)
   where
   prettyT = \case
     TypeMismatch term exp got ->
@@ -247,7 +246,7 @@ type HasThrowTC' extV extT primTy primVal m =
   HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m
 
 type HasThrowTC primTy primVal m =
-  HasThrowTC' IR.NoExt IR.NoExt primTy primVal m
+  HasThrowTC' IR.T IR.T primTy primVal m
 
 throwTC ::
   HasThrowTC' extV extT primTy primVal m =>

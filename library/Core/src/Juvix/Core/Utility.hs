@@ -51,7 +51,7 @@ import qualified Data.HashMap.Strict as HM
 import qualified Data.IntMap.Strict as PM
 import qualified Data.IntSet as PS
 import Data.List (elemIndex, (!!))
-import Juvix.Core.IR.Types (PatternMap, PatternSet, PatternVar)
+import Juvix.Core.Base.Types (PatternMap, PatternSet, PatternVar)
 import Juvix.Library hiding (filter, take)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 

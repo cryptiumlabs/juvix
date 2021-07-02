@@ -10,8 +10,8 @@ where
 
 import Juvix.Backends.LLVM.Primitive
 import qualified Juvix.Core.Application as App
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.IR.Evaluator as IR
-import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified LLVM.AST.Type as LLVM
@@ -71,19 +71,19 @@ instance IR.HasWeak PrimTy where weakBy' _ _ t = t
 instance IR.HasWeak RawPrimVal where weakBy' _ _ t = t
 
 instance
-  Monoid (IR.XVPrimTy ext PrimTy primVal) =>
+  Monoid (Core.XVPrimTy ext PrimTy primVal) =>
   IR.HasSubstValue ext PrimTy primVal PrimTy
   where
-  substValueWith _ _ _ t = pure $ IR.VPrimTy' t mempty
+  substValueWith _ _ _ t = pure $ Core.VPrimTy' t mempty
 
 instance
-  Monoid (IR.XPrimTy ext PrimTy primVal) =>
+  Monoid (Core.XPrimTy ext PrimTy primVal) =>
   IR.HasPatSubstTerm ext PrimTy primVal PrimTy
   where
-  patSubstTerm' _ _ t = pure $ IR.PrimTy' t mempty
+  patSubstTerm' _ _ t = pure $ Core.PrimTy' t mempty
 
 instance
-  Monoid (IR.XPrim ext primTy RawPrimVal) =>
+  Monoid (Core.XPrim ext primTy RawPrimVal) =>
   IR.HasPatSubstTerm ext primTy RawPrimVal RawPrimVal
   where
-  patSubstTerm' _ _ t = pure $ IR.Prim' t mempty
+  patSubstTerm' _ _ t = pure $ Core.Prim' t mempty

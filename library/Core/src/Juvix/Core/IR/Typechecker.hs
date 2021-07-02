@@ -11,6 +11,7 @@ module Juvix.Core.IR.Typechecker
   )
 where
 
+import qualified Juvix.Core.Base.Types as Core
 import Juvix.Core.IR.CheckDatatype
 import Juvix.Core.IR.CheckTerm (ShowExt)
 import qualified Juvix.Core.IR.Evaluator as Eval
@@ -18,7 +19,6 @@ import Juvix.Core.IR.Typechecker.Env as Env
 import Juvix.Core.IR.Typechecker.Error as Error
 import Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.IR.Types.Globals as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype)
 
@@ -30,34 +30,34 @@ typeCheckDeclaration ::
     Show primVal,
     Show extT,
     ShowExt extT primTy primVal,
-    Eval.CanEval extT IR.NoExt primTy primVal,
-    Eval.EvalPatSubst IR.NoExt primTy primVal,
-    Eval.EvalPatSubst IR.NoExt primTy (TypedPrim primTy primVal),
-    Eval.NoExtensions extT primTy (TypedPrim primTy primVal),
+    Eval.CanEval extT IR.T primTy primVal,
+    Eval.EvalPatSubst IR.T primTy primVal,
+    Eval.EvalPatSubst IR.T primTy (Param.TypedPrim primTy primVal),
+    Eval.NoExtensions extT primTy (Param.TypedPrim primTy primVal),
     Eval.NoExtensions extT primTy primVal,
-    CanTC' extT primTy primVal m,
-    Param.CanApply (TypedPrim primTy primVal),
-    HasReader "globals" (GlobalsT' IR.NoExt extT primTy primVal) m
+    Env.CanTC' extT primTy primVal m,
+    Param.CanApply (Param.TypedPrim primTy primVal),
+    HasReader "globals" (Typed.GlobalsT' IR.T extT primTy primVal) m
   ) =>
   -- | Telescope containing a list of
   -- (name, usage, ty (of type Value') and the extension)
-  IR.Telescope IR.NoExt extT primTy primVal ->
+  Core.Telescope IR.T extT primTy primVal ->
   -- | Raw telescope containing ty (of type Term')
-  IR.RawTelescope extT primTy primVal ->
+  Core.RawTelescope extT primTy primVal ->
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
   -- | A list of datatype declarations to be checked
-  [IR.RawDatatype' extT primTy primVal] ->
+  [Core.RawDatatype' extT primTy primVal] ->
   -- | A list of function declarations to be checked
-  [IR.RawFunction' extT primTy primVal] ->
+  [Core.RawFunction' extT primTy primVal] ->
   -- | A list of Globals to be added to the global state
-  Env.TypeCheck IR.NoExt primTy primVal m [IR.RawGlobal' extT primTy primVal]
+  Env.TypeCheck IR.T primTy primVal m [Core.RawGlobal' extT primTy primVal]
 typeCheckDeclaration _tel _rtel _param [] [] =
   return []
 -- type checking datatype declarations
 typeCheckDeclaration tel rtel param dts fns =
   case dts of
-    (hdd@(IR.RawDatatype name lpos args _levels cons) : tld) ->
+    (hdd@(Core.RawDatatype name lpos args _levels cons) : tld) ->
       do
         globals <- lift $ ask @"globals"
         -- check the first datatype's args
@@ -68,7 +68,7 @@ typeCheckDeclaration tel rtel param dts fns =
         checkedCons <- typeCheckAllCons param tel lpos rtel globals cons
         -- when successful, return the datatype and the datacons
         -- to the list of globals
-        return $ IR.RawGDatatype hdd : rest <> checkedCons
+        return $ Core.RawGDatatype hdd : rest <> checkedCons
     [] -> do
       -- TODO functions, etc
       return []

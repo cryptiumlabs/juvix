@@ -6,11 +6,13 @@ module Juvix.Core.Erased.Types
   )
 where
 
-import Juvix.Core.Erased.Types.Base
+import qualified Juvix.Core.Base.Types as Core
+import Juvix.Core.Erased.Base.Types
 import qualified Juvix.Core.IR.Typechecker.Types as TC
-import qualified Juvix.Core.IR.Types.Globals as Core
+import Juvix.Library
 
 data T
+  deriving (Show, Read, Data)
 
 extendTerm "Term" [] [t|T|] (\_ -> defaultExtTerm)
 

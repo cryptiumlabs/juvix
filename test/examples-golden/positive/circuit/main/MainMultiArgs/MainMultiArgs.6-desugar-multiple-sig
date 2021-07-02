@@ -1,0 +1,14 @@
+[
+    ( "open" "Prelude" )
+,
+    ( "open" "Circuit" )
+,
+    ( ":defsig-match" "+"
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "field" ) )
+        ( () ( ":primitive" "Circuit.add" ) ) )
+,
+    ( "declare" "infixl" "+" 5 )
+,
+    ( ":defsig-match" "main"
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "field" ) )
+        ( ( "x" "y" ) ( ":infix" "+" "x" "y" ) ) ) ]

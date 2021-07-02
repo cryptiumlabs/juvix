@@ -8,8 +8,8 @@ import qualified Data.HashMap.Strict as HM
 import Juvix.Backends.LLVM.Compilation
 import Juvix.Backends.LLVM.Parameterization
 import Juvix.Backends.LLVM.Primitive
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.Pipeline as Core
 import Juvix.Library
 import Juvix.Library.Feedback
 import qualified Juvix.Pipeline as Pipeline
@@ -30,6 +30,6 @@ instance Pipeline.HasBackend BLLVM where
   typecheck ctx = Pipeline.typecheck' ctx llvm Set
 
   compile out term = do
-    let raw = Core.toRaw term
+    let raw = ErasedAnn.toRaw term
     code <- compileProgram raw
     Pipeline.writeout out code

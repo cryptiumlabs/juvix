@@ -1,38 +1,35 @@
 module Juvix.Core.HR.Extend where
 
-import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.Base.Types as Core
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
 -- | Extend binders, i.e Lam, Pi, Sig, Let with a human readable name (NameSymbol)
-extTerm :: p1 -> p2 -> IR.ExtTerm
-extTerm =
-  \_primTy _primVal ->
-    IR.defaultExtTerm
-      { IR.nameLam = "Lam0",
-        IR.typeLam = Just [[t|NameSymbol.T|]],
-        IR.namePi = "Pi0",
-        IR.typePi = Just [[t|NameSymbol.T|]],
-        IR.nameSig = "Sig0",
-        IR.typeSig = Just [[t|NameSymbol.T|]],
-        IR.nameLet = "Let0",
-        IR.typeLet = Just [[t|NameSymbol.T|]]
-      }
+extTerm :: p1 -> p2 -> Core.ExtTerm
+extTerm _primTy _primVal =
+  Core.defaultExtTerm
+    { Core.nameLam = "Lam0",
+      Core.typeLam = Just [[t|NameSymbol.T|]],
+      Core.namePi = "Pi0",
+      Core.typePi = Just [[t|NameSymbol.T|]],
+      Core.nameSig = "Sig0",
+      Core.typeSig = Just [[t|NameSymbol.T|]],
+      Core.nameLet = "Let0",
+      Core.typeLet = Just [[t|NameSymbol.T|]]
+    }
 
-extElim :: p1 -> p2 -> IR.ExtElim
-extElim =
-  \_primTy _primVal ->
-    IR.defaultExtElim
-      { IR.typeBound = Nothing,
-        IR.typeFree = Nothing,
-        -- | Extend with extra constructor Var that was not existing before
-        IR.typeElimX = [("Var", [[t|NameSymbol.T|]])]
-      }
+-- | Extend with extra constructor Var that was not existing before
+extElim :: p1 -> p2 -> Core.ExtElim
+extElim _primTy _primVal =
+  Core.defaultExtElim
+    { Core.typeBound = Nothing,
+      Core.typeFree = Nothing,
+      Core.typeElimX = [("Var", [[t|NameSymbol.T|]])]
+    }
 
-extPattern :: p1 -> p2 -> IR.ExtPattern
-extPattern =
-  \_primTy _primVal ->
-    IR.defaultExtPattern
-      { IR.typePVar = Nothing,
-        IR.typePatternX = [("PVar", [[t|NameSymbol.T|]])]
-      }
+extPattern :: p1 -> p2 -> Core.ExtPattern
+extPattern _primTy _primVal =
+  Core.defaultExtPattern
+    { Core.typePVar = Nothing,
+      Core.typePatternX = [("PVar", [[t|NameSymbol.T|]])]
+    }

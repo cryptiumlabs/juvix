@@ -6,7 +6,7 @@ import qualified Test.Contextify as Contextify
 import qualified Test.Contextualise.Contextify as Contextualise
 import Test.Contextualise.Infix.ShuntYard (allInfixTests)
 import qualified Test.Desugar.Sexp as Sexp
-import Test.Golden (parseTests)
+import qualified Test.Golden as Golden
 import qualified Test.Tasty as T
 
 translationPasses :: T.TestTree
@@ -26,7 +26,7 @@ allCheckedTests =
 
 main :: IO ()
 main = do
-  p <- parseTests
+  p <- Golden.top
   T.defaultMain $
     T.testGroup
       "All tests"

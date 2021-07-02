@@ -14,16 +14,15 @@ import qualified Juvix.Backends.Plonk.Compiler as Compiler
 import qualified Juvix.Backends.Plonk.Dot as Dot
 import qualified Juvix.Backends.Plonk.Parameterization as Parameterization
 import qualified Juvix.Backends.Plonk.Types as Types
-import qualified Juvix.Core.ErasedAnn.Types as CoreErased
+import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
     TypedPrim,
   )
 import qualified Juvix.Core.Parameterisation as Param
-import qualified Juvix.Core.Pipeline as CorePipeline
 import Juvix.Library
 import Juvix.Pipeline as Pipeline
 import qualified Text.PrettyPrint.Leijen.Text as Pretty
@@ -38,23 +37,23 @@ instance
     CanApply (Param.TypedPrim (Types.PrimTy f) (Types.PrimVal f)),
     CanApply (Types.PrimTy f),
     IR.HasPatSubstTerm
-      (OnlyExts.T IR.NoExt)
+      (OnlyExts.T IR.T)
       (Types.PrimTy f)
       (Param.TypedPrim (Types.PrimTy f) (Types.PrimVal f))
       (Types.PrimTy f),
     IR.HasWeak (Types.PrimVal f),
     IR.HasSubstValue
-      IR.NoExt
+      IR.T
       (Types.PrimTy f)
       (Param.TypedPrim (Types.PrimTy f) (Types.PrimVal f))
       (Types.PrimTy f),
     IR.HasPatSubstTerm
-      (OnlyExts.T IR.NoExt)
+      (OnlyExts.T IR.T)
       (Types.PrimTy f)
       (Types.PrimVal f)
       (Types.PrimTy f),
     IR.HasPatSubstTerm
-      (OnlyExts.T IR.NoExt)
+      (OnlyExts.T IR.T)
       (Types.PrimTy f)
       (Types.PrimVal f)
       (Types.PrimVal f),
@@ -88,8 +87,8 @@ instance
 
 compileCircuit ::
   (Integral f, Show f) =>
-  CoreErased.AnnTerm
+  ErasedAnn.AnnTerm
     (Types.PrimTy f)
-    (CoreErased.TypedPrim (Types.PrimTy f) (Types.PrimVal f)) ->
+    (ErasedAnn.TypedPrim (Types.PrimTy f) (Types.PrimVal f)) ->
   Circuit.ArithCircuit f
-compileCircuit term = Builder.execCircuitBuilder . Compiler.compileTermWithWire $ CorePipeline.toRaw term
+compileCircuit term = Builder.execCircuitBuilder . Compiler.compileTermWithWire $ ErasedAnn.toRaw term
