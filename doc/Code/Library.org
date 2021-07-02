@@ -664,7 +664,6 @@ keeps the extensions.
   + [[Core/Base/Types]]
   + [[Extend]]
   + [[Library]]
->>>>>>> develop
 ***** IR <<Core/IR>>
 - _Relies on_
   + [[CheckTerm]]
@@ -729,13 +728,6 @@ the substitution functions (substV).
   + [[Evaluator/Weak]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
-  + [[Library]]
-  + [[Library/Usage]]
-******* Subst
-- _Relies on_
-  + [[Application]]
-  + [[Core/Base/Types]]
-  + [[Evaluator/Weak]]
   + [[Library]]
   + [[Library/Usage]]
 ******* SubstV
