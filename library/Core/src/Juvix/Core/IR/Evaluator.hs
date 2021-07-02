@@ -174,8 +174,9 @@ evalElimWith g exts (IR.Ann' _ s _ _ _) =
 evalElimWith g exts (IR.ElimX a) =
   eExtFun exts g a
 
--- | Evaluate a term with extensions, discards annotations but keeps the
--- extensions.
+-- | Evaluate a term, discarding annotations.
+-- Throws 'UnsupportedTermExt' or 'UnsupportedElimExt' if the
+-- input contains any extension constructors.
 evalTerm ::
   CanEval extT extG primTy primVal =>
   -- | Lookup function for globals that may be present in the term.
@@ -185,8 +186,9 @@ evalTerm ::
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalTerm g t = evalTermWith g rejectExts $ OnlyExts.onlyExtsT t
 
--- | Evaluate an elimination with extensions, discards annotations but keeps
--- the extensions.
+-- | Evaluate an elimination, discarding annotations.
+-- Throws 'UnsupportedTermExt' or 'UnsupportedElimExt' if the
+-- input contains any extension constructors.
 evalElim ::
   CanEval extT extG primTy primVal =>
   -- | Lookup function for globals that may be present in the elimination.
@@ -252,7 +254,19 @@ toOnlyExtsE ::
   IR.Elim' (OnlyExts.T ext2) primTy primVal
 toOnlyExtsE = extTransformE $ OnlyExts.injector `compose` forgetter
 
--- | Translate a `Global'` function definition into an elimination.
+-- | Translate a `Global'` function definition into an elimination,
+-- consisting of a λ-term with a type annotation. For example:
+--
+-- @
+-- foo : int -> int
+-- foo x = add x x
+-- @
+--
+-- becomes:
+--
+-- @
+-- (ω | \x -> add x x : int -> int)
+-- @
 toLambda ::
   forall ext ext' primTy primVal.
   ( EvalPatSubst ext' primTy primVal,
@@ -266,6 +280,7 @@ toLambda (IR.GFunction (IR.Function {funUsage = π, funType = ty, funClauses}))
 toLambda _ = Nothing
 
 -- | Translate a `RawGlobal'` function definition into an elimination term.
+-- See 'toLambda' for an example.
 toLambdaR ::
   forall ext' ext primTy primVal.
   ( EvalPatSubst ext' primTy primVal,
