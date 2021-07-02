@@ -98,7 +98,7 @@ transformDefHR x def = do
 
 -- TODO: Define transformDef in terms of transformDefHR
 transformDef ::
-  ( ReduceEff IR.T primTy primVal m,
+  ( ReduceEff HR.T primTy primVal m,
     HasNextPatVar m,
     HasPatVars m,
     Show primTy,

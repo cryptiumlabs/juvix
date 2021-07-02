@@ -22,13 +22,15 @@ import Prelude (String)
 -- we abuse laziness here
 -- TODO ∷ add directory option
 -- this will add top level to the thing, and properly handle paths
-ofPath :: [FilePath] -> IO (Either ParserError [(NameSymbol.T, [Types.TopLevel])])
-ofPath =
+-- | Parse multiple files into ML AST
+parseFiles :: [FilePath] -> IO (Either ParserError [(NameSymbol.T, [Types.TopLevel])])
+parseFiles =
   -- fmap gets through the IO, so that sequenceA flips the either and list
-  fmap sequenceA . traverse ofSingleFile
+  fmap sequenceA . traverse parseSingleFile
 
-ofSingleFile :: FilePath -> IO (Either ParserError (NameSymbol.T, [Types.TopLevel]))
-ofSingleFile file = do
+-- | Parse single file into ML AST
+parseSingleFile :: FilePath -> IO (Either ParserError (NameSymbol.T, [Types.TopLevel]))
+parseSingleFile file = do
   read <- ByteString.readFile file
   case Parser.parse read of
     Left x ->

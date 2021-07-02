@@ -22,7 +22,6 @@ import Juvix.ToCore.FromFrontend.Transform.Usage
   )
 import Juvix.ToCore.Types
   ( CoreSig (..),
-    CoreSigHR,
     Error (..),
     HasCoreSigs,
     HasParam,
@@ -42,7 +41,7 @@ transformSig ::
   ) =>
   NameSymbol.T ->
   Ctx.Definition Sexp.T Sexp.T Sexp.T ->
-  m [CoreSigHR primTy primVal]
+  m [CoreSig HR.T primTy primVal]
 transformSig x def = trySpecial <||> tryNormal
   where
     q = NameSymbol.mod x
@@ -59,11 +58,11 @@ extractDataConstructorSigs (typeCons Sexp.:> _ Sexp.:> dataCons)
 extractDataConstructorSigs _t = []
 
 transformNormalSig ::
-  (ReduceEff primTy primVal m, HasPatVars m, HasParam primTy primVal m, Show primTy, Show primVal) =>
+  (ReduceEff HR.T primTy primVal m, HasPatVars m, HasParam primTy primVal m, Show primTy, Show primVal) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
   Ctx.Definition Sexp.T Sexp.T Sexp.T ->
-  m [CoreSigHR primTy primVal]
+  m [CoreSig HR.T primTy primVal]
 transformNormalSig q x def@(Ctx.Def (Ctx.D π msig _ _)) =
   pure <$> transformValSig q x def π msig
 transformNormalSig _ _ (Ctx.Record record) =
@@ -91,9 +90,9 @@ transformNormalSig _ _ Ctx.Information {} =
   pure []
 
 transformValSig ::
-  ( HasThrowFF primTy primVal m,
+  ( HasThrowFF HR.T primTy primVal m,
     HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m,
+    HasCoreSigs HR.T primTy primVal m,
     Show primTy,
     Show primVal
   ) =>
@@ -102,7 +101,7 @@ transformValSig ::
   Ctx.Definition Sexp.T Sexp.T Sexp.T ->
   Maybe Usage.T ->
   Maybe Sexp.T ->
-  m (CoreSigHR primTy primVal)
+  m (CoreSig HR.T primTy primVal)
 transformValSig q _ _ _ (Just (Sexp.List [usage, usageExpr, arrow]))
   | Sexp.isAtomNamed usage ":usage" =
     ValSig <$> transformGUsage q (Just usageExpr) <*> transformTermHR q arrow
@@ -113,8 +112,8 @@ transformValSig _ x def _ _ = throwFF $ SigRequired x def
 transformSpecial ::
   ( Show primTy,
     Show primVal,
-    HasThrowFF primTy primVal m,
-    HasCoreSigs primTy primVal m
+    HasThrowFF ext primTy primVal m,
+    HasCoreSigs ext primTy primVal m
   ) =>
   NameSymbol.Mod ->
   Ctx.Definition Sexp.T Sexp.T Sexp.T ->
@@ -130,8 +129,8 @@ transformSpecial _ _ = pure Nothing
 transformSpecialRhs ::
   ( Show primTy,
     Show primVal,
-    HasThrowFF primTy primVal m,
-    HasCoreSigs primTy primVal m
+    HasThrowFF ext primTy primVal m,
+    HasCoreSigs ext primTy primVal m
   ) =>
   NameSymbol.Mod ->
   Sexp.T ->

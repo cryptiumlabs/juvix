@@ -125,7 +125,7 @@ sexp xs = ignoreHeader (Parser.parse xs) >>| SexpTrans.transTopLevel
 -- File ⟶ ML AST ⟶ LISP AST
 sexpFile :: FilePath -> IO [Sexp.T]
 sexpFile file = do
-  f <- Frontend.ofSingleFile file
+  f <- Frontend.parseSingleFile file
   case f of
     Right (_name, ast) ->
       fmap SexpTrans.transTopLevel ast
@@ -137,7 +137,7 @@ sexpFile file = do
 -- Prelude ⟶ ML AST ⟶ LISP AST
 sexpLibrary :: Options primTy primVal -> IO [(NameSymb.T, [Sexp.T])]
 sexpLibrary def = do
-  files <- Frontend.ofPath (prelude def)
+  files <- Frontend.parseFiles (prelude def)
   case files of
     Right f ->
       pure (second (fmap SexpTrans.transTopLevel) <$> f)

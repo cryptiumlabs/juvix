@@ -2,14 +2,12 @@
 
 module Juvix.Pipeline
   ( module Juvix.Pipeline.Compile,
-    module Juvix.Pipeline.Internal,
     module Juvix.Pipeline.Types,
     module Juvix.Pipeline,
   )
 where
 
 import qualified Data.Aeson as A
-import qualified Data.HashMap.Strict as HM
 import qualified Data.Text as Text
 import qualified Data.Text.IO as T
 import Debug.Pretty.Simple (pTraceShowM)
@@ -17,8 +15,9 @@ import qualified Juvix.Context as Context
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.TransformExt as TransformExt
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
+import qualified Juvix.Core.Base as Core
+import qualified Juvix.Core.Base.TransformExt as TransformExt
+import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
@@ -27,12 +26,14 @@ import Juvix.Core.Parameterisation
 import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Types as Core
 import Juvix.Library
+import Juvix.Library.Parser (ParserError)
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Sexp as Sexp
 import Juvix.Pipeline.Compile
-import Juvix.Pipeline.Internal
-import qualified Juvix.Pipeline.Internal as Pipeline
+import qualified Juvix.Pipeline.Core as CorePipeline
+import qualified Juvix.Pipeline.Frontend as FrontendPipeline
 import Juvix.Pipeline.Types
+import qualified Juvix.Frontend as Frontend
 import qualified Juvix.ToCore.FromFrontend as FF
 import qualified System.IO.Temp as Temp
 import qualified Text.Megaparsec as P
@@ -40,6 +41,15 @@ import qualified Text.PrettyPrint.Leijen.Text as Pretty
 import qualified Juvix.Core.HR.Types as HR
 import qualified Data.HashMap.Strict as HM
 import qualified Data.IntMap.Strict as PM
+
+type Pipeline = Feedback.FeedbackT [] [Char] IO
+data Error
+  = FrontendErr FrontendPipeline.Error
+  | ParseErr ParserError
+  -- TODO: CoreError
+  deriving (Show)
+
+
 class HasBackend b where
   type Ty b = ty | ty -> b
   type Val b = val | val -> b
@@ -50,19 +60,19 @@ class HasBackend b where
 
   parseWithLibs :: [FilePath] -> b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
   parseWithLibs libs b code = liftIO $ do
-    fp <- Temp.writeSystemTempFile "juvix-toCore.ju" (Text.unpack code)
-    core <- Pipeline.toCore (libs ++ [fp])
+    fp <- Temp.writeSystemTempFile "juvix-toSexp.ju" (Text.unpack code)
+    core <- toSexp (libs ++ [fp])
     handleCore core
 
   parse :: b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
   parse b code = do
-    core <- liftIO $ toCore_wrap code
+    core <- liftIO $ toSexp_wrap code
     handleCore core
     where
-      toCore_wrap :: Text -> IO (Either Pipeline.Error (Context.T Sexp.T Sexp.T Sexp.T))
-      toCore_wrap code = do
-        fp <- Temp.writeSystemTempFile "juvix-toCore.ju" (Text.unpack code)
-        Pipeline.toCore
+      toSexp_wrap :: Text -> IO (Either Error (Context.T Sexp.T Sexp.T Sexp.T))
+      toSexp_wrap code = do
+        fp <- Temp.writeSystemTempFile "juvix-toSexp.ju" (Text.unpack code)
+        toSexp
           ("stdlib/Prelude.ju" : stdlibs b ++ [fp])
 
   typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
@@ -71,10 +81,11 @@ class HasBackend b where
     (Show (Ty b), Show (Val b)) =>
     Context.T Sexp.T Sexp.T Sexp.T ->
     Param.Parameterisation (Ty b) (Val b) ->
-    Pipeline (FF.CoreDefsHR (Ty b) (Val b))
-  toHR ctx param = case Pipeline.contextToHR ctx param of
-    Left err -> Feedback.fail $ show err
-    Right defs -> pure defs
+    Pipeline (FF.CoreDefs HR.T (Ty b) (Val b))
+  toHR ctx param = notImplemented
+    -- case CorePipeline.contextToHR ctx param of
+    -- Left err -> Feedback.fail $ show err
+    -- Right defs -> pure defs
 
   
   -- toIR: in terms of HR 
@@ -96,10 +107,10 @@ class HasBackend b where
       CanApply (Ty b),
       CanApply (TypedPrim (Ty b) (Val b)),
       IR.HasWeak (Val b),
-      IR.HasSubstValue IR.NoExt (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
-      IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (Val b) (Ty b),
-      IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (Val b) (Val b),
-      IR.HasPatSubstTerm (OnlyExts.T IR.NoExt) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
+      IR.HasSubstValue IR.T (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
+      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (Val b) (Ty b),
+      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (Val b) (Val b),
+      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
       IR.HasPatSubstTerm (OnlyExts.T TypeChecker.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b)
     ) =>
     Context.T Sexp.T Sexp.T Sexp.T ->
@@ -107,7 +118,7 @@ class HasBackend b where
     Ty b ->
     Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
   typecheck' ctx param ty = do
-    let (res, state) = Pipeline.contextToCore ctx param
+    let res = notImplemented -- Pipeline.contextToCore ctx param
 
     -- Pipeline.
     case res of
@@ -122,19 +133,14 @@ class HasBackend b where
             evaluatedGlobals = HM.map (unsafeEvalGlobal typedGlobals) typedGlobals
         case HM.elems $ HM.filter isMain globalDefs of
           [] -> Feedback.fail $ "No main function found in " <> show globalDefs
-          [f@(IR.RawGFunction _)] ->
-            case TransformExt.extForgetE <$> IR.toLambdaR @IR.NoExt f of
+          [f@(Core.RawGFunction _)] ->
+            case TransformExt.extForgetE <$> IR.toLambdaR @IR.T f of
               Nothing -> do
                 Feedback.fail "Unable to convert main to lambda"
               Just (IR.Ann usage term ty _) -> do
-<<<<<<< Updated upstream
-                let inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-                (res, _) <- liftIO $ exec (ErasedAnn.irToErasedAnn @(Err b) inlinedTerm usage ty) param newGlobals
-=======
                 let patternMap = HM.toList (FF.patVars state) |> map swap |> PM.fromList
                 let inlinedTerm = IR.inlineAllGlobals term lookupGlobal patternMap
-                (res, _) <- liftIO $ exec (CorePipeline.coreToAnn @(Err b) inlinedTerm usage ty) param evaluatedGlobals
->>>>>>> Stashed changes
+                (res, _) <- liftIO $ exec (ErasedAnn.irToErasedAnn @(Err b) inlinedTerm usage ty) param evaluatedGlobals
                 case res of
                   Right r -> do
                     pure r
@@ -156,19 +162,31 @@ writeout fout code = liftIO $ T.writeFile fout code
 
 parseExplicit :: b -> Text -> [FilePath] -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
 parseExplicit _b code libs = do
-  core <- liftIO $ toCore_wrap code
+  core <- liftIO $ toSexp_wrap code
   case core of
     Right ctx -> return ctx
-    Left (Pipeline.ParseErr err) -> Feedback.fail $ P.errorBundlePretty err
+    Left (ParseErr err) -> Feedback.fail $ P.errorBundlePretty err
     Left err -> Feedback.fail $ show err
   where
-    toCore_wrap :: Text -> IO (Either Pipeline.Error (Context.T Sexp.T Sexp.T Sexp.T))
-    toCore_wrap code = do
-      fp <- Temp.writeSystemTempFile "juvix-toCore.ju" (Text.unpack code)
-      Pipeline.toCore (fp : libs)
+    toSexp_wrap :: Text -> IO (Either Error (Context.T Sexp.T Sexp.T Sexp.T))
+    toSexp_wrap code = do
+      fp <- Temp.writeSystemTempFile "juvix-toSexp.ju" (Text.unpack code)
+      toSexp (fp : libs)
 
 handleCore :: MonadFail m => Either Error a -> m a
 handleCore core = case core of
   Right ctx -> return ctx
-  Left (Pipeline.ParseErr err) -> Feedback.fail $ P.errorBundlePretty err
+  Left (ParseErr err) -> Feedback.fail $ P.errorBundlePretty err
   Left err -> Feedback.fail $ show err
+
+toSexp :: [FilePath] -> IO (Either Error (Context.T Sexp.T Sexp.T Sexp.T))
+toSexp paths = do
+  x <- Frontend.parseFiles paths
+  case x of
+    Left er -> pure $ Left (ParseErr er)
+    Right x -> do
+      from <- FrontendPipeline.frontendToSexp x
+      case from of
+        Left errr -> pure $ Left (FrontendErr errr)
+        Right con -> pure $ Right con
+

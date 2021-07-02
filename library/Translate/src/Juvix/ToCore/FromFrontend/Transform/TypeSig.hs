@@ -13,7 +13,6 @@ import Juvix.ToCore.FromFrontend.Transform.Helpers
   )
 import Juvix.ToCore.Types
   ( CoreSig (..),
-    CoreSigHR,
     Error (..),
     HasCoreSigs,
     HasParam,
@@ -106,7 +105,7 @@ transformProduct ::
   -- | type constructor
   Sexp.T ->
   (Symbol, Sexp.T) ->
-  m (NameSymbol.T, CoreSigHR primTy primVal)
+  m (NameSymbol.T, CoreSig HR.T primTy primVal)
 transformProduct q hd typeCon (x, prod) =
   (NameSymbol.qualify1 q x,) . makeSig
     <$> transformConSig q (NameSymbol.fromSymbol x) hd typeCon prod

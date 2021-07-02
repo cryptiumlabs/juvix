@@ -1,5 +1,6 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Juvix.ToCore.Types where
 
@@ -99,7 +100,7 @@ data Error ext primTy primVal
     UnexpectedOmega
   deriving (Generic)
 
-deriving instance 
+deriving instance
    (Core.CoreEq ext primTy primVal
   , Eq primTy
   , Eq primVal) => Eq (Error ext primTy primVal)
@@ -267,32 +268,35 @@ deriving instance
   ) =>
   Data (CoreSig ext primTy primVal)
 
-type CoreSigIR = CoreSig IR.T
-
-type CoreSigHR = CoreSig HR.T
 
 type CoreSigs ext primTy primVal =
   HashMap Core.GlobalName (CoreSig ext primTy primVal)
 
-type CoreSigsIR primTy primVal = CoreSigs IR.T primTy primVal
 
-type CoreSigsHR primTy primVal = CoreSigs HR.T primTy primVal
 
-hrToIRSig :: CoreSigHR ty val -> CoreSigIR ty val
+hrToIRSig :: CoreSig HR.T ty val -> CoreSig IR.T ty val
 hrToIRSig d@DataSig { dataType }  = d { dataType = hrToIR dataType}
 hrToIRSig c@ConSig{ conType } = c { conType = hrToIR <$> conType}
 hrToIRSig v@ValSig {valType} = v { valType = hrToIR valType }
 hrToIRSig (SpecialSig s) = SpecialSig s
 
-hrToIRSigs :: CoreSigsHR ty val -> CoreSigsIR ty val
+hrToIRSigs :: CoreSigs HR.T ty val -> CoreSigs IR.T ty val
 hrToIRSigs sigs = hrToIRSig <$> sigs
 
+hrToIRDef :: CoreDef HR.T ty val -> CoreDef IR.T ty val
+hrToIRDef (SpecialDef sym s) = SpecialDef sym s
+hrToIRDef (CoreDef global) = CoreDef (hrToIRRawGlobal global)
+
+hrToIRRawGlobal (Core.RawGDatatype d@Core.RawDatatype {Core.rawDataArgs, Core.rawDataCons, ..}) = notImplemented
+hrToIRRawGlobal (Core.RawGDataCon d@Core.RawDataCon {Core.rawConType, ..})= notImplemented
+hrToIRRawGlobal (Core.RawGFunction f@Core.RawFunction {})= notImplemented
+hrToIRRawGlobal (Core.RawGAbstract a@Core.RawAbstract {}) = notImplemented
 data CoreDef ext primTy primVal
   = CoreDef !(Core.RawGlobal' ext primTy primVal)
   | SpecialDef !NameSymbol.T !Special
   deriving (Generic)
 
-deriving instance 
+deriving instance
   ( Show primTy,
     Show primVal,
     Core.TermAll Show ext primTy primVal,
@@ -301,7 +305,7 @@ deriving instance
   ) =>
   Show (CoreDef ext primTy primVal)
 
-deriving instance 
+deriving instance
   ( Eq primTy,
     Eq primVal,
     Core.TermAll Eq ext primTy primVal,
@@ -310,7 +314,7 @@ deriving instance
   ) =>
   Eq (CoreDef ext primTy primVal)
 
-deriving instance 
+deriving instance
   ( Data primTy,
     Data primVal,
     Data ext,
@@ -320,34 +324,31 @@ deriving instance
   ) =>
   Data (CoreDef ext primTy primVal)
 
-type CoreDefIR = CoreDef IR.T
-type CoreDefHR = CoreDef HR.T 
-
-data CoreDefs' ext primTy primVal = CoreDefs
+data CoreDefs ext primTy primVal = CoreDefs
   { order :: [NonEmpty NameSymbol.T],
-    defs :: CoreDefMap' ext primTy primVal
+    defs :: CoreDefMap ext primTy primVal
   }
   deriving (Generic)
 
-deriving instance 
+deriving instance
   ( Show primTy,
     Show primVal,
     Core.TermAll Show ext primTy primVal,
     Core.ElimAll Show ext primTy primVal,
     Core.PatternAll Show ext primTy primVal
   ) =>
-  Show (CoreDefs' ext primTy primVal)
+  Show (CoreDefs ext primTy primVal)
 
-deriving instance 
+deriving instance
   ( Eq primTy,
     Eq primVal,
     Core.TermAll Eq ext primTy primVal,
     Core.ElimAll Eq ext primTy primVal,
     Core.PatternAll Eq ext primTy primVal
   ) =>
-  Eq (CoreDefs' ext primTy primVal)
+  Eq (CoreDefs ext primTy primVal)
 
-deriving instance 
+deriving instance
   ( Data primTy,
     Data primVal,
     Data ext,
@@ -355,31 +356,31 @@ deriving instance
     Core.ElimAll Data ext primTy primVal,
     Core.PatternAll Data ext primTy primVal
   ) =>
-  Data (CoreDefs' ext primTy primVal)
+  Data (CoreDefs ext primTy primVal)
 
-type CoreDefs = CoreDefs' IR.T
-type CoreDefsHR = CoreDefs' HR.T 
+type CoreDefMap ext primTy primVal = HashMap Core.GlobalName (CoreDef ext primTy primVal)
 
-type CoreDefMap' ext primTy primVal = HashMap Core.GlobalName (CoreDef ext  primTy primVal)
-type CoreDefMapHR primTy primVal = CoreDefMap' HR.T primTy primVal 
-type CoreDefMap primTy primVal = CoreDefMap' IR.T primTy primVal 
-
-type FFStateIR = FFState' IR.T
-type FFStateHR = FFState' HR.T
-
-data FFState' ext primTy primVal = FFState
+data FFState ext primTy primVal = FFState
   { frontend :: Ctx.T Sexp.T Sexp.T Sexp.T,
     param :: P.Parameterisation primTy primVal,
     -- TODO: Do signatures need to be
     coreSigs :: CoreSigs ext primTy primVal,
-    core :: CoreDefMap' ext primTy primVal,
+    core :: CoreDefMap ext primTy primVal,
     patVars :: HashMap Core.GlobalName Core.PatternVar,
     nextPatVar :: Core.PatternVar
     -- TODO: Add order here and remove CorDefs
   }
   deriving (Generic)
+
+
+hrToIRState :: FFState HR.T ty val -> FFState IR.T ty val
+hrToIRState FFState{ coreSigs, core, .. } = FFState { 
+    coreSigs = hrToIRSigs coreSigs,
+    core = fmap hrToIRDef core ,
+     .. }
+
 type EnvAlias ext primTy primVal =
-  ExceptT (Error ext primTy primVal) (State (FFState' ext primTy primVal))
+  ExceptT (Error ext primTy primVal) (State (FFState ext primTy primVal))
 
 newtype Env ext primTy primVal a = Env {unEnv :: EnvAlias ext primTy primVal a}
   deriving newtype (Functor, Applicative, Monad)
@@ -403,9 +404,9 @@ newtype Env ext primTy primVal a = Env {unEnv :: EnvAlias ext primTy primVal a}
     )
     via StateField "coreSigs" (EnvAlias ext primTy primVal)
   deriving
-    ( HasSource "core" (CoreDefMap' ext primTy primVal),
-      HasSink "core" (CoreDefMap' ext primTy primVal),
-      HasState "core" (CoreDefMap' ext primTy primVal)
+    ( HasSource "core" (CoreDefMap ext primTy primVal),
+      HasSink "core" (CoreDefMap ext primTy primVal),
+      HasState "core" (CoreDefMap ext primTy primVal)
     )
     via StateField "core" (EnvAlias ext primTy primVal)
   deriving
@@ -432,7 +433,7 @@ type HasCoreSigs ext primTy primVal =
   HasState "coreSigs" (CoreSigs ext primTy primVal)
 
 type HasCore ext primTy primVal =
-  HasState "core" (CoreDefMap' ext primTy primVal)
+  HasState "core" (CoreDefMap ext primTy primVal)
 
 type HasPatVars =
   HasState "patVars" (HashMap Core.GlobalName Core.PatternVar)
@@ -450,7 +451,7 @@ evalEnv ::
   Ctx.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
   Env ext primTy primVal a ->
-  FFState' ext primTy primVal
+  FFState ext primTy primVal
 evalEnv ctx param env =
   snd $ runEnv ctx param env
 
@@ -458,7 +459,7 @@ runEnv ::
   Ctx.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
   Env ext primTy primVal a ->
-  (Either (Error ext primTy primVal) a, FFState' ext primTy primVal)
+  (Either (Error ext primTy primVal) a, FFState ext primTy primVal)
 runEnv ctx param (Env env) =
   runIdentity $ runStateT (runExceptT env) initState where
     initState =

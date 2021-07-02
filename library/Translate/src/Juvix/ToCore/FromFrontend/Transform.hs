@@ -1,6 +1,7 @@
 module Juvix.ToCore.FromFrontend.Transform
   ( transformSig,
     transformDef,
+    transformDefHR,
   )
 where
 

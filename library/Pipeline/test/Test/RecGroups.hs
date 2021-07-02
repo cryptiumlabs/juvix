@@ -35,7 +35,7 @@ pipeline =
         "multiple modules have correct ordering"
         $ do
           Right c <-
-            Pipeline.toCore
+            Pipeline.toSexp
               ( withJuvixExamplesPath
                   <$> [ "to-fix/rec-groups/Rec-Groups.ju",
                         "to-fix/rec-groups/Rec-Groups-Helper.ju"
@@ -57,7 +57,7 @@ pipelineOpen =
         "multiple modules have correct ordering"
         $ do
           Right c <-
-            Pipeline.toCore
+            Pipeline.toSexp
               ( withJuvixExamplesPath
                   <$> [ "to-fix/dependencies/D.ju",
                         "to-fix/dependencies/A.ju",

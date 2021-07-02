@@ -29,6 +29,7 @@ import Juvix.Core.IR.Evaluator.Weak
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
+import qualified Data.IntMap.Strict as PM
 
 type NoExtensions ext primTy primVal =
   ( Core.TermX ext primTy primVal ~ Void,
@@ -63,27 +64,27 @@ inlineAllGlobals ::
   ) =>
   Core.Term' ext primTy primVal ->
   LookupFun ext primTy primVal ->
+  Core.PatternMap Core.GlobalName ->
   Core.Term' ext primTy primVal
-inlineAllGlobals t map =
+inlineAllGlobals t lookupFun patternMap =
   case t of
     Core.Unit' {} -> t
     Core.UnitTy' {} -> t
     Core.Pair' p1 p2 ann ->
-      Core.Pair' (inlineAllGlobals p1 map) (inlineAllGlobals p2 map) ann
+      Core.Pair' (inlineAllGlobals p1 lookupFun patternMap) (inlineAllGlobals p2 lookupFun patternMap) ann
     Core.Elim' elim ann ->
-      Core.Elim' (inlineAllGlobalsElim elim map) ann
+      Core.Elim' (inlineAllGlobalsElim elim lookupFun patternMap) ann
     Core.Sig' u t1 t2 ann ->
-      Core.Sig' u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) ann
+      Core.Sig' u (inlineAllGlobals t1 lookupFun patternMap) (inlineAllGlobals t2 lookupFun patternMap) ann
     Core.Let' u e t ann ->
-      Core.Let' u (inlineAllGlobalsElim e map) (inlineAllGlobals t map) ann
+      Core.Let' u (inlineAllGlobalsElim e lookupFun patternMap) (inlineAllGlobals t lookupFun patternMap) ann
     Core.Lam' t ann ->
-      Core.Lam' (inlineAllGlobals t map) ann
+      Core.Lam' (inlineAllGlobals t lookupFun patternMap) ann
     Core.Pi' u t1 t2 ann ->
-      Core.Pi' u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) ann
+      Core.Pi' u (inlineAllGlobals t1 lookupFun patternMap) (inlineAllGlobals t2 lookupFun patternMap) ann
     Core.Prim' {} -> t
     Core.PrimTy' {} -> t
     Core.Star' {} -> t
-    Core.TermX {} -> t
 
 inlineAllGlobalsElim ::
   ( EvalPatSubst ext primTy primVal,
@@ -91,16 +92,17 @@ inlineAllGlobalsElim ::
   ) =>
   Core.Elim' ext primTy primVal ->
   LookupFun ext primTy primVal ->
+  Core.PatternMap Core.GlobalName ->
   Core.Elim' ext primTy primVal
-inlineAllGlobalsElim t map =
+inlineAllGlobalsElim t lookupFun patternMap =
   case t of
     Core.Bound' {} -> t
-    Core.Free' (Core.Global name) _ann -> fromMaybe t $ map name
-    Core.Free' {} -> t
+    Core.Free' (Core.Global name) _ann -> fromMaybe t $ lookupFun name
+    Core.Free' (Core.Pattern i) _ -> fromMaybe t $ PM.lookup i patternMap >>= lookupFun
     Core.App' elim term ann ->
-      Core.App' (inlineAllGlobalsElim elim map) (inlineAllGlobals term map) ann
+      Core.App' (inlineAllGlobalsElim elim lookupFun patternMap) (inlineAllGlobals term lookupFun patternMap) ann
     Core.Ann' u t1 t2 uni ann ->
-      Core.Ann' u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) uni ann
+      Core.Ann' u (inlineAllGlobals t1 lookupFun patternMap) (inlineAllGlobals t2 lookupFun patternMap) uni ann
     Core.ElimX {} -> t
 
 -- annotations are discarded
