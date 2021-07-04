@@ -1,5 +1,15 @@
 {-# LANGUAGE BangPatterns #-}
 
+-- | Provides utility and functionality for automatic pattern names,
+-- name streams, and aliases for capabilities over these structures.
+--
+-- - Streams are offered in this module for an infinite name supply
+--   structures
+-- - Operations are given for shuffling these in a capability
+-- - Pattern Variables are given to help set the mapping between
+--   patterns and symbols
+-- - =HasNamStack= talks about the mapping between names in the =HR=
+--   form and the =De Brunjin= Index
 module Juvix.Core.Utility
   ( -- * Capabilities
     HasNameStack,
@@ -40,8 +50,8 @@ import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import qualified Data.IntMap.Strict as PM
 import qualified Data.IntSet as PS
-import Data.List (findIndex, (!!))
-import Juvix.Core.IR.Types (PatternMap, PatternSet, PatternVar)
+import Data.List (elemIndex, (!!))
+import Juvix.Core.Base.Types (PatternMap, PatternSet, PatternVar)
 import Juvix.Library hiding (filter, take)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
@@ -57,11 +67,14 @@ type HasSymToPat = HasState "symToPat" (HashMap NameSymbol.T PatternVar)
 
 type HasPatToSym = HasState "patToSym" (PatternMap NameSymbol.T)
 
+-- | @withName@ pushes a name on the stack for the duration of given
+-- computation
 withName :: HasNameStack m => NameSymbol.T -> m a -> m a
 withName name = local @"nameStack" (name :)
 
+-- | @
 lookupName :: HasNameStack m => NameSymbol.T -> m (Maybe Int)
-lookupName name = findIndex (== name) <$> ask @"nameStack"
+lookupName name = elemIndex name <$> ask @"nameStack"
 
 lookupIndex :: HasNameStack m => Int -> m NameSymbol.T
 lookupIndex ind = asks @"nameStack" (!! ind)
@@ -71,6 +84,7 @@ withFresh act = do
   sym <- nextFresh
   local @"nameStack" (sym :) $ act sym
 
+-- | @nextFresh@ increments the name supply
 nextFresh :: HasNameSupply m => m NameSymbol.T
 nextFresh = state @"nameSupply" \(x :> xs) -> (x, xs)
 
@@ -99,9 +113,11 @@ data Stream a = (:>) {head :: a, tail :: Stream a}
 app :: [a] -> Stream a -> Stream a
 app l s = foldr (:>) s l
 
+-- | filters the stream based a given predicate
 filter :: (a -> Bool) -> Stream a -> Stream a
 filter p (x :> xs) = if p x then x :> xs' else xs' where xs' = filter p xs
 
+-- | @take@ @n@ @stream@ takes @n@ elements from the given @stream@
 take :: Natural -> Stream a -> [a]
 take 0 _ = []
 take n (x :> xs) = x : take (n - 1) xs
@@ -111,9 +127,12 @@ names :: Stream NameSymbol.T
 names = map (\c -> makeNS [c]) az `app` go (1 :: Natural)
   where
     az = ['a' .. 'z']
-    go i = [makeNS $ a : show i | a <- az] `app` go (i + 1)
+    go i =
+      map (\a -> makeNS (a : show i)) az `app` go (succ i)
     makeNS x = NameSymbol.fromString x
 
+-- | @patVarsExcept@ generates a stream of @PatternVar@s that are not
+-- in the given @PatternSet@
 patVarsExcept :: PatternSet -> Stream PatternVar
 patVarsExcept vars = go (PS.minView vars) 0
   where

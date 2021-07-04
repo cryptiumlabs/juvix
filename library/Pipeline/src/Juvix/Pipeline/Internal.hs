@@ -13,8 +13,9 @@ module Juvix.Pipeline.Internal
 where
 
 import qualified Data.HashMap.Strict as HM
+import qualified Juvix.Context as Context
 import qualified Juvix.Core as Core
-import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.Common.Context.Traverse as Context
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as P
@@ -22,8 +23,8 @@ import qualified Juvix.Frontend as Frontend
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Parser (ParserError)
-import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
+import qualified Juvix.Sexp as Sexp
 import qualified Juvix.ToCore.FromFrontend as FF
 
 data Error
@@ -112,7 +113,7 @@ addSig ::
     HasThrow "fromFrontendError" (FF.Error primTy primVal) m,
     HasReader "param" (P.Parameterisation primTy primVal) m,
     HasState "coreSigs" (FF.CoreSigsHR primTy primVal) m,
-    HasState "patVars" (HM.HashMap IR.GlobalName IR.PatternVar) m
+    HasState "patVars" (HM.HashMap Core.GlobalName Core.PatternVar) m
   ) =>
   Context.Entry Sexp.T Sexp.T Sexp.T ->
   m ()
@@ -127,8 +128,8 @@ addDef ::
     HasReader "param" (P.Parameterisation primTy primVal) m,
     HasState "core" (HM.HashMap NameSymbol.T (FF.CoreDef primTy primVal)) m,
     HasState "coreSigs" (FF.CoreSigsHR primTy primVal) m,
-    HasState "nextPatVar" IR.PatternVar m,
-    HasState "patVars" (HM.HashMap IR.GlobalName IR.PatternVar) m
+    HasState "nextPatVar" Core.PatternVar m,
+    HasState "patVars" (HM.HashMap Core.GlobalName Core.PatternVar) m
   ) =>
   Context.Entry Sexp.T Sexp.T Sexp.T ->
   m ()
@@ -139,8 +140,8 @@ addDef (Context.Entry x feDef) = do
 
 defName :: FF.CoreDef primTy primVal -> NameSymbol.T
 defName = \case
-  FF.CoreDef (IR.RawGDatatype IR.RawDatatype {rawDataName = x}) -> x
-  FF.CoreDef (IR.RawGDataCon IR.RawDataCon {rawConName = x}) -> x
-  FF.CoreDef (IR.RawGFunction IR.RawFunction {rawFunName = x}) -> x
-  FF.CoreDef (IR.RawGAbstract IR.RawAbstract {rawAbsName = x}) -> x
+  FF.CoreDef (Core.RawGDatatype Core.RawDatatype {rawDataName = x}) -> x
+  FF.CoreDef (Core.RawGDataCon Core.RawDataCon {rawConName = x}) -> x
+  FF.CoreDef (Core.RawGFunction Core.RawFunction {rawFunName = x}) -> x
+  FF.CoreDef (Core.RawGAbstract Core.RawAbstract {rawAbsName = x}) -> x
   FF.SpecialDef x _ -> x

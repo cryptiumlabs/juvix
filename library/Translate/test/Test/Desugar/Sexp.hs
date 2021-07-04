@@ -2,7 +2,7 @@ module Test.Desugar.Sexp (top) where
 
 import qualified Juvix.Desugar.Passes as Desugar
 import Juvix.Library hiding (head)
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 

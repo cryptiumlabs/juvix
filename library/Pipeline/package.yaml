@@ -32,10 +32,12 @@ dependencies:
   # Libraries
   ###########################
   - standard-library
+  - Sexp
   - frontend
   - core
   - translate
   - galois-field
+  - Context
   # - llvm
   # - interaction-net
   # - InteractionNetIR

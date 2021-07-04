@@ -1,4 +1,26 @@
 * Changelog for Juvix
+** 0.1.1.9
+- Added explicit exports for the IR/Evaluator modules.
+- Removed unused functions in the IR/Evaluator modules.
+** 0.1.1.8
+- Add Golden tests for desugar and contextify passes
+** 0.1.1.7
+- Add Michelson golden tests
+- Allow golden tests to be compared with their Show instance
+- Add tests for `main` having different signatures
+** 0.1.1.6
+- Allow main be of any type
+- Refactor typecheck
+** 0.1.1.5
+- Fix: Bug in #809 and #844, where pattern variables were considered
+  to be global variables.
+  + Add: Tests for the bug
+** 0.1.1.4
+- Adds: easy pipeline support up to Core.
+  + Creates: A time-lapse function
+** 0.1.1.3
+- Split =Context= into it's own pacakge
+- Tests and documentation for Utility in Core
 ** 0.1.1.2
 - Simplifies: =Context=
   + Adds: =mapWithName=, =mapSumWithName=, and =overTopLevelMap=

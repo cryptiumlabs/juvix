@@ -1,6 +1,0 @@
-cradle:
-  stack:
-    - path: ./src
-      component: "plonk"
-    - path: ./test
-      component: "plonk:test:plonk-test"

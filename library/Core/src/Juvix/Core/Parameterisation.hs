@@ -28,13 +28,13 @@ module Juvix.Core.Parameterisation
 where
 
 import qualified Juvix.Core.Application as App
+import Juvix.Core.Base.Types (BoundVar, GlobalName)
 import qualified Juvix.Core.HR.Pretty as HR
-import Juvix.Core.IR.Types (BoundVar, GlobalName, NoExt)
+import Juvix.Core.IR.Types (T)
 import Juvix.Library
 import Juvix.Library.HashMap (HashMap)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.PrettyPrint as PP
-import Prelude (String)
 
 -- | @[A, B, ..., Z]@ represents the type
 -- @π A -> ρ B -> ... -> Z@ for any usages @π@, @ρ@
@@ -172,7 +172,7 @@ apply1Maybe f x = applyMaybe f (x :| [])
 type TypedPrim' ext ty val = App.Return' ext (PrimType ty) val
 
 -- | A typed primitive.
-type TypedPrim ty val = TypedPrim' NoExt ty val
+type TypedPrim ty val = TypedPrim' T ty val
 
 data PPAnn' primTy
   = PAArrow

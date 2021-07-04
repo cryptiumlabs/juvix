@@ -1,0 +1,9 @@
+mod MainConst where
+
+
+open Prelude
+open Michelson
+
+sig main : nat
+let main = 3 
+

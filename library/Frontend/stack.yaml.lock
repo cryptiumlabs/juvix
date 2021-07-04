@@ -3,35 +3,47 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
+snapshots:
+- original: lts-17.9
+  completed:
+    sha256: d7d8d5106e53d1669964bd8bd2b0f88a5ad192d772f5376384b76738fd992311
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/9.yaml
+    size: 567037
 packages:
-- completed:
+- original:
     hackage: capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
+  completed:
     pantry-tree:
-      size: 2581
       sha256: 21bf502c888f32bd6aabeeef05bc2a362cf72bf694b432a0eda9431ac4cfea9b
-  original:
+      size: 2581
     hackage: capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
+- completed:
+    size: 359995
+    url: https://github.com/jyp/prettiest/archive/e5ce6cd6b4da71860c3d97da84bed4a827fa00ef.tar.gz
+    name: pretty-compact
+    version: '3.0'
+    sha256: 27a4b2e7ee8f4768b27e7173f758fd0af83b1d8e3c3af9711b5fed2b27ef54ec
+    pantry-tree:
+      size: 2327
+      sha256: c768b2faa4e5d7b791d987679616d8f90f169a73ae3fd38c20f37f08d02d930d
+  original:
+    url: https://github.com/jyp/prettiest/archive/e5ce6cd6b4da71860c3d97da84bed4a827fa00ef.tar.gz
 - completed:
     size: 18968
     url: https://github.com/phile314/tasty-silver/archive/f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b.tar.gz
-    name: tasty-silver
-    version: 3.2.1
-    sha256: 666b911fb302ef1e2ddb7562e3347674a91cae01b632958527f376c576e27852
+  completed:
     pantry-tree:
-      size: 784
       sha256: 540333aa07ba4f46c8bfb2e7cf75f756f908aa3f163f7c621cec10186238f27d
-  original:
+      size: 784
+    version: 3.2.1
+    name: tasty-silver
+    sha256: 666b911fb302ef1e2ddb7562e3347674a91cae01b632958527f376c576e27852
     url: https://github.com/phile314/tasty-silver/archive/f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b.tar.gz
-- completed:
+    size: 18968
+- original:
     hackage: tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638
+  completed:
     pantry-tree:
-      size: 1873
       sha256: 0c8fb1ece12aa96b9e884a2c382bfe5f3688c0f7a69bc165bdae64674b4ffe83
-  original:
+      size: 1873
     hackage: tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638
-snapshots:
-- completed:
-    size: 567037
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/9.yaml
-    sha256: d7d8d5106e53d1669964bd8bd2b0f88a5ad192d772f5376384b76738fd992311
-  original: lts-17.9

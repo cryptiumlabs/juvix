@@ -24,8 +24,8 @@ where
 import qualified Data.DList as D
 import Data.HashMap.Strict (HashMap)
 import Data.HashSet (HashSet)
-import Juvix.Core.Common.Context.Types
-import qualified Juvix.Core.Common.Context.Types as Context
+import Juvix.Context.Types
+import qualified Juvix.Context.Types as Context
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 

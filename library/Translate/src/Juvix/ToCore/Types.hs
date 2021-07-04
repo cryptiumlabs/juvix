@@ -4,16 +4,16 @@
 module Juvix.ToCore.Types where
 
 import Data.HashMap.Strict (HashMap)
-import qualified Juvix.Core.Common.Context as Ctx
+import qualified Juvix.Context as Ctx
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
+import qualified Juvix.Sexp as Sexp
 import Text.Show (Show (..))
 
 type ReduceEff primTy primVal m =
@@ -189,15 +189,15 @@ instance (Show primTy, Show primVal) => Show (Error primTy primVal) where
 
 data CoreSig ext primTy primVal
   = DataSig
-      { dataType :: !(IR.Term' ext primTy primVal),
+      { dataType :: !(Core.Term' ext primTy primVal),
         dataCons :: [NameSymbol.T]
       }
   | ConSig
-      { conType :: !(Maybe (IR.Term' ext primTy primVal))
+      { conType :: !(Maybe (Core.Term' ext primTy primVal))
       }
   | ValSig
-      { valUsage :: !IR.GlobalUsage,
-        valType :: !(IR.Term' ext primTy primVal)
+      { valUsage :: !Core.GlobalUsage,
+        valType :: !(Core.Term' ext primTy primVal)
       }
   | SpecialSig !Special
   deriving (Generic)
@@ -230,16 +230,16 @@ data Special
 deriving instance
   ( Eq primTy,
     Eq primVal,
-    IR.TermAll Eq ext primTy primVal,
-    IR.ElimAll Eq ext primTy primVal
+    Core.TermAll Eq ext primTy primVal,
+    Core.ElimAll Eq ext primTy primVal
   ) =>
   Eq (CoreSig ext primTy primVal)
 
 deriving instance
   ( Show primTy,
     Show primVal,
-    IR.TermAll Show ext primTy primVal,
-    IR.ElimAll Show ext primTy primVal
+    Core.TermAll Show ext primTy primVal,
+    Core.ElimAll Show ext primTy primVal
   ) =>
   Show (CoreSig ext primTy primVal)
 
@@ -253,19 +253,19 @@ deriving instance
   ( Data ext,
     Data primTy,
     Data primVal,
-    IR.TermAll Data ext primTy primVal,
-    IR.ElimAll Data ext primTy primVal
+    Core.TermAll Data ext primTy primVal,
+    Core.ElimAll Data ext primTy primVal
   ) =>
   Data (CoreSig ext primTy primVal)
 
-type CoreSigIR = CoreSig IR.NoExt
+type CoreSigIR = CoreSig IR.T
 
 type CoreSigHR = CoreSig HR.T
 
 type CoreSigs' ext primTy primVal =
-  HashMap IR.GlobalName (CoreSig ext primTy primVal)
+  HashMap Core.GlobalName (CoreSig ext primTy primVal)
 
-type CoreSigsIR primTy primVal = CoreSigs' IR.NoExt primTy primVal
+type CoreSigsIR primTy primVal = CoreSigs' IR.T primTy primVal
 
 type CoreSigsHR primTy primVal = CoreSigs' HR.T primTy primVal
 
@@ -280,15 +280,15 @@ data CoreDefs primTy primVal = CoreDefs
   }
   deriving (Eq, Show, Data, Generic)
 
-type CoreMap primTy primVal = HashMap IR.GlobalName (CoreDef primTy primVal)
+type CoreMap primTy primVal = HashMap Core.GlobalName (CoreDef primTy primVal)
 
 data FFState primTy primVal = FFState
   { frontend :: Ctx.T Sexp.T Sexp.T Sexp.T,
     param :: P.Parameterisation primTy primVal,
     coreSigs :: CoreSigsHR primTy primVal,
     core :: CoreMap primTy primVal,
-    patVars :: HashMap IR.GlobalName IR.PatternVar,
-    nextPatVar :: IR.PatternVar
+    patVars :: HashMap Core.GlobalName Core.PatternVar,
+    nextPatVar :: Core.PatternVar
   }
   deriving (Generic)
 
@@ -323,15 +323,15 @@ newtype Env primTy primVal a = Env {unEnv :: EnvAlias primTy primVal a}
     )
     via StateField "core" (EnvAlias primTy primVal)
   deriving
-    ( HasSource "patVars" (HashMap IR.GlobalName IR.PatternVar),
-      HasSink "patVars" (HashMap IR.GlobalName IR.PatternVar),
-      HasState "patVars" (HashMap IR.GlobalName IR.PatternVar)
+    ( HasSource "patVars" (HashMap Core.GlobalName Core.PatternVar),
+      HasSink "patVars" (HashMap Core.GlobalName Core.PatternVar),
+      HasState "patVars" (HashMap Core.GlobalName Core.PatternVar)
     )
     via StateField "patVars" (EnvAlias primTy primVal)
   deriving
-    ( HasSource "nextPatVar" IR.PatternVar,
-      HasSink "nextPatVar" IR.PatternVar,
-      HasState "nextPatVar" IR.PatternVar
+    ( HasSource "nextPatVar" Core.PatternVar,
+      HasSink "nextPatVar" Core.PatternVar,
+      HasState "nextPatVar" Core.PatternVar
     )
     via StateField "nextPatVar" (EnvAlias primTy primVal)
 
@@ -351,10 +351,10 @@ type HasCore primTy primVal =
   HasState "core" (CoreMap primTy primVal)
 
 type HasPatVars =
-  HasState "patVars" (HashMap IR.GlobalName IR.PatternVar)
+  HasState "patVars" (HashMap Core.GlobalName Core.PatternVar)
 
 type HasNextPatVar =
-  HasState "nextPatVar" IR.PatternVar
+  HasState "nextPatVar" Core.PatternVar
 
 execEnv ::
   Ctx.T Sexp.T Sexp.T Sexp.T ->

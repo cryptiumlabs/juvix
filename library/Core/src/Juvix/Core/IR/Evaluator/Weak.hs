@@ -1,21 +1,26 @@
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.IR.Evaluator.Weak where
+module Juvix.Core.IR.Evaluator.Weak
+  ( HasWeak (..),
+    weakBy,
+    weak,
+    GHasWeak,
+  )
+where
 
 import qualified Juvix.Core.Application as App
-import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.Base.Types as Core
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 
 class HasWeak a where
-  weakBy' :: Natural -> IR.BoundVar -> a -> a
+  weakBy' :: Natural -> Core.BoundVar -> a -> a
   default weakBy' ::
     (Generic a, GHasWeak (Rep a)) =>
     Natural ->
-    IR.BoundVar ->
+    Core.BoundVar ->
     a ->
     a
   weakBy' b i = to . gweakBy' b i . from
@@ -23,7 +28,7 @@ class HasWeak a where
 weakBy :: HasWeak a => Natural -> a -> a
 weakBy b = weakBy' b 0
 
-weak' :: HasWeak a => IR.BoundVar -> a -> a
+weak' :: HasWeak a => Core.BoundVar -> a -> a
 weak' = weakBy' 1
 
 weak :: HasWeak a => a -> a
@@ -32,103 +37,103 @@ weak = weak' 0
 type AllWeak ext primTy primVal =
   ( HasWeak primTy,
     HasWeak primVal,
-    IR.TermAll HasWeak ext primTy primVal,
-    IR.ElimAll HasWeak ext primTy primVal
+    Core.TermAll HasWeak ext primTy primVal,
+    Core.ElimAll HasWeak ext primTy primVal
   )
 
-instance AllWeak ext primTy primVal => HasWeak (IR.Term' ext primTy primVal) where
-  weakBy' b i (IR.Star' u a) =
-    IR.Star' u (weakBy' b i a)
-  weakBy' b i (IR.PrimTy' p a) =
-    IR.PrimTy' (weakBy' b i p) (weakBy' b i a)
-  weakBy' b i (IR.Prim' p a) =
-    IR.Prim' (weakBy' b i p) (weakBy' b i a)
-  weakBy' b i (IR.Pi' π s t a) =
-    IR.Pi' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
-  weakBy' b i (IR.Lam' t a) =
-    IR.Lam' (weakBy' b (succ i) t) (weakBy' b i a)
-  weakBy' b i (IR.Sig' π s t a) =
-    IR.Sig' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
-  weakBy' b i (IR.Pair' s t a) =
-    IR.Pair' (weakBy' b i s) (weakBy' b i t) (weakBy' b i a)
-  weakBy' b i (IR.UnitTy' a) =
-    IR.UnitTy' (weakBy' b i a)
-  weakBy' b i (IR.Unit' a) =
-    IR.Unit' (weakBy' b i a)
-  weakBy' b i (IR.Let' π s t a) =
-    IR.Let' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
-  weakBy' b i (IR.Elim' f a) =
-    IR.Elim' (weakBy' b i f) (weakBy' b i a)
-  weakBy' b i (IR.TermX a) =
-    IR.TermX (weakBy' b i a)
+instance AllWeak ext primTy primVal => HasWeak (Core.Term' ext primTy primVal) where
+  weakBy' b i (Core.Star' u a) =
+    Core.Star' u (weakBy' b i a)
+  weakBy' b i (Core.PrimTy' p a) =
+    Core.PrimTy' (weakBy' b i p) (weakBy' b i a)
+  weakBy' b i (Core.Prim' p a) =
+    Core.Prim' (weakBy' b i p) (weakBy' b i a)
+  weakBy' b i (Core.Pi' π s t a) =
+    Core.Pi' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (Core.Lam' t a) =
+    Core.Lam' (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (Core.Sig' π s t a) =
+    Core.Sig' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (Core.Pair' s t a) =
+    Core.Pair' (weakBy' b i s) (weakBy' b i t) (weakBy' b i a)
+  weakBy' b i (Core.UnitTy' a) =
+    Core.UnitTy' (weakBy' b i a)
+  weakBy' b i (Core.Unit' a) =
+    Core.Unit' (weakBy' b i a)
+  weakBy' b i (Core.Let' π s t a) =
+    Core.Let' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (Core.Elim' f a) =
+    Core.Elim' (weakBy' b i f) (weakBy' b i a)
+  weakBy' b i (Core.TermX a) =
+    Core.TermX (weakBy' b i a)
 
-instance AllWeak ext primTy primVal => HasWeak (IR.Elim' ext primTy primVal) where
-  weakBy' b i (IR.Bound' j a)
-    | j >= i = IR.Bound' (j + b) a'
-    | otherwise = IR.Bound' j a'
+instance AllWeak ext primTy primVal => HasWeak (Core.Elim' ext primTy primVal) where
+  weakBy' b i (Core.Bound' j a)
+    | j >= i = Core.Bound' (j + b) a'
+    | otherwise = Core.Bound' j a'
     where
       a' = weakBy' b i a
-  weakBy' b i (IR.Free' x a) =
-    IR.Free' x (weakBy' b i a)
-  weakBy' b i (IR.App' s t a) =
-    IR.App' (weakBy' b i s) (weakBy' b i t) (weakBy' b i a)
-  weakBy' b i (IR.Ann' π s t l a) =
-    IR.Ann' π (weakBy' b i s) (weakBy' b i t) l (weakBy' b i a)
-  weakBy' b i (IR.ElimX a) =
-    IR.ElimX (weakBy' b i a)
+  weakBy' b i (Core.Free' x a) =
+    Core.Free' x (weakBy' b i a)
+  weakBy' b i (Core.App' s t a) =
+    Core.App' (weakBy' b i s) (weakBy' b i t) (weakBy' b i a)
+  weakBy' b i (Core.Ann' π s t l a) =
+    Core.Ann' π (weakBy' b i s) (weakBy' b i t) l (weakBy' b i a)
+  weakBy' b i (Core.ElimX a) =
+    Core.ElimX (weakBy' b i a)
 
 type AllWeakV ext primTy primVal =
   ( HasWeak primTy,
     HasWeak primVal,
-    IR.ValueAll HasWeak ext primTy primVal,
-    IR.NeutralAll HasWeak ext primTy primVal
+    Core.ValueAll HasWeak ext primTy primVal,
+    Core.NeutralAll HasWeak ext primTy primVal
   )
 
 instance
   AllWeakV ext primTy primVal =>
-  HasWeak (IR.Value' ext primTy primVal)
+  HasWeak (Core.Value' ext primTy primVal)
   where
-  weakBy' b i (IR.VStar' n a) =
-    IR.VStar' n (weakBy' b i a)
-  weakBy' b i (IR.VPrimTy' p a) =
-    IR.VPrimTy' (weakBy' b i p) (weakBy' b i a)
-  weakBy' b i (IR.VPi' π s t a) =
-    IR.VPi' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
-  weakBy' b i (IR.VLam' t a) =
-    IR.VLam' (weakBy' b (succ i) t) (weakBy' b i a)
-  weakBy' b i (IR.VSig' π s t a) =
-    IR.VSig' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
-  weakBy' b i (IR.VPair' s t a) =
-    IR.VPair' (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
-  weakBy' b i (IR.VUnitTy' a) =
-    IR.VUnitTy' (weakBy' b i a)
-  weakBy' b i (IR.VUnit' a) =
-    IR.VUnit' (weakBy' b i a)
-  weakBy' b i (IR.VNeutral' n a) =
-    IR.VNeutral' (weakBy' b i n) (weakBy' b i a)
-  weakBy' b i (IR.VPrim' p a) =
-    IR.VPrim' (weakBy' b i p) (weakBy' b i a)
-  weakBy' b i (IR.ValueX a) =
-    IR.ValueX (weakBy' b i a)
+  weakBy' b i (Core.VStar' n a) =
+    Core.VStar' n (weakBy' b i a)
+  weakBy' b i (Core.VPrimTy' p a) =
+    Core.VPrimTy' (weakBy' b i p) (weakBy' b i a)
+  weakBy' b i (Core.VPi' π s t a) =
+    Core.VPi' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (Core.VLam' t a) =
+    Core.VLam' (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (Core.VSig' π s t a) =
+    Core.VSig' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (Core.VPair' s t a) =
+    Core.VPair' (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (Core.VUnitTy' a) =
+    Core.VUnitTy' (weakBy' b i a)
+  weakBy' b i (Core.VUnit' a) =
+    Core.VUnit' (weakBy' b i a)
+  weakBy' b i (Core.VNeutral' n a) =
+    Core.VNeutral' (weakBy' b i n) (weakBy' b i a)
+  weakBy' b i (Core.VPrim' p a) =
+    Core.VPrim' (weakBy' b i p) (weakBy' b i a)
+  weakBy' b i (Core.ValueX a) =
+    Core.ValueX (weakBy' b i a)
 
 instance
   AllWeakV ext primTy primVal =>
-  HasWeak (IR.Neutral' ext primTy primVal)
+  HasWeak (Core.Neutral' ext primTy primVal)
   where
-  weakBy' b i (IR.NBound' j a)
-    | j >= i = IR.NBound' (j + b) a'
-    | otherwise = IR.NBound' j a'
+  weakBy' b i (Core.NBound' j a)
+    | j >= i = Core.NBound' (j + b) a'
+    | otherwise = Core.NBound' j a'
     where
       a' = weakBy' b i a
-  weakBy' b i (IR.NFree' x a) =
-    IR.NFree' x (weakBy' b i a)
-  weakBy' b i (IR.NApp' f s a) =
-    IR.NApp' (weakBy' b i f) (weakBy' b i s) (weakBy' b i a)
-  weakBy' b i (IR.NeutralX a) =
-    IR.NeutralX (weakBy' b i a)
+  weakBy' b i (Core.NFree' x a) =
+    Core.NFree' x (weakBy' b i a)
+  weakBy' b i (Core.NApp' f s a) =
+    Core.NApp' (weakBy' b i f) (weakBy' b i s) (weakBy' b i a)
+  weakBy' b i (Core.NeutralX a) =
+    Core.NeutralX (weakBy' b i a)
 
 class GHasWeak f where
-  gweakBy' :: Natural -> IR.BoundVar -> f t -> f t
+  gweakBy' :: Natural -> Core.BoundVar -> f t -> f t
 
 instance GHasWeak U1 where gweakBy' _ _ U1 = U1
 

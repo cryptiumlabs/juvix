@@ -1,10 +1,10 @@
 module Juvix.ToCore.FromFrontend.Transform.Sig (transformSig) where
 
-import qualified Juvix.Core.Common.Context as Ctx
+import qualified Juvix.Context as Ctx
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
+import qualified Juvix.Sexp as Sexp
 import Juvix.ToCore.FromFrontend.Transform.HR (transformTermHR)
 import Juvix.ToCore.FromFrontend.Transform.Helpers
   ( ReduceEff,

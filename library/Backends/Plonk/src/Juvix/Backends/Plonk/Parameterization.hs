@@ -20,9 +20,9 @@ import Data.Field.Galois (GaloisField (..))
 import qualified Data.List.NonEmpty as NonEmpty
 import Juvix.Backends.Plonk.Types as Types
 import qualified Juvix.Core.Application as App
-import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
+import qualified Juvix.Core.Base.Types as Core
+import qualified Juvix.Core.Erased.Ann.Types as ErasedAnn
 import qualified Juvix.Core.IR.Evaluator as Eval
-import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, show, try)
@@ -118,7 +118,7 @@ instance Core.CanApply (PrimTy f) where
       |> Right
 
 data ApplyError f
-  = CompilationError CompilationError
+  = CompilationError (CompilationError f)
   | ReturnTypeNotPrimitive (ErasedAnn.Type (PrimTy f))
 
 instance Show f => Show (ApplyError f) where
@@ -211,19 +211,19 @@ instance Eval.HasWeak (PrimTy f) where weakBy' _ _ t = t
 instance Eval.HasWeak (PrimVal f) where weakBy' _ _ t = t
 
 instance
-  Monoid (IR.XVPrimTy ext (PrimTy f) primVal) =>
+  Monoid (Core.XVPrimTy ext (PrimTy f) primVal) =>
   Eval.HasSubstValue ext (PrimTy f) primVal (PrimTy f)
   where
-  substValueWith _ _ _ t = pure $ IR.VPrimTy' t mempty
+  substValueWith _ _ _ t = pure $ Core.VPrimTy' t mempty
 
 instance
-  Monoid (IR.XPrimTy ext (PrimTy f) primVal) =>
+  Monoid (Core.XPrimTy ext (PrimTy f) primVal) =>
   Eval.HasPatSubstTerm ext (PrimTy f) primVal (PrimTy f)
   where
-  patSubstTerm' _ _ t = pure $ IR.PrimTy' t mempty
+  patSubstTerm' _ _ t = pure $ Core.PrimTy' t mempty
 
 instance
-  Monoid (IR.XPrim ext primTy (PrimVal f)) =>
+  Monoid (Core.XPrim ext primTy (PrimVal f)) =>
   Eval.HasPatSubstTerm ext primTy (PrimVal f) (PrimVal f)
   where
-  patSubstTerm' _ _ t = pure $ IR.Prim' t mempty
+  patSubstTerm' _ _ t = pure $ Core.Prim' t mempty

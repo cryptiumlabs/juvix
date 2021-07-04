@@ -1,0 +1,12 @@
+[
+    ( "open" "Prelude" )
+,
+    ( "open" "LLVM" )
+,
+    ( ":defsig" "addint" ( ":infix" "->" "int" ( ":infix" "->" "int" "int" ) ) )
+,
+    ( ":defun" "addint" () ( ":primitive" "LLVM.add" ) )
+,
+    ( ":defsig" "main" "int" )
+,
+    ( ":defun" "main" () ( "addint" 4 6 ) ) ]

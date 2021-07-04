@@ -19,14 +19,15 @@ module Juvix.ToCore.FromFrontend.Transform.Helpers
 where
 
 import qualified Data.HashMap.Strict as HM
-import qualified Juvix.Core.Common.Context as Ctx
+import qualified Juvix.Context as Ctx
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Translate (hrToIR)
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import Juvix.ToCore.Types
 
 -- | Retrieve constant primVal from parameterization
@@ -159,7 +160,7 @@ getValSig ::
   ) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
-  m (IR.GlobalUsage, HR.Term primTy primVal)
+  m (Core.GlobalUsage, HR.Term primTy primVal)
 getValSig q = getSig q \case ValSig π ty -> Just (π, ty); _ -> Nothing
 
 getConSig ::
@@ -210,13 +211,13 @@ splitDataType ::
   (Show primTy, Show primVal, HasThrowFF primTy primVal m) =>
   NameSymbol.T ->
   HR.Term primTy primVal ->
-  m ([IR.RawDataArg primTy primVal], IR.Universe)
+  m ([IR.RawDataArg primTy primVal], Core.Universe)
 splitDataType x ty0 = go ty0
   where
     go (HR.Pi π x s t) = first (arg :) <$> splitDataType x t
       where
         arg =
-          IR.RawDataArg
+          Core.RawDataArg
             { rawArgName = x,
               rawArgUsage = π,
               rawArgType = hrToIR s

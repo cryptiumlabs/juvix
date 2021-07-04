@@ -37,8 +37,8 @@ pipeline =
           Right c <-
             Pipeline.toCore
               ( withJuvixExamplesPath
-                  <$> [ "positive/michelson/rec-groups/Rec-Groups.ju",
-                        "positive/michelson/rec-groups/Rec-Groups-Helper.ju"
+                  <$> [ "to-fix/rec-groups/Rec-Groups.ju",
+                        "to-fix/rec-groups/Rec-Groups-Helper.ju"
                       ]
               )
           let recd = Traverse.recGroups c
@@ -59,10 +59,10 @@ pipelineOpen =
           Right c <-
             Pipeline.toCore
               ( withJuvixExamplesPath
-                  <$> [ "positive/michelson/test/D.ju",
-                        "positive/michelson/test/A.ju",
-                        "positive/michelson/test/B.ju",
-                        "positive/michelson/test/C.ju"
+                  <$> [ "to-fix/dependencies/D.ju",
+                        "to-fix/dependencies/A.ju",
+                        "to-fix/dependencies/B.ju",
+                        "to-fix/dependencies/C.ju"
                       ]
               )
           let recd = Traverse.recGroups c

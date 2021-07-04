@@ -21,13 +21,13 @@ module Juvix.Contextify.Environment
 where
 
 import Control.Lens hiding ((|>))
+import qualified Juvix.Closure as Closure
+import qualified Juvix.Context as Context
+import qualified Juvix.Context.NameSpace as NameSpace
 import qualified Juvix.Contextify.InfixPrecedence.ShuntYard as Shunt
-import qualified Juvix.Core.Common.Closure as Closure
-import qualified Juvix.Core.Common.Context as Context
-import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import Prelude (error)
 
 data ErrorS

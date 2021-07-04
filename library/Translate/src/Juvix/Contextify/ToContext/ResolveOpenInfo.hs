@@ -23,9 +23,9 @@ module Juvix.Contextify.ToContext.ResolveOpenInfo where
 
 import Control.Lens hiding ((|>))
 import qualified Data.HashSet as Set
-import qualified Juvix.Core.Common.Context as Context
-import qualified Juvix.Core.Common.NameSpace as NameSpace
-import qualified Juvix.Core.Common.Open as Open
+import qualified Juvix.Context as Context
+import qualified Juvix.Context.NameSpace as NameSpace
+import qualified Juvix.Context.Open as Open
 import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol

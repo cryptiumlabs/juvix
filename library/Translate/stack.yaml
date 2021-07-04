@@ -5,6 +5,8 @@ packages:
 - ../Core
 - ../Frontend
 - ../StandardLibrary
+- ../Sexp
+- ../Context
 
 extra-deps:
 

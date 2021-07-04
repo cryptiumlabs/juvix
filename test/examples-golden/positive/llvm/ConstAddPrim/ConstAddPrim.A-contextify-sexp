@@ -1,0 +1,28 @@
+Rec
+    { recordContents = T
+        { public = fromList
+            [
+                ( "addint"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "int"
+                                ( ":infix" "->" "int" "int" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "LLVM.add" ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "main"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just "int"
+                        , defTerm =
+                            ( ":lambda-case" ( () ( "addint" 4 6 ) ) )
+                        , defPrecedence = Pred Left 9 } ) ) ]
+        , private = fromList [] }
+    , recordMTy = Nothing
+    , recordOpenList = []
+    , recordQualifiedMap = map }

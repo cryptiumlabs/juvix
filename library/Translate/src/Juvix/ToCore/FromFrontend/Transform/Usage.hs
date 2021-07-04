@@ -1,10 +1,11 @@
 module Juvix.ToCore.FromFrontend.Transform.Usage (transformUsage, transformGUsage) where
 
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.IR as IR
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
+import qualified Juvix.Sexp as Sexp
 import Juvix.ToCore.FromFrontend.Transform.Helpers
   ( isOmega,
   )
@@ -38,9 +39,9 @@ transformGUsage ::
   ) =>
   NameSymbol.Mod ->
   Maybe Sexp.T ->
-  m IR.GlobalUsage
-transformGUsage _ Nothing = pure IR.GOmega
-transformGUsage _ (Just (Sexp.Atom Sexp.N {atomNum = 0})) = pure IR.GZero
+  m Core.GlobalUsage
+transformGUsage _ Nothing = pure Core.GOmega
+transformGUsage _ (Just (Sexp.Atom Sexp.N {atomNum = 0})) = pure Core.GZero
 transformGUsage q (Just e) = do
   o <- isOmega q e
-  if o then pure IR.GOmega else throwFF $ NotAGUsage e
+  if o then pure Core.GOmega else throwFF $ NotAGUsage e

@@ -1,15 +1,20 @@
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.IR.Evaluator.PatSubst where
+module Juvix.Core.IR.Evaluator.PatSubst
+  ( HasPatSubst (..),
+    patSubst,
+    HasPatSubstTerm (..),
+  )
+where
 
 import Data.Foldable (foldr1) -- on NonEmpty
 import qualified Data.IntMap as IntMap
 import qualified Juvix.Core.Application as App
+import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
+import qualified Juvix.Core.Base.Types as Core
 import Juvix.Core.IR.Evaluator.Weak
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
@@ -21,24 +26,24 @@ class HasWeak a => HasPatSubst extT primTy primVal a where
     -- | How many bindings have been traversed so far
     Natural ->
     -- | Mapping of pattern variables to matched subterms
-    IR.PatternMap (IR.Elim' extT primTy primVal) ->
+    Core.PatternMap (Core.Elim' extT primTy primVal) ->
     a ->
-    Either IR.PatternVar a
+    Either Core.PatternVar a
   default patSubst' ::
     ( Generic a,
       GHasPatSubst extT primTy primVal (Rep a)
     ) =>
     Natural ->
-    IR.PatternMap (IR.Elim' extT primTy primVal) ->
+    Core.PatternMap (Core.Elim' extT primTy primVal) ->
     a ->
-    Either IR.PatternVar a
+    Either Core.PatternVar a
   patSubst' b m = fmap to . gpatSubst' b m . from
 
 patSubst ::
   (HasPatSubst extT primTy primVal a) =>
-  IR.PatternMap (IR.Elim' extT primTy primVal) ->
+  Core.PatternMap (Core.Elim' extT primTy primVal) ->
   a ->
-  Either IR.PatternVar a
+  Either Core.PatternVar a
 patSubst = patSubst' 0
 
 class HasWeak a => HasPatSubstTerm extT primTy primVal a where
@@ -48,97 +53,90 @@ class HasWeak a => HasPatSubstTerm extT primTy primVal a where
     -- | How many bindings have been traversed so far
     Natural ->
     -- | Mapping of pattern variables to matched subterms
-    IR.PatternMap (IR.Elim' extT primTy primVal) ->
+    Core.PatternMap (Core.Elim' extT primTy primVal) ->
     a ->
-    Either IR.PatternVar (IR.Term' extT primTy primVal)
-
-patSubstTerm ::
-  (HasPatSubstTerm extT primTy primVal a) =>
-  IR.PatternMap (IR.Elim' extT primTy primVal) ->
-  a ->
-  Either IR.PatternVar (IR.Term' extT primTy primVal)
-patSubstTerm = patSubstTerm' 0
+    Either Core.PatternVar (Core.Term' extT primTy primVal)
 
 type AllPatSubst ext primTy primVal =
-  ( IR.TermAll (HasPatSubst ext primTy primVal) ext primTy primVal,
-    IR.ElimAll (HasPatSubst ext primTy primVal) ext primTy primVal,
+  ( Core.TermAll (HasPatSubst ext primTy primVal) ext primTy primVal,
+    Core.ElimAll (HasPatSubst ext primTy primVal) ext primTy primVal,
     HasPatSubstTerm ext primTy primVal primTy,
     HasPatSubstTerm ext primTy primVal primVal
   )
 
 instance
   AllPatSubst ext primTy primVal =>
-  HasPatSubst ext primTy primVal (IR.Term' ext primTy primVal)
+  HasPatSubst ext primTy primVal (Core.Term' ext primTy primVal)
   where
-  patSubst' b m (IR.Star' u a) =
-    IR.Star' u <$> patSubst' b m a
-  patSubst' b m (IR.PrimTy' t _) =
+  patSubst' b m (Core.Star' u a) =
+    Core.Star' u <$> patSubst' b m a
+  patSubst' b m (Core.PrimTy' t _) =
     -- FIXME annotation?
     patSubstTerm' b m t
-  patSubst' b m (IR.Prim' p _) =
+  patSubst' b m (Core.Prim' p _) =
     -- FIXME annotation?
     patSubstTerm' b m p
-  patSubst' b m (IR.Pi' π s t a) =
-    IR.Pi' π <$> patSubst' b m s
+  patSubst' b m (Core.Pi' π s t a) =
+    Core.Pi' π <$> patSubst' b m s
       <*> patSubst' (succ b) m t
       <*> patSubst' b m a
-  patSubst' b m (IR.Lam' t a) =
-    IR.Lam' <$> patSubst' (succ b) m t
+  patSubst' b m (Core.Lam' t a) =
+    Core.Lam' <$> patSubst' (succ b) m t
       <*> patSubst' b m a
-  patSubst' b m (IR.Sig' π s t a) =
-    IR.Sig' π <$> patSubst' b m s
+  patSubst' b m (Core.Sig' π s t a) =
+    Core.Sig' π <$> patSubst' b m s
       <*> patSubst' (succ b) m t
       <*> patSubst' b m a
-  patSubst' b m (IR.Pair' s t a) =
-    IR.Pair' <$> patSubst' b m s
+  patSubst' b m (Core.Pair' s t a) =
+    Core.Pair' <$> patSubst' b m s
       <*> patSubst' b m t
       <*> patSubst' b m a
-  patSubst' b m (IR.UnitTy' a) =
-    IR.UnitTy' <$> patSubst' b m a
-  patSubst' b m (IR.Unit' a) =
-    IR.Unit' <$> patSubst' b m a
-  patSubst' b m (IR.Let' π l t a) =
-    IR.Let' π <$> patSubst' b m l
+  patSubst' b m (Core.UnitTy' a) =
+    Core.UnitTy' <$> patSubst' b m a
+  patSubst' b m (Core.Unit' a) =
+    Core.Unit' <$> patSubst' b m a
+  patSubst' b m (Core.Let' π l t a) =
+    Core.Let' π <$> patSubst' b m l
       <*> patSubst' (succ b) m t
       <*> patSubst' b m a
-  patSubst' b m (IR.Elim' e a) =
-    IR.Elim' <$> patSubst' b m e
+  patSubst' b m (Core.Elim' e a) =
+    Core.Elim' <$> patSubst' b m e
       <*> patSubst' b m a
-  patSubst' b m (IR.TermX a) =
-    IR.TermX <$> patSubst' b m a
+  patSubst' b m (Core.TermX a) =
+    Core.TermX <$> patSubst' b m a
 
 instance
   AllPatSubst ext primTy primVal =>
-  HasPatSubst ext primTy primVal (IR.Elim' ext primTy primVal)
+  HasPatSubst ext primTy primVal (Core.Elim' ext primTy primVal)
   where
-  patSubst' b m (IR.Bound' j a) =
-    IR.Bound' j <$> patSubst' b m a
-  patSubst' b m (IR.Free' (IR.Pattern x) _) =
+  patSubst' b m (Core.Bound' j a) =
+    Core.Bound' j <$> patSubst' b m a
+  patSubst' b m (Core.Free' (Core.Pattern x) _) =
     case IntMap.lookup x m of
       Nothing -> Left x
       Just e -> pure $ weakBy b e
-  patSubst' b m (IR.Free' x a) =
-    IR.Free' x <$> patSubst' b m a
-  patSubst' b m (IR.App' f e a) =
-    IR.App' <$> patSubst' b m f
+  patSubst' b m (Core.Free' x a) =
+    Core.Free' x <$> patSubst' b m a
+  patSubst' b m (Core.App' f e a) =
+    Core.App' <$> patSubst' b m f
       <*> patSubst' b m e
       <*> patSubst' b m a
-  patSubst' b m (IR.Ann' π s t ℓ a) =
-    IR.Ann' π <$> patSubst' b m s
+  patSubst' b m (Core.Ann' π s t ℓ a) =
+    Core.Ann' π <$> patSubst' b m s
       <*> patSubst' b m t
       <*> pure ℓ
       <*> patSubst' b m a
-  patSubst' b m (IR.ElimX a) =
-    IR.ElimX <$> patSubst' b m a
+  patSubst' b m (Core.ElimX a) =
+    Core.ElimX <$> patSubst' b m a
 
 class GHasWeak f => GHasPatSubst extT primTy primVal f where
   gpatSubst' ::
     -- | How many bindings have been traversed so far
     Natural ->
     -- | Mapping of pattern variables to matched subterms
-    IR.PatternMap (IR.Elim' extT primTy primVal) ->
+    Core.PatternMap (Core.Elim' extT primTy primVal) ->
     f t ->
-    Either IR.PatternVar (f t)
+    Either Core.PatternVar (f t)
 
 instance GHasPatSubst ext primTy primVal U1 where gpatSubst' _ _ U1 = pure U1
 
@@ -255,7 +253,7 @@ instance
 
 takeToElim ::
   App.Take (Param.PrimType primTy) primVal ->
-  IR.Elim' (OnlyExts.T ext) primTy (Param.TypedPrim primTy primVal)
+  Core.Elim' (OnlyExts.T ext) primTy (Param.TypedPrim primTy primVal)
 takeToElim (App.Take {type', term}) =
   let term' = IR.Prim (App.Return {retType = type', retTerm = term})
       ty' = typeToTerm type'
@@ -263,20 +261,20 @@ takeToElim (App.Take {type', term}) =
 
 argToTerm ::
   App.Arg (Param.PrimType primTy) primVal ->
-  IR.Term' (OnlyExts.T ext) primTy (Param.TypedPrim primTy primVal)
+  Core.Term' (OnlyExts.T ext) primTy (Param.TypedPrim primTy primVal)
 argToTerm = \case
   App.TermArg (App.Take {type', term}) ->
     IR.Prim $ App.Return {retType = type', retTerm = term}
   App.BoundArg i -> IR.Elim $ IR.Bound i
-  App.FreeArg x -> IR.Elim $ IR.Free $ IR.Global x
+  App.FreeArg x -> IR.Elim $ IR.Free $ Core.Global x
 
 typeToTerm ::
-  ( Monoid (IR.XPi ext primTy primVal),
-    Monoid (IR.XPrimTy ext primTy primVal)
+  ( Monoid (Core.XPi ext primTy primVal),
+    Monoid (Core.XPrimTy ext primTy primVal)
   ) =>
   Param.PrimType primTy ->
-  IR.Term' ext primTy primVal
+  Core.Term' ext primTy primVal
 typeToTerm tys = foldr1 arr $ map prim tys
   where
-    prim ty = IR.PrimTy' ty mempty
-    arr s t = IR.Pi' Usage.Omega s t mempty
+    prim ty = Core.PrimTy' ty mempty
+    arr s t = Core.Pi' Usage.Omega s t mempty

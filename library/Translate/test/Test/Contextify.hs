@@ -1,11 +1,11 @@
 module Test.Contextify (top) where
 
+import qualified Juvix.Context as Context
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.Environment as Env
 import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as Contextify
-import qualified Juvix.Core.Common.Context as Context
 import Juvix.Library (Either (Left, Right), Maybe (Just), ($))
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import Test.Sexp.Helpers
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T

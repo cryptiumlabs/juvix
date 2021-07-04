@@ -26,6 +26,21 @@ cradle:
     - path: ./library/Backends/LLVM/test
       component: "llvm:test:llvm-test"
 
+    - path: ./library/Backends/Plonk/src
+      component: "plonk"
+    - path: ./library/Backends/Plonk/test
+      component: "plonk:test:plonk-test"
+
+    - path: ./library/Context/src
+      component: "Context"
+    - path: ./library/Context/test
+      component: "Context:test:Context-test"
+
+    - path: ./library/Sexp/src
+      component: "Sexp"
+    - path: ./library/Sexp/test
+      component: "Sexp:test:Sexp-test"
+
     - path: ./library/Translate/src
       component: "translate"
     - path: ./library/Translate/test

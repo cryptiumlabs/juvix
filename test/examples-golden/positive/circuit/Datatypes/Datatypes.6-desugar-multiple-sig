@@ -1,0 +1,55 @@
+[
+    ( "open" "Prelude" )
+,
+    ( "open" "Circuit" )
+,
+    ( ":defsig-match" "field" "ty" ( () ( ":primitive" "Circuit.field" ) ) )
+,
+    ( ":defsig-match" "+"
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "field" ) )
+        ( () ( ":primitive" "Circuit.add" ) ) )
+,
+    ( "declare" "infixl" "+" 5 )
+,
+    ( ":defsig-match" "^"
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "field" ) )
+        ( () ( ":primitive" "Circuit.exp" ) ) )
+,
+    ( "declare" "infixl" "^" 8 )
+,
+    ( ":defsig-match" "*"
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "field" ) )
+        ( () ( ":primitive" "Circuit.mul" ) ) )
+,
+    ( "declare" "infixl" "*" 7 )
+,
+    ( ":defsig-match" "=="
+        ( ":infix" "->" "field" ( ":infix" "->" "field" "bool" ) )
+        ( () ( ":primitive" "Circuit.eq" ) ) )
+,
+    ( "declare" "infixl" "==" 2 )
+,
+    ( ":defsig-match" "x" "field" ( () 3 ) )
+,
+    ( "type"
+        ( "Bar" ":type" "ty" ) ()
+        ( "P" "field" "field" )
+        ( "Q" "field" "field" "field" ) )
+,
+    ( ":defsig-match" "t"
+        ( ":infix" "->" "field" "field" )
+        ( ( "x" ) ( ":infix" "+" "x" 5 ) ) )
+,
+    ( ":defsig-match" "norm"
+        ( ":infix" "->" "Bar" "field" )
+        (
+            ( ( "P" "x" "y" ) )
+            ( ":infix" "^" "x" ( ":infix" "+" 2 ( ":infix" "^" "y" 2 ) ) ) )
+        (
+            ( ( "Q" "x" "y" "z" ) )
+            ( ":infix" "^" "x"
+                ( ":infix" "+" 2
+                    ( ":infix" "^" "y"
+                        ( ":infix" "+" 2 ( ":infix" "^" "z" 2 ) ) ) ) ) ) )
+,
+    ( ":defsig-match" "main" "field" ( () 3 ) ) ]

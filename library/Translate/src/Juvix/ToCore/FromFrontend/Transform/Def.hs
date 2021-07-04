@@ -2,16 +2,18 @@ module Juvix.ToCore.FromFrontend.Transform.Def (transformDef) where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NonEmpty
-import qualified Juvix.Core.Common.Context as Ctx
+import qualified Juvix.Context as Ctx
+import qualified Juvix.Core.Base as Core
+import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Translate (hrToIR)
+import qualified Juvix.Core.Translate as Translate
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Sexp as Sexp
 import Juvix.ToCore.FromFrontend.Transform.HR (transformTermHR)
 import Juvix.ToCore.FromFrontend.Transform.Helpers
   ( ReduceEff,
-    eleToSymbol,
     getConSig,
     getDataSig,
     getParamConstant,
@@ -24,7 +26,9 @@ import Juvix.ToCore.Types
     CoreSig (..),
     Error (..),
     HasNextPatVar,
+    HasParam,
     HasPatVars,
+    HasThrowFF,
     throwFF,
   )
 import Prelude (error)
@@ -53,7 +57,7 @@ transformDef x def = do
         transformCon x ty _def = do
           -- def <- traverse (transformFunction q (conDefName x)) def
           pure $
-            IR.RawDataCon
+            Core.RawDataCon
               { rawConName = x,
                 rawConType = hrToIR ty,
                 rawConDef = Nothing --def
@@ -65,7 +69,7 @@ transformDef x def = do
           cons <- traverse (uncurry3 transformCon) conSigs
           (args, ℓ) <- splitDataType name ty
           let dat' =
-                IR.RawDatatype
+                Core.RawDatatype
                   { rawDataName = name,
                     rawDataArgs = args,
                     rawDataLevel = ℓ,
@@ -73,7 +77,7 @@ transformDef x def = do
                     -- TODO ∷ replace
                     rawDataPos = []
                   }
-          pure $ IR.RawGDatatype dat' : fmap IR.RawGDataCon cons
+          pure $ Core.RawGDatatype dat' : fmap Core.RawGDataCon cons
     transformNormalDef _ _ Ctx.CurrentNameSpace = pure []
     transformNormalDef _ _ Ctx.Information {} = pure []
     transformNormalDef _ _ (Ctx.Unknown _) = pure []
@@ -81,14 +85,14 @@ transformDef x def = do
     transformNormalDef _ _ Ctx.SumCon {} = pure []
     transformNormalDef q x (Ctx.Def def) = do
       f <- transformFunction q x def
-      pure [IR.RawGFunction f]
+      pure [Core.RawGFunction f]
 
     transformFunction q x (Ctx.D _ _ (_lambdaCase Sexp.:> defs) _)
       | Just xs <- Sexp.toList defs >>= NonEmpty.nonEmpty = do
         (π, typ) <- getValSig q x
         clauses <- traverse (transformClause q) xs
         pure $
-          IR.RawFunction
+          Core.RawFunction
             { rawFunName = x,
               rawFunUsage = π,
               rawFunType = hrToIR typ,
@@ -100,35 +104,35 @@ transformDef x def = do
       | Just args <- Sexp.toList args' = do
         put @"patVars" mempty
         put @"nextPatVar" 0
-        patts <- traverse transformArg args
+        pattsHR <- traverse transformArgHR args
+        let (patts, pattsTable) = Translate.hrPatternsToIR pattsHR
+            transformTermIR q fe =
+              Translate.hrToIRWith pattsTable <$> transformTermHR q fe
         clauseBody <- transformTermIR q body
-        pure $ IR.RawFunClause [] patts clauseBody False
-      where
-        transformTermIR q fe = do
-          hrToIR <$> transformTermHR q fe
+        pure $ Core.RawFunClause [] patts clauseBody False
     transformClause _ _ = error "malformed tansformClause"
 
-    transformArg p@(name Sexp.:> _rest)
+    transformArgHR p@(name Sexp.:> _rest)
       | Sexp.isAtomNamed name ":implicit-a" =
         throwFF $ PatternUnimplemented p
-    transformArg pat = transformPat pat
+    transformArgHR pat = transformPatHR pat
 
-    transformPat p@(asCon Sexp.:> con)
+    transformPatHR ::
+      (HasThrowFF primTy primVal m, HasParam primTy primVal m) =>
+      Sexp.T ->
+      m (HR.Pattern primTy primVal)
+    transformPatHR p@(asCon Sexp.:> con)
       -- implicit arguments are not supported
       -- TODO ∷ translate as patterns into @let@
       | Sexp.isAtomNamed asCon ":as" =
         throwFF $ PatternUnimplemented p
       | Just args <- Sexp.toList con,
         Just Sexp.A {atomName} <- Sexp.atomFromT asCon =
-        IR.PCon atomName <$> traverse transformPat args
-    transformPat n
-      | Just x <- eleToSymbol n = do
-        var <- getNextPatVar
-        modify @"patVars" $ HM.insert (NameSymbol.fromSymbol x) var
-        pure $ IR.PVar var
+        HR.PCon atomName <$> traverse transformPatHR args
+    transformPatHR n
+      | Just x <- Sexp.nameFromT n = do
+        pure $ HR.PVar x
       | Just n@Sexp.N {} <- Sexp.atomFromT n =
-        IR.PPrim <$> getParamConstant n
-      | otherwise = error "malformed match pattern"
-
-    getNextPatVar :: HasNextPatVar m => m IR.PatternVar
-    getNextPatVar = state @"nextPatVar" \v -> (v, succ v)
+        HR.PPrim <$> getParamConstant n
+      | otherwise =
+        error "malformed match pattern"

@@ -1,9 +1,9 @@
 module Test.Context.Environment (top) where
 
 import qualified Data.HashSet as Set
+import qualified Juvix.Closure as Closure
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.Environment as Env
-import qualified Juvix.Core.Common.Closure as Closure
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
