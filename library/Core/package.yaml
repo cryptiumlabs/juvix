@@ -27,8 +27,9 @@ dependencies:
 - stm-containers
 - lens
 - dlist
+- hashable
+- pretty-simple
 - pretty-compact
-# - pretty-simple
 - mtl
 
 default-extensions:

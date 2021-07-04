@@ -172,6 +172,8 @@ data Handler
   = Hand Symbol [Operation]
   deriving (Show, Read, Generic, Eq)
 
+
+
 --------------------------------------------------------------------------------
 -- Functions And Modules
 --------------------------------------------------------------------------------
@@ -273,6 +275,7 @@ data Expression
   | Infix Infix
   | ExpRecord ExpRecord
   | Do Do
+  | EffApp EffApp
   | -- Added due to merge
     ArrowE ArrowExp
   | NamedTypeE NamedType
@@ -335,6 +338,12 @@ data Application = App
     applicationArgs :: NonEmpty Expression
   }
   deriving (Show, Read, Eq)
+
+data EffApp = Via
+  { effappHand :: Expression,
+    effappArg  :: Expression
+  }
+  deriving (Show, Read, Generic, Eq)
 
 -- Was a newtype but extensible adds fields
 newtype Do

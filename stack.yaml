@@ -11,8 +11,12 @@ packages:
 - ./library/EasyPipeline
 - ./library/Backends/Plonk
 - ./library/Backends/llvm
+<<<<<<< HEAD
+- ./library/ANF
+=======
 - ./library/Context
 - ./library/Sexp
+>>>>>>> 4ef172b9d098cc37cae009e94a4819d7362333fd
 
 extra-deps:
 

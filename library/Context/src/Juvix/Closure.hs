@@ -1,8 +1,11 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 -- | Closure.T serves as the data structure in which we will store
 -- temporary lexical bindings as our code encounters binders.
 module Juvix.Closure where
 
 import qualified Data.HashSet as Set
+import Data.Hashable (Hashable (..), hash)
 import qualified Juvix.Context as Context
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
@@ -21,11 +24,17 @@ data Information = Info
     -- from
     mOpen :: Maybe NameSymbol.T
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
 newtype T
   = T (Map.T Symbol Information)
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance Hashable Information where
+  hash (Info {mSig, info, mOpen}) = hash (hash mSig, hash info, hash mOpen)
+
+instance Hashable T where
+  hash (T m) = hash m
 
 insert :: Symbol -> Information -> T -> T
 insert k info (T m) =
@@ -43,3 +52,8 @@ lookup k (T m) = Map.lookup k m
 
 empty :: T
 empty = T Map.empty
+
+insertHash :: T -> (Symbol, T)
+insertHash info =
+  let name = intern . show $ hash info
+   in (name, insertGeneric name info)

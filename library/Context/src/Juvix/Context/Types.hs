@@ -83,6 +83,9 @@ newtype Information
   = Prec Precedence
   deriving (Show, Read, Generic, Eq, Data)
 
+instance Hashable Information where
+  hash (Prec pred) = hash pred * 10
+
 newtype PathError
   = VariableShared NameSymbol.T
   deriving (Show, Read, Eq)

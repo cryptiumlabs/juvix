@@ -37,8 +37,8 @@ import Juvix.Sexp.Types
 import Prelude (error)
 
 -- | @foldSearchPred@ is like foldPred with some notable exceptions.
--- 1. Instead of recusing on the @predChange@ form, it will just leave
---    the main form in tact.
+-- 1. Instead of recursing on the @predChange@ form, it will just leave
+--    the main form intact.
 --    - This is because in this sort of task we
 --      will wish to maybe just change an aspect of it but maybe not
 --      the actual form!

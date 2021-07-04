@@ -423,6 +423,7 @@ handler =
   shouldParseAs
     "effect handler with op"
     Parser.parse
+    ]
     "handler printer = let print x = print x let pure x = toString x"
     $ AST.NoHeader
       [ [ AST.Name ("x" :| []) :| []

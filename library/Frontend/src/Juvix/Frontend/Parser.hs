@@ -138,7 +138,7 @@ app'' :: Parser Types.Expression
 app'' = Types.Application <$> P.try application
 
 all'' :: Parser Types.Expression
-all'' = P.try do''' <|> app'' <|> (Types.Application <$> P.try via_)
+all'' = P.try do''' <|> app'' <|> (Types.EffApp <$> P.try via_)
 
 expressionGen :: Parser Types.Expression -> Parser Types.Expression
 expressionGen p =
@@ -494,12 +494,12 @@ opSig = do
   exp <- expression
   pure (Types.Sig name maybeUsage exp typeclasses)
 
-via_ :: Parser Types.Application
+via_ :: Parser Types.EffApp
 via_ = do
-  args <- J.many1H (spaceLiner expressionArguments)
+  args <- spaceLiner expressionArguments
   reserved "via"
   name <- spaceLiner (expressionGen' (fail ""))
-  pure (Types.App name args)
+  pure (Types.Via name args)
 
 --------------------------------------------------
 -- Arrow Type parser

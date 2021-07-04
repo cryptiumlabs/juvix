@@ -34,6 +34,7 @@ transExpr (Types.LetType l) = transLetType l
 transExpr (Types.ModuleE m) = transModuleE m
 transExpr (Types.ArrowE a) = transArrowE a
 transExpr (Types.Lambda l) = transLambda l
+transExpr (Types.EffApp e) = transVia e
 transExpr (Types.Tuple t) = transTuple t
 transExpr (Types.Match m) = transMatch m
 transExpr (Types.Block b) = transBlock b
@@ -43,6 +44,7 @@ transExpr (Types.Cond c) = transCond transExpr c
 transExpr (Types.Name n) = Sexp.atom n
 transExpr (Types.Let l) = transLet l
 transExpr (Types.Do d) = transDo d
+
 
 --------------------------------------------------------------------------------
 -- Types
@@ -211,6 +213,14 @@ transOperation :: Types.Operation -> Sexp.T
 transOperation (Types.Op like) = Sexp.list [Sexp.atom ":defop", name, args, body]
   where
     (name, args, body) = transLike False transExpr like
+
+transVia :: Types.EffApp -> Sexp.T
+transVia (Types.Via effappHand effappArg) =
+  Sexp.list
+    [ Sexp.atom ":via",
+      transExpr effappHand,
+      transExpr effappArg
+    ]
 
 --------------------------------------------------------------------------------
 -- Match Expansion

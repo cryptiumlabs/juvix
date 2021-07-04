@@ -1,4 +1,83 @@
+* ANF
+** Setup <<ANF/Setup>>
+** src
+*** Juvix
+**** ANF
+- _Relies on_
+  + [[ANF/IR]]
+***** Convert
+- _Relies on_
+  + [[Library]]
+  + [[Sexp]]
+  + [[Structure]]
+  + [[ANF/IR]]
+***** IR <<ANF/IR>>
+- _Relies on_
+  + [[Library]]
+  + [[Sexp]]
+** test
+*** Main <<ANF/test/Main>>
+- _Relies on_
+  + [[Library]]
 * Backends
+** LLVM
+*** Setup <<LLVM/Setup>>
+*** src
+**** Juvix
+***** Backends
+****** LLVM
+- _Relies on_
+  + [[LLVM/Compilation]]
+  + [[LLVM/Parameterization]]
+  + [[LLVM/Pipeline]]
+  + [[Primitive]]
+******* Compilation <<LLVM/Compilation>>
+- _Relies on_
+  + [[Primitive]]
+  + [[Ann]]
+  + [[Library]]
+  + [[Feedback]]
+******* Parameterization <<LLVM/Parameterization>>
+Parameterization and application of the LLVM backend primitives.
+- _Relies on_
+  + [[Primitive]]
+  + [[Application]]
+  + [[Core/Base/Types]]
+  + [[Evaluator]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+******* Pipeline <<LLVM/Pipeline>>
+The basic connection between the backend and the Juvix pipeline.
+- _Relies on_
+  + [[LLVM/Compilation]]
+  + [[LLVM/Parameterization]]
+  + [[Primitive]]
+  + [[Ann]]
+  + [[Core/IR]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Juvix/Pipeline]]
+  + [[ToCore/FromFrontend]]
+******* Primitive
+Representation of LLVM primitives in Juvix.
+- _Relies on_
+  + [[Application]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+*** test
+**** Main <<LLVM/test/Main>>
+- _Relies on_
+  + [[Library]]
+**** Test
+***** Golden <<LLVM/test/Test/Golden>>
+- _Relies on_
+  + [[LLVM]]
+  + [[Ann]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Library/Test/Golden]]
+  + [[Juvix/Pipeline]]
+  + [[Juvix/Pipeline]]
 ** Michelson
 *** Setup <<Michelson/Setup>>
 *** src
@@ -338,64 +417,6 @@ Surface language
   + [[Ann]]
   + [[Library]]
   + [[Library/Usage]]
-** llvm
-*** Setup <<llvm/Setup>>
-*** src
-**** Juvix
-***** Backends
-****** LLVM
-- _Relies on_
-  + [[LLVM/Compilation]]
-  + [[LLVM/Parameterization]]
-  + [[LLVM/Pipeline]]
-  + [[Primitive]]
-******* Compilation <<LLVM/Compilation>>
-- _Relies on_
-  + [[Primitive]]
-  + [[Ann]]
-  + [[Library]]
-  + [[Feedback]]
-******* Parameterization <<LLVM/Parameterization>>
-Parameterization and application of the LLVM backend primitives.
-- _Relies on_
-  + [[Primitive]]
-  + [[Application]]
-  + [[Core/Base/Types]]
-  + [[Evaluator]]
-  + [[Core/Parameterisation]]
-  + [[Library]]
-******* Pipeline <<LLVM/Pipeline>>
-The basic connection between the backend and the Juvix pipeline.
-- _Relies on_
-  + [[LLVM/Compilation]]
-  + [[LLVM/Parameterization]]
-  + [[Primitive]]
-  + [[Ann]]
-  + [[Core/IR]]
-  + [[Library]]
-  + [[Feedback]]
-  + [[Juvix/Pipeline]]
-  + [[ToCore/FromFrontend]]
-******* Primitive
-Representation of LLVM primitives in Juvix.
-- _Relies on_
-  + [[Application]]
-  + [[Core/Parameterisation]]
-  + [[Library]]
-*** test
-**** Main <<llvm/test/Main>>
-- _Relies on_
-  + [[Library]]
-**** Test
-***** Golden <<llvm/test/Test/Golden>>
-- _Relies on_
-  + [[LLVM]]
-  + [[Ann]]
-  + [[Library]]
-  + [[Feedback]]
-  + [[Library/Test/Golden]]
-  + [[Juvix/Pipeline]]
-  + [[Juvix/Pipeline]]
 * Context
 ** Setup <<Context/Setup>>
 ** src
@@ -548,12 +569,6 @@ keeps the extensions.
 - _Relies on_
   + [[Erased/Types]]
   + [[Util]]
-****** Types <<Erased/Types>>
-- _Relies on_
-  + [[Core/Base/Types]]
-  + [[Erased/Base/Types]]
-  + [[Typechecker/Types]]
-  + [[Library]]
 ****** Util
 - _Relies on_
   + [[Erased/Types]]
@@ -643,6 +658,12 @@ keeps the extensions.
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Library/Usage]]
+****** Types <<Erased/Types>>
+- _Relies on_
+  + [[Core/Base/Types]]
+  + [[Erased/Base/Types]]
+  + [[Typechecker/Types]]
+  + [[Library]]
 ***** HR <<Core/HR>>
 - _Relies on_
   + [[Core/HR/Pretty]]
@@ -695,14 +716,6 @@ datatype and function declarations.
   + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
-  + [[Library/Usage]]
-****** Types <<IR/Types>>
-Quantitative type implementation inspired by
-  Atkey 2018 and McBride 2016.
-- _Relies on_
-  + [[Core/Base/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
   + [[Library/Usage]]
 ****** Evaluator
 This includes the evaluators (evalTerm and evalElimWith),
@@ -805,6 +818,14 @@ Typechecked declarations are added to the signature.
   + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
+  + [[Library/Usage]]
+****** Types <<IR/Types>>
+Quantitative type implementation inspired by
+  Atkey 2018 and McBride 2016.
+- _Relies on_
+  + [[Core/Base/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
   + [[Library/Usage]]
 ***** Parameterisations
 ****** All
@@ -1434,34 +1455,9 @@ sexp type and all the various helper functionality one can need
   + [[NameSymbol]]
 ***** Structure
 ****** Frontend <<Structure/Frontend>>
-Hardeing S-expressions into a more readable form. Here we use a
-mixture of record structures and aliases. Each cover a form that we
-wish to talk about rather than just match away at
-- _The form for transformation follows this structure_
-#+begin_src haskell
-  -- the data type
-  data Form = ... deriving (Show)
-  is<Form>   :: Sexp.T -> Bool
-  to<Form>   :: Sexp.T -> Maybe <Form>
-  from<Form> :: <Form> -> Sexp.T
-#+end_src
-+ With the following properties of the forms
-  #+begin_src haskell
-    ∀ s : Sexp.T. is<Form> s = True ⟷ is-just (to<Form> s)
-    to<Form> 。 from<Form> = Just
-  #+end_src
-_TODO_
- 1. Figure out if we can even express a spec system in
-    Haskell... =to<Form>= and =From<From>= have the exact same signature
- 2. replace the repeat code with the =to<Form>= with an abstraction
- 3. put the meta data with the form so we don't have to do it by
-    hand in the code that uses this
-    1. Use =Juvix.Library.LineNum=
-    2. append the =Form= With this
-    3. have to<Form> fill this
-    4. Have extra smart consturctors that are =<form>=, so that we
-       can automatically fill in this meta data
 - _Relies on_
+  + [[GenStructures]]
+  + [[EffectHandlerHelpers]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Juvix/Sexp]]
@@ -1507,6 +1503,41 @@ _TODO_
   + [[NameSymbol]]
   + [[Juvix/Sexp]]
   + [[Structure/Frontend]]
+  + [[Structure/Helpers]]
+****** Structure
+******* EffectHandlerHelpers
+- _Relies on_
+  + [[Library]]
+  + [[Sexp]]
+  + [[GenStructures]]
+  + [[NameSymbol]]
+******* GenStructures
+Hardeing S-expressions into a more readable form. Here we use a
+mixture of record structures and aliases. Each cover a form that we
+wish to talk about rather than just match away at
+- _The form for transformation follows this structure_
+#+begin_src haskell
+  -- the data type
+  data Form = ... deriving (Show)
+  is<Form>   :: Sexp.T -> Bool
+  to<Form>   :: Sexp.T -> Maybe <Form>
+  from<Form> :: <Form> -> Sexp.T
+#+end_src
+_TODO_
+ 1. Figure out if we can even express a spec system in
+    Haskell... =to<Form>= and =From<From>= have the exact same signature
+ 2. replace the repeat code with the =to<Form>= with an abstraction
+ 3. put the meta data with the form so we don't have to do it by
+    hand in the code that uses this
+    1. Use =Juvix.Library.LineNum=
+    2. append the =Form= With this
+    3. have to<Form> fill this
+    4. Have extra smart consturctors that are =<form>=, so that we
+       can automatically fill in this meta data
+- _Relies on_
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Sexp]]
   + [[Structure/Helpers]]
 ** test
 *** Main <<Sexp/test/Main>>

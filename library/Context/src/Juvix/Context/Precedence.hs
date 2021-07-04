@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Juvix.Context.Precedence
   ( default',
     left,
@@ -11,15 +13,25 @@ module Juvix.Context.Precedence
 where
 
 import Data.Data
+import Data.Hashable (Hashable (..), hash)
 import Juvix.Library (Eq, Int, Read, Show, Symbol)
 
 data Associativity
   = Left
   | Right
   | NonAssoc
-  deriving (Eq, Show, Read, Data)
+  deriving (Eq, Show, Data, Generic)
 
 data Precedence = Pred Associativity Int
+  deriving (Eq, Show, Data, Generic)
+
+instance Hashable Associativity where
+  hash Left = 1
+  hash Right = 2
+  hash NonAssoc = 3
+
+instance Hashable Precedence where
+  hash (Pred assoc num) = hash (hash assoc, hash num)
   deriving (Eq, Show, Read, Data)
 
 default' :: Precedence

@@ -1,0 +1,6 @@
+cradle:
+  stack:
+    - path: ./src
+      component: "anf-ir"
+    - path: ./test
+      component: "anf-ir:test:anf-ir-test"

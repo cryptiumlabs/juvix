@@ -22,4 +22,5 @@
   (generate-yaml-file *Pipeline*           "library/Pipeline/stack.yaml")
   (generate-yaml-file *interaction-net*    "library/InteractionNet/stack.yaml")
   (generate-yaml-file *interaction-net-IR* "library/InteractionNetIR/stack.yaml")
+  (generate-yaml-file *anf*                "library/ANF/stack.yaml")
   (generate-yaml-file *juvix*              "stack.yaml"))
