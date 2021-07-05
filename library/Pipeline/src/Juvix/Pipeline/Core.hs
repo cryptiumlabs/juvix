@@ -2,9 +2,9 @@
 
 module Juvix.Pipeline.Core
   ( 
-    contextToCore,
+    contextToIR,
+    contextToDefsIR,
     contextToHR,
-    defName,
     -- we export these functions to be able to call them stepwise from
     -- a testing place
     addSig,
@@ -29,6 +29,89 @@ import qualified Juvix.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.ToCore.FromFrontend as FF
 import qualified Juvix.ToCore.Types as ToCore
+
+
+
+contextToHR ::
+  ( Show primTy,
+    Show primVal
+    -- HasState
+    --                   "ffOrder"
+    --                   [Context.Group Sexp.T Sexp.T Sexp.T]
+    --                   (ToCore.Env HR.T primTy primVal)
+  ) =>
+  Context.T Sexp.T Sexp.T Sexp.T ->
+  P.Parameterisation primTy primVal ->
+  FF.FFState HR.T primTy primVal
+contextToHR ctx param =
+  FF.evalEnv ctx param do
+    newCtx <- Context.mapSumWithName ctx attachConstructor
+
+    let ordered = Context.recGroups newCtx
+
+    for_ ordered \grp -> do
+      traverse_ addSig grp
+
+    for_ ordered \grp -> do
+      traverse_ addDef grp
+
+
+    -- TODO
+    -- put @"ffOrder" ordered
+    
+  where
+    -- Attaches the sum constructor with a data constructor filling
+    attachConstructor s@Context.Sum {sumTDef, sumTName} dataCons c =
+      case sumTDef of
+        Just __ -> s
+        Nothing ->
+          let dataConsSexp = Sexp.atom $ NameSymbol.fromSymbol dataCons
+              typeConsSexp = Sexp.atom $ NameSymbol.fromSymbol sumTName
+           in s {Context.sumTDef = mkDef typeConsSexp dataConsSexp s c}
+        |> Context.SumCon
+        |> pure
+
+contextToIR ::
+  (Show primTy, Show primVal) =>
+  Context.T Sexp.T Sexp.T Sexp.T ->
+  P.Parameterisation primTy primVal ->
+  FF.FFState IR.T primTy primVal
+contextToIR ctx param = ToCore.hrToIRState $ contextToHR ctx param
+
+
+contextToDefsIR ctx param = FF.coreDefs $ contextToIR ctx param
+
+addSig ::
+  ( Show primTy,
+    Show primVal,
+    HasThrow "fromFrontendError" (FF.Error HR.T primTy primVal) m,
+    HasReader "param" (P.Parameterisation primTy primVal) m,
+    HasState "coreSigs" (FF.CoreSigs HR.T primTy primVal) m,
+    HasState "patVars" (HM.HashMap Core.GlobalName Core.PatternVar) m
+  ) =>
+  Context.Entry Sexp.T Sexp.T Sexp.T ->
+  m ()
+addSig (Context.Entry x feDef) = do
+  sigs <- FF.transformSig x feDef
+  for_ sigs $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
+
+addDef ::
+  ( Show primTy,
+    Show primVal,
+    HasThrow "fromFrontendError" (FF.Error HR.T primTy primVal) m,
+    HasReader "param" (P.Parameterisation primTy primVal) m,
+    HasState "coreDefs" (FF.CoreDefs HR.T primTy primVal) m,
+    HasState "coreSigs" (FF.CoreSigs HR.T primTy primVal) m,
+    HasState "nextPatVar" Core.PatternVar m,
+    HasState "patVars" (HM.HashMap Core.GlobalName Core.PatternVar) m
+  ) =>
+  Context.Entry Sexp.T Sexp.T Sexp.T ->
+  m ()
+addDef (Context.Entry x feDef) = do
+  defs <- FF.transformDefHR x feDef
+  for_ defs \def -> do
+    modify @"coreDefs" $ HM.insert (FF.defName def) def
+
 
 extractTypeDeclar :: Context.Definition term ty a -> Maybe a
 extractTypeDeclar (Context.TypeDeclar t) = Just t
@@ -62,88 +145,4 @@ generateSumConsSexp typeCons (Sexp.cdr -> declaration) = do
       | Just l <- Sexp.toList (Sexp.groupBy2 fields) = Sexp.cdr <$> l
     f n acc = Sexp.list [arrow, n, acc]
     arrow = Sexp.atom "TopLevel.Prelude.->"
-
-contextToHR ::
-  (Show primTy, Show primVal) =>
-  Context.T Sexp.T Sexp.T Sexp.T ->
-  P.Parameterisation primTy primVal ->
-  FF.FFState HR.T primTy primVal
-contextToHR ctx param =
-  FF.evalEnv ctx param do
-    newCtx <- Context.mapSumWithName ctx attachConstructor
-
-    let ordered = Context.recGroups newCtx
-
-    for_ ordered \grp -> do
-      traverse_ addSig grp
-
-    for_ ordered \grp -> do
-      traverse_ addDef grp
-
-    -- TODO: Cleanup
-    -- defs <- foldM (\acc grp -> do
-    --   foldM (\m (Context.Entry x feDef) -> do
-    --       dfs <- FF.transformDefHR x feDef
-    --       pure $ foldl' (\m' def -> HM.insert (defName def) def m') m dfs
-    --       ) acc grp
-    --   ) mempty ordered
-
-    -- pure $ FF.CoreDefs {FF.defs = defs, FF.order = fmap Context.name <$> ordered}
-  where
-    -- Attaches the sum constructor with a data constructor filling
-    attachConstructor s@Context.Sum {sumTDef, sumTName} dataCons c =
-      case sumTDef of
-        Just __ -> s
-        Nothing ->
-          let dataConsSexp = Sexp.atom $ NameSymbol.fromSymbol dataCons
-              typeConsSexp = Sexp.atom $ NameSymbol.fromSymbol sumTName
-           in s {Context.sumTDef = mkDef typeConsSexp dataConsSexp s c}
-        |> Context.SumCon
-        |> pure
-
-contextToCore ::
-  (Show primTy, Show primVal) =>
-  Context.T Sexp.T Sexp.T Sexp.T ->
-  P.Parameterisation primTy primVal ->
-  FF.FFState IR.T primTy primVal
-contextToCore ctx param = ToCore.hrToIRState $ contextToHR ctx param
-
-addSig ::
-  ( Show primTy,
-    Show primVal,
-    HasThrow "fromFrontendError" (FF.Error HR.T primTy primVal) m,
-    HasReader "param" (P.Parameterisation primTy primVal) m,
-    HasState "coreSigs" (FF.CoreSigs HR.T primTy primVal) m,
-    HasState "patVars" (HM.HashMap Core.GlobalName Core.PatternVar) m
-  ) =>
-  Context.Entry Sexp.T Sexp.T Sexp.T ->
-  m ()
-addSig (Context.Entry x feDef) = do
-  sigs <- FF.transformSig x feDef
-  for_ sigs $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
-
-addDef ::
-  ( Show primTy,
-    Show primVal,
-    HasThrow "fromFrontendError" (FF.Error HR.T primTy primVal) m,
-    HasReader "param" (P.Parameterisation primTy primVal) m,
-    HasState "core" (HM.HashMap NameSymbol.T (FF.CoreDef HR.T primTy primVal)) m,
-    HasState "coreSigs" (FF.CoreSigs HR.T primTy primVal) m,
-    HasState "nextPatVar" Core.PatternVar m,
-    HasState "patVars" (HM.HashMap Core.GlobalName Core.PatternVar) m
-  ) =>
-  Context.Entry Sexp.T Sexp.T Sexp.T ->
-  m ()
-addDef (Context.Entry x feDef) = do
-  defs <- FF.transformDefHR x feDef
-  for_ defs \def -> do
-    modify @"core" $ HM.insert (defName def) def
-defName :: FF.CoreDef ext primTy primVal -> NameSymbol.T
-defName = \case
-  FF.CoreDef (Core.RawGDatatype Core.RawDatatype {rawDataName = x}) -> x
-  FF.CoreDef (Core.RawGDataCon Core.RawDataCon {rawConName = x}) -> x
-  FF.CoreDef (Core.RawGFunction Core.RawFunction {rawFunName = x}) -> x
-  FF.CoreDef (Core.RawGAbstract Core.RawAbstract {rawAbsName = x}) -> x
-  FF.SpecialDef x _ -> x
-
 

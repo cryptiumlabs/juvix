@@ -30,8 +30,8 @@ import Juvix.Library.Parser (ParserError)
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Sexp as Sexp
 import Juvix.Pipeline.Compile
-import qualified Juvix.Pipeline.Core as CorePipeline
-import qualified Juvix.Pipeline.Frontend as FrontendPipeline
+import qualified Juvix.Pipeline.Core as Core
+import qualified Juvix.Pipeline.Frontend as Frontend
 import Juvix.Pipeline.Types
 import qualified Juvix.Frontend as Frontend
 import qualified Juvix.ToCore.FromFrontend as FF
@@ -44,7 +44,7 @@ import qualified Data.IntMap.Strict as PM
 
 type Pipeline = Feedback.FeedbackT [] [Char] IO
 data Error
-  = FrontendErr FrontendPipeline.Error
+  = FrontendErr Frontend.Error
   | ParseErr ParserError
   -- TODO: CoreError
   deriving (Show)
@@ -77,6 +77,16 @@ class HasBackend b where
 
   typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
 
+
+  -- toML :: FilePath -> ML
+  -- parsed
+  -- toSexp :: ML -> Sexp
+  -- toHR :: Sexp -> HR
+  -- toIR :: HR -> IR
+  -- toErased :: IR -> Erased
+  -- typechecked
+  -- toBackend :: Erased -> ?
+  -- compiled
   toHR ::
     (Show (Ty b), Show (Val b)) =>
     Context.T Sexp.T Sexp.T Sexp.T ->
@@ -118,39 +128,35 @@ class HasBackend b where
     Ty b ->
     Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
   typecheck' ctx param ty = do
-    let res = notImplemented -- Pipeline.contextToCore ctx param
-
-    -- Pipeline.
-    case res of
-      Right (FF.CoreDefs _order globals) -> do
-        -- Filter out Special Defs
-        let globalDefs = HM.mapMaybe toCoreDef globals
-            lookupGlobal = IR.rawLookupFun' globalDefs
-        -- Type primitive values, i.e.
-        --      RawGlobal (Ty b) (Val b) 
-        -- into RawGlobal (Ty b) (TypedPrim (Ty b) (Val b))
-        let typedGlobals = map (typePrims ty) globalDefs
-            evaluatedGlobals = HM.map (unsafeEvalGlobal typedGlobals) typedGlobals
-        case HM.elems $ HM.filter isMain globalDefs of
-          [] -> Feedback.fail $ "No main function found in " <> show globalDefs
-          [f@(Core.RawGFunction _)] ->
-            case TransformExt.extForgetE <$> IR.toLambdaR @IR.T f of
-              Nothing -> do
-                Feedback.fail "Unable to convert main to lambda"
-              Just (IR.Ann usage term ty _) -> do
-                let patternMap = HM.toList (FF.patVars state) |> map swap |> PM.fromList
-                let inlinedTerm = IR.inlineAllGlobals term lookupGlobal patternMap
-                (res, _) <- liftIO $ exec (ErasedAnn.irToErasedAnn @(Err b) inlinedTerm usage ty) param evaluatedGlobals
-                case res of
-                  Right r -> do
-                    pure r
-                  Left err -> do
-                    print term
-                    Feedback.fail $ show err
-          somethingElse -> do
-            pTraceShowM somethingElse
-            Feedback.fail $ show somethingElse
-      Left err -> Feedback.fail $ "failed at ctxToCore\n" ++ show err
+    let state = Core.contextToIR ctx param
+        globals = FF.coreDefs state
+    -- Filter out Special Defs
+    let globalDefs = HM.mapMaybe toCoreDef globals
+        lookupGlobal = IR.rawLookupFun' globalDefs
+    -- Type primitive values, i.e.
+    --      RawGlobal (Ty b) (Val b) 
+    -- into RawGlobal (Ty b) (TypedPrim (Ty b) (Val b))
+    let typedGlobals = map (typePrims ty) globalDefs
+        evaluatedGlobals = HM.map (unsafeEvalGlobal typedGlobals) typedGlobals
+    case HM.elems $ HM.filter isMain globalDefs of
+      [] -> Feedback.fail $ "No main function found in " <> show globalDefs
+      [f@(Core.RawGFunction _)] ->
+        case TransformExt.extForgetE <$> IR.toLambdaR @IR.T f of
+          Nothing -> do
+            Feedback.fail "Unable to convert main to lambda"
+          Just (IR.Ann usage term ty _) -> do
+            let patternMap = HM.toList (FF.patVars state) |> map swap |> PM.fromList
+            let inlinedTerm = IR.inlineAllGlobals term lookupGlobal patternMap
+            (res, _) <- liftIO $ exec (ErasedAnn.irToErasedAnn @(Err b) inlinedTerm usage ty) param evaluatedGlobals
+            case res of
+              Right r -> do
+                pure r
+              Left err -> do
+                print term
+                Feedback.fail $ show err
+      somethingElse -> do
+        pTraceShowM somethingElse
+        Feedback.fail $ show somethingElse
   compile ::
     FilePath ->
     ErasedAnn.AnnTermT (Ty b) (Val b) ->
@@ -185,7 +191,7 @@ toSexp paths = do
   case x of
     Left er -> pure $ Left (ParseErr er)
     Right x -> do
-      from <- FrontendPipeline.frontendToSexp x
+      from <- Frontend.frontendToSexp x
       case from of
         Left errr -> pure $ Left (FrontendErr errr)
         Right con -> pure $ Right con

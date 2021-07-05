@@ -27,7 +27,9 @@ import qualified Juvix.Context.NameSpace as NameSpace
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as ResolveOpen
 import qualified Juvix.Contextify.ToContext.Types as ContextifyT
-import qualified Juvix.Core as Core
+import qualified Juvix.Core.Base as Core
+import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Common.Context.Traverse as Traverse
 import qualified Juvix.Desugar as Desugar
 import qualified Juvix.Frontend as Frontend
@@ -42,6 +44,7 @@ import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymb
 import qualified Juvix.Pipeline as Pipeline
+import qualified Juvix.Pipeline.Core as Core
 import qualified Juvix.Pipeline.Compile as Compile
 import qualified Juvix.Sexp as Sexp
 import qualified Juvix.ToCore.Types as ToCore.Types
@@ -53,13 +56,13 @@ import qualified Prelude (Show (..))
 -- OPTIONS
 --------------------------------------------------------------------------------
 
-instance Prelude.Show (Core.Parameterisation primTy primVal) where
+instance Prelude.Show (Param.Parameterisation primTy primVal) where
   show _ = "param"
 
 data Options primTy primVal = Opt
   { prelude :: [FilePath],
     currentContextName :: NameSymb.T,
-    param :: Core.Parameterisation primTy primVal
+    param :: Param.Parameterisation primTy primVal
   }
   deriving (Show)
 
@@ -323,31 +326,14 @@ contexify1 = do
 -- Core Phase
 --------------------------------------------------------------------------------
 
-coreify ::
-  (Show primTy, Show primVal) =>
-  ByteString ->
-  Options primTy primVal ->
-  IO
-    ( Either
-        (ToCore.Types.Error primTy primVal)
-        (ToCore.Types.CoreDefs primTy primVal)
-    )
 coreify juvix options = do
   Right ctx <- contextifyDesugar juvix options
-  pure $ Pipeline.contextToCore ctx (param options)
+  pure $ Core.contextToDefsIR ctx (param options)
 
-coreifyFile ::
-  (Show primTy, Show primVal) =>
-  FilePath ->
-  Options primTy primVal ->
-  IO
-    ( Either
-        (ToCore.Types.Error primTy primVal)
-        (ToCore.Types.CoreDefs primTy primVal)
-    )
+
 coreifyFile juvix options = do
   Right ctx <- contextifyDesugarFile juvix options
-  pure $ Pipeline.contextToCore ctx (param options)
+  pure $ Core.contextToDefsIR ctx (param options)
 
 ----------------------------------------
 -- Coreify Examples
@@ -355,13 +341,13 @@ coreifyFile juvix options = do
 
 coreify1 :: IO ()
 coreify1 = do
-  Right x <- coreify "sig foo : int let foo = 3" defMichelson
+  x <- coreify "sig foo : int let foo = 3" defMichelson
   printCoreFunction x defMichelson "foo"
 
 coreify2 :: IO ()
 coreify2 = do
   -- Broken example that works currently
-  Right x <- coreify "sig foo : int let foo x = x" defMichelson
+  x <- coreify "sig foo : int let foo x = x" defMichelson
   printCoreFunction x defMichelson "foo"
 
 --------------------------------------------------------------------------------
@@ -389,18 +375,18 @@ printModule name ctx =
       pure ()
 
 lookupCoreFunction ::
-  ToCore.Types.CoreDefs primTy1 primVal1 ->
+  ToCore.Types.CoreDefs ext primTy1 primVal1 ->
   Options primTy2 primVal2 ->
   Symbol ->
-  Maybe (ToCore.Types.CoreDef primTy1 primVal1)
-lookupCoreFunction core option functionName =
+  Maybe (ToCore.Types.CoreDef ext primTy1 primVal1)
+lookupCoreFunction coreDefs option functionName =
   let name =
         currentContextName option <> NameSymb.fromSymbol functionName
-   in Map.lookup name (ToCore.Types.defs core)
+   in Map.lookup name coreDefs
 
 printCoreFunction ::
-  (MonadIO m, Show primTy1, Show primVal1) =>
-  ToCore.Types.CoreDefs primTy1 primVal1 ->
+  (MonadIO m, Show primTy1, Show primVal1, Core.CoreShow ext primTy1 primVal1) =>
+  ToCore.Types.CoreDefs ext primTy1 primVal1 ->
   Options primTy2 primVal2 ->
   Symbol ->
   m ()
@@ -421,7 +407,7 @@ printTimeLapse byteString option = do
   --
   let currentDefinedItems = definedFunctionsInModule option context
   --
-  Right cored <- coreify byteString option
+  cored <- coreify byteString option
   traverse_ (printCoreFunction cored option) currentDefinedItems
 
 printTimeLapseFile ::
@@ -438,7 +424,7 @@ printTimeLapseFile file option = do
   --
   let currentDefinedItems = definedFunctionsInModule option context
   --
-  Right cored <- coreifyFile file option
+  cored <- coreifyFile file option
   traverse_ (printCoreFunction cored option) currentDefinedItems
 
 printDefModule ::
