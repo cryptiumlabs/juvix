@@ -8,9 +8,11 @@ module Juvix.Pipeline
 where
 
 import qualified Data.Aeson as A
+import Control.Arrow (left)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as T
 import Debug.Pretty.Simple (pTraceShowM)
+import Text.Pretty.Simple (pShowNoColor)
 import qualified Juvix.Context as Context
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.Erased.Ann as ErasedAnn
@@ -41,6 +43,10 @@ import qualified Text.PrettyPrint.Leijen.Text as Pretty
 import qualified Juvix.Core.HR.Types as HR
 import qualified Data.HashMap.Strict as HM
 import qualified Data.IntMap.Strict as PM
+import qualified Juvix.Frontend.Types as Types
+import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Core.Translate as Translate
+
 
 type Pipeline = Feedback.FeedbackT [] [Char] IO
 data Error
@@ -49,60 +55,85 @@ data Error
   -- TODO: CoreError
   deriving (Show)
 
+createTmpPath :: Text -> IO FilePath 
+createTmpPath code = Temp.writeSystemTempFile "juvix-tmp.ju" (Text.unpack code)
 
+prelude :: FilePath 
+prelude = "stdlib/Prelude.ju" 
+
+-- toIR :: (Applicative f, Traversable t) =>
+-- (t (HR.Pattern primTy primVal), FF.CoreDefs HR.T ty val)
+-- -> f (t (IR.Pattern primTy primVal), FF.CoreDefs IR.T ty val)
+-- toIR (patVars, defs) = pure (fst $ Translate.hrPatternsToIR patVars, FF.hrToIRDefs defs)
 class HasBackend b where
   type Ty b = ty | ty -> b
   type Val b = val | val -> b
   type Err b = e | e -> b
 
+  
   stdlibs :: b -> [FilePath]
   stdlibs _ = []
 
+ 
+  -------------
+  -- Parsing --
+  -------------
+
+  -- | Parse juvix source code passing a set of libraries explicitly to have them in scope
+  toML' :: [FilePath] -> b -> Text -> Pipeline [(NameSymbol.T, [Types.TopLevel])]
+  toML' libs b code = liftIO $ do
+    fp <- createTmpPath code
+    e <- Frontend.parseFiles (libs ++ [fp])
+    case e of
+      Left err -> Feedback.fail . toS . pShowNoColor . P.errorBundlePretty $ err
+      Right x -> pure x
+
+  toML :: b -> Text -> Pipeline [(NameSymbol.T, [Types.TopLevel])]
+  toML b = toML' (prelude : stdlibs b) b
+
+  toSexp :: b -> [(NameSymbol.T, [Types.TopLevel])] -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
+  toSexp _b x = liftIO $ do
+    e <- Frontend.frontendToSexp x
+    case e of
+      Left err -> Feedback.fail . toS . pShowNoColor $ err
+      Right x -> pure x
+
+  -- | Parse juvix source code passing a set of libraries explicitly to have them in scope
   parseWithLibs :: [FilePath] -> b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
-  parseWithLibs libs b code = liftIO $ do
-    fp <- Temp.writeSystemTempFile "juvix-toSexp.ju" (Text.unpack code)
-    core <- toSexp (libs ++ [fp])
-    handleCore core
+  parseWithLibs libs b code =  do
+    fp <- liftIO $ createTmpPath code
+    toML' (libs ++ [fp]) b code 
+      >>= toSexp b
 
+  -- TODO: parse === toML?
   parse :: b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
-  parse b code = do
-    core <- liftIO $ toSexp_wrap code
-    handleCore core
+  parse b = parseWithLibs libs b
     where
-      toSexp_wrap :: Text -> IO (Either Error (Context.T Sexp.T Sexp.T Sexp.T))
-      toSexp_wrap code = do
-        fp <- Temp.writeSystemTempFile "juvix-toSexp.ju" (Text.unpack code)
-        toSexp
-          ("stdlib/Prelude.ju" : stdlibs b ++ [fp])
+      libs = prelude : stdlibs b
 
-  typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
-
-
-  -- toML :: FilePath -> ML
-  -- parsed
-  -- toSexp :: ML -> Sexp
-  -- toHR :: Sexp -> HR
-  -- toIR :: HR -> IR
-  -- toErased :: IR -> Erased
-  -- typechecked
-  -- toBackend :: Erased -> ?
-  -- compiled
+  ------------------
+  -- Typechecking --
+  ------------------
   toHR ::
     (Show (Ty b), Show (Val b)) =>
     Context.T Sexp.T Sexp.T Sexp.T ->
     Param.Parameterisation (Ty b) (Val b) ->
-    Pipeline (FF.CoreDefs HR.T (Ty b) (Val b))
-  toHR ctx param = notImplemented
-    -- case CorePipeline.contextToHR ctx param of
-    -- Left err -> Feedback.fail $ show err
-    -- Right defs -> pure defs
+    Pipeline (HM.HashMap HR.GlobalName HR.PatternVar, FF.CoreDefs HR.T (Ty b) (Val b))
+  toHR ctx param = 
+    let hrState = Core.contextToHR ctx param 
+    -- TODO: Filter coreDefs
+    in pure (FF.patVars hrState, FF.coreDefs hrState)
 
   
-  -- toIR: in terms of HR 
-  -- = f toHR
+  toIR :: 
+    (HM.HashMap Core.GlobalName HR.PatternVar, FF.CoreDefs HR.T (Ty b) (Val b))
+    -> Pipeline (HM.HashMap Core.GlobalName Core.PatternVar, FF.CoreDefs IR.T (Ty b) (Val b))
+  toIR (patVars, defs) = pure (patVars, FF.hrToIRDefs defs)
   
-  -- toErased
-  --  = f toIR
+  -- toErased :: (HM.HashMap Core.GlobalName Core.PatternVar, FF.CoreDefs IR.T (Ty b) (Val b))
+  -- toErased (patVars, defs) = 
+
+  typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
 
   typecheck' ::
     ( Eq (Ty b),
@@ -128,35 +159,33 @@ class HasBackend b where
     Ty b ->
     Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
   typecheck' ctx param ty = do
-    let state = Core.contextToIR ctx param
-        globals = FF.coreDefs state
-    -- Filter out Special Defs
-    let globalDefs = HM.mapMaybe toCoreDef globals
-        lookupGlobal = IR.rawLookupFun' globalDefs
-    -- Type primitive values, i.e.
-    --      RawGlobal (Ty b) (Val b) 
-    -- into RawGlobal (Ty b) (TypedPrim (Ty b) (Val b))
-    let typedGlobals = map (typePrims ty) globalDefs
-        evaluatedGlobals = HM.map (unsafeEvalGlobal typedGlobals) typedGlobals
+    -- Handle main function
     case HM.elems $ HM.filter isMain globalDefs of
       [] -> Feedback.fail $ "No main function found in " <> show globalDefs
-      [f@(Core.RawGFunction _)] ->
+      f : _ ->
         case TransformExt.extForgetE <$> IR.toLambdaR @IR.T f of
-          Nothing -> do
-            Feedback.fail "Unable to convert main to lambda"
+          Nothing -> Feedback.fail "Unable to convert main to lambda"
           Just (IR.Ann usage term ty _) -> do
-            let patternMap = HM.toList (FF.patVars state) |> map swap |> PM.fromList
             let inlinedTerm = IR.inlineAllGlobals term lookupGlobal patternMap
             (res, _) <- liftIO $ exec (ErasedAnn.irToErasedAnn @(Err b) inlinedTerm usage ty) param evaluatedGlobals
             case res of
               Right r -> do
                 pure r
               Left err -> do
-                print term
-                Feedback.fail $ show err
-      somethingElse -> do
-        pTraceShowM somethingElse
-        Feedback.fail $ show somethingElse
+                Feedback.fail $ "Error: " <> show err <> "on Term: " <> show term
+    where
+      irState = Core.contextToIR ctx param
+      -- Filter out Special Defs
+      globalDefs = HM.mapMaybe toCoreDef (FF.coreDefs irState)
+      patVars = FF.patVars irState
+      patternMap = HM.toList patVars |> map swap |> PM.fromList
+      lookupGlobal = IR.rawLookupFun' globalDefs
+    -- Type primitive values, i.e.
+    --      RawGlobal (Ty b) (Val b) 
+    -- into RawGlobal (Ty b) (TypedPrim (Ty b) (Val b))
+      typedGlobals = map (typePrims ty) globalDefs
+      evaluatedGlobals = HM.map (unsafeEvalGlobal typedGlobals) typedGlobals
+
   compile ::
     FilePath ->
     ErasedAnn.AnnTermT (Ty b) (Val b) ->
@@ -165,34 +194,3 @@ class HasBackend b where
 -- | Write the output code to a given file.
 writeout :: FilePath -> Text -> Pipeline ()
 writeout fout code = liftIO $ T.writeFile fout code
-
-parseExplicit :: b -> Text -> [FilePath] -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
-parseExplicit _b code libs = do
-  core <- liftIO $ toSexp_wrap code
-  case core of
-    Right ctx -> return ctx
-    Left (ParseErr err) -> Feedback.fail $ P.errorBundlePretty err
-    Left err -> Feedback.fail $ show err
-  where
-    toSexp_wrap :: Text -> IO (Either Error (Context.T Sexp.T Sexp.T Sexp.T))
-    toSexp_wrap code = do
-      fp <- Temp.writeSystemTempFile "juvix-toSexp.ju" (Text.unpack code)
-      toSexp (fp : libs)
-
-handleCore :: MonadFail m => Either Error a -> m a
-handleCore core = case core of
-  Right ctx -> return ctx
-  Left (ParseErr err) -> Feedback.fail $ P.errorBundlePretty err
-  Left err -> Feedback.fail $ show err
-
-toSexp :: [FilePath] -> IO (Either Error (Context.T Sexp.T Sexp.T Sexp.T))
-toSexp paths = do
-  x <- Frontend.parseFiles paths
-  case x of
-    Left er -> pure $ Left (ParseErr er)
-    Right x -> do
-      from <- Frontend.frontendToSexp x
-      case from of
-        Left errr -> pure $ Left (FrontendErr errr)
-        Right con -> pure $ Right con
-

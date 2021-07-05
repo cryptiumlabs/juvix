@@ -5,6 +5,7 @@ module Juvix.Pipeline.Core
     contextToIR,
     contextToDefsIR,
     contextToHR,
+    contextToDefsHR,
     -- we export these functions to be able to call them stepwise from
     -- a testing place
     addSig,
@@ -71,6 +72,12 @@ contextToHR ctx param =
         |> Context.SumCon
         |> pure
 
+contextToDefsHR :: (Show primTy, Show primVal) =>
+  Context.T Sexp.T Sexp.T Sexp.T
+  -> P.Parameterisation primTy primVal
+  -> ToCore.CoreDefs HR.T primTy primVal
+contextToDefsHR ctx param = FF.coreDefs $ contextToHR ctx param
+
 contextToIR ::
   (Show primTy, Show primVal) =>
   Context.T Sexp.T Sexp.T Sexp.T ->
@@ -79,6 +86,10 @@ contextToIR ::
 contextToIR ctx param = ToCore.hrToIRState $ contextToHR ctx param
 
 
+contextToDefsIR :: (Show primTy, Show primVal) =>
+  Context.T Sexp.T Sexp.T Sexp.T
+  -> P.Parameterisation primTy primVal
+  -> ToCore.CoreDefs IR.T primTy primVal
 contextToDefsIR ctx param = FF.coreDefs $ contextToIR ctx param
 
 addSig ::
