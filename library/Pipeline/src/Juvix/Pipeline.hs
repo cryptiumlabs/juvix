@@ -61,10 +61,6 @@ createTmpPath code = Temp.writeSystemTempFile "juvix-tmp.ju" (Text.unpack code)
 prelude :: FilePath 
 prelude = "stdlib/Prelude.ju" 
 
--- toIR :: (Applicative f, Traversable t) =>
--- (t (HR.Pattern primTy primVal), FF.CoreDefs HR.T ty val)
--- -> f (t (IR.Pattern primTy primVal), FF.CoreDefs IR.T ty val)
--- toIR (patVars, defs) = pure (fst $ Translate.hrPatternsToIR patVars, FF.hrToIRDefs defs)
 class HasBackend b where
   type Ty b = ty | ty -> b
   type Val b = val | val -> b
@@ -130,8 +126,7 @@ class HasBackend b where
     -> Pipeline (HM.HashMap Core.GlobalName Core.PatternVar, FF.CoreDefs IR.T (Ty b) (Val b))
   toIR (patVars, defs) = pure (patVars, FF.hrToIRDefs defs)
   
-  -- toErased :: (HM.HashMap Core.GlobalName Core.PatternVar, FF.CoreDefs IR.T (Ty b) (Val b))
-  -- toErased (patVars, defs) = 
+  -- TODO: Define toErased as a function of IR
 
   typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
 
