@@ -74,10 +74,6 @@ class HasBackend b where
   stdlibs :: b -> [FilePath]
   stdlibs _ = []
  
-  -------------
-  -- Parsing --
-  -------------
-
   -- | Parse juvix source code passing a set of libraries explicitly to have them in scope
   toML' :: [FilePath] -> b -> Text -> Pipeline [(NameSymbol.T, [Types.TopLevel])]
   toML' libs b code = liftIO $ do
@@ -87,6 +83,7 @@ class HasBackend b where
       Left err -> Feedback.fail . toS . pShowNoColor . P.errorBundlePretty $ err
       Right x -> pure x
 
+  -- | Parse juvix source code using prelude and the default set of libraries of the backend
   toML :: b -> Text -> Pipeline [(NameSymbol.T, [Types.TopLevel])]
   toML b = toML' (prelude : stdlibs b) b
 
@@ -97,22 +94,6 @@ class HasBackend b where
       Left err -> Feedback.fail . toS . pShowNoColor $ err
       Right x -> pure x
 
-  -- | Parse juvix source code passing a set of libraries explicitly to have them in scope
-  parseWithLibs :: [FilePath] -> b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
-  parseWithLibs libs b code =  do
-    fp <- liftIO $ createTmpPath code
-    toML' (libs ++ [fp]) b code 
-      >>= toSexp b
-
-  -- TODO: parse :: Text -> ML?
-  parse :: b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
-  parse b = parseWithLibs libs b
-    where
-      libs = prelude : stdlibs b
-
-  ------------------
-  -- Typechecking --
-  ------------------
   toHR ::
     (Show (Ty b), Show (Val b)) =>
     Context.T Sexp.T Sexp.T Sexp.T ->
@@ -177,6 +158,25 @@ class HasBackend b where
           case TransformExt.extForgetE <$> IR.toLambdaR @IR.T main of
             Nothing -> Feedback.fail "Unable to convert main to lambda"
             Just (IR.Ann usage term ty _) -> pure (usage, term, ty)
+  -------------
+  -- Parsing --
+  -------------
+  -- | Parse juvix source code passing a set of libraries explicitly to have them in scope
+  parseWithLibs :: [FilePath] -> b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
+  parseWithLibs libs b code =  do
+    fp <- liftIO $ createTmpPath code
+    toML' (libs ++ [fp]) b code 
+      >>= toSexp b
+
+  -- TODO: parse === toML?
+  parse :: b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
+  parse b = parseWithLibs libs b
+    where
+      libs = prelude : stdlibs b
+
+  ------------------
+  -- Typechecking --
+  ------------------
 
   typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
 

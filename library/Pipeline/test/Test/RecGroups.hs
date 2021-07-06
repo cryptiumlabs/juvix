@@ -7,6 +7,10 @@ import Juvix.Library
 import qualified Juvix.Pipeline as Pipeline
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
+import qualified Juvix.Pipeline.Frontend as Frontend
+import qualified Juvix.Frontend as Frontend
+import qualified Juvix.Sexp as Sexp
+import qualified Juvix.Context as Context
 
 juvixRootPath :: FilePath
 juvixRootPath = "../../"
@@ -23,6 +27,17 @@ top =
     "Rec Groups tests"
     [pipeline, pipelineOpen]
 
+toSexp :: [FilePath] -> IO (Either Pipeline.Error (Context.T Sexp.T Sexp.T Sexp.T))
+toSexp paths = do
+  x <- Frontend.parseFiles paths
+  case x of
+    Left er -> pure $ Left (Pipeline.ParseErr er)
+    Right x -> do
+      from <- Frontend.frontendToSexp x
+      case from of
+        Left err -> pure $ Left (Pipeline.FrontendErr err)
+        Right con -> pure $ Right con
+
 pipeline :: T.TestTree
 pipeline =
   let correctOrder =
@@ -35,7 +50,7 @@ pipeline =
         "multiple modules have correct ordering"
         $ do
           Right c <-
-            Pipeline.toSexp
+            toSexp
               ( withJuvixExamplesPath
                   <$> [ "to-fix/rec-groups/Rec-Groups.ju",
                         "to-fix/rec-groups/Rec-Groups-Helper.ju"
@@ -57,7 +72,7 @@ pipelineOpen =
         "multiple modules have correct ordering"
         $ do
           Right c <-
-            Pipeline.toSexp
+            toSexp
               ( withJuvixExamplesPath
                   <$> [ "to-fix/dependencies/D.ju",
                         "to-fix/dependencies/A.ju",
