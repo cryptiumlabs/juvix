@@ -389,5 +389,5 @@ argToValue ::
 argToValue = \case
   App.TermArg (App.Take {type', term}) ->
     IR.VPrim $ App.Return {retType = type', retTerm = term}
-  App.BoundArg i -> IR.VBound i
-  App.FreeArg x -> IR.VFree $ Core.Global x
+  App.BoundArg i -> Core.VBound i
+  App.FreeArg x -> Core.VFree $ Core.Global x

@@ -85,6 +85,7 @@ inlineAllGlobals t lookupFun patternMap =
     Core.Prim' {} -> t
     Core.PrimTy' {} -> t
     Core.Star' {} -> t
+    Core.TermX {} -> t
 
 inlineAllGlobalsElim ::
   ( EvalPatSubst ext primTy primVal,
@@ -146,12 +147,12 @@ evalElimWith ::
   Core.Elim' (OnlyExts.T extT) primTy primVal ->
   Either (Error IR.T extT primTy primVal) (IR.Value primTy primVal)
 evalElimWith _ _ (Core.Bound' i _) =
-  pure $ IR.VBound i
+  pure $ Core.VBound i
 evalElimWith g exts (Core.Free' x _)
   | Core.Global x <- x,
     Just e <- g x =
     evalElimWith g exts $ toOnlyExtsE e
-  | otherwise = pure $ IR.VFree x
+  | otherwise = pure $ Core.VFree x
 evalElimWith g exts (Core.App' s t _) =
   join $
     vapp <$> evalElimWith g exts s
@@ -176,14 +177,13 @@ evalElim ::
   Either (Error IR.T extT primTy primVal) (IR.Value primTy primVal)
 evalElim g e = evalElimWith g rejectExts $ OnlyExts.onlyExtsE e
 
--- TODO generalise the @IR.T@s
 toLambda' ::
   forall ext' ext primTy primVal.
   ( EvalPatSubst ext' primTy primVal,
     NoExtensions ext primTy primVal
   ) =>
   Core.GlobalUsage ->
-  IR.Term primTy primVal ->
+  Core.Term' IR.T primTy primVal ->
   [Core.Pattern' ext primTy primVal] ->
   Core.Term' ext primTy primVal ->
   Maybe (Core.Elim' (OnlyExts.T ext') primTy primVal)
@@ -234,7 +234,7 @@ toLambda ::
   Maybe (Core.Elim' (OnlyExts.T ext') primTy primVal)
 toLambda (Core.GFunction (Core.Function {funUsage = π, funType = ty, funClauses}))
   | Core.FunClause _ pats rhs _ _ _ :| [] <- funClauses =
-    toLambda' π (IR.quote ty) pats rhs
+    toLambda' π (Core.quote ty) pats rhs
 toLambda _ = Nothing
 
 toLambdaR ::

@@ -23,7 +23,8 @@ import Juvix.Core.Erased.Types as Type
 import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
-import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Core.Translate
 import Juvix.Library hiding (Datatype, Type, empty)
@@ -130,12 +131,12 @@ instance
     UnsupportedTypeV v ->
       PP.sepIndent'
         [ (False, "Unsupported type:"),
-          (True, PP.pretty0 $ irToHR $ IR.quote v)
+          (True, PP.pretty0 $ irToHR $ Core.quote v)
         ]
     UnsupportedTypeN n ->
       PP.sepIndent'
         [ (False, "Unsupported type:"),
-          (True, PP.pretty0 $ irToHR $ IR.quote $ IR.VNeutral n)
+          (True, PP.pretty0 $ irToHR $ Core.quote $ IR.VNeutral n)
         ]
     CannotEraseZeroUsageTerm t ->
       PP.sepIndent'

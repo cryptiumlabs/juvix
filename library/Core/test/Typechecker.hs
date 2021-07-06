@@ -481,9 +481,9 @@ evaluations =
     add12 = IR.Elim $ add `IR.App` nat 1 `IR.App` nat 2
     sub52 = IR.Elim $ sub `IR.App` nat 5 `IR.App` nat 2
     sub = IR.Ann Usage.Omega (IR.Prim Nat.Sub) addTyT 0
-    videntity = IR.VLam $ IR.VBound 0
+    videntity = IR.VLam $ Core.VBound 0
     name = IR.Elim . IR.Free . Core.Global
-    vname = IR.VFree . Core.Global
+    vname = Core.VFree . Core.Global
 
 skiCont :: T.TestTree
 skiCont =
@@ -557,7 +557,7 @@ depIdentityCompTy =
     `ann` IR.VPi
       mempty
       (IR.VStar 0)
-      (IR.VPi one (IR.VBound 0) (IR.VBound 1))
+      (IR.VPi one (Core.VBound 0) (Core.VBound 1))
 
 -- computation dependent identity annotation (1, 0 * -> w t -> t)
 depIdentityCompTyOmega :: AllAnnotation
@@ -566,7 +566,7 @@ depIdentityCompTyOmega =
     `ann` IR.VPi
       mempty
       (IR.VStar 0)
-      (IR.VPi Usage.Omega (IR.VBound 0) (IR.VBound 1))
+      (IR.VPi Usage.Omega (Core.VBound 0) (Core.VBound 1))
 
 -- \x.x 1
 identityApplication :: NatTerm
@@ -853,11 +853,11 @@ depKCompTy =
           (IR.VStar 0)
           ( IR.VPi
               one
-              (IR.VBound 1)
+              (Core.VBound 1)
               ( IR.VPi
                   mempty
-                  (IR.VBound 1)
-                  (IR.VBound 3)
+                  (Core.VBound 1)
+                  (Core.VBound 3)
               )
           )
       )
@@ -994,13 +994,13 @@ twoNats :: NatTerm
 twoNats = IR.Pair (nat 0) (nat 1)
 
 boxNatAnn :: NatAnnotation
-boxNatAnn = one `ann` IR.VSig mempty (IR.VStar 0) (IR.VBound 0)
+boxNatAnn = one `ann` IR.VSig mempty (IR.VStar 0) (Core.VBound 0)
 
 boxNat :: NatTerm
 boxNat = IR.Pair natT' (nat 1)
 
 allAnn :: AllAnnotation
-allAnn = one `ann` IR.VSig mempty (IR.VStar 0) (IR.VBound 0)
+allAnn = one `ann` IR.VSig mempty (IR.VStar 0) (Core.VBound 0)
 
 allNatTy :: AllTerm
 allNatTy = IR.PrimTy (All.NatTy Nat.Ty)
