@@ -48,7 +48,12 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Core.Translate as Translate
 
 
+-- TODO: Change error type to Error
 type Pipeline = Feedback.FeedbackT [] [Char] IO
+
+type HR b = (HM.HashMap HR.GlobalName HR.PatternVar, FF.CoreDefs HR.T (Ty b) (Val b)) 
+type IR b = (HM.HashMap Core.GlobalName Core.PatternVar, FF.CoreDefs IR.T (Ty b) (Val b))
+
 data Error
   = FrontendErr Frontend.Error
   | ParseErr ParserError
@@ -65,11 +70,9 @@ class HasBackend b where
   type Ty b = ty | ty -> b
   type Val b = val | val -> b
   type Err b = e | e -> b
-
   
   stdlibs :: b -> [FilePath]
   stdlibs _ = []
-
  
   -------------
   -- Parsing --
@@ -101,7 +104,7 @@ class HasBackend b where
     toML' (libs ++ [fp]) b code 
       >>= toSexp b
 
-  -- TODO: parse === toML?
+  -- TODO: parse :: Text -> ML?
   parse :: b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
   parse b = parseWithLibs libs b
     where
@@ -114,19 +117,66 @@ class HasBackend b where
     (Show (Ty b), Show (Val b)) =>
     Context.T Sexp.T Sexp.T Sexp.T ->
     Param.Parameterisation (Ty b) (Val b) ->
-    Pipeline (HM.HashMap HR.GlobalName HR.PatternVar, FF.CoreDefs HR.T (Ty b) (Val b))
-  toHR ctx param = 
-    let hrState = Core.contextToHR ctx param 
+    Pipeline (HR b)
+  toHR sexp param = 
+    let hrState = Core.contextToHR sexp param 
     -- TODO: Filter coreDefs
     in pure (FF.patVars hrState, FF.coreDefs hrState)
 
   
-  toIR :: 
-    (HM.HashMap Core.GlobalName HR.PatternVar, FF.CoreDefs HR.T (Ty b) (Val b))
-    -> Pipeline (HM.HashMap Core.GlobalName Core.PatternVar, FF.CoreDefs IR.T (Ty b) (Val b))
-  toIR (patVars, defs) = pure (patVars, FF.hrToIRDefs defs)
+  toIR :: HR b -> Pipeline (IR b)
+  toIR hr = pure $ FF.hrToIRDefs <$> hr
   
-  -- TODO: Define toErased as a function of IR
+  toErased :: 
+    ( Eq (Ty b),
+      Eq (Val b),
+      Show (Err b),
+      Show (Val b),
+      Show (Ty b),
+      Show (ApplyErrorExtra (Ty b)),
+      Show (ApplyErrorExtra (TypedPrim (Ty b) (Val b))),
+      Show (Arg (Ty b)),
+      Show (Arg (TypedPrim (Ty b) (Val b))),
+      CanApply (Ty b),
+      CanApply (TypedPrim (Ty b) (Val b)),
+      IR.HasWeak (Val b),
+      IR.HasSubstValue IR.T (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
+      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (Val b) (Ty b),
+      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (Val b) (Val b),
+      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
+      IR.HasPatSubstTerm (OnlyExts.T TypeChecker.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b)
+    ) =>
+    IR b -> 
+    Param.Parameterisation (Ty b) (Val b) ->
+    Ty b ->
+    Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
+  toErased (patVars, defs) param ty = do 
+    (usage, term, ty) <- getMain >>= toLambda
+    let inlinedTerm = IR.inlineAllGlobals term lookupGlobal patternMap
+    let erasedAnn = ErasedAnn.irToErasedAnn @(Err b) inlinedTerm usage ty
+    res <- liftIO $ fst <$> exec erasedAnn param evaluatedGlobals
+    case res of
+      Right r -> do
+        pure r
+      Left err -> do
+        Feedback.fail $ "Error: " <> show err <> "on Term: " <> show term 
+    where
+      -- Filter out Special Defs
+      globalDefs = HM.mapMaybe toCoreDef defs
+      patternMap = HM.toList patVars |> map swap |> PM.fromList
+      lookupGlobal = IR.rawLookupFun' globalDefs
+      -- Type primitive values, i.e.
+      --      RawGlobal (Ty b) (Val b) 
+      -- into RawGlobal (Ty b) (TypedPrim (Ty b) (Val b))
+      typedGlobals = map (typePrims ty) globalDefs
+      evaluatedGlobals = HM.map (unsafeEvalGlobal typedGlobals) typedGlobals
+      getMain = case HM.elems $ HM.filter isMain globalDefs of
+        [] -> Feedback.fail $ "No main function found in " <> show globalDefs
+        main : _ -> pure main
+      toLambda main =
+          case TransformExt.extForgetE <$> IR.toLambdaR @IR.T main of
+            Nothing -> Feedback.fail "Unable to convert main to lambda"
+            Just (IR.Ann usage term ty _) -> pure (usage, term, ty)
 
   typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
 
@@ -153,33 +203,11 @@ class HasBackend b where
     Param.Parameterisation (Ty b) (Val b) ->
     Ty b ->
     Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
-  typecheck' ctx param ty = do
-    -- Handle main function
-    case HM.elems $ HM.filter isMain globalDefs of
-      [] -> Feedback.fail $ "No main function found in " <> show globalDefs
-      f : _ ->
-        case TransformExt.extForgetE <$> IR.toLambdaR @IR.T f of
-          Nothing -> Feedback.fail "Unable to convert main to lambda"
-          Just (IR.Ann usage term ty _) -> do
-            let inlinedTerm = IR.inlineAllGlobals term lookupGlobal patternMap
-            (res, _) <- liftIO $ exec (ErasedAnn.irToErasedAnn @(Err b) inlinedTerm usage ty) param evaluatedGlobals
-            case res of
-              Right r -> do
-                pure r
-              Left err -> do
-                Feedback.fail $ "Error: " <> show err <> "on Term: " <> show term
-    where
-      irState = Core.contextToIR ctx param
-      -- Filter out Special Defs
-      globalDefs = HM.mapMaybe toCoreDef (FF.coreDefs irState)
-      patVars = FF.patVars irState
-      patternMap = HM.toList patVars |> map swap |> PM.fromList
-      lookupGlobal = IR.rawLookupFun' globalDefs
-    -- Type primitive values, i.e.
-    --      RawGlobal (Ty b) (Val b) 
-    -- into RawGlobal (Ty b) (TypedPrim (Ty b) (Val b))
-      typedGlobals = map (typePrims ty) globalDefs
-      evaluatedGlobals = HM.map (unsafeEvalGlobal typedGlobals) typedGlobals
+  typecheck' ctx param ty =
+    let ir = Core.contextToIR ctx param
+        defs = FF.coreDefs ir
+        patVars = FF.patVars ir
+    in toErased (patVars, defs) param ty
 
   compile ::
     FilePath ->

@@ -162,3 +162,26 @@ type CoreEq ext primTy primVal = (
   , Eq (XPPrim ext primTy primVal)
   , Eq (PatternX ext primTy primVal)
   )
+
+-- -- Quotation: takes a value back to a term
+-- quote0 :: Value' ext primTy primVal -> Term' ext primTy primVal
+-- quote0 = quote
+-- {-# DEPRECATED quote0 "use quote directly" #-}
+
+-- quote :: Value' ext primTy primVal -> Term' ext primTy primVal
+-- quote (VStar' nat ext) = Star' nat ext
+-- quote (VPrimTy' p ext) = PrimTy p
+-- quote (VPi' π s t ext) = Pi π (quote s) (quote t)
+-- quote (VLam' s ext) = Lam (quote s)
+-- quote (VSig' π s t ext) = Sig π (quote s) (quote t)
+-- quote (VPair' s t ext) = Pair (quote s) (quote t)
+-- quote (VUnitTy' ext) = UnitTy
+-- quote (VUnit' ext) = Unit
+-- quote (VPrim' pri ext) = Prim pri
+-- quote (VNeutral' n ext) = Elim $ neutralQuote n
+
+-- neutralQuote :: Neutral' ext primTy primVal -> Elim' ext primTy primVal
+-- neutralQuote (NBound' x ext) = Bound x
+-- neutralQuote (NFree' x ext) = Free x
+-- neutralQuote (NApp' n v ext) = App (neutralQuote n) (quote v)
+
