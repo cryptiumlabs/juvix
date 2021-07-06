@@ -47,12 +47,31 @@ import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Core.Translate as Translate
 
-
 -- TODO: Change error type to Error
 type Pipeline = Feedback.FeedbackT [] [Char] IO
 
 type HR b = (HM.HashMap HR.GlobalName HR.PatternVar, FF.CoreDefs HR.T (Ty b) (Val b))
 type IR b = (HM.HashMap Core.GlobalName Core.PatternVar, FF.CoreDefs IR.T (Ty b) (Val b))
+
+type Constraints b = 
+  ( Eq (Ty b),
+    Eq (Val b),
+    Show (Err b),
+    Show (Val b),
+    Show (Ty b),
+    Show (ApplyErrorExtra (Ty b)),
+    Show (ApplyErrorExtra (TypedPrim (Ty b) (Val b))),
+    Show (Arg (Ty b)),
+    Show (Arg (TypedPrim (Ty b) (Val b))),
+    CanApply (Ty b),
+    CanApply (TypedPrim (Ty b) (Val b)),
+    IR.HasWeak (Val b),
+    IR.HasSubstValue IR.T (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
+    IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (Val b) (Ty b),
+    IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (Val b) (Val b),
+    IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
+    IR.HasPatSubstTerm (OnlyExts.T TypeChecker.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b)
+  )
 
 data Error
   = FrontendErr Frontend.Error
@@ -101,7 +120,6 @@ class HasBackend b where
     Pipeline (HR b)
   toHR sexp param =
     let hrState = Core.contextToHR sexp param
-    -- TODO: Filter coreDefs
     in pure (FF.patVars hrState, FF.coreDefs hrState)
 
 
@@ -109,24 +127,7 @@ class HasBackend b where
   toIR hr = pure $ FF.hrToIRDefs <$> hr
 
   toErased ::
-    ( Eq (Ty b),
-      Eq (Val b),
-      Show (Err b),
-      Show (Val b),
-      Show (Ty b),
-      Show (ApplyErrorExtra (Ty b)),
-      Show (ApplyErrorExtra (TypedPrim (Ty b) (Val b))),
-      Show (Arg (Ty b)),
-      Show (Arg (TypedPrim (Ty b) (Val b))),
-      CanApply (Ty b),
-      CanApply (TypedPrim (Ty b) (Val b)),
-      IR.HasWeak (Val b),
-      IR.HasSubstValue IR.T (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
-      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (Val b) (Ty b),
-      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (Val b) (Val b),
-      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
-      IR.HasPatSubstTerm (OnlyExts.T TypeChecker.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b)
-    ) =>
+    Constraints b =>
     IR b ->
     Param.Parameterisation (Ty b) (Val b) ->
     Ty b ->
@@ -181,24 +182,7 @@ class HasBackend b where
   typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
 
   typecheck' ::
-    ( Eq (Ty b),
-      Eq (Val b),
-      Show (Err b),
-      Show (Val b),
-      Show (Ty b),
-      Show (ApplyErrorExtra (Ty b)),
-      Show (ApplyErrorExtra (TypedPrim (Ty b) (Val b))),
-      Show (Arg (Ty b)),
-      Show (Arg (TypedPrim (Ty b) (Val b))),
-      CanApply (Ty b),
-      CanApply (TypedPrim (Ty b) (Val b)),
-      IR.HasWeak (Val b),
-      IR.HasSubstValue IR.T (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
-      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (Val b) (Ty b),
-      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (Val b) (Val b),
-      IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
-      IR.HasPatSubstTerm (OnlyExts.T TypeChecker.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b)
-    ) =>
+    Constraints b =>
     Context.T Sexp.T Sexp.T Sexp.T ->
     Param.Parameterisation (Ty b) (Val b) ->
     Ty b ->
