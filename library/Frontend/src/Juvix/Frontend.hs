@@ -4,16 +4,7 @@ import qualified Data.ByteString as ByteString
 import qualified Data.Char as Char
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Types as Types
-import Juvix.Library
-  ( Applicative (pure),
-    Either (..),
-    FilePath,
-    Functor (fmap),
-    IO,
-    Traversable (sequenceA, traverse),
-    intern,
-    (.),
-  )
+import Juvix.Library hiding (toUpper)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Parser (ParserError)
 import qualified System.FilePath as FilePath

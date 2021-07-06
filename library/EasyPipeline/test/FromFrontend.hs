@@ -40,12 +40,12 @@ patternVarTests =
     ]
   where
     rawPattern = do
-      Right x <- Easy.coreify "sig foo : int let foo x = x" Easy.defMichelson
+      x <- Easy.coreify "sig foo : int let foo x = x" Easy.defMichelson
       pure (grabSingleBody (Easy.lookupCoreFunction x Easy.defMichelson "foo"))
     rawPatternShouldBe =
       IR.Elim (IR.Free (Core.Pattern 0))
     rawPatternAdd = do
-      Right x <-
+      x <-
         Easy.coreify
           "open Prelude\
           \ open Michelson\

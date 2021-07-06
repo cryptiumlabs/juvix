@@ -51,7 +51,7 @@ import qualified Juvix.Core.Translate as Translate
 -- TODO: Change error type to Error
 type Pipeline = Feedback.FeedbackT [] [Char] IO
 
-type HR b = (HM.HashMap HR.GlobalName HR.PatternVar, FF.CoreDefs HR.T (Ty b) (Val b)) 
+type HR b = (HM.HashMap HR.GlobalName HR.PatternVar, FF.CoreDefs HR.T (Ty b) (Val b))
 type IR b = (HM.HashMap Core.GlobalName Core.PatternVar, FF.CoreDefs IR.T (Ty b) (Val b))
 
 data Error
@@ -60,20 +60,20 @@ data Error
   -- TODO: CoreError
   deriving (Show)
 
-createTmpPath :: Text -> IO FilePath 
+createTmpPath :: Text -> IO FilePath
 createTmpPath code = Temp.writeSystemTempFile "juvix-tmp.ju" (Text.unpack code)
 
-prelude :: FilePath 
-prelude = "stdlib/Prelude.ju" 
+prelude :: FilePath
+prelude = "stdlib/Prelude.ju"
 
 class HasBackend b where
   type Ty b = ty | ty -> b
   type Val b = val | val -> b
   type Err b = e | e -> b
-  
+
   stdlibs :: b -> [FilePath]
   stdlibs _ = []
- 
+
   -- | Parse juvix source code passing a set of libraries explicitly to have them in scope
   toML' :: [FilePath] -> b -> Text -> Pipeline [(NameSymbol.T, [Types.TopLevel])]
   toML' libs b code = liftIO $ do
@@ -99,16 +99,16 @@ class HasBackend b where
     Context.T Sexp.T Sexp.T Sexp.T ->
     Param.Parameterisation (Ty b) (Val b) ->
     Pipeline (HR b)
-  toHR sexp param = 
-    let hrState = Core.contextToHR sexp param 
+  toHR sexp param =
+    let hrState = Core.contextToHR sexp param
     -- TODO: Filter coreDefs
     in pure (FF.patVars hrState, FF.coreDefs hrState)
 
-  
+
   toIR :: HR b -> Pipeline (IR b)
   toIR hr = pure $ FF.hrToIRDefs <$> hr
-  
-  toErased :: 
+
+  toErased ::
     ( Eq (Ty b),
       Eq (Val b),
       Show (Err b),
@@ -127,11 +127,11 @@ class HasBackend b where
       IR.HasPatSubstTerm (OnlyExts.T IR.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b),
       IR.HasPatSubstTerm (OnlyExts.T TypeChecker.T) (Ty b) (TypedPrim (Ty b) (Val b)) (Ty b)
     ) =>
-    IR b -> 
+    IR b ->
     Param.Parameterisation (Ty b) (Val b) ->
     Ty b ->
     Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
-  toErased (patVars, defs) param ty = do 
+  toErased (patVars, defs) param ty = do
     (usage, term, ty) <- getMain >>= toLambda
     let inlinedTerm = IR.inlineAllGlobals term lookupGlobal patternMap
     let erasedAnn = ErasedAnn.irToErasedAnn @(Err b) inlinedTerm usage ty
@@ -140,7 +140,7 @@ class HasBackend b where
       Right r -> do
         pure r
       Left err -> do
-        Feedback.fail $ "Error: " <> show err <> "on Term: " <> show term 
+        Feedback.fail $ "Error: " <> toS (pShowNoColor err) <> " on Term: " <> toS (pShowNoColor term)
     where
       -- Filter out Special Defs
       globalDefs = HM.mapMaybe toCoreDef defs
@@ -152,11 +152,11 @@ class HasBackend b where
       typedGlobals = map (typePrims ty) globalDefs
       evaluatedGlobals = HM.map (unsafeEvalGlobal typedGlobals) typedGlobals
       getMain = case HM.elems $ HM.filter isMain globalDefs of
-        [] -> Feedback.fail $ "No main function found in " <> show globalDefs
+        [] -> Feedback.fail $ "No main function found in " <> toS (pShowNoColor globalDefs)
         main : _ -> pure main
       toLambda main =
           case TransformExt.extForgetE <$> IR.toLambdaR @IR.T main of
-            Nothing -> Feedback.fail "Unable to convert main to lambda"
+            Nothing -> Feedback.fail $ "Unable to convert main to lambda" <> toS (pShowNoColor main)
             Just (IR.Ann usage term ty _) -> pure (usage, term, ty)
   -------------
   -- Parsing --
@@ -165,7 +165,7 @@ class HasBackend b where
   parseWithLibs :: [FilePath] -> b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
   parseWithLibs libs b code =  do
     fp <- liftIO $ createTmpPath code
-    toML' (libs ++ [fp]) b code 
+    toML' (libs ++ [fp]) b code
       >>= toSexp b
 
   -- TODO: parse === toML?
@@ -217,3 +217,4 @@ class HasBackend b where
 -- | Write the output code to a given file.
 writeout :: FilePath -> Text -> Pipeline ()
 writeout fout code = liftIO $ T.writeFile fout code
+

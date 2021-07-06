@@ -28,6 +28,7 @@ libs = ["stdlib/Prelude.ju", "stdlib/Circuit.ju"]
 withJuvixRootPath :: FilePath -> FilePath
 withJuvixRootPath p = juvixRootPath <> p
 
+top :: IO TestTree
 top =
   testGroup "Plonk golden tests"
     <$> sequence
