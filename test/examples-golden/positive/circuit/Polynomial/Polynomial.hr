@@ -1,5 +1,4 @@
-( fromList []
-, fromList
+fromList
     [
         ( "Polynomial" :| [ "^" ]
         , CoreDef
@@ -1019,4 +1018,3 @@
             )
         )
     ]
-)

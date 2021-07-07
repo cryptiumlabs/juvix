@@ -50,8 +50,7 @@ import qualified Juvix.Core.Translate as Translate
 -- TODO: Change error type to Error
 type Pipeline = Feedback.FeedbackT [] [Char] IO
 
-type HR b = (HM.HashMap HR.GlobalName HR.PatternVar, FF.CoreDefs HR.T (Ty b) (Val b))
-type IR b = (HM.HashMap Core.GlobalName Core.PatternVar, FF.CoreDefs IR.T (Ty b) (Val b))
+type IR b = (Core.PatternMap Core.GlobalName, FF.CoreDefs IR.T (Ty b) (Val b))
 
 type Constraints b = 
   ( Eq (Ty b),
@@ -117,24 +116,24 @@ class HasBackend b where
     (Show (Ty b), Show (Val b)) =>
     Context.T Sexp.T Sexp.T Sexp.T ->
     Param.Parameterisation (Ty b) (Val b) ->
-    Pipeline (HR b)
-  toHR sexp param =
-    let hrState = Core.contextToHR sexp param
-    in pure (FF.patVars hrState, FF.coreDefs hrState)
+    Pipeline (FF.CoreDefs HR.T (Ty b) (Val b))
+  toHR sexp param = pure $ FF.coreDefs (Core.contextToHR sexp param)
 
 
-  toIR :: HR b -> Pipeline (IR b)
-  toIR hr = pure $ FF.hrToIRDefs <$> hr
+  toIR ::
+    FF.CoreDefs HR.T (Ty b) (Val b) -> 
+    Pipeline (Core.PatternMap Core.GlobalName, FF.CoreDefs IR.T (Ty b) (Val b))
+  toIR hr = pure $ FF.hrToIRDefs hr
 
   toErased ::
     Constraints b =>
-    IR b ->
+    (Core.PatternMap Core.GlobalName, FF.CoreDefs IR.T (Ty b) (Val b)) ->
     Param.Parameterisation (Ty b) (Val b) ->
     Ty b ->
     Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
-  toErased (patVars, defs) param ty = do
+  toErased (patToSym, defs) param ty = do
     (usage, term, ty) <- getMain >>= toLambda
-    let inlinedTerm = IR.inlineAllGlobals term lookupGlobal patternMap
+    let inlinedTerm = IR.inlineAllGlobals term lookupGlobal patToSym
     let erasedAnn = ErasedAnn.irToErasedAnn @(Err b) inlinedTerm usage ty
     res <- liftIO $ fst <$> exec erasedAnn param evaluatedGlobals
     case res of
@@ -145,7 +144,6 @@ class HasBackend b where
     where
       -- Filter out Special Defs
       globalDefs = HM.mapMaybe toCoreDef defs
-      patternMap = HM.toList patVars |> map swap |> PM.fromList
       lookupGlobal = IR.rawLookupFun' globalDefs
       -- Type primitive values, i.e.
       --      RawGlobal (Ty b) (Val b) 
@@ -191,7 +189,8 @@ class HasBackend b where
     let ir = Core.contextToIR ctx param
         defs = FF.coreDefs ir
         patVars = FF.patVars ir
-    in toErased (patVars, defs) param ty
+        patToSym = HM.toList patVars |> map swap |> PM.fromList
+    in toErased (patToSym, defs) param ty
 
   compile ::
     FilePath ->

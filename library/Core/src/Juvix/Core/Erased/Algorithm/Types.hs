@@ -26,7 +26,7 @@ import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.Parameterisation as Param
-import Juvix.Core.Translate
+import qualified Juvix.Core.Translate as Translate
 import Juvix.Library hiding (Datatype, Type, empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.PrettyPrint as PP
@@ -121,27 +121,27 @@ instance
     UnsupportedTermT t ->
       PP.sepIndent'
         [ (False, "Unsupported term:"),
-          (True, PP.pretty0 $ irToHR $ extForgetT t)
+          (True, PP.pretty0 $ Translate.irToHR $ extForgetT t)
         ]
     UnsupportedTermE e ->
       PP.sepIndent'
         [ (False, "Unsupported term:"),
-          (True, PP.pretty0 $ irToHR $ IR.Elim $ extForgetE e)
+          (True, PP.pretty0 $ Translate.irToHR $ IR.Elim $ extForgetE e)
         ]
     UnsupportedTypeV v ->
       PP.sepIndent'
         [ (False, "Unsupported type:"),
-          (True, PP.pretty0 $ irToHR $ Core.quote v)
+          (True, PP.pretty0 $ Translate.irToHR $ Core.quote v)
         ]
     UnsupportedTypeN n ->
       PP.sepIndent'
         [ (False, "Unsupported type:"),
-          (True, PP.pretty0 $ irToHR $ Core.quote $ IR.VNeutral n)
+          (True, PP.pretty0 $ Translate.irToHR $ Core.quote $ IR.VNeutral n)
         ]
     CannotEraseZeroUsageTerm t ->
       PP.sepIndent'
         [ (False, "Entire term has zero usage:"),
-          (True, PP.pretty0 $ irToHR $ extForgetT t)
+          (True, PP.pretty0 $ Translate.irToHR $ extForgetT t)
         ]
     InternalError txt ->
       PP.text txt

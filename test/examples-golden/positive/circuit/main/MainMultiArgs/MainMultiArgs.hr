@@ -1,5 +1,4 @@
-( fromList []
-, fromList
+fromList
     [
         ( "Prelude" :|
             [ "Circuit"
@@ -856,4 +855,3 @@
             )
         )
     ]
-)

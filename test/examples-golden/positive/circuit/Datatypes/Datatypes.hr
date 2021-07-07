@@ -1,5 +1,4 @@
-( fromList []
-, fromList
+fromList
     [
         ( "Datatypes" :| [ "norm" ]
         , CoreDef
@@ -1335,4 +1334,3 @@
             )
         )
     ]
-)
