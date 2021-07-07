@@ -64,6 +64,7 @@ inlineAllGlobals ::
   ) =>
   Core.Term' ext primTy primVal ->
   LookupFun ext primTy primVal ->
+  -- | Maps @Int@s to @GlobalName@s. Passed to @inlineAllGlobalsElim@ as a pattern is an integer encoded in a free variable
   Core.PatternMap Core.GlobalName ->
   Core.Term' ext primTy primVal
 inlineAllGlobals t lookupFun patternMap =
