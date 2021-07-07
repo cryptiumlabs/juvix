@@ -240,14 +240,18 @@ singleVar :: Alternative f => IR.Pattern' ext primTy primVal -> f IR.PatternVar
 singleVar (IR.PVar' p _) = pure p
 singleVar _ = empty
 
--- | Discard annotations from a `Term'`, but keep the extensions.
+-- | Discard annotations from a `Term'`, but keeps the extended constructors.
+-- Requires the input to be free from any extensions, allowing the result to
+-- have other extensions.
 toOnlyExtsT ::
   NoExtensions ext1 primTy primVal =>
   IR.Term' ext1 primTy primVal ->
   IR.Term' (OnlyExts.T ext2) primTy primVal
 toOnlyExtsT = extTransformT $ OnlyExts.injector `compose` forgetter
 
--- | Discard annotations from an `Elim'`, but keep the extensions.
+-- | Discard annotations from a `ELim'`, but keeps the extended constructors.
+-- Requires the input to be free from any extensions, allowing the result to
+-- have other extensions.
 toOnlyExtsE ::
   NoExtensions ext1 primTy primVal =>
   IR.Elim' ext1 primTy primVal ->
