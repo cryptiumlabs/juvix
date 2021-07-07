@@ -2,8 +2,7 @@ module Juvix.Backends.Michelson.Pipeline (BMichelson (..), compileMichelson) whe
 
 import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
-import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
-import qualified Juvix.Core.Pipeline as CorePipeline
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import Juvix.Pipeline as Pipeline
@@ -21,7 +20,7 @@ instance HasBackend BMichelson where
   typecheck ctx = Pipeline.typecheck' ctx Param.michelson Param.Set
 
   compile out term = do
-    let (res, _logs) = M.compileContract $ CorePipeline.toRaw term
+    let (res, _logs) = M.compileContract $ ErasedAnn.toRaw term
     case res of
       Right c -> do
         writeout out $ M.untypedContractToSource (fst c)
@@ -34,7 +33,7 @@ compileMichelson ::
     (ErasedAnn.TypedPrim Param.PrimTy Param.RawPrimVal) ->
   f Text
 compileMichelson term = do
-  let (res, _logs) = M.compileContract $ CorePipeline.toRaw term
+  let (res, _logs) = M.compileContract $ ErasedAnn.toRaw term
   case res of
     Right c -> pure $ M.untypedContractToSource (fst c)
     Left err -> Feedback.fail $ show err

@@ -1,0 +1,30 @@
+[
+    ( "open" "Prelude" )
+,
+    ( "open" "Michelson" )
+,
+    ( ":defsig" "make-pair"
+        ( ":infix" "->"
+            ( "list" "operation" )
+            ( ":infix" "->" "nat"
+                ( "pair" ( ":paren" ( "list" "operation" ) ) "nat" ) ) ) )
+,
+    ( ":defun-match" "make-pair" ( () ( ":primitive" "Michelson.pair" ) ) )
+,
+    ( ":defsig" "nil" ( "list" "operation" ) )
+,
+    ( ":defun-match" "nil" ( () ( ":primitive" "Michelson.nil" ) ) )
+,
+    ( ":defsig" "add" ( ":infix" "->" "nat" ( ":infix" "->" "nat" "nat" ) ) )
+,
+    ( ":defun-match" "add" ( () ( ":primitive" "Michelson.add" ) ) )
+,
+    ( ":defsig" "main"
+        ( ":infix" "->"
+            ( "pair" "nat" "nat" )
+            ( "pair" ( ":paren" ( "list" "operation" ) ) "nat" ) ) )
+,
+    ( ":defun-match" "main"
+        ( ()
+            ( ":lambda" ( "ps" )
+                ( "make-pair" "nil" ( ":paren" ( "add" 4 6 ) ) ) ) ) ) ]

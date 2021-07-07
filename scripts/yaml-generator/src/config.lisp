@@ -383,7 +383,8 @@ common ones to include"
                         ;; this is needed due to pipeline additions
                         ;; have left it unable to build. I think due to cyclic dependencies
                         *translate*
-                        *frontend*)
+                        *frontend*
+                        *sexp*)
    :extra-deps    (list (make-general-dependencies *capability* *extensible* *prettiest*)
                         *fmt-withdraw*
                         *eac-solver*
@@ -403,7 +404,8 @@ common ones to include"
                    *core*
                    *Context*
                    *pipeline*
-                   *translate*)
+                   *translate*
+                   *sexp*)
    :extra-deps (big-dep-list :plonk t)
    :extra "allow-newer: true"))
 

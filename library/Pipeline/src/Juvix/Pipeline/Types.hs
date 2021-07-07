@@ -7,8 +7,8 @@ module Juvix.Pipeline.Types
   )
 where
 
-import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
-import qualified Juvix.Core.Erasure.Types as Erasure
+import qualified Juvix.Core.Erased.Algorithm.Types as Erasure
+import qualified Juvix.Core.Erased.Ann.Types as ErasedAnn
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (log)

@@ -5,8 +5,7 @@ module Test.Golden where
 
 import qualified Data.ByteString as ByteString (readFile)
 import qualified Juvix.Backends.LLVM as LLVM
-import qualified Juvix.Core.ErasedAnn as ErasedAnn
-import qualified Juvix.Core.Pipeline as Core
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import Juvix.Library.Test.Golden
@@ -79,4 +78,4 @@ discoverGoldenTestsCompile ::
   IO TestTree
 discoverGoldenTestsCompile (withJuvixRootPath -> p) = discoverGoldenTests [".ju"] ".llvm" getGolden (expectSuccess . compile) p
   where
-    compile file = LLVM.compileProgram . Core.toRaw =<< typecheck file
+    compile file = LLVM.compileProgram . ErasedAnn.toRaw =<< typecheck file

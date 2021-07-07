@@ -17,6 +17,8 @@ module Juvix.Frontend.Parser
     matchLogic,
     cond,
     prefixSymbol,
+    moduleOpen,
+    moduleName,
   )
 where
 

@@ -6,7 +6,7 @@ module Juvix.Backends.LLVM.Compilation
 where
 
 import Juvix.Backends.LLVM.Primitive
-import qualified Juvix.Core.ErasedAnn as Core
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import Juvix.Library
 import Juvix.Library.Feedback
 import qualified LLVM.AST as LLVM (Module, Operand)
@@ -17,9 +17,9 @@ import qualified Prelude as P
 
 compileProgram ::
   Monad m =>
-  Core.AnnTerm PrimTy RawPrimVal ->
+  ErasedAnn.AnnTerm PrimTy RawPrimVal ->
   FeedbackT [] P.String m Text
-compileProgram t@(Core.Ann usage ty _) = do
+compileProgram t@(ErasedAnn.Ann usage ty _) = do
   let llvmmod :: LLVM.Module
       llvmmod = LLVM.buildModule "juvix-module" $ do
         LLVM.function "main" [] (typeToLLVM ty) $ \[] -> do
@@ -28,30 +28,30 @@ compileProgram t@(Core.Ann usage ty _) = do
   return $ toStrict $ LLVM.ppllvm llvmmod
 
 compileTerm ::
-  Core.AnnTerm PrimTy RawPrimVal ->
+  ErasedAnn.AnnTerm PrimTy RawPrimVal ->
   LLVM.IRBuilderT LLVM.ModuleBuilder LLVM.Operand
-compileTerm (Core.Ann usage ty t) = case t of
-  Core.Prim t' -> mkPrim t
-  Core.AppM f xs -> mkApp (Core.term f) ty xs
+compileTerm (ErasedAnn.Ann usage ty t) = case t of
+  ErasedAnn.Prim t' -> mkPrim t
+  ErasedAnn.AppM f xs -> mkApp (ErasedAnn.term f) ty xs
 
 mkPrim ::
-  Core.Term PrimTy RawPrimVal ->
+  ErasedAnn.Term PrimTy RawPrimVal ->
   LLVM.IRBuilderT LLVM.ModuleBuilder LLVM.Operand
-mkPrim (Core.Prim prim) = case prim of
+mkPrim (ErasedAnn.Prim prim) = case prim of
   LitInt i -> return $ LLVM.int8 i -- TODO deal with the type correctly.
 
 mkApp ::
-  Core.Term PrimTy RawPrimVal ->
-  Core.Type PrimTy ->
-  [Core.AnnTerm PrimTy RawPrimVal] ->
+  ErasedAnn.Term PrimTy RawPrimVal ->
+  ErasedAnn.Type PrimTy ->
+  [ErasedAnn.AnnTerm PrimTy RawPrimVal] ->
   LLVM.IRBuilderT LLVM.ModuleBuilder LLVM.Operand
-mkApp f (Core.PrimTy ty) xs = case f of
-  Core.Prim prim -> applyPrim prim ty xs
+mkApp f (ErasedAnn.PrimTy ty) xs = case f of
+  ErasedAnn.Prim prim -> applyPrim prim ty xs
 
 applyPrim ::
   RawPrimVal ->
   PrimTy ->
-  [Core.AnnTerm PrimTy RawPrimVal] ->
+  [ErasedAnn.AnnTerm PrimTy RawPrimVal] ->
   LLVM.IRBuilderT LLVM.ModuleBuilder LLVM.Operand
 applyPrim f ty xs
   | arityRaw f == lengthN xs =
@@ -61,5 +61,5 @@ applyPrim f ty xs
         y <- compileTerm (xs P.!! 1)
         LLVM.add x y
 
-typeToLLVM :: Core.Type PrimTy -> LLVM.Type
-typeToLLVM (Core.PrimTy (PrimTy ty)) = ty
+typeToLLVM :: ErasedAnn.Type PrimTy -> LLVM.Type
+typeToLLVM (ErasedAnn.PrimTy (PrimTy ty)) = ty

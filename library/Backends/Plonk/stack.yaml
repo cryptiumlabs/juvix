@@ -8,6 +8,7 @@ packages:
 - ../../Context
 - ../../Pipeline
 - ../../Translate
+- ../../Sexp
 
 extra-deps:
 

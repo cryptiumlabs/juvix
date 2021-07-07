@@ -1,5 +1,6 @@
 module Conv where
 
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Translate as Trans
@@ -55,12 +56,12 @@ hrToirConversion =
             IR.Elim $
               IR.Bound 0
                 `IR.App` IR.Lam (IR.Elim $ IR.Bound 0)
-                `IR.App` IR.Lam (IR.Elim $ IR.Free (IR.Global "x"))
+                `IR.App` IR.Lam (IR.Elim $ IR.Free (Core.Global "x"))
         ),
       shouldConvertHRWith
         [HR.PVar "a", HR.PVar "hi"]
         (HR.Elim (HR.Var "a"))
-        (IR.Elim (IR.Free (IR.Pattern 0)))
+        (IR.Elim (IR.Free (Core.Pattern 0)))
     ]
 
 irTohrConversion :: T.TestTree

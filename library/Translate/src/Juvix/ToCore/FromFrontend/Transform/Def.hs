@@ -3,6 +3,7 @@ module Juvix.ToCore.FromFrontend.Transform.Def (transformDef) where
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Context as Ctx
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Translate (hrToIR)
@@ -13,7 +14,6 @@ import qualified Juvix.Sexp as Sexp
 import Juvix.ToCore.FromFrontend.Transform.HR (transformTermHR)
 import Juvix.ToCore.FromFrontend.Transform.Helpers
   ( ReduceEff,
-    eleToSymbol,
     getConSig,
     getDataSig,
     getParamConstant,
@@ -21,7 +21,6 @@ import Juvix.ToCore.FromFrontend.Transform.Helpers
     lookupSig,
     splitDataType,
   )
-import Juvix.ToCore.FromFrontend.Transform.IR (transformTermIR)
 import Juvix.ToCore.Types
   ( CoreDef (..),
     CoreSig (..),
@@ -58,7 +57,7 @@ transformDef x def = do
         transformCon x ty _def = do
           -- def <- traverse (transformFunction q (conDefName x)) def
           pure $
-            IR.RawDataCon
+            Core.RawDataCon
               { rawConName = x,
                 rawConType = hrToIR ty,
                 rawConDef = Nothing --def
@@ -70,7 +69,7 @@ transformDef x def = do
           cons <- traverse (uncurry3 transformCon) conSigs
           (args, ℓ) <- splitDataType name ty
           let dat' =
-                IR.RawDatatype
+                Core.RawDatatype
                   { rawDataName = name,
                     rawDataArgs = args,
                     rawDataLevel = ℓ,
@@ -78,7 +77,7 @@ transformDef x def = do
                     -- TODO ∷ replace
                     rawDataPos = []
                   }
-          pure $ IR.RawGDatatype dat' : fmap IR.RawGDataCon cons
+          pure $ Core.RawGDatatype dat' : fmap Core.RawGDataCon cons
     transformNormalDef _ _ Ctx.CurrentNameSpace = pure []
     transformNormalDef _ _ Ctx.Information {} = pure []
     transformNormalDef _ _ (Ctx.Unknown _) = pure []
@@ -86,14 +85,14 @@ transformDef x def = do
     transformNormalDef _ _ Ctx.SumCon {} = pure []
     transformNormalDef q x (Ctx.Def def) = do
       f <- transformFunction q x def
-      pure [IR.RawGFunction f]
+      pure [Core.RawGFunction f]
 
     transformFunction q x (Ctx.D _ _ (_lambdaCase Sexp.:> defs) _)
       | Just xs <- Sexp.toList defs >>= NonEmpty.nonEmpty = do
         (π, typ) <- getValSig q x
         clauses <- traverse (transformClause q) xs
         pure $
-          IR.RawFunction
+          Core.RawFunction
             { rawFunName = x,
               rawFunUsage = π,
               rawFunType = hrToIR typ,
@@ -110,7 +109,7 @@ transformDef x def = do
             transformTermIR q fe =
               Translate.hrToIRWith pattsTable <$> transformTermHR q fe
         clauseBody <- transformTermIR q body
-        pure $ IR.RawFunClause [] patts clauseBody False
+        pure $ Core.RawFunClause [] patts clauseBody False
     transformClause _ _ = error "malformed tansformClause"
 
     transformArgHR p@(name Sexp.:> _rest)

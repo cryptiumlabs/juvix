@@ -1,0 +1,8 @@
+[
+    ( "open" "Prelude" )
+,
+    ( "open" "LLVM" )
+,
+    ( ":defsig" "main" "int" )
+,
+    ( ":defun" "main" () 10 ) ]

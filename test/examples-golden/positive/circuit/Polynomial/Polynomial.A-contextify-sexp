@@ -1,0 +1,70 @@
+Rec
+    { recordContents = T
+        { public = fromList
+            [
+                ( "*"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "field"
+                                ( ":infix" "->" "field" "field" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Circuit.mul" ) ) )
+                        , defPrecedence = Pred Left 7 } ) )
+            ,
+                ( "+"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "field"
+                                ( ":infix" "->" "field" "field" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Circuit.add" ) ) )
+                        , defPrecedence = Pred Left 5 } ) )
+            ,
+                ( "main"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "field"
+                                ( ":infix" "->" "field" "bool" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                (
+                                    ( "x" "y" )
+                                    ( ":infix" "^" "x"
+                                        ( ":infix" "==" 3 "y" ) ) ) )
+                        , defPrecedence = Pred Left 9 } ) )
+            ,
+                ( "^"
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "field"
+                                ( ":infix" "->" "field" "field" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Circuit.exp" ) ) )
+                        , defPrecedence = Pred Left 8 } ) )
+            ,
+                ( "=="
+                , Def
+                    ( D
+                        { defUsage = Nothing
+                        , defMTy = Just
+                            ( ":infix" "->" "field"
+                                ( ":infix" "->" "field" "bool" ) )
+                        , defTerm =
+                            ( ":lambda-case"
+                                ( () ( ":primitive" "Circuit.eq" ) ) )
+                        , defPrecedence = Pred Left 2 } ) ) ]
+        , private = fromList [] }
+    , recordMTy = Nothing
+    , recordOpenList = []
+    , recordQualifiedMap = map }

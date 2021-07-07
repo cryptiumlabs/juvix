@@ -1,0 +1,266 @@
+[
+    ( "open" "Prelude" )
+,
+    ( ":defmodule" "Token" ()
+        ( ":defun" "Address" ()
+            ( ":infix" ":" "s"
+                ( ":refinement" "String.T"
+                    ( ":infix" "=="
+                        ( "String.length" "s" ) 36
+                    )
+                )
+            )
+        )
+        ( "type" "Storage" ()
+            ( ":record-d" "total-supply" "Nat.T" "accounts"
+                ( ":refinement" "Accounts.T"
+                    ( ":infix" "==" "Accounts.measure-value" "total-supply" )
+                )
+            )
+        )
+        ( ":defsig" "empty-storage" "Storage" )
+        ( ":defun" "empty-storage" ()
+            ( ":record"
+                ( "total-supply" 0 )
+                ( "accounts" "Accounts.empty" )
+            )
+        )
+        ( "type" "T" ()
+            ( ":record-d" "storage" "Storage" "version" "Nat.T" "name" "String.T" "symbol" "Char.T" "owner" "Address" )
+        )
+    )
+,
+    ( ":defmodule" "Transaction" ()
+        ( "type" "Transfer" ()
+            ( ":record-d" "from-account" "Token.Address" "to-account" "Token.Address" "ammount" "Nat.T" )
+        )
+        ( "type" "Mint" ()
+            ( ":record-d" "mint-amount" "Nat.T" "mint-to-account" "Token.Address" )
+        )
+        ( "type" "Burn" ()
+            ( ":record-d" "burn-amount" "Nat.T" "burn-from-account" "Token.Address" )
+        )
+        ( "type" "Data" ()
+            ( "Transfer"
+                ( ":arrow"
+                    ( ":infix" "->" "Transfer" "Data" )
+                )
+            )
+            ( "Mint"
+                ( ":arrow"
+                    ( ":infix" "->" "Mint" "Data" )
+                )
+            )
+            ( "Burn"
+                ( ":arrow"
+                    ( ":infix" "->" "Burn" "Data" )
+                )
+            )
+        )
+        ( "type" "T" ()
+            ( ":record-d" "data" "Data" "authorized-account" "Token.Address" )
+        )
+    )
+,
+    ( ":defsig" "has-n"
+        ( ":infix" "->" "Accounts.T"
+            ( ":infix" "->" "Token.Address"
+                ( ":infix" "->" "Nat" "Bool" )
+            )
+        )
+    )
+,
+    ( ":defun" "has-n"
+        ( "accounts" "add" "to-transfer" )
+        ( "case"
+            ( "Accounts.select" "accounts" "add" )
+            (
+                ( "Just" "n" )
+                ( ":infix" "<=" "to-transfer" "n" )
+            )
+            ( ( "Nothing" ) "False" )
+        )
+    )
+,
+    ( ":defsig" "account-sub"
+        ( ":infix" ":" "acc"
+            ( ":infix" "->" "Accounts.T"
+                ( ":infix" ":" "add"
+                    ( ":infix" "->" "Token.Address"
+                        ( ":infix" ":" "num"
+                            ( ":infix" "->"
+                                ( ":refinement" "Nat.T"
+                                    ( "has-n" "acc" "add" "num" )
+                                ) "Accounts.T"
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+,
+    ( ":defun" "account-sub"
+        ( "accounts" "add" "number" )
+        ( "case"
+            ( "Accounts.select" "accounts" "add" )
+            (
+                ( "Just" "balance" )
+                ( "Accounts.put" "accounts" "add"
+                    ( ":paren"
+                        ( ":infix" "-" "balance" "number" )
+                    )
+                )
+            )
+        )
+    )
+,
+    ( ":defsig" "account-add"
+        ( ":infix" "->" "Accounts.T"
+            ( ":infix" "->" "Token.Address"
+                ( ":infix" "->" "Nat.T" "Accounts.T" )
+            )
+        )
+    )
+,
+    ( ":defun" "account-add"
+        ( "accounts" "add" "number" )
+        ( "Accounts.update" "accounts"
+            ( ":paren"
+                ( "+" "number" )
+            ) "add"
+        )
+    )
+,
+    ( ":defsig" "transfer-stor"
+        ( ":infix" ":" "stor"
+            ( ":infix" "->" "Token.Storage"
+                ( ":infix" ":" "from"
+                    ( ":infix" "->" "Token.Address"
+                        ( ":infix" ":" "to"
+                            ( ":infix" "->" "Token.Address"
+                                ( ":infix" ":" "num"
+                                    ( ":infix" "->"
+                                        ( ":refinement" "Nat.T"
+                                            ( "has-n" "stor.accounts" "from" "num" )
+                                        ) "Token.Storage"
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+,
+    ( ":defun" "transfer-stor"
+        ( "stor" "add-from" "add-to" "num" )
+        ( "let" "new-acc" ()
+            ( "account-add"
+                ( ":paren"
+                    ( "account-sub" "stor.accounts" "add-from" )
+                ) "add-to" "num"
+            )
+            ( ":record"
+                ( "total-supply" "stor.total-supply" )
+                ( "accounts" "new-acc" )
+            )
+        )
+    )
+,
+    ( ":defmodule" "Validation" ()
+        ( ":defun" "T" ()
+            ( ":infix" "->" "Token.T"
+                ( ":infix" "->" "Transaction.T" "Bool" )
+            )
+        )
+        ( ":defun" "mint"
+            ( "token" "tx" )
+            ( "case" "tx.data"
+                ( ( "Transaction.Mint" )
+                    ( ":infix" "==" "token.owner" "tx.authorized-account" )
+                )
+                ( "_" "false" )
+            )
+        )
+        ( ":defun" "transfer"
+            ( "token" "tx" )
+            ( "case" "tx.data"
+                (
+                    ( "Transaction.Transfer"
+                        ( ":record" ( "from-account" ) ( "amount" ) )
+                    )
+                    ( ":infix" "&&"
+                        ( "has-n" "token.storage.accounts" "from-account" "amount" )
+                        ( ":infix" "==" "tx.authorized-account" "from-account" )
+                    )
+                )
+                ( "_" "false" )
+            )
+        )
+        ( ":defun" "Burn"
+            ( "token" "tx" )
+            ( "case" "tx.data"
+                (
+                    ( "Transaction.Burn"
+                        ( ":record" ( "burn-from-account" ) ( "burn-amount" ) )
+                    )
+                    ( ":infix" "&&"
+                        ( "has-n" "token.storage.accounts" "burn-from-account" "burn-amount" )
+                        ( ":infix" "==" "tx.authorized-account" "burn-from-account" )
+                    )
+                )
+                ( "_" "false" )
+            )
+        )
+    )
+,
+    ( "type" "Error" () ( "NotEnoughFunds" ) ( "NotSameAccount" ) ( "NotOwnerToken" ) ( "NotEnoughTokens" ) )
+,
+    ( ":defsig" "exec"
+        ( ":infix" "->" "Token.T"
+            ( ":infix" "->" "Transaction.T"
+                ( "Either.T" "Error" "Token.T" )
+            )
+        )
+    )
+,
+    ( ":defun" "exec"
+        ( "token" "tx" )
+        ( "case" "tx.data"
+            (
+                ( "Transfer" "_" )
+                ( ":cond"
+                    (
+                        ( "Validation.transfer" "token" "tx" )
+                        ( "Right"
+                            ( ":paren"
+                                ( "transfer" "token" "tx" )
+                            )
+                        )
+                    )
+                    ( "else"
+                        ( "Left" "NotEnoughFunds" )
+                    )
+                )
+            )
+            (
+                ( "Mint" "_" )
+                ( ":cond"
+                    (
+                        ( "Validation.mint" "token" "tx" )
+                        ( "Right"
+                            ( ":paren"
+                                ( "mint" "token" "tx" )
+                            )
+                        )
+                    )
+                    ( "else"
+                        ( "Left" "NotEnoughFunds" )
+                    )
+                )
+            )
+        )
+    )
+]

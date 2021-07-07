@@ -4,7 +4,7 @@ module Test.AnnTerm where
 import Data.Curve.Weierstrass.BLS12381 (Fr)
 import Juvix.Backends.Plonk (FFAnnTerm, FFType, PrimVal (..))
 import qualified Juvix.Backends.Plonk as P
-import Juvix.Core.ErasedAnn
+import Juvix.Core.Erased.Ann
 import Juvix.Library hiding (Type, exp)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Usage
