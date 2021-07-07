@@ -17,11 +17,13 @@ import qualified Juvix.Core.IR as IR
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Sexp as Sexp
-import Juvix.Core.Translate ( hrToIR, hrPatternsToIR )
+import Juvix.Core.Translate ( hrToIR, hrPatternsToIR, hrToIRWith )
 import Juvix.ToCore.Types.Env
 import Juvix.ToCore.Types.Error
 import Juvix.ToCore.Types.Defs
--- import Juvix.Core.Base.TransformExt as TransformExt
+import qualified Data.HashMap.Strict as HM
+
+
 type ReduceEff ext primTy primVal m =
   ( HasThrowFF ext primTy primVal m,
     HasParam primTy primVal m,
@@ -43,45 +45,57 @@ hrToIRSig (SpecialSig s) = SpecialSig s
 hrToIRSigs :: CoreSigs HR.T ty val -> CoreSigs IR.T ty val
 hrToIRSigs sigs = hrToIRSig <$> sigs
 
-hrToIRDef :: CoreDef HR.T ty val -> CoreDef IR.T ty val
+hrToIRDef :: CoreDef HR.T ty val -> (HM.HashMap Core.GlobalName Core.PatternVar, CoreDef IR.T ty val)
 hrToIRDef (SpecialDef sym s) = SpecialDef sym s
 hrToIRDef (CoreDef global) = CoreDef (hrToIRRawGlobal global)
 
 hrToIRDefs :: CoreDefs HR.T ty val -> CoreDefs IR.T ty val
 hrToIRDefs defs = hrToIRDef <$> defs
 
-hrToIRRawGlobal :: Core.RawGlobal' HR.T primTy primVal -> Core.RawGlobal' IR.T primTy primVal
-hrToIRRawGlobal (Core.RawGDatatype d@Core.RawDatatype {rawDataArgs, rawDataCons, ..}) 
-  = Core.RawGDatatype Core.RawDatatype {
-    rawDataArgs = hrToIRRawArg <$> rawDataArgs, 
-    rawDataCons = hrToIRRawDataCon <$> rawDataCons, ..}
-hrToIRRawGlobal (Core.RawGDataCon d)= Core.RawGDataCon  $ hrToIRRawDataCon d
-hrToIRRawGlobal (Core.RawGFunction f)= Core.RawGFunction $ hrToIRRawFun f
+hrToIRRawGlobal :: Core.RawGlobal' HR.T primTy primVal -> State (HM.HashMap Core.GlobalName Core.PatternVar) (Core.RawGlobal' IR.T primTy primVal)
+hrToIRRawGlobal (Core.RawGDatatype d) = Core.RawGDatatype <$> hrToIRRawDatatype d
+hrToIRRawGlobal (Core.RawGDataCon d)= Core.RawGDataCon  <$> hrToIRRawDataCon d
+hrToIRRawGlobal (Core.RawGFunction f)= Core.RawGFunction <$> hrToIRRawFun f
 hrToIRRawGlobal (Core.RawGAbstract Core.RawAbstract {rawAbsType, ..})
-  = Core.RawGAbstract Core.RawAbstract { rawAbsType = hrToIR rawAbsType, ..}
+  =  pure $ Core.RawGAbstract Core.RawAbstract { rawAbsType = hrToIR rawAbsType, ..}
 
+hrToIRRawDatatype :: Core.RawDatatype' HR.T primTy primVal -> State (HM.HashMap Core.GlobalName Core.PatternVar) (Core.RawDatatype' IR.T primTy primVal)
+hrToIRRawDatatype Core.RawDatatype {rawDataArgs, rawDataCons, ..} = do
+  cons <- traverse hrToIRRawDataCon rawDataCons
+  pure Core.RawDatatype {
+    rawDataArgs = hrToIRRawArg <$> rawDataArgs, 
+    rawDataCons = cons,
+    ..}
 
 hrToIRRawArg :: Core.RawDataArg' HR.T primTy primVal -> Core.RawDataArg' IR.T primTy primVal
 hrToIRRawArg Core.RawDataArg {rawArgType, ..} = Core.RawDataArg { rawArgType = hrToIR rawArgType, ..}
 
-hrToIRRawDataCon :: Core.RawDataCon' HR.T primTy primVal -> Core.RawDataCon' IR.T primTy primVal
-hrToIRRawDataCon Core.RawDataCon {rawConType, rawConDef, ..} = Core.RawDataCon { 
+hrToIRRawDataCon :: Core.RawDataCon' HR.T primTy primVal -> State (HM.HashMap Core.GlobalName Core.PatternVar) (Core.RawDataCon' IR.T primTy primVal)
+hrToIRRawDataCon Core.RawDataCon {rawConType, rawConDef, ..} = do
+  mDef <- traverse hrToIRRawFun rawConDef
+  pure $ Core.RawDataCon { 
   rawConType = hrToIR rawConType, 
-  rawConDef = hrToIRRawFun <$> rawConDef,
+  rawConDef = mDef,
   ..}
 
-hrToIRRawFun :: Core.RawFunction' HR.T primTy primVal -> Core.RawFunction' IR.T primTy primVal
-hrToIRRawFun Core.RawFunction {rawFunType, rawFunClauses, ..} = Core.RawFunction {
+hrToIRRawFun :: Core.RawFunction' HR.T primTy primVal -> State (HM.HashMap Core.GlobalName Core.PatternVar) (Core.RawFunction' IR.T primTy primVal)
+hrToIRRawFun Core.RawFunction {rawFunType, rawFunClauses, ..} = do
+  fclauses <- traverse hrToIRRawFunClause rawFunClauses
+  pure $ Core.RawFunction {
   rawFunType = hrToIR rawFunType,
-  rawFunClauses = hrToIRRawFunClause <$> rawFunClauses,
+  rawFunClauses = fclauses,
   ..}
 
-hrToIRRawFunClause :: Core.RawFunClause' HR.T primTy primVal -> Core.RawFunClause' IR.T primTy primVal
+hrToIRRawFunClause :: Core.RawFunClause' HR.T primTy primVal -> State (HM.HashMap Core.GlobalName Core.PatternVar) (Core.RawFunClause' IR.T primTy primVal)
 hrToIRRawFunClause Core.RawFunClause {rawClauseTel, rawClausePats, rawClauseBody, ..}
-  = Core.RawFunClause {
+  = do
+  let (pats, pattsTable) = hrPatternsToIR rawClausePats
+  -- TODO: How to avoid clashes?
+  modify $ HM.union pattsTable
+  pure Core.RawFunClause {
     rawClauseTel = hrToIRRawTeleEle <$> rawClauseTel ,
-    rawClausePats = fst $ hrPatternsToIR rawClausePats,
-    rawClauseBody = hrToIR rawClauseBody,
+    rawClausePats = pats ,
+    rawClauseBody =  hrToIRWith pattsTable  rawClauseBody,
     ..
     }
 

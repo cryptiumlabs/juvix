@@ -36,10 +36,6 @@ import qualified Juvix.ToCore.Types as ToCore
 contextToHR ::
   ( Show primTy,
     Show primVal
-    -- HasState
-    --                   "ffOrder"
-    --                   [Context.Group Sexp.T Sexp.T Sexp.T]
-    --                   (ToCore.Env HR.T primTy primVal)
   ) =>
   Context.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
@@ -56,10 +52,8 @@ contextToHR ctx param =
     for_ ordered \grp -> do
       traverse_ addDef grp
 
-
     -- TODO
     -- put @"ffOrder" ordered
-    
   where
     -- Attaches the sum constructor with a data constructor filling
     attachConstructor s@Context.Sum {sumTDef, sumTName} dataCons c =
