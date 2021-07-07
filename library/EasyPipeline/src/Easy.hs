@@ -326,10 +326,18 @@ contexify1 = do
 -- Core Phase
 --------------------------------------------------------------------------------
 
+coreify :: (Show primTy, Show primVal) =>
+  ByteString
+  -> Options primTy primVal
+  -> IO (ToCore.Types.CoreDefs IR.T primTy primVal)
 coreify juvix options = do
   Right ctx <- contextifyDesugar juvix options
   pure $ Core.contextToDefsIR ctx (param options)
 
+coreifyFile :: (Show primTy, Show primVal) =>
+  FilePath
+  -> Options primTy primVal
+  -> IO (ToCore.Types.CoreDefs IR.T primTy primVal)
 coreifyFile juvix options = do
   Right ctx <- contextifyDesugarFile juvix options
   pure $ Core.contextToDefsIR ctx (param options)
