@@ -313,7 +313,6 @@ Surface language
 - _Relies on_
   + [[Plonk]]
   + [[Plonk]]
-  + [[Core]]
   + [[Ann]]
   + [[Library]]
   + [[Feedback]]
@@ -577,7 +576,8 @@ keeps the extensions.
   + [[Erased/Types]]
   + [[Core/HR/Pretty]]
   + [[Typechecker/Types]]
-  + [[IR/Types]]
+  + [[Core/IR]]
+  + [[Core/Base]]
   + [[Core/Parameterisation]]
   + [[Translate]]
   + [[Library]]
@@ -690,7 +690,7 @@ datatype and function declarations.
   + [[Core/Base/Types]]
   + [[Evaluator]]
   + [[Typechecker/Env]]
-  + [[Error]]
+  + [[Typechecker/Error]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
@@ -769,7 +769,7 @@ Typechecked declarations are added to the signature.
   + [[CheckTerm]]
   + [[Evaluator]]
   + [[Typechecker/Env]]
-  + [[Error]]
+  + [[Typechecker/Error]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
@@ -779,13 +779,13 @@ Typechecked declarations are added to the signature.
   + [[OnlyExts]]
   + [[Core/Base/Types]]
   + [[Evaluator]]
-  + [[Error]]
+  + [[Typechecker/Error]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Library/Usage]]
-******* Error
+******* Error <<Typechecker/Error>>
 - _Relies on_
   + [[Application]]
   + [[Core/Base/Types]]
@@ -915,7 +915,9 @@ with any stage of the compiler while modifying the source code.
   + [[Juvix/Contextify]]
   + [[ResolveOpenInfo]]
   + [[ToContext/Types]]
-  + [[Core]]
+  + [[Core/Base]]
+  + [[Core/IR]]
+  + [[Core/Parameterisation]]
   + [[Traverse]]
   + [[Desugar]]
   + [[Juvix/Frontend]]
@@ -930,6 +932,7 @@ with any stage of the compiler while modifying the source code.
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Juvix/Pipeline]]
+  + [[Core]]
   + [[Compile]]
   + [[Juvix/Sexp]]
   + [[ToCore/Types]]
@@ -1290,20 +1293,6 @@ Can be added to via core translation
 ** Setup <<Pipeline/Setup>>
 ** src
 *** Juvix
-**** Core
-- _Relies on_
-  + [[Juvix/Context]]
-  + [[Juvix/Contextify]]
-  + [[Algorithm]]
-  + [[Core/HR/Pretty]]
-  + [[Translate]]
-  + [[Core/Types]]
-  + [[Frontend/Types]]
-  + [[FrontendDesugar]]
-  + [[Library]]
-  + [[NameSymbol]]
-  + [[PrettyPrint]]
-  + [[Juvix/Sexp]]
 **** Encoding
 ***** Encoding <<Encoding/Encoding>>
 - This provides generic functions used by the various encodings in
@@ -1341,38 +1330,44 @@ Can be added to via core translation
 - _Relies on_
   + [[Juvix/Context]]
   + [[Application]]
+  + [[Ann]]
+  + [[Core/IR]]
   + [[Core/Base]]
   + [[TransformExt]]
   + [[OnlyExts]]
-  + [[Ann]]
-  + [[Core/IR]]
   + [[Typechecker/Types]]
   + [[Core/Parameterisation]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
+  + [[Library/Parser]]
   + [[Feedback]]
-  + [[Compile]]
-  + [[Pipeline/Internal]]
-  + [[Pipeline/Internal]]
-  + [[Pipeline/Types]]
   + [[Juvix/Sexp]]
+  + [[Compile]]
+  + [[Core]]
+  + [[Pipeline/Frontend]]
+  + [[Pipeline/Types]]
+  + [[Juvix/Frontend]]
   + [[ToCore/FromFrontend]]
+  + [[HR/Types]]
+  + [[Frontend/Types]]
+  + [[NameSymbol]]
+  + [[Translate]]
 ***** Compile
 - _Relies on_
   + [[Application]]
-  + [[Core/Base]]
-  + [[Core/Base/Types]]
   + [[Core/IR]]
+  + [[Core/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Feedback]]
   + [[ToCore/Types]]
-***** Internal <<Pipeline/Internal>>
+***** Core
 - _Relies on_
   + [[Juvix/Context]]
-  + [[Core]]
-  + [[Core/Base/Types]]
+  + [[Core/IR]]
+  + [[Core/HR]]
+  + [[Core/Base]]
   + [[Traverse]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
@@ -1380,9 +1375,24 @@ Can be added to via core translation
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Parser]]
-  + [[Library/Usage]]
   + [[Juvix/Sexp]]
+  + [[Library/Usage]]
   + [[ToCore/FromFrontend]]
+  + [[ToCore/Types]]
+***** Frontend <<Pipeline/Frontend>>
+- _Relies on_
+  + [[Juvix/Context]]
+  + [[Juvix/Contextify]]
+  + [[Algorithm]]
+  + [[Core/HR/Pretty]]
+  + [[Translate]]
+  + [[Core/Types]]
+  + [[Frontend/Types]]
+  + [[FrontendDesugar]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[PrettyPrint]]
+  + [[Juvix/Sexp]]
 ***** Types <<Pipeline/Types>>
 - _Relies on_
   + [[Algorithm/Types]]
@@ -1407,6 +1417,10 @@ Can be added to via core translation
   + [[Traverse]]
   + [[Library]]
   + [[Juvix/Pipeline]]
+  + [[Pipeline/Frontend]]
+  + [[Juvix/Frontend]]
+  + [[Juvix/Sexp]]
+  + [[Juvix/Context]]
 * Sexp
 ** Setup <<Sexp/Setup>>
 ** src
@@ -1425,7 +1439,7 @@ sexp type and all the various helper functionality one can need
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Parser]]
-  + [[Parser/Internal]]
+  + [[Internal]]
   + [[Sexp/Types]]
 ***** Types <<Sexp/Types>>
 - _Relies on_
@@ -1566,14 +1580,14 @@ _TODO_
   + [[PrettyPrint]]
 ***** Parser <<Library/Parser>>
 - _Relies on_
-  + [[Parser/Internal]]
+  + [[Internal]]
   + [[Lexer]]
   + [[Token]]
-****** Internal <<Parser/Internal>>
+****** Internal
 ****** Lexer
 - _Relies on_
   + [[Library]]
-  + [[Parser/Internal]]
+  + [[Internal]]
   + [[Token]]
 ****** Token
 - _Relies on_
@@ -1806,18 +1820,6 @@ done with no extra information needed. Thus we export the following passes
   + [[Lens]]
   + [[Transition]]
 **** ToCore
-***** Types <<ToCore/Types>>
-- _Relies on_
-  + [[Juvix/Context]]
-  + [[Core/Base/Types]]
-  + [[Core/HR]]
-  + [[Core/IR]]
-  + [[Core/Parameterisation]]
-  + [[Library]]
-  + [[LineNum]]
-  + [[NameSymbol]]
-  + [[Library/Usage]]
-  + [[Juvix/Sexp]]
 ***** FromFrontend <<ToCore/FromFrontend>>
 - _Relies on_
   + [[Transform]]
@@ -1829,9 +1831,9 @@ done with no extra information needed. Thus we export the following passes
 ******* Def
 - _Relies on_
   + [[Juvix/Context]]
-  + [[Core/Base]]
   + [[Core/HR]]
   + [[Core/IR]]
+  + [[Core/Base]]
   + [[Translate]]
   + [[Translate]]
   + [[Library]]
@@ -1867,6 +1869,7 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Core/Base]]
   + [[Core/IR]]
+  + [[Core/HR]]
   + [[Translate]]
   + [[Library]]
   + [[NameSymbol]]
@@ -1878,6 +1881,7 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Juvix/Context]]
   + [[Library]]
+  + [[Core/HR]]
   + [[NameSymbol]]
   + [[Library/Usage]]
   + [[Juvix/Sexp]]
@@ -1889,6 +1893,7 @@ done with no extra information needed. Thus we export the following passes
 ******* TypeSig
 - _Relies on_
   + [[Core/HR]]
+  + [[Core/Base]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Usage]]
@@ -1899,13 +1904,51 @@ done with no extra information needed. Thus we export the following passes
 ******* Usage <<Transform/Usage>>
 - _Relies on_
   + [[Core/Base]]
-  + [[Core/IR]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Usage]]
   + [[Juvix/Sexp]]
   + [[Transform/Helpers]]
   + [[ToCore/Types]]
+***** Types <<ToCore/Types>>
+- _Relies on_
+  + [[Core/Base/Types]]
+  + [[Core/HR]]
+  + [[Core/IR]]
+  + [[Library]]
+  + [[LineNum]]
+  + [[Juvix/Sexp]]
+  + [[Translate]]
+  + [[Translate]]
+  + [[Types/Env]]
+  + [[Types/Error]]
+  + [[Defs]]
+****** Defs
+- _Relies on_
+  + [[Core/Base/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Usage]]
+****** Env <<Types/Env>>
+- _Relies on_
+  + [[Juvix/Context]]
+  + [[Core/Base/Types]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Juvix/Sexp]]
+  + [[Defs]]
+  + [[Types/Error]]
+****** Error <<Types/Error>>
+- _Relies on_
+  + [[Juvix/Context]]
+  + [[Core/Base/Types]]
+  + [[Core/HR]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Usage]]
+  + [[Juvix/Sexp]]
+  + [[Defs]]
 ** test
 *** Main <<Translate/test/Main>>
 - _Relies on_
@@ -1969,7 +2012,7 @@ done with no extra information needed. Thus we export the following passes
   + [[Frontend/Sexp]]
   + [[Frontend/Types]]
   + [[Library]]
-  + [[Parser/Internal]]
+  + [[Internal]]
   + [[Juvix/Sexp]]
 ***** Infix
 ****** ShuntYard <<Infix/ShuntYard>>

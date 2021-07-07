@@ -22,7 +22,6 @@ data FFState ext primTy primVal = FFState
   }
   deriving (Generic)
 
-
 type EnvAlias ext primTy primVal =
   ExceptT (Error ext primTy primVal) (State (FFState ext primTy primVal))
 
@@ -71,6 +70,7 @@ newtype Env ext primTy primVal a = Env {unEnv :: EnvAlias ext primTy primVal a}
       HasState "ffOrder" [NonEmpty NameSymbol.T]
     )
     via StateField "ffOrder" (EnvAlias ext primTy primVal)
+
 type HasThrowFF ext primTy primVal =
   HasThrow "fromFrontendError" (Error ext primTy primVal)
 
@@ -93,7 +93,7 @@ type HasNextPatVar =
   HasState "nextPatVar" Core.PatternVar
 
 type HasOrder =
-  HasState "ffOrder" [NonEmpty NameSymbol.T] 
+  HasState "ffOrder" [NonEmpty NameSymbol.T]
 
 execEnv ::
   Ctx.T Sexp.T Sexp.T Sexp.T ->
@@ -117,7 +117,8 @@ runEnv ::
   Env ext primTy primVal a ->
   (Either (Error ext primTy primVal) a, FFState ext primTy primVal)
 runEnv ctx param (Env env) =
-  runIdentity $ runStateT (runExceptT env) initState where
+  runIdentity $ runStateT (runExceptT env) initState
+  where
     initState =
       FFState
         { frontend = ctx,
@@ -128,4 +129,3 @@ runEnv ctx param (Env env) =
           nextPatVar = 0,
           ffOrder = []
         }
-

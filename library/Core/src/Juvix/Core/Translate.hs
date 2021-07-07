@@ -12,10 +12,10 @@ module Juvix.Core.Translate
     hrPatternToIRWith,
     irPatternToHR,
     irPatternToHRWith,
-    M(..),
-    Env(..),
+    M (..),
+    Env (..),
     exec,
-    execSymToPat
+    execSymToPat,
   )
 where
 

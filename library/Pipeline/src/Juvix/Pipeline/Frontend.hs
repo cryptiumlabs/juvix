@@ -2,7 +2,7 @@
 
 module Juvix.Pipeline.Frontend
   ( frontendToSexp,
-    Error(..)
+    Error (..),
   )
 where
 
@@ -22,7 +22,7 @@ import qualified Juvix.Sexp as Sexp
 -- | Frontend Error
 data Error
   = ContextErr Contextify.ResolveErr
-  | DesugarErr 
+  | DesugarErr
   deriving (Show)
 
 type instance PP.Ann Error = ()

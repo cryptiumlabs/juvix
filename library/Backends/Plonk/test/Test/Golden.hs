@@ -15,6 +15,7 @@ import qualified Juvix.Pipeline as Pipeline
 import Test.Orphan
 import Test.Tasty
 import Text.Pretty.Simple (pPrint)
+
 --------------------------------------------------------------------------------
 -- Parse contracts (Golden tests)
 --------------------------------------------------------------------------------
@@ -65,7 +66,6 @@ typecheck file = do
   context <- Pipeline.parseWithLibs (withJuvixRootPath <$> libs) (Plonk.BPlonk @Fr) contract
   Pipeline.typecheck @(Plonk.BPlonk Fr) context
 
-
 hrTests :: IO TestTree
 hrTests =
   testGroup "Plonk HR"
@@ -82,5 +82,5 @@ hrTests =
       Pipeline.toHR context (Plonk.param @Fr)
 
 plonkGoldenTestsNoQuotes = discoverGoldenTestsNoQuotes withJuvixRootPath
-plonkGoldenTests ext f (withJuvixRootPath -> p) = discoverGoldenTests  [".ju"] ext getGolden f p
 
+plonkGoldenTests ext f (withJuvixRootPath -> p) = discoverGoldenTests [".ju"] ext getGolden f p

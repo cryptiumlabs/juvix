@@ -7,52 +7,52 @@ module Juvix.Pipeline
   )
 where
 
-import qualified Data.Aeson as A
 import Control.Arrow (left)
+import qualified Data.Aeson as A
+import qualified Data.HashMap.Strict as HM
+import qualified Data.IntMap.Strict as PM
 import qualified Data.Text as Text
 import qualified Data.Text.IO as T
 import Debug.Pretty.Simple (pTraceShowM)
-import Text.Pretty.Simple (pShowNoColor)
 import qualified Juvix.Context as Context
 import qualified Juvix.Core.Application as CoreApp
-import qualified Juvix.Core.Erased.Ann as ErasedAnn
-import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.Base.TransformExt as TransformExt
 import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
+import qualified Juvix.Core.Erased.Ann as ErasedAnn
+import qualified Juvix.Core.HR.Types as HR
+import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
     TypedPrim,
   )
 import qualified Juvix.Core.Parameterisation as Param
+import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.Core.Types as Core
+import qualified Juvix.Frontend as Frontend
+import qualified Juvix.Frontend.Types as Types
 import Juvix.Library
-import Juvix.Library.Parser (ParserError)
 import qualified Juvix.Library.Feedback as Feedback
-import qualified Juvix.Sexp as Sexp
+import qualified Juvix.Library.NameSymbol as NameSymbol
+import Juvix.Library.Parser (ParserError)
 import Juvix.Pipeline.Compile
 import qualified Juvix.Pipeline.Core as Core
 import qualified Juvix.Pipeline.Frontend as Frontend
 import Juvix.Pipeline.Types
-import qualified Juvix.Frontend as Frontend
+import qualified Juvix.Sexp as Sexp
 import qualified Juvix.ToCore.FromFrontend as FF
 import qualified System.IO.Temp as Temp
 import qualified Text.Megaparsec as P
+import Text.Pretty.Simple (pShowNoColor)
 import qualified Text.PrettyPrint.Leijen.Text as Pretty
-import qualified Juvix.Core.HR.Types as HR
-import qualified Data.HashMap.Strict as HM
-import qualified Data.IntMap.Strict as PM
-import qualified Juvix.Frontend.Types as Types
-import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Core.Translate as Translate
 
 -- TODO: Change error type to Error
 type Pipeline = Feedback.FeedbackT [] [Char] IO
 
 type IR b = (Core.PatternMap Core.GlobalName, FF.CoreDefs IR.T (Ty b) (Val b))
 
-type Constraints b = 
+type Constraints b =
   ( Eq (Ty b),
     Eq (Val b),
     Show (Err b),
@@ -119,9 +119,8 @@ class HasBackend b where
     Pipeline (FF.CoreDefs HR.T (Ty b) (Val b))
   toHR sexp param = pure $ FF.coreDefs (Core.contextToHR sexp param)
 
-
   toIR ::
-    FF.CoreDefs HR.T (Ty b) (Val b) -> 
+    FF.CoreDefs HR.T (Ty b) (Val b) ->
     Pipeline (Core.PatternMap Core.GlobalName, FF.CoreDefs IR.T (Ty b) (Val b))
   toIR hr = pure $ FF.hrToIRDefs hr
 
@@ -146,7 +145,7 @@ class HasBackend b where
       globalDefs = HM.mapMaybe toCoreDef defs
       lookupGlobal = IR.rawLookupFun' globalDefs
       -- Type primitive values, i.e.
-      --      RawGlobal (Ty b) (Val b) 
+      --      RawGlobal (Ty b) (Val b)
       -- into RawGlobal (Ty b) (TypedPrim (Ty b) (Val b))
       typedGlobals = map (typePrims ty) globalDefs
       evaluatedGlobals = HM.map (unsafeEvalGlobal typedGlobals) typedGlobals
@@ -154,15 +153,17 @@ class HasBackend b where
         [] -> Feedback.fail $ "No main function found in " <> toS (pShowNoColor globalDefs)
         main : _ -> pure main
       toLambda main =
-          case TransformExt.extForgetE <$> IR.toLambdaR @IR.T main of
-            Nothing -> Feedback.fail $ "Unable to convert main to lambda" <> toS (pShowNoColor main)
-            Just (IR.Ann usage term ty _) -> pure (usage, term, ty)
+        case TransformExt.extForgetE <$> IR.toLambdaR @IR.T main of
+          Nothing -> Feedback.fail $ "Unable to convert main to lambda" <> toS (pShowNoColor main)
+          Just (IR.Ann usage term ty _) -> pure (usage, term, ty)
+
   -------------
   -- Parsing --
   -------------
+
   -- | Parse juvix source code passing a set of libraries explicitly to have them in scope
   parseWithLibs :: [FilePath] -> b -> Text -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
-  parseWithLibs libs b code =  do
+  parseWithLibs libs b code = do
     fp <- liftIO $ createTmpPath code
     toML' (libs ++ [fp]) b code
       >>= toSexp b
@@ -190,7 +191,7 @@ class HasBackend b where
         defs = FF.coreDefs ir
         patVars = FF.patVars ir
         patToSym = HM.toList patVars |> map swap |> PM.fromList
-    in toErased (patToSym, defs) param ty
+     in toErased (patToSym, defs) param ty
 
   compile ::
     FilePath ->
@@ -200,4 +201,3 @@ class HasBackend b where
 -- | Write the output code to a given file.
 writeout :: FilePath -> Text -> Pipeline ()
 writeout fout code = liftIO $ T.writeFile fout code
-

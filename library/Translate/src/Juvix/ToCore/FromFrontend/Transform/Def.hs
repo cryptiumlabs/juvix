@@ -5,8 +5,8 @@ module Juvix.ToCore.FromFrontend.Transform.Def
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Context as Ctx
-import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.Base as Core
+import qualified Juvix.Core.HR as HR
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Sexp as Sexp
@@ -30,7 +30,7 @@ transformDef x def = do
   case sig of
     Just (SpecialSig s) -> pure [SpecialDef x s]
     _ -> map CoreDef <$> transformNormalDef q x def
-    where
+  where
     q = NameSymbol.mod x
     transformNormalDef q x (Ctx.TypeDeclar dec) =
       transformType x dec
@@ -43,7 +43,7 @@ transformDef x def = do
                 rawConType = ty,
                 rawConDef = Nothing --def
               }
-              
+
         transformType name _ = do
           (ty, conNames) <- getDataSig q name
           let getConSig' x = do ty <- getConSig q x; pure (x, ty, def)

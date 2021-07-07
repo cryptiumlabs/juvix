@@ -13,6 +13,7 @@ import Prelude (String)
 -- we abuse laziness here
 -- TODO ∷ add directory option
 -- this will add top level to the thing, and properly handle paths
+
 -- | Parse multiple files into ML AST
 parseFiles :: [FilePath] -> IO (Either ParserError [(NameSymbol.T, [Types.TopLevel])])
 parseFiles =

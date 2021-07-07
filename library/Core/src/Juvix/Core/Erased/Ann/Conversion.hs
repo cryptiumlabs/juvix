@@ -69,7 +69,9 @@ lookupMapPrim ns (App.Cont f xs n) =
         Erasure.InternalError $
           "unknown de Bruijn index " <> show i
 
-irToErasedAnn :: forall err ty val m. CompConstraints ty val err m => 
+irToErasedAnn ::
+  forall err ty val m.
+  CompConstraints ty val err m =>
   IR.Term ty val ->
   Usage.T ->
   IR.Term ty val ->

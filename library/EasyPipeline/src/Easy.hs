@@ -28,9 +28,9 @@ import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as ResolveOpen
 import qualified Juvix.Contextify.ToContext.Types as ContextifyT
 import qualified Juvix.Core.Base as Core
+import qualified Juvix.Core.Common.Context.Traverse as Traverse
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Parameterisation as Param
-import qualified Juvix.Core.Common.Context.Traverse as Traverse
 import qualified Juvix.Desugar as Desugar
 import qualified Juvix.Frontend as Frontend
 import qualified Juvix.Frontend.Parser as Parser
@@ -44,8 +44,8 @@ import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymb
 import qualified Juvix.Pipeline as Pipeline
-import qualified Juvix.Pipeline.Core as Core
 import qualified Juvix.Pipeline.Compile as Compile
+import qualified Juvix.Pipeline.Core as Core
 import qualified Juvix.Sexp as Sexp
 import qualified Juvix.ToCore.Types as ToCore.Types
 import qualified Text.Pretty.Simple as Pretty
@@ -329,7 +329,6 @@ contexify1 = do
 coreify juvix options = do
   Right ctx <- contextifyDesugar juvix options
   pure $ Core.contextToDefsIR ctx (param options)
-
 
 coreifyFile juvix options = do
   Right ctx <- contextifyDesugarFile juvix options
