@@ -3,11 +3,11 @@
 
 module Juvix.Core.Base.Types.Base where
 
+import Data.Kind (Constraint)
 import Extensible (extensible)
 import Juvix.Library hiding (Pos)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Usage (Usage)
-import Data.Kind (Constraint)
 
 type Universe = Natural
 
@@ -115,8 +115,11 @@ type CoreAll (c :: Type -> Constraint) ext primTy primVal =
     ElimAll c ext primTy primVal,
     PatternAll c ext primTy primVal
   )
+
 type CoreShow ext primTy primVal = CoreAll Show ext primTy primVal
+
 type CoreEq ext primTy primVal = CoreAll Eq ext primTy primVal
+
 type QuoteContext ext primTy primVal =
   ( XVStar ext primTy primVal ~ XStar ext primTy primVal,
     XVPrimTy ext primTy primVal ~ XPrimTy ext primTy primVal,
