@@ -83,12 +83,13 @@ contextToHR ctx param =
         removeFieldNames fields
           | Just l <- Sexp.toList (Sexp.groupBy2 fields) = Sexp.cdr <$> l
         f n acc = Sexp.list [arrow, n, acc]
-        arrow = Sexp.atom "TopLevel.Prelude.->" 
+        arrow = Sexp.atom "TopLevel.Prelude.->"
 
-contextToDefsHR :: (Show primTy, Show primVal) =>
-  Context.T Sexp.T Sexp.T Sexp.T
-  -> P.Parameterisation primTy primVal
-  -> ToCore.CoreDefs HR.T primTy primVal
+contextToDefsHR ::
+  (Show primTy, Show primVal) =>
+  Context.T Sexp.T Sexp.T Sexp.T ->
+  P.Parameterisation primTy primVal ->
+  ToCore.CoreDefs HR.T primTy primVal
 contextToDefsHR ctx param = FF.coreDefs $ contextToHR ctx param
 
 contextToIR ::
@@ -139,6 +140,3 @@ addDef (Context.Entry x feDef) = do
 extractTypeDeclar :: Context.Definition term ty a -> Maybe a
 extractTypeDeclar (Context.TypeDeclar t) = Just t
 extractTypeDeclar _ = Nothing
-
-
-

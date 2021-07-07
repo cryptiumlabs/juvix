@@ -1,7 +1,7 @@
-module Juvix.ToCore.FromFrontend.Transform.Def 
-  (
-    transformDef, 
-  ) where
+module Juvix.ToCore.FromFrontend.Transform.Def
+  ( transformDef,
+  )
+where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Context as Ctx
@@ -89,9 +89,10 @@ transformDef x def = do
         pure $ Core.RawFunClause [] pattsHR clauseBody False
     transformClause _ _ = error "malformed tansformClause"
 
-transformArg :: 
+transformArg ::
   (HasThrowFF HR.T primTy primVal m, HasParam primTy primVal m) =>
-  Sexp.T -> m (HR.Pattern primTy primVal)
+  Sexp.T ->
+  m (HR.Pattern primTy primVal)
 transformArg p@(name Sexp.:> _rest)
   | Sexp.isAtomNamed name ":implicit-a" =
     throwFF $ PatternUnimplemented p
