@@ -1,7 +1,13 @@
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.IR.Evaluator.Weak where
+module Juvix.Core.IR.Evaluator.Weak
+  ( HasWeak (..),
+    weakBy,
+    weak,
+    GHasWeak,
+  )
+where
 
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.Base.Types as Core

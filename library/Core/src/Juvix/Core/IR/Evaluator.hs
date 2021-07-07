@@ -2,14 +2,21 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 -- |
--- This includes the evaluators (evalTerm and evalElim),
+-- This includes the evaluators (evalTerm and evalElimWith),
 -- the value application function (vapp) and
--- the substitution functions (substTerm and substElim).
+-- the substitution functions (substV).
 module Juvix.Core.IR.Evaluator
-  ( module Juvix.Core.IR.Evaluator,
+  ( inlineAllGlobals,
+    evalTerm,
+    NoExtensions,
+    CanEval,
+    EvalPatSubst,
+    toLambdaR,
+    lookupFun,
+    lookupFun',
+    rawLookupFun',
     module Juvix.Core.IR.Evaluator.Types,
     module Juvix.Core.IR.Evaluator.Weak,
-    module Juvix.Core.IR.Evaluator.Subst,
     module Juvix.Core.IR.Evaluator.SubstV,
     module Juvix.Core.IR.Evaluator.PatSubst,
   )
@@ -22,7 +29,6 @@ import qualified Juvix.Core.Base.TransformExt as TransformExt
 import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.Base.Types as Core
 import Juvix.Core.IR.Evaluator.PatSubst
-import Juvix.Core.IR.Evaluator.Subst
 import Juvix.Core.IR.Evaluator.SubstV
 import Juvix.Core.IR.Evaluator.Types
 import Juvix.Core.IR.Evaluator.Weak

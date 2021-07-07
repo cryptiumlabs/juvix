@@ -1,7 +1,12 @@
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.IR.Evaluator.SubstV where
+module Juvix.Core.IR.Evaluator.SubstV
+  ( HasSubstValue (..),
+    substV,
+    vapp,
+  )
+where
 
 import Data.Foldable (foldr1) -- on NonEmpty
 import qualified Juvix.Core.Application as App
@@ -53,21 +58,6 @@ class HasWeak a => HasSubstValue extV primTy primVal a where
     Core.Value' extV primTy primVal ->
     a ->
     Either (Error extV extT primTy primVal) (Core.Value' extV primTy primVal)
-
-substValue' ::
-  HasSubstValue extV primTy primVal a =>
-  Core.BoundVar ->
-  Core.Value' extV primTy primVal ->
-  a ->
-  Either (Error extV extT primTy primVal) (Core.Value' extV primTy primVal)
-substValue' = substValueWith 0
-
-substValue ::
-  HasSubstValue extV primTy primVal a =>
-  Core.Value' extV primTy primVal ->
-  a ->
-  Either (Error extV extT primTy primVal) (Core.Value' extV primTy primVal)
-substValue = substValue' 0
 
 type AllSubstV extV primTy primVal =
   ( Core.ValueAll (HasSubstV extV primTy primVal) extV primTy primVal,

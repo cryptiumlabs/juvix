@@ -1,7 +1,12 @@
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.IR.Evaluator.PatSubst where
+module Juvix.Core.IR.Evaluator.PatSubst
+  ( HasPatSubst (..),
+    patSubst,
+    HasPatSubstTerm (..),
+  )
+where
 
 import Data.Foldable (foldr1) -- on NonEmpty
 import qualified Data.IntMap as IntMap
@@ -51,13 +56,6 @@ class HasWeak a => HasPatSubstTerm extT primTy primVal a where
     Core.PatternMap (Core.Elim' extT primTy primVal) ->
     a ->
     Either Core.PatternVar (Core.Term' extT primTy primVal)
-
-patSubstTerm ::
-  (HasPatSubstTerm extT primTy primVal a) =>
-  Core.PatternMap (Core.Elim' extT primTy primVal) ->
-  a ->
-  Either Core.PatternVar (Core.Term' extT primTy primVal)
-patSubstTerm = patSubstTerm' 0
 
 type AllPatSubst ext primTy primVal =
   ( Core.TermAll (HasPatSubst ext primTy primVal) ext primTy primVal,

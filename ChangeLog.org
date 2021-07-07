@@ -1,4 +1,7 @@
 * Changelog for Juvix
+** 0.1.1.9
+- Added explicit exports for the IR/Evaluator modules.
+- Removed unused functions in the IR/Evaluator modules.
 ** 0.1.1.8
 - Add Golden tests for desugar and contextify passes
 ** 0.1.1.7

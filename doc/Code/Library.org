@@ -705,16 +705,15 @@ Quantitative type implementation inspired by
   + [[NameSymbol]]
   + [[Library/Usage]]
 ****** Evaluator
-This includes the evaluators (evalTerm and evalElim),
+This includes the evaluators (evalTerm and evalElimWith),
 the value application function (vapp) and
-the substitution functions (substTerm and substElim).
+the substitution functions (substV).
 - _Relies on_
   + [[TransformExt]]
   + [[TransformExt]]
   + [[OnlyExts]]
   + [[Core/Base/Types]]
   + [[PatSubst]]
-  + [[Subst]]
   + [[SubstV]]
   + [[Evaluator/Types]]
   + [[Evaluator/Weak]]
@@ -729,13 +728,6 @@ the substitution functions (substTerm and substElim).
   + [[Evaluator/Weak]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
-  + [[Library]]
-  + [[Library/Usage]]
-******* Subst
-- _Relies on_
-  + [[Application]]
-  + [[Core/Base/Types]]
-  + [[Evaluator/Weak]]
   + [[Library]]
   + [[Library/Usage]]
 ******* SubstV
