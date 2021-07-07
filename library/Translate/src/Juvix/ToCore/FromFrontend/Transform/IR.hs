@@ -4,8 +4,8 @@ module Juvix.ToCore.FromFrontend.Transform.IR (transformTermIR) where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Core.Base as Core
-import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.HR as HR
+import qualified Juvix.Core.IR as IR
 import Juvix.Core.Translate (hrToIR)
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol

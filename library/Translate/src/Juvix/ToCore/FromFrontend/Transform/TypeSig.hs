@@ -1,7 +1,7 @@
 module Juvix.ToCore.FromFrontend.Transform.TypeSig where
 
-import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.Base as Core
+import qualified Juvix.Core.HR as HR
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
@@ -23,10 +23,12 @@ import Juvix.ToCore.Types
 import Prelude (error)
 
 transformTypeSig ::
-  (ReduceEff HR.T primTy primVal m, 
-  HasPatVars m, HasParam primTy primVal m,
-  Show primTy, 
-  Show primVal) =>
+  ( ReduceEff HR.T primTy primVal m,
+    HasPatVars m,
+    HasParam primTy primVal m,
+    Show primTy,
+    Show primVal
+  ) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
   Sexp.T ->

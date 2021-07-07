@@ -24,6 +24,7 @@ where
 
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.IntMap as IntMap
+import qualified Data.IntMap.Strict as PM
 import Juvix.Core.Base.TransformExt
 import qualified Juvix.Core.Base.TransformExt as TransformExt
 import qualified Juvix.Core.Base.TransformExt.OnlyExts as OnlyExts
@@ -35,7 +36,6 @@ import Juvix.Core.IR.Evaluator.Weak
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
-import qualified Data.IntMap.Strict as PM
 
 type NoExtensions ext primTy primVal =
   ( Core.TermX ext primTy primVal ~ Void,

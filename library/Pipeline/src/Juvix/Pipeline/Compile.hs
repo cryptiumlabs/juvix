@@ -9,8 +9,8 @@ module Juvix.Pipeline.Compile
 where
 
 import qualified Juvix.Core.Application as CoreApp
-import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Base as Core
+import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
@@ -143,7 +143,7 @@ funClauseEval globals (Core.RawFunClause tel patts rhs catchall) =
   Core.FunClause
     (telescopeEval globals tel)
     patts
-    rhs 
+    rhs
     Nothing -- TODO:-- | @Δ ⊢ t@.  The type of the rhs under @clauseTel@.
     catchall
     Nothing --TODO

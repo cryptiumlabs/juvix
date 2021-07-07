@@ -109,78 +109,79 @@ extensible
       deriving (Show, Eq, Generic, Data, NFData)
     |]
 
-type CoreShow ext primTy primVal = (
-    Show (XStar ext primTy primVal)
-  , Show (XPrimTy ext primTy primVal)
-  , Show (XPrim ext primTy primVal)
-  , Show (XPi ext primTy primVal)
-  , Show (XLam ext primTy primVal)
-  , Show (XSig ext primTy primVal)
-  , Show (XPair ext primTy primVal)
-  , Show (XLet ext primTy primVal)
-  , Show (XUnitTy ext primTy primVal)
-  , Show (XUnit ext primTy primVal)
-  , Show (XElim ext primTy primVal)
-  , Show (TermX ext primTy primVal)
-  , Show (XBound ext primTy primVal)
-  , Show (XFree ext primTy primVal)
-  , Show (XApp ext primTy primVal)
-  , Show (XAnn ext primTy primVal)
-  , Show (ElimX ext primTy primVal)
-  , Show (XPCon ext primTy primVal)
-  , Show (XPPair ext primTy primVal)
-  , Show (XPUnit ext primTy primVal)
-  , Show (XPVar ext primTy primVal)
-  , Show (XPDot ext primTy primVal)
-  , Show (XPPrim ext primTy primVal)
-  , Show (PatternX ext primTy primVal)
+type CoreShow ext primTy primVal =
+  ( Show (XStar ext primTy primVal),
+    Show (XPrimTy ext primTy primVal),
+    Show (XPrim ext primTy primVal),
+    Show (XPi ext primTy primVal),
+    Show (XLam ext primTy primVal),
+    Show (XSig ext primTy primVal),
+    Show (XPair ext primTy primVal),
+    Show (XLet ext primTy primVal),
+    Show (XUnitTy ext primTy primVal),
+    Show (XUnit ext primTy primVal),
+    Show (XElim ext primTy primVal),
+    Show (TermX ext primTy primVal),
+    Show (XBound ext primTy primVal),
+    Show (XFree ext primTy primVal),
+    Show (XApp ext primTy primVal),
+    Show (XAnn ext primTy primVal),
+    Show (ElimX ext primTy primVal),
+    Show (XPCon ext primTy primVal),
+    Show (XPPair ext primTy primVal),
+    Show (XPUnit ext primTy primVal),
+    Show (XPVar ext primTy primVal),
+    Show (XPDot ext primTy primVal),
+    Show (XPPrim ext primTy primVal),
+    Show (PatternX ext primTy primVal)
   )
 
-type CoreEq ext primTy primVal = (
-    Eq (XStar ext primTy primVal)
-  , Eq (XPrimTy ext primTy primVal)
-  , Eq (XPrim ext primTy primVal)
-  , Eq (XPi ext primTy primVal)
-  , Eq (XLam ext primTy primVal)
-  , Eq (XSig ext primTy primVal)
-  , Eq (XPair ext primTy primVal)
-  , Eq (XLet ext primTy primVal)
-  , Eq (XUnitTy ext primTy primVal)
-  , Eq (XUnit ext primTy primVal)
-  , Eq (XElim ext primTy primVal)
-  , Eq (TermX ext primTy primVal)
-  , Eq (XBound ext primTy primVal)
-  , Eq (XFree ext primTy primVal)
-  , Eq (XApp ext primTy primVal)
-  , Eq (XAnn ext primTy primVal)
-  , Eq (ElimX ext primTy primVal)
-  , Eq (XPCon ext primTy primVal)
-  , Eq (XPPair ext primTy primVal)
-  , Eq (XPUnit ext primTy primVal)
-  , Eq (XPVar ext primTy primVal)
-  , Eq (XPDot ext primTy primVal)
-  , Eq (XPPrim ext primTy primVal)
-  , Eq (PatternX ext primTy primVal)
+type CoreEq ext primTy primVal =
+  ( Eq (XStar ext primTy primVal),
+    Eq (XPrimTy ext primTy primVal),
+    Eq (XPrim ext primTy primVal),
+    Eq (XPi ext primTy primVal),
+    Eq (XLam ext primTy primVal),
+    Eq (XSig ext primTy primVal),
+    Eq (XPair ext primTy primVal),
+    Eq (XLet ext primTy primVal),
+    Eq (XUnitTy ext primTy primVal),
+    Eq (XUnit ext primTy primVal),
+    Eq (XElim ext primTy primVal),
+    Eq (TermX ext primTy primVal),
+    Eq (XBound ext primTy primVal),
+    Eq (XFree ext primTy primVal),
+    Eq (XApp ext primTy primVal),
+    Eq (XAnn ext primTy primVal),
+    Eq (ElimX ext primTy primVal),
+    Eq (XPCon ext primTy primVal),
+    Eq (XPPair ext primTy primVal),
+    Eq (XPUnit ext primTy primVal),
+    Eq (XPVar ext primTy primVal),
+    Eq (XPDot ext primTy primVal),
+    Eq (XPPrim ext primTy primVal),
+    Eq (PatternX ext primTy primVal)
   )
 
-type QuoteContext ext primTy primVal = 
-  (XVStar ext primTy primVal ~ XStar ext primTy primVal
-  ,XVPrimTy ext primTy primVal ~ XPrimTy ext primTy primVal
-  ,XVPi ext primTy primVal ~ XPi ext primTy primVal
-  ,XVLam ext primTy primVal ~ XLam ext primTy primVal
-  ,XVSig ext primTy primVal ~ XSig ext primTy primVal
-  ,XVPair ext primTy primVal ~ XPair ext primTy primVal
-  ,XVUnitTy ext primTy primVal ~ XUnitTy ext primTy primVal
-  ,XVUnit ext primTy primVal ~ XUnit ext primTy primVal
-  ,XVPrim ext primTy primVal ~ XPrim ext primTy primVal
-  ,XVNeutral ext primTy primVal ~ XElim ext primTy primVal
-  ,XVPrimTy ext primTy primVal ~ XPrimTy ext primTy primVal
-  ,ValueX ext primTy primVal ~ TermX ext primTy primVal
-  , XNBound ext primTy primVal ~ XBound ext primTy primVal
-  , XNFree ext primTy primVal ~ XFree ext primTy primVal
-  , XNApp ext primTy primVal ~ XApp ext primTy primVal
-  , NeutralX ext primTy primVal ~ ElimX ext primTy primVal
+type QuoteContext ext primTy primVal =
+  ( XVStar ext primTy primVal ~ XStar ext primTy primVal,
+    XVPrimTy ext primTy primVal ~ XPrimTy ext primTy primVal,
+    XVPi ext primTy primVal ~ XPi ext primTy primVal,
+    XVLam ext primTy primVal ~ XLam ext primTy primVal,
+    XVSig ext primTy primVal ~ XSig ext primTy primVal,
+    XVPair ext primTy primVal ~ XPair ext primTy primVal,
+    XVUnitTy ext primTy primVal ~ XUnitTy ext primTy primVal,
+    XVUnit ext primTy primVal ~ XUnit ext primTy primVal,
+    XVPrim ext primTy primVal ~ XPrim ext primTy primVal,
+    XVNeutral ext primTy primVal ~ XElim ext primTy primVal,
+    XVPrimTy ext primTy primVal ~ XPrimTy ext primTy primVal,
+    ValueX ext primTy primVal ~ TermX ext primTy primVal,
+    XNBound ext primTy primVal ~ XBound ext primTy primVal,
+    XNFree ext primTy primVal ~ XFree ext primTy primVal,
+    XNApp ext primTy primVal ~ XApp ext primTy primVal,
+    NeutralX ext primTy primVal ~ ElimX ext primTy primVal
   )
+
 -- Quotation: takes a value back to a term
 quote0 :: QuoteContext ext primTy primVal => Value' ext primTy primVal -> Term' ext primTy primVal
 quote0 = quote
@@ -222,4 +223,3 @@ pattern VBound ::
   BoundVar ->
   Value' ext primTy primVal
 pattern VBound n = VNeutral' (NBound' n ()) ()
-

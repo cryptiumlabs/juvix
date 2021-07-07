@@ -1,14 +1,14 @@
-module Juvix.ToCore.FromFrontend.Transform.Def 
-  (
-    transformDef, 
-    transformDefHR
-  ) where
+module Juvix.ToCore.FromFrontend.Transform.Def
+  ( transformDef,
+    transformDefHR,
+  )
+where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Context as Ctx
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.Base as Core
 import Juvix.Core.Translate (hrToIR)
 import qualified Juvix.Core.Translate as Translate
 import Juvix.Library
@@ -34,7 +34,7 @@ transformDefHR x def = do
   case sig of
     Just (SpecialSig s) -> pure [SpecialDef x s]
     _ -> map CoreDef <$> transformNormalDef q x def
-    where
+  where
     q = NameSymbol.mod x
     transformNormalDef q x (Ctx.TypeDeclar dec) =
       transformType x dec
@@ -47,7 +47,7 @@ transformDefHR x def = do
                 rawConType = ty,
                 rawConDef = Nothing --def
               }
-              
+
         transformType name _ = do
           (ty, conNames) <- getDataSig q name
           let getConSig' x = do ty <- getConSig q x; pure (x, ty, def)
@@ -91,7 +91,7 @@ transformDefHR x def = do
         pattsHR <- traverse transformArgHR args
         -- let (patts, pattsTable) = Translate.hrPatternsToIR pattsHR
         --     transformTermIR q fe =
-        --       Translate.hrToIRWith pattsTable <$> 
+        --       Translate.hrToIRWith pattsTable <$>
         clauseBody <- transformTermHR q body
         pure $ Core.RawFunClause [] pattsHR clauseBody False
     transformClause _ _ = error "malformed tansformClause"
@@ -176,9 +176,10 @@ transformDef x def = do
         pure $ Core.RawFunClause [] patts clauseBody False
     transformClause _ _ = error "malformed tansformClause"
 
-transformArgHR :: 
+transformArgHR ::
   (HasThrowFF HR.T primTy primVal m, HasParam primTy primVal m) =>
-  Sexp.T -> m (HR.Pattern primTy primVal)
+  Sexp.T ->
+  m (HR.Pattern primTy primVal)
 transformArgHR p@(name Sexp.:> _rest)
   | Sexp.isAtomNamed name ":implicit-a" =
     throwFF $ PatternUnimplemented p

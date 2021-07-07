@@ -33,6 +33,7 @@ module Juvix.Library.Test.Golden
     compareGoldenCompact,
     mkGoldenTestCompact,
     discoverGoldenTestsCompact,
+
     -- *
     getGolden,
     expectSuccess,

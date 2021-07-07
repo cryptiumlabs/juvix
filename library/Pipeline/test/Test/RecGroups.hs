@@ -2,15 +2,15 @@
 
 module Test.RecGroups where
 
+import qualified Juvix.Context as Context
 import qualified Juvix.Core.Common.Context.Traverse as Traverse
+import qualified Juvix.Frontend as Frontend
 import Juvix.Library
 import qualified Juvix.Pipeline as Pipeline
+import qualified Juvix.Pipeline.Frontend as Frontend
+import qualified Juvix.Sexp as Sexp
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import qualified Juvix.Pipeline.Frontend as Frontend
-import qualified Juvix.Frontend as Frontend
-import qualified Juvix.Sexp as Sexp
-import qualified Juvix.Context as Context
 
 juvixRootPath :: FilePath
 juvixRootPath = "../../"

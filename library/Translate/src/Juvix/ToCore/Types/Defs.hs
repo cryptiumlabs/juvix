@@ -1,6 +1,6 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Juvix.ToCore.Types.Defs where
 
@@ -58,7 +58,6 @@ deriving instance
   ) =>
   Show (CoreSig ext primTy primVal)
 
-
 deriving instance
   ( Data ext,
     Data primTy,
@@ -67,7 +66,6 @@ deriving instance
     Core.ElimAll Data ext primTy primVal
   ) =>
   Data (CoreSig ext primTy primVal)
-
 
 type CoreSigs ext primTy primVal =
   HashMap Core.GlobalName (CoreSig ext primTy primVal)
@@ -128,4 +126,3 @@ mergeSigs ::
 mergeSigs (ConSig newTy) (ConSig oldTy) =
   ConSig (newTy <|> oldTy)
 mergeSigs _ second = second
-

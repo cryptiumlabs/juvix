@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
+
 module Juvix.ToCore.Types.Error where
 
 import qualified Juvix.Context as Ctx
@@ -8,8 +9,8 @@ import Juvix.Library hiding (show)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Sexp as Sexp
-import Text.Show (Show (..))
 import Juvix.ToCore.Types.Defs
+import Text.Show (Show (..))
 
 data Error ext primTy primVal
   = -- features not yet implemented
@@ -81,13 +82,21 @@ data Error ext primTy primVal
   deriving (Generic)
 
 deriving instance
-   (Core.CoreEq ext primTy primVal
-  , Eq primTy
-  , Eq primVal) => Eq (Error ext primTy primVal)
+  ( Core.CoreEq ext primTy primVal,
+    Eq primTy,
+    Eq primVal
+  ) =>
+  Eq (Error ext primTy primVal)
+
 -- FIXME replace with PrettyText
-instance (Show primTy, Show primVal, Show ext,
+instance
+  ( Show primTy,
+    Show primVal,
+    Show ext,
     Core.CoreShow ext primTy primVal
-  ) => Show (Error ext primTy primVal) where
+  ) =>
+  Show (Error ext primTy primVal)
+  where
   show = \case
     ConstraintsUnimplemented x cons ->
       "Definition " <> show x <> " has constraints\n"
@@ -181,4 +190,3 @@ instance (Show primTy, Show primVal, Show ext,
     UnexpectedOmega ->
       "%Builtin.Omega cannot be used as an arbitrary term, only as\n"
         <> "the first argument of %Builtin.Arrow or %Builtin.Pair"
-
