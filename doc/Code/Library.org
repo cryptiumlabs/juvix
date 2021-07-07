@@ -548,6 +548,12 @@ keeps the extensions.
 - _Relies on_
   + [[Erased/Types]]
   + [[Util]]
+****** Types <<Erased/Types>>
+- _Relies on_
+  + [[Core/Base/Types]]
+  + [[Erased/Base/Types]]
+  + [[Typechecker/Types]]
+  + [[Library]]
 ****** Util
 - _Relies on_
   + [[Erased/Types]]
@@ -637,12 +643,6 @@ keeps the extensions.
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Library/Usage]]
-****** Types <<Erased/Types>>
-- _Relies on_
-  + [[Core/Base/Types]]
-  + [[Erased/Base/Types]]
-  + [[Typechecker/Types]]
-  + [[Library]]
 ***** HR <<Core/HR>>
 - _Relies on_
   + [[Core/HR/Pretty]]
@@ -695,6 +695,14 @@ datatype and function declarations.
   + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
+  + [[Library/Usage]]
+****** Types <<IR/Types>>
+Quantitative type implementation inspired by
+  Atkey 2018 and McBride 2016.
+- _Relies on_
+  + [[Core/Base/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
   + [[Library/Usage]]
 ****** Evaluator
 This includes the evaluators (`evalTerm` and `evalElim`),
@@ -803,14 +811,6 @@ Typechecked declarations are added to the signature.
   + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
-  + [[Library/Usage]]
-****** Types <<IR/Types>>
-Quantitative type implementation inspired by
-  Atkey 2018 and McBride 2016.
-- _Relies on_
-  + [[Core/Base/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
   + [[Library/Usage]]
 ***** Parameterisations
 ****** All
@@ -1673,6 +1673,21 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Library]]
   + [[NameSymbol]]
   + [[Juvix/Sexp]]
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Desugar]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
+  + [[Juvix/Sexp]]
 **** Contextify <<Juvix/Contextify>>
 - _Relies on_
   + [[Juvix/Context]]
@@ -1796,21 +1811,6 @@ done with no extra information needed. Thus we export the following passes
   + [[Structure/Frontend]]
   + [[Lens]]
   + [[Transition]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Desugar]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[Library]]
-  + [[Juvix/Sexp]]
 **** ToCore
 ***** Types <<ToCore/Types>>
 - _Relies on_
