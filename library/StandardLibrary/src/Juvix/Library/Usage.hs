@@ -39,6 +39,8 @@ instance Monoid T where
 instance Semiring T where
   one = SNat 1
 
+  SNat 0 <.> _ = SNat 0
+  _ <.> SNat 0 = SNat 0
   SNat π <.> SNat ρ = SNat (π * ρ)
   Omega <.> _ = Omega
   _ <.> Omega = Omega
