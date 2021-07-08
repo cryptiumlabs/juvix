@@ -80,7 +80,9 @@ stack-yaml:
 accept-golden:
 	rm -rf test/examples-golden/positive
 	rm -rf test/examples-golden/negative
-	-stack test --test-arguments "--accept"
+	# If we want further commands, put - at the start, to ignore
+	# the error from this command
+	stack test --test-arguments "--accept"
 
 
 .PHONY: all setup build build-libff build-z3 build-watch build-prod lint format org-gen test test-parser test-typecheck test-compile repl-lib repl-exe clean clean-full bench build-format
