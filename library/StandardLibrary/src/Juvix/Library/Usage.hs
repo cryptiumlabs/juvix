@@ -51,9 +51,8 @@ instance PP.PrettySyntax T where
   pretty' (SNat π) = pure $ PP.show π
   pretty' Omega = pure "ω"
 
-pred :: T -> T
-pred (SNat x) = SNat (x - 1)
-pred Omega = Omega
+pred :: T -> Maybe T
+pred π = π `minus` SNat 1
 
 minus :: T -> T -> Maybe T
 minus Omega _ = Just Omega
