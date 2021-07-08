@@ -46,8 +46,8 @@ compileTests =
         compileTestsNeg "test/examples/negative/circuit"
       ]
   where
-    compileTestsPos = plonkGoldenTests ".circuit" (expectSuccess . typecheck)
-    compileTestsNeg = plonkGoldenTests ".circuit" (expectFailure . typecheck)
+    compileTestsPos = plonkGoldenTests ".circuit" (expectSuccess . compile)
+    compileTestsNeg = plonkGoldenTests ".circuit" (expectFailure . compile)
     compile file = Plonk.compileCircuit <$> typecheck file
 
 typecheckTests :: IO TestTree
