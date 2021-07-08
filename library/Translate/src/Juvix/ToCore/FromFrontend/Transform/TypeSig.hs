@@ -1,5 +1,6 @@
 module Juvix.ToCore.FromFrontend.Transform.TypeSig where
 
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.HR as HR
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -12,7 +13,6 @@ import Juvix.ToCore.FromFrontend.Transform.Helpers
   )
 import Juvix.ToCore.Types
   ( CoreSig (..),
-    CoreSigHR,
     Error (..),
     HasCoreSigs,
     HasParam,
@@ -23,11 +23,16 @@ import Juvix.ToCore.Types
 import Prelude (error)
 
 transformTypeSig ::
-  (ReduceEff primTy primVal m, HasPatVars m, HasParam primTy primVal m, Show primTy, Show primVal) =>
+  ( ReduceEff HR.T primTy primVal m,
+    HasPatVars m,
+    HasParam primTy primVal m,
+    Show primTy,
+    Show primVal
+  ) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
   Sexp.T ->
-  m [CoreSigHR primTy primVal]
+  m [CoreSig HR.T primTy primVal]
 transformTypeSig q _name (typeCon Sexp.:> args Sexp.:> typeForm)
   | Just typeArgs <- Sexp.toList args >>= traverse eleToSymbol = do
     (baseTy, hd) <- transformIndices typeArgs typeCon
@@ -55,7 +60,7 @@ transformTypeSig q _name (typeCon Sexp.:> args Sexp.:> typeForm)
 transformTypeSig _ _ _ = error "malformed type"
 
 transformConSigs ::
-  (ReduceEff primTy primVal m, HasPatVars m, HasParam primTy primVal m, Show primTy, Show primVal) =>
+  (ReduceEff HR.T primTy primVal m, HasPatVars m, HasParam primTy primVal m, Show primTy, Show primVal) =>
   -- | namespace containing declaration
   NameSymbol.Mod ->
   -- | datatype head
@@ -64,7 +69,7 @@ transformConSigs ::
   Sexp.T ->
   -- | rhs
   Sexp.T ->
-  m [(NameSymbol.T, CoreSigHR primTy primVal)]
+  m [(NameSymbol.T, CoreSig HR.T primTy primVal)]
 transformConSigs pfx hd typeCon =
   traverse (transformProduct pfx hd typeCon) <=< toProducts
   where
@@ -90,19 +95,19 @@ transformConSigs pfx hd typeCon =
 
 transformProduct ::
   ( HasPatVars m,
-    HasThrowFF primTy primVal m,
+    HasThrowFF HR.T primTy primVal m,
     HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m,
+    HasCoreSigs HR.T primTy primVal m,
     Show primTy,
     Show primVal
   ) =>
   NameSymbol.Mod ->
   -- | datatype head
-  Maybe (HR.Term primTy primVal) ->
+  Maybe (Core.Term' HR.T primTy primVal) ->
   -- | type constructor
   Sexp.T ->
   (Symbol, Sexp.T) ->
-  m (NameSymbol.T, CoreSigHR primTy primVal)
+  m (NameSymbol.T, CoreSig HR.T primTy primVal)
 transformProduct q hd typeCon (x, prod) =
   (NameSymbol.qualify1 q x,) . makeSig
     <$> transformConSig q (NameSymbol.fromSymbol x) hd typeCon prod
@@ -110,15 +115,15 @@ transformProduct q hd typeCon (x, prod) =
     makeSig ty = ConSig {conType = Just ty}
 
 transformConSig ::
-  (ReduceEff primTy primVal m, HasPatVars m, Show primTy, Show primVal) =>
+  (ReduceEff HR.T primTy primVal m, HasPatVars m, Show primTy, Show primVal) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
   -- | datatype head
-  Maybe (HR.Term primTy primVal) ->
+  Maybe (Core.Term' HR.T primTy primVal) ->
   -- | type constructor
   Sexp.T ->
   Sexp.T ->
-  m (HR.Term primTy primVal)
+  m (Core.Term' HR.T primTy primVal)
 transformConSig q name mHd typeCon r@((t Sexp.:> ts) Sexp.:> _)
   | named ":record-d" = do
     let convertedSexp = Sexp.list [arrow, Sexp.list $ removeFieldNames ts, Sexp.car typeCon]

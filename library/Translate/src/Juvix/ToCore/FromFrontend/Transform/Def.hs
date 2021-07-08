@@ -1,40 +1,22 @@
-module Juvix.ToCore.FromFrontend.Transform.Def (transformDef) where
+module Juvix.ToCore.FromFrontend.Transform.Def
+  ( transformDef,
+  )
+where
 
-import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Context as Ctx
 import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.HR as HR
-import qualified Juvix.Core.IR as IR
-import Juvix.Core.Translate (hrToIR)
-import qualified Juvix.Core.Translate as Translate
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Sexp as Sexp
 import Juvix.ToCore.FromFrontend.Transform.HR (transformTermHR)
 import Juvix.ToCore.FromFrontend.Transform.Helpers
-  ( ReduceEff,
-    getConSig,
-    getDataSig,
-    getParamConstant,
-    getValSig,
-    lookupSig,
-    splitDataType,
-  )
 import Juvix.ToCore.Types
-  ( CoreDef (..),
-    CoreSig (..),
-    Error (..),
-    HasNextPatVar,
-    HasParam,
-    HasPatVars,
-    HasThrowFF,
-    throwFF,
-  )
 import Prelude (error)
 
 transformDef ::
-  ( ReduceEff primTy primVal m,
+  ( ReduceEff HR.T primTy primVal m,
     HasNextPatVar m,
     HasPatVars m,
     Show primTy,
@@ -42,7 +24,7 @@ transformDef ::
   ) =>
   NameSymbol.T ->
   Ctx.Definition Sexp.T Sexp.T Sexp.T ->
-  m [CoreDef primTy primVal]
+  m [CoreDef HR.T primTy primVal]
 transformDef x def = do
   sig <- lookupSig Nothing x
   case sig of
@@ -50,7 +32,6 @@ transformDef x def = do
     _ -> map CoreDef <$> transformNormalDef q x def
   where
     q = NameSymbol.mod x
-
     transformNormalDef q x (Ctx.TypeDeclar dec) =
       transformType x dec
       where
@@ -59,15 +40,16 @@ transformDef x def = do
           pure $
             Core.RawDataCon
               { rawConName = x,
-                rawConType = hrToIR ty,
+                rawConType = ty,
                 rawConDef = Nothing --def
               }
+
         transformType name _ = do
           (ty, conNames) <- getDataSig q name
           let getConSig' x = do ty <- getConSig q x; pure (x, ty, def)
           conSigs <- traverse getConSig' conNames
           cons <- traverse (uncurry3 transformCon) conSigs
-          (args, ℓ) <- splitDataType name ty
+          (args, ℓ) <- splitDataTypeHR name ty
           let dat' =
                 Core.RawDatatype
                   { rawDataName = name,
@@ -86,7 +68,6 @@ transformDef x def = do
     transformNormalDef q x (Ctx.Def def) = do
       f <- transformFunction q x def
       pure [Core.RawGFunction f]
-
     transformFunction q x (Ctx.D _ _ (_lambdaCase Sexp.:> defs) _)
       | Just xs <- Sexp.toList defs >>= NonEmpty.nonEmpty = do
         (π, typ) <- getValSig q x
@@ -95,44 +76,44 @@ transformDef x def = do
           Core.RawFunction
             { rawFunName = x,
               rawFunUsage = π,
-              rawFunType = hrToIR typ,
+              rawFunType = typ,
               rawFunClauses = clauses
             }
     transformFunction _ _ _ = error "malformed defun"
-
     transformClause q (Sexp.List [args', body])
       | Just args <- Sexp.toList args' = do
         put @"patVars" mempty
         put @"nextPatVar" 0
-        pattsHR <- traverse transformArgHR args
-        let (patts, pattsTable) = Translate.hrPatternsToIR pattsHR
-            transformTermIR q fe =
-              Translate.hrToIRWith pattsTable <$> transformTermHR q fe
-        clauseBody <- transformTermIR q body
-        pure $ Core.RawFunClause [] patts clauseBody False
+        pattsHR <- traverse transformArg args
+        clauseBody <- transformTermHR q body
+        pure $ Core.RawFunClause [] pattsHR clauseBody False
     transformClause _ _ = error "malformed tansformClause"
 
-    transformArgHR p@(name Sexp.:> _rest)
-      | Sexp.isAtomNamed name ":implicit-a" =
-        throwFF $ PatternUnimplemented p
-    transformArgHR pat = transformPatHR pat
+transformArg ::
+  (HasThrowFF HR.T primTy primVal m, HasParam primTy primVal m) =>
+  Sexp.T ->
+  m (HR.Pattern primTy primVal)
+transformArg p@(name Sexp.:> _rest)
+  | Sexp.isAtomNamed name ":implicit-a" =
+    throwFF $ PatternUnimplemented p
+transformArg pat = transformPat pat
 
-    transformPatHR ::
-      (HasThrowFF primTy primVal m, HasParam primTy primVal m) =>
-      Sexp.T ->
-      m (HR.Pattern primTy primVal)
-    transformPatHR p@(asCon Sexp.:> con)
-      -- implicit arguments are not supported
-      -- TODO ∷ translate as patterns into @let@
-      | Sexp.isAtomNamed asCon ":as" =
-        throwFF $ PatternUnimplemented p
-      | Just args <- Sexp.toList con,
-        Just Sexp.A {atomName} <- Sexp.atomFromT asCon =
-        HR.PCon atomName <$> traverse transformPatHR args
-    transformPatHR n
-      | Just x <- Sexp.nameFromT n = do
-        pure $ HR.PVar x
-      | Just n@Sexp.N {} <- Sexp.atomFromT n =
-        HR.PPrim <$> getParamConstant n
-      | otherwise =
-        error "malformed match pattern"
+transformPat ::
+  (HasThrowFF HR.T primTy primVal m, HasParam primTy primVal m) =>
+  Sexp.T ->
+  m (HR.Pattern primTy primVal)
+transformPat p@(asCon Sexp.:> con)
+  -- implicit arguments are not supported
+  -- TODO ∷ translate as patterns into @let@
+  | Sexp.isAtomNamed asCon ":as" =
+    throwFF $ PatternUnimplemented p
+  | Just args <- Sexp.toList con,
+    Just Sexp.A {atomName} <- Sexp.atomFromT asCon =
+    HR.PCon atomName <$> traverse transformPat args
+transformPat n
+  | Just x <- Sexp.nameFromT n = do
+    pure $ HR.PVar x
+  | Just n@Sexp.N {} <- Sexp.atomFromT n =
+    HR.PPrim <$> getParamConstant n
+  | otherwise =
+    error "malformed match pattern"

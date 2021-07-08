@@ -100,9 +100,9 @@ instance
       PP.vcat
         [ PP.sepIndent'
             [ (False, "Cannot apply"),
-              (True, PP.pretty0 $ irToHR $ IR.quote fun),
+              (True, PP.pretty0 $ irToHR $ Core.quote fun),
               (False, "to argument"),
-              (True, PP.pretty0 $ irToHR $ IR.quote arg)
+              (True, PP.pretty0 $ irToHR $ Core.quote arg)
             ],
           PP.prettyT paramErr
         ]

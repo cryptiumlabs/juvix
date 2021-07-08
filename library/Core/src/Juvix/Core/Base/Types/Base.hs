@@ -3,6 +3,7 @@
 
 module Juvix.Core.Base.Types.Base where
 
+import Data.Kind (Constraint)
 import Extensible (extensible)
 import Juvix.Library hiding (Pos)
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -108,3 +109,70 @@ extensible
       | PPrim primVal
       deriving (Show, Eq, Generic, Data, NFData)
     |]
+
+type CoreAll (c :: Type -> Constraint) ext primTy primVal =
+  ( TermAll c ext primTy primVal,
+    ElimAll c ext primTy primVal,
+    PatternAll c ext primTy primVal
+  )
+
+type CoreShow ext primTy primVal = CoreAll Show ext primTy primVal
+
+type CoreEq ext primTy primVal = CoreAll Eq ext primTy primVal
+
+type QuoteContext ext primTy primVal =
+  ( XVStar ext primTy primVal ~ XStar ext primTy primVal,
+    XVPrimTy ext primTy primVal ~ XPrimTy ext primTy primVal,
+    XVPi ext primTy primVal ~ XPi ext primTy primVal,
+    XVLam ext primTy primVal ~ XLam ext primTy primVal,
+    XVSig ext primTy primVal ~ XSig ext primTy primVal,
+    XVPair ext primTy primVal ~ XPair ext primTy primVal,
+    XVUnitTy ext primTy primVal ~ XUnitTy ext primTy primVal,
+    XVUnit ext primTy primVal ~ XUnit ext primTy primVal,
+    XVPrim ext primTy primVal ~ XPrim ext primTy primVal,
+    XVNeutral ext primTy primVal ~ XElim ext primTy primVal,
+    XVPrimTy ext primTy primVal ~ XPrimTy ext primTy primVal,
+    ValueX ext primTy primVal ~ TermX ext primTy primVal,
+    XNBound ext primTy primVal ~ XBound ext primTy primVal,
+    XNFree ext primTy primVal ~ XFree ext primTy primVal,
+    XNApp ext primTy primVal ~ XApp ext primTy primVal,
+    NeutralX ext primTy primVal ~ ElimX ext primTy primVal
+  )
+
+-- Quotation: takes a value back to a term
+quote :: QuoteContext ext primTy primVal => Value' ext primTy primVal -> Term' ext primTy primVal
+quote (VStar' nat ext) = Star' nat ext
+quote (VPrimTy' p ext) = PrimTy' p ext
+quote (VPi' π s t ext) = Pi' π (quote s) (quote t) ext
+quote (VLam' s ext) = Lam' (quote s) ext
+quote (VSig' π s t ext) = Sig' π (quote s) (quote t) ext
+quote (VPair' s t ext) = Pair' (quote s) (quote t) ext
+quote (VUnitTy' ext) = UnitTy' ext
+quote (VUnit' ext) = Unit' ext
+quote (VPrim' pri ext) = Prim' pri ext
+quote (VNeutral' n ext) = Elim' (neutralQuote n) ext
+quote (ValueX ext) = TermX ext
+
+neutralQuote :: QuoteContext ext primTy primVal => Neutral' ext primTy primVal -> Elim' ext primTy primVal
+neutralQuote (NBound' x ext) = Bound' x ext
+neutralQuote (NFree' x ext) = Free' x ext
+neutralQuote (NApp' n v ext) = App' (neutralQuote n) (quote v) ext
+neutralQuote (NeutralX ext) = ElimX ext
+
+-- | 'VFree' creates the value corresponding to a free variable
+pattern VFree ::
+  ( XNFree ext primTy primVal ~ (),
+    XVNeutral ext primTy primVal ~ ()
+  ) =>
+  Name ->
+  Value' ext primTy primVal
+pattern VFree n = VNeutral' (NFree' n ()) ()
+
+-- | 'VBound' creates the value corresponding to a bound variable
+pattern VBound ::
+  ( XNBound ext primTy primVal ~ (),
+    XVNeutral ext primTy primVal ~ ()
+  ) =>
+  BoundVar ->
+  Value' ext primTy primVal
+pattern VBound n = VNeutral' (NBound' n ()) ()

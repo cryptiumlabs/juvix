@@ -85,7 +85,7 @@ eraseFunction ::
   IR.Function primTy1 primVal1 ->
   m (Erasure.Function primTy2 primVal2)
 eraseFunction (Core.Function name usage ty clauses) = do
-  let (tys, ret) = piTypeToList (IR.quote ty)
+  let (tys, ret) = piTypeToList (Core.quote ty)
   clauses <- flip mapM clauses $ \(Core.FunClause _tel patts _term _rhsTy _catchAll _unreachable) -> do
     (patts, _ty) <- erasePatterns (patts, (tys, ret))
     patts <- mapM erasePattern patts

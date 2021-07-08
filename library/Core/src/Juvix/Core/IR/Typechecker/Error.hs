@@ -237,7 +237,7 @@ prettySA :: Show a => a -> Doc
 prettySA = PP.annotate' HR.ATyCon . PP.show
 
 prettyVal :: HR.PrimPretty primTy primVal => IR.Value primTy primVal -> Doc
-prettyVal = prettyHR . IR.quote
+prettyVal = prettyHR . Core.quote
 
 prettyHR :: HR.PrimPretty primTy primVal => IR.Term primTy primVal -> Doc
 prettyHR = PP.pretty0 . irToHR

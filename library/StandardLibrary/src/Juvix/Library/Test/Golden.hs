@@ -26,6 +26,7 @@ module Juvix.Library.Test.Golden
     compareGolden,
     mkGoldenTest,
     discoverGoldenTests,
+    discoverGoldenTestsNoQuotes,
 
     -- * Testing functions compact Variants
     toNoQuotesCompact,
@@ -145,6 +146,15 @@ discoverGoldenTestsCompact exts_in ext_out getGolden action path =
   testGroup path
     . map (mkGoldenTestCompact getGolden action ext_out)
     <$> T.findByExtension exts_in path
+
+discoverGoldenTestsNoQuotes ::
+  (FilePath -> FilePath) ->
+  [Char] ->
+  (FilePath -> IO NoQuotes) ->
+  -- | the directory in which to recursively look for golden tests
+  FilePath ->
+  IO TestTree
+discoverGoldenTestsNoQuotes withJuvixRootPath ext f p = discoverGoldenTests [".ju"] ext getGolden f (withJuvixRootPath p)
 
 toGolden :: (ConvertText a Text, ConvertText Text c) => a -> c
 toGolden = toS . Text.replace "examples" "examples-golden" . toS

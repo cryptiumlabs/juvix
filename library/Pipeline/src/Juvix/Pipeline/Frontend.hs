@@ -1,10 +1,8 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
-module Juvix.Core
-  ( module Juvix.Core.Erased.Algorithm,
-    module Juvix.Core.Translate,
-    module Juvix.Core.Types,
-    module Juvix.Core,
+module Juvix.Pipeline.Frontend
+  ( frontendToSexp,
+    Error (..),
   )
 where
 
@@ -21,9 +19,10 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.PrettyPrint as PP
 import qualified Juvix.Sexp as Sexp
 
+-- | Frontend Error
 data Error
   = ContextErr Contextify.ResolveErr
-  | NoInput
+  | DesugarErr
   deriving (Show)
 
 type instance PP.Ann Error = ()
@@ -31,17 +30,17 @@ type instance PP.Ann Error = ()
 instance PP.PrettyText Error where
   prettyT = \case
     ContextErr err -> PP.show err -- FIXME
-    NoInput -> PP.text "no input"
+    DesugarErr -> PP.text "no input after desugaring"
 
 -- TODO ∷ update the target when the last pass is finished,
 -- that way we can get the T out
-ofFrontend ::
+frontendToSexp ::
   [(NameSymbol.T, [Initial.TopLevel])] ->
   IO (Either Error (Context.T Sexp.T Sexp.T Sexp.T))
-ofFrontend syn =
+frontendToSexp syn =
   case fmap (second Desugar.op) syn of
     [] ->
-      pure $ Left NoInput
+      pure $ Left DesugarErr
     x : xs -> do
       contextd <- Contextify.op (x :| xs)
       pure $ case contextd of

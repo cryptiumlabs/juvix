@@ -1,25 +1,21 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module Juvix.Pipeline.Compile
-  ( Pipeline,
-    toCoreDef,
+  ( toCoreDef,
     isMain,
-    convGlobal,
+    typePrims,
     unsafeEvalGlobal,
   )
 where
 
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.Base as Core
-import Juvix.Core.Base.Types (Elim', Term', XPi)
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import Juvix.ToCore.Types (CoreDef (..))
 import qualified Prelude as P
-
-type Pipeline = Feedback.FeedbackT [] P.String IO
 
 type Debug primTy primVal =
   ( Show primTy,
@@ -32,8 +28,8 @@ type Debug primTy primVal =
 
 toCoreDef ::
   Alternative f =>
-  CoreDef primTy primVal ->
-  f (IR.RawGlobal primTy primVal)
+  CoreDef ext primTy primVal ->
+  f (Core.RawGlobal' ext primTy primVal)
 toCoreDef (CoreDef g) = pure g
 toCoreDef _ = empty
 
@@ -41,6 +37,7 @@ isMain :: Core.RawGlobal' ext primTy primVal -> Bool
 isMain (Core.RawGFunction (Core.RawFunction (_ :| ["main"]) _ _ _)) = True
 isMain _ = False
 
+-- | Evaluate terms of a global definition
 unsafeEvalGlobal ::
   ( IR.CanEval IR.T IR.T primTy primVal,
     Debug primTy primVal
@@ -60,12 +57,13 @@ unsafeEvalGlobal globals g =
     Core.RawGAbstract (Core.RawAbstract n u t) ->
       Core.GAbstract $ Core.Abstract n u (unsafeEval globals t)
 
-convGlobal ::
+-- | Type primitive values of a global definition
+typePrims ::
   (Show ty, Show val) =>
   ty ->
   IR.RawGlobal ty val ->
   IR.RawGlobal ty (Param.TypedPrim ty val)
-convGlobal ty g =
+typePrims ty g =
   case g of
     Core.RawGDatatype (Core.RawDatatype n pos a l cons) ->
       Core.RawGDatatype (Core.RawDatatype n pos (argReturn ty <$> a) l (conReturn ty <$> cons))
@@ -191,8 +189,8 @@ pattEval ty patt =
 
 baseToReturn ::
   ty ->
-  Term' IR.T ty val ->
-  Term' IR.T ty (Param.TypedPrim ty val)
+  Core.Term' IR.T ty val ->
+  Core.Term' IR.T ty (Param.TypedPrim ty val)
 baseToReturn ty t =
   case t of
     IR.Star u -> IR.Star u
@@ -209,8 +207,8 @@ baseToReturn ty t =
 
 elimToReturn ::
   ty ->
-  Elim' IR.T ty val ->
-  Elim' IR.T ty (Param.TypedPrim ty val) -- ty' --(TypedPrim ty val)
+  Core.Elim' IR.T ty val ->
+  Core.Elim' IR.T ty (Param.TypedPrim ty val) -- ty' --(TypedPrim ty val)
 elimToReturn ty e =
   case e of
     IR.Bound b -> IR.Bound b

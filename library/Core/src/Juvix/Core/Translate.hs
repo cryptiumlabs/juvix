@@ -2,14 +2,20 @@
 
 module Juvix.Core.Translate
   ( hrToIR,
+    hrToIR',
     hrToIRWith,
     irToHR,
     irToHRWith,
     hrPatternToIR,
     hrPatternsToIR,
+    hrPatternToIR',
     hrPatternToIRWith,
     irPatternToHR,
     irPatternToHRWith,
+    M (..),
+    Env (..),
+    exec,
+    execSymToPat,
   )
 where
 

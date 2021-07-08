@@ -13,6 +13,7 @@ module Juvix.ToCore.FromFrontend.Transform.Helpers
     parseVarPat,
     toElim,
     splitDataType,
+    splitDataTypeHR,
     conDefName,
     eleToSymbol,
   )
@@ -32,7 +33,7 @@ import Juvix.ToCore.Types
 
 -- | Retrieve constant primVal from parameterization
 getParamConstant ::
-  (HasParam primTy primVal m, HasThrowFF primTy primVal m) =>
+  (HasParam primTy primVal m, HasThrowFF ext primTy primVal m) =>
   Sexp.Atom ->
   m primVal
 getParamConstant atom = do
@@ -51,13 +52,13 @@ getParamConstant atom = do
 lookupSigWithSymbol ::
   ( Show primTy,
     Show primVal,
-    HasCoreSigs primTy primVal m
+    HasCoreSigs ext primTy primVal m
   ) =>
   -- | Namespace of current declaration
   Maybe NameSymbol.Mod ->
   -- | Qualified symbol
   NameSymbol.T ->
-  m (Maybe (NameSymbol.T, CoreSig HR.T primTy primVal))
+  m (Maybe (NameSymbol.T, CoreSig ext primTy primVal))
 lookupSigWithSymbol q x' = do
   gets @"coreSigs" \sigs -> do
     case q of
@@ -71,15 +72,15 @@ lookupSigWithSymbol q x' = do
 
 -- | Lookup signature from a qualified symbol.
 lookupSig ::
-  (Show primTy, Show primVal, HasCoreSigs primTy primVal m) =>
+  (Show primTy, Show primVal, HasCoreSigs ext primTy primVal m) =>
   Maybe NameSymbol.Mod -> -- namespace of current declaration
   NameSymbol.T ->
-  m (Maybe (CoreSig HR.T primTy primVal))
+  m (Maybe (CoreSig ext primTy primVal))
 lookupSig q x = fmap snd <$> lookupSigWithSymbol q x
 
 -- | Lookup signature
 checkSymbolSig ::
-  (Show primTy, Show primVal, ReduceEff primTy primVal m) =>
+  (Show primTy, Show primVal, ReduceEff ext primTy primVal m) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
   m (HR.Term primTy primVal)
@@ -91,8 +92,8 @@ checkSymbolSig q symbol =
 isOmega ::
   ( Show primTy,
     Show primVal,
-    HasCoreSigs primTy primVal m,
-    HasThrowFF primTy primVal m
+    HasCoreSigs ext primTy primVal m,
+    HasThrowFF ext primTy primVal m
   ) =>
   NameSymbol.Mod ->
   Sexp.T ->
@@ -103,8 +104,8 @@ isOmega q e = (== Just OmegaS) <$> getSpecialSig q e
 getSpecialSig ::
   ( Show primTy,
     Show primVal,
-    HasCoreSigs primTy primVal m,
-    HasThrowFF primTy primVal m
+    HasCoreSigs ext primTy primVal m,
+    HasThrowFF ext primTy primVal m
   ) =>
   NameSymbol.Mod ->
   Sexp.T ->
@@ -122,7 +123,7 @@ getSpecialSig _ _ = pure Nothing
 
 -- | Check whether the S-expression form is a non-implicit string atom
 parseVarArg ::
-  HasThrowFF primTy primVal m =>
+  HasThrowFF ext primTy primVal m =>
   Sexp.T ->
   m NameSymbol.T
 parseVarArg p@(name Sexp.:> _rest)
@@ -133,7 +134,7 @@ parseVarArg p = parseVarPat p
 -- | Check whether the S-expression form is a string atom (i.e. not a number)
 -- and return its name
 parseVarPat ::
-  HasThrowFF primTy primVal m =>
+  HasThrowFF ext primTy primVal m =>
   Sexp.T ->
   m NameSymbol.T
 parseVarPat p
@@ -144,7 +145,7 @@ parseVarPat p =
 
 -- | Unwrap Term
 toElim ::
-  HasThrowFF primTy primVal m =>
+  HasThrowFF ext primTy primVal m =>
   -- | the original expression
   Sexp.T ->
   HR.Term primTy primVal ->
@@ -155,23 +156,25 @@ toElim e _ = throwFF $ NotAnElim e
 getValSig ::
   ( Show primTy,
     Show primVal,
-    HasCoreSigs primTy primVal m,
-    HasThrowFF primTy primVal m
+    Core.CoreShow ext primTy primVal,
+    HasCoreSigs ext primTy primVal m,
+    HasThrowFF ext primTy primVal m
   ) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
-  m (Core.GlobalUsage, HR.Term primTy primVal)
+  m (Core.GlobalUsage, Core.Term' ext primTy primVal)
 getValSig q = getSig q \case ValSig π ty -> Just (π, ty); _ -> Nothing
 
 getConSig ::
   ( Show primTy,
     Show primVal,
-    HasCoreSigs primTy primVal m,
-    HasThrowFF primTy primVal m
+    Core.CoreShow ext primTy primVal,
+    HasCoreSigs ext primTy primVal m,
+    HasThrowFF ext primTy primVal m
   ) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
-  m (HR.Term primTy primVal)
+  m (Core.Term' ext primTy primVal)
 getConSig q = getSig q \case
   ConSig (Just ty) -> Just ty
   _ -> Nothing
@@ -179,12 +182,13 @@ getConSig q = getSig q \case
 getDataSig ::
   ( Show primTy,
     Show primVal,
-    HasCoreSigs primTy primVal m,
-    HasThrowFF primTy primVal m
+    Core.CoreShow ext primTy primVal,
+    HasCoreSigs ext primTy primVal m,
+    HasThrowFF ext primTy primVal m
   ) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
-  m (HR.Term primTy primVal, [NameSymbol.T])
+  m (Core.Term' ext primTy primVal, [NameSymbol.T])
 getDataSig q = getSig q \case
   DataSig ty cons -> Just (ty, cons)
   _ -> Nothing
@@ -194,11 +198,11 @@ getSig ::
   ( Show a,
     Show primTy,
     Show primVal,
-    HasCoreSigs primTy primVal m,
-    HasThrowFF primTy primVal m
+    HasCoreSigs ext primTy primVal m,
+    HasThrowFF ext primTy primVal m
   ) =>
   NameSymbol.Mod ->
-  (CoreSigHR primTy primVal -> Maybe a) ->
+  (CoreSig ext primTy primVal -> Maybe a) ->
   NameSymbol.T ->
   m a
 getSig q f x = do
@@ -208,7 +212,7 @@ getSig q f x = do
     _ -> throwFF $ WrongSigType x msig
 
 splitDataType ::
-  (Show primTy, Show primVal, HasThrowFF primTy primVal m) =>
+  (Show primTy, Show primVal, HasThrowFF ext primTy primVal m) =>
   NameSymbol.T ->
   HR.Term primTy primVal ->
   m ([IR.RawDataArg primTy primVal], Core.Universe)
@@ -221,6 +225,24 @@ splitDataType x ty0 = go ty0
             { rawArgName = x,
               rawArgUsage = π,
               rawArgType = hrToIR s
+            }
+    go (HR.Star ℓ) = pure ([], ℓ)
+    go _ = throwFF $ InvalidDatatypeType x ty0
+
+splitDataTypeHR ::
+  (Show primTy, Show primVal, HasThrowFF ext primTy primVal m) =>
+  NameSymbol.T ->
+  HR.Term primTy primVal ->
+  m ([Core.RawDataArg' HR.T primTy primVal], Core.Universe)
+splitDataTypeHR x ty0 = go ty0
+  where
+    go (HR.Pi π x s t) = first (arg :) <$> splitDataTypeHR x t
+      where
+        arg =
+          Core.RawDataArg
+            { rawArgName = x,
+              rawArgUsage = π,
+              rawArgType = s
             }
     go (HR.Star ℓ) = pure ([], ℓ)
     go _ = throwFF $ InvalidDatatypeType x ty0

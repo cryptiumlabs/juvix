@@ -1,7 +1,6 @@
 module Juvix.ToCore.FromFrontend.Transform.Usage (transformUsage, transformGUsage) where
 
 import qualified Juvix.Core.Base as Core
-import qualified Juvix.Core.IR as IR
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
@@ -20,8 +19,8 @@ import Juvix.ToCore.Types
 transformUsage ::
   ( Show primTy,
     Show primVal,
-    HasThrowFF primTy primVal m,
-    HasCoreSigs primTy primVal m
+    HasThrowFF ext primTy primVal m,
+    HasCoreSigs ext primTy primVal m
   ) =>
   NameSymbol.Mod ->
   Sexp.T ->
@@ -34,8 +33,8 @@ transformUsage q e = do
 transformGUsage ::
   ( Show primTy,
     Show primVal,
-    HasThrowFF primTy primVal m,
-    HasCoreSigs primTy primVal m
+    HasThrowFF ext primTy primVal m,
+    HasCoreSigs ext primTy primVal m
   ) =>
   NameSymbol.Mod ->
   Maybe Sexp.T ->

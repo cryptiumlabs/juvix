@@ -2,14 +2,11 @@
 
 module Test.Compiler where
 
-import qualified Data.Aeson as A
 import Data.Curve.Weierstrass.BLS12381 (Fr)
-import Data.Field.Galois (GaloisField, PrimeField (..), toP)
+import Data.Field.Galois (GaloisField, PrimeField (..))
 import qualified Data.Map as Map
-import qualified Data.Scientific as S
-import Juvix.Backends.Plonk (FFAnnTerm, FFType, PrimVal (..))
+import Juvix.Backends.Plonk (FFAnnTerm)
 import qualified Juvix.Backends.Plonk as P
-import qualified Juvix.Core as Core
 import qualified Juvix.Core.Erased.Ann as ErasedAnn
 import Juvix.Library hiding (Type, exp)
 import qualified Juvix.Library.Feedback as Feedback
@@ -89,7 +86,7 @@ polynomial1 = T.testCase "\\x y -> x^3 - 2x^2 + 4 = y" (testOutput Example.circu
 compile :: FilePath -> Pipeline.Pipeline (FFAnnTerm Fr)
 compile fin = do
   t <- liftIO $ readFile fin
-  parsed <- Pipeline.parseExplicit (P.BPlonk :: P.BPlonk Fr) t ["../../../stdlib/Prelude.ju", "../../../stdlib/Circuit.ju"]
+  parsed <- Pipeline.parseWithLibs ["../../../stdlib/Prelude.ju", "../../../stdlib/Circuit.ju"] (P.BPlonk :: P.BPlonk Fr) t
   s <- Pipeline.typecheck @(P.BPlonk Fr) parsed
   pure $ ErasedAnn.toRaw s
 

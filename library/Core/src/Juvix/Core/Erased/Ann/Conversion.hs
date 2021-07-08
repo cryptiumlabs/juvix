@@ -4,7 +4,6 @@
 module Juvix.Core.Erased.Ann.Conversion
   ( irToErasedAnn,
     toRaw,
-    Comp,
     CompConstraints',
     CompConstraints,
   )
@@ -26,14 +25,6 @@ import qualified Juvix.Core.Types as Types
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
-
-type Comp ty val err res =
-  forall m.
-  CompConstraints ty val err m =>
-  IR.Term ty val ->
-  Usage.T ->
-  IR.Term ty val ->
-  m res
 
 type CompConstraints' primTy primVal compErr m =
   ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
@@ -78,7 +69,13 @@ lookupMapPrim ns (App.Cont f xs n) =
         Erasure.InternalError $
           "unknown de Bruijn index " <> show i
 
-irToErasedAnn :: forall err ty val. Comp ty val err (ErasedAnn.AnnTerm ty (ErasedAnn.TypedPrim ty val))
+irToErasedAnn ::
+  forall err ty val m.
+  CompConstraints ty val err m =>
+  IR.Term ty val ->
+  Usage.T ->
+  IR.Term ty val ->
+  m (ErasedAnn.AnnTerm ty (ErasedAnn.TypedPrim ty val))
 irToErasedAnn term usage ty = do
   -- FIXME: allow any universe!
   (term, _) <- typecheckErase' term usage ty

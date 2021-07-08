@@ -303,7 +303,7 @@ handleContextPass desuagredSexp contextPass =
 
 sexp :: FilePath -> Feedback (NameSymbol.T, [Sexp.T])
 sexp path = do
-  fileRead <- liftIO $ Frontend.ofSingleFile path
+  fileRead <- liftIO $ Frontend.parseSingleFile path
   case fileRead of
     Right (names, top) ->
       pure (names, fmap SexpTrans.transTopLevel top)
@@ -312,7 +312,7 @@ sexp path = do
 fullyDesugarPath ::
   (MonadIO m, MonadFail m) => [FilePath] -> m [(NameSymbol.T, [Sexp.T])]
 fullyDesugarPath paths = do
-  fileRead <- liftIO $ Frontend.ofPath paths
+  fileRead <- liftIO $ Frontend.parseFiles paths
   case fileRead of
     Right xs ->
       pure $ fmap (\(names, top) -> (names, fullDesugar (fmap SexpTrans.transTopLevel top))) xs

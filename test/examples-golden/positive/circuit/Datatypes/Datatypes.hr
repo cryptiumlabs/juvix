@@ -1,0 +1,1336 @@
+fromList
+    [
+        ( "Datatypes" :| [ "norm" ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Datatypes" :| [ "norm" ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Datatypes" :| [ "Bar" ] )
+                            ) ()
+                        )
+                        ( Elim'
+                            ( ElimX
+                                ( "Datatypes" :| [ "field" ] )
+                            ) ()
+                        )
+                        ( "" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats =
+                            [ PCon'
+                                ( "P" :| [] )
+                                [ PatternX
+                                    ( "x" :| [] )
+                                , PatternX
+                                    ( "y" :| [] )
+                                ] ()
+                            ]
+                        , rawClauseBody = Elim'
+                            ( App'
+                                ( App'
+                                    ( ElimX
+                                        ( "Datatypes" :| [ "+" ] )
+                                    )
+                                    ( Elim'
+                                        ( App'
+                                            ( App'
+                                                ( ElimX
+                                                    ( "Datatypes" :| [ "^" ] )
+                                                )
+                                                ( Elim'
+                                                    ( ElimX
+                                                        ( "Datatypes" :| [ "x" ] )
+                                                    ) ()
+                                                ) ()
+                                            )
+                                            ( Prim'
+                                                ( PConst
+                                                    ( P
+                                                        ( 2 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                                                    )
+                                                ) ()
+                                            ) ()
+                                        ) ()
+                                    ) ()
+                                )
+                                ( Elim'
+                                    ( App'
+                                        ( App'
+                                            ( ElimX
+                                                ( "Datatypes" :| [ "^" ] )
+                                            )
+                                            ( Elim'
+                                                ( ElimX
+                                                    ( "y" :| [] )
+                                                ) ()
+                                            ) ()
+                                        )
+                                        ( Prim'
+                                            ( PConst
+                                                ( P
+                                                    ( 2 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                                                )
+                                            ) ()
+                                        ) ()
+                                    ) ()
+                                ) ()
+                            ) ()
+                        , rawClauseCatchall = False
+                        } :|
+                        [ RawFunClause
+                            { rawClauseTel = []
+                            , rawClausePats =
+                                [ PCon'
+                                    ( "Q" :| [] )
+                                    [ PatternX
+                                        ( "x" :| [] )
+                                    , PatternX
+                                        ( "y" :| [] )
+                                    , PatternX
+                                        ( "z" :| [] )
+                                    ] ()
+                                ]
+                            , rawClauseBody = Elim'
+                                ( App'
+                                    ( App'
+                                        ( ElimX
+                                            ( "Datatypes" :| [ "+" ] )
+                                        )
+                                        ( Elim'
+                                            ( App'
+                                                ( App'
+                                                    ( ElimX
+                                                        ( "Datatypes" :| [ "^" ] )
+                                                    )
+                                                    ( Elim'
+                                                        ( ElimX
+                                                            ( "Datatypes" :| [ "x" ] )
+                                                        ) ()
+                                                    ) ()
+                                                )
+                                                ( Prim'
+                                                    ( PConst
+                                                        ( P
+                                                            ( 2 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                                                        )
+                                                    ) ()
+                                                ) ()
+                                            ) ()
+                                        ) ()
+                                    )
+                                    ( Elim'
+                                        ( App'
+                                            ( App'
+                                                ( ElimX
+                                                    ( "Datatypes" :| [ "+" ] )
+                                                )
+                                                ( Elim'
+                                                    ( App'
+                                                        ( App'
+                                                            ( ElimX
+                                                                ( "Datatypes" :| [ "^" ] )
+                                                            )
+                                                            ( Elim'
+                                                                ( ElimX
+                                                                    ( "y" :| [] )
+                                                                ) ()
+                                                            ) ()
+                                                        )
+                                                        ( Prim'
+                                                            ( PConst
+                                                                ( P
+                                                                    ( 2 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                                                                )
+                                                            ) ()
+                                                        ) ()
+                                                    ) ()
+                                                ) ()
+                                            )
+                                            ( Elim'
+                                                ( App'
+                                                    ( App'
+                                                        ( ElimX
+                                                            ( "Datatypes" :| [ "^" ] )
+                                                        )
+                                                        ( Elim'
+                                                            ( ElimX
+                                                                ( "z" :| [] )
+                                                            ) ()
+                                                        ) ()
+                                                    )
+                                                    ( Prim'
+                                                        ( PConst
+                                                            ( P
+                                                                ( 2 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                                                            )
+                                                        ) ()
+                                                    ) ()
+                                                ) ()
+                                            ) ()
+                                        ) ()
+                                    ) ()
+                                ) ()
+                            , rawClauseCatchall = False
+                            }
+                        ]
+                    }
+                )
+            )
+        )
+    ,
+        ( "Datatypes" :| [ "t" ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Datatypes" :| [ "t" ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Datatypes" :| [ "field" ] )
+                            ) ()
+                        )
+                        ( Elim'
+                            ( ElimX
+                                ( "Datatypes" :| [ "field" ] )
+                            ) ()
+                        )
+                        ( "" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats =
+                            [ PatternX
+                                ( "x" :| [] )
+                            ]
+                        , rawClauseBody = Elim'
+                            ( App'
+                                ( App'
+                                    ( ElimX
+                                        ( "Datatypes" :| [ "+" ] )
+                                    )
+                                    ( Elim'
+                                        ( ElimX
+                                            ( "Datatypes" :| [ "x" ] )
+                                        ) ()
+                                    ) ()
+                                )
+                                ( Prim'
+                                    ( PConst
+                                        ( P
+                                            ( 5 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                                        )
+                                    ) ()
+                                ) ()
+                            ) ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :|
+            [ "Circuit"
+            , "and%"
+            ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :|
+                        [ "Circuit"
+                        , "and%"
+                        ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Prelude" :| [ "ty" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "x" :| [] )
+                                ) ()
+                            )
+                            ( Pi' Omega
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( "" :| [] )
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "x" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats =
+                            [ PatternX
+                                ( "_" :| [] )
+                            ]
+                        , rawClauseBody = Prim' PAnd ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :|
+            [ "Circuit"
+            , "bool"
+            ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :|
+                        [ "Circuit"
+                        , "bool"
+                        ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Elim'
+                        ( ElimX
+                            ( "Prelude" :| [ "ty" ] )
+                        ) ()
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats = []
+                        , rawClauseBody = PrimTy' PBool ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :| [ "dpair" ]
+        , SpecialDef
+            ( "Prelude" :| [ "dpair" ] ) ( PairS Nothing )
+        )
+    ,
+        ( "Datatypes" :| [ "+" ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Datatypes" :| [ "+" ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Datatypes" :| [ "field" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
+                            )
+                            ( Elim'
+                                ( ElimX
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats = []
+                        , rawClauseBody = Prim' PAdd ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Datatypes" :| [ "P" ]
+        , CoreDef
+            ( RawGDataCon
+                ( RawDataCon
+                    { rawConName = "Datatypes" :| [ "P" ]
+                    , rawConType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Datatypes" :| [ "field" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
+                            )
+                            ( Elim'
+                                ( ElimX
+                                    ( "Datatypes" :| [ "Bar" ] )
+                                ) ()
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "" :| [] )
+                    , rawConDef = Nothing
+                    }
+                )
+            )
+        )
+    ,
+        ( "Datatypes" :| [ "==" ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Datatypes" :| [ "==" ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Datatypes" :| [ "field" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
+                            )
+                            ( Elim'
+                                ( ElimX
+                                    ( "Prelude" :|
+                                        [ "Circuit"
+                                        , "bool"
+                                        ]
+                                    )
+                                ) ()
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats = []
+                        , rawClauseBody = Prim' PEq ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Datatypes" :| [ "Bar" ]
+        , CoreDef
+            ( RawGDatatype
+                ( RawDatatype
+                    { rawDataName = "Datatypes" :| [ "Bar" ]
+                    , rawDataPos = []
+                    , rawDataArgs = []
+                    , rawDataLevel = 0
+                    , rawDataCons =
+                        [ RawDataCon
+                            { rawConName = "Datatypes" :| [ "P" ]
+                            , rawConType = Pi' Omega
+                                ( Elim'
+                                    ( ElimX
+                                        ( "Datatypes" :| [ "field" ] )
+                                    ) ()
+                                )
+                                ( Pi' Omega
+                                    ( Elim'
+                                        ( ElimX
+                                            ( "Datatypes" :| [ "field" ] )
+                                        ) ()
+                                    )
+                                    ( Elim'
+                                        ( ElimX
+                                            ( "Datatypes" :| [ "Bar" ] )
+                                        ) ()
+                                    )
+                                    ( "" :| [] )
+                                )
+                                ( "" :| [] )
+                            , rawConDef = Nothing
+                            }
+                        , RawDataCon
+                            { rawConName = "Datatypes" :| [ "Q" ]
+                            , rawConType = Pi' Omega
+                                ( Elim'
+                                    ( ElimX
+                                        ( "Datatypes" :| [ "field" ] )
+                                    ) ()
+                                )
+                                ( Pi' Omega
+                                    ( Elim'
+                                        ( ElimX
+                                            ( "Datatypes" :| [ "field" ] )
+                                        ) ()
+                                    )
+                                    ( Pi' Omega
+                                        ( Elim'
+                                            ( ElimX
+                                                ( "Datatypes" :| [ "field" ] )
+                                            ) ()
+                                        )
+                                        ( Elim'
+                                            ( ElimX
+                                                ( "Datatypes" :| [ "Bar" ] )
+                                            ) ()
+                                        )
+                                        ( "" :| [] )
+                                    )
+                                    ( "" :| [] )
+                                )
+                                ( "" :| [] )
+                            , rawConDef = Nothing
+                            }
+                        ]
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :|
+            [ "Circuit"
+            , "exp"
+            ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :|
+                        [ "Circuit"
+                        , "exp"
+                        ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Prelude" :| [ "ty" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "x" :| [] )
+                                ) ()
+                            )
+                            ( Pi' Omega
+                                ( Elim'
+                                    ( ElimX
+                                        ( "Prelude" :|
+                                            [ "Circuit"
+                                            , "int"
+                                            ]
+                                        )
+                                    ) ()
+                                )
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( "" :| [] )
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "x" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats =
+                            [ PatternX
+                                ( "_" :| [] )
+                            ]
+                        , rawClauseBody = Prim' PExp ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :| [ "id" ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :| [ "id" ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Prelude" :| [ "ty" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "a" :| [] )
+                                ) ()
+                            )
+                            ( Elim'
+                                ( ElimX
+                                    ( "a" :| [] )
+                                ) ()
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "a" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats =
+                            [ PatternX
+                                ( "_" :| [] )
+                            , PatternX
+                                ( "x" :| [] )
+                            ]
+                        , rawClauseBody = Elim'
+                            ( ElimX
+                                ( "x" :| [] )
+                            ) ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :|
+            [ "Circuit"
+            , "xor"
+            ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :|
+                        [ "Circuit"
+                        , "xor"
+                        ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Prelude" :| [ "ty" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "x" :| [] )
+                                ) ()
+                            )
+                            ( Pi' Omega
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( "" :| [] )
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "x" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats =
+                            [ PatternX
+                                ( "_" :| [] )
+                            ]
+                        , rawClauseBody = Prim' PXor ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :| [ ":" ]
+        , SpecialDef
+            ( "Prelude" :| [ ":" ] ) ColonS
+        )
+    ,
+        ( "Prelude" :|
+            [ "Circuit"
+            , "field"
+            ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :|
+                        [ "Circuit"
+                        , "field"
+                        ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Elim'
+                        ( ElimX
+                            ( "Prelude" :| [ "ty" ] )
+                        ) ()
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats = []
+                        , rawClauseBody = PrimTy' PField ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Datatypes" :| [ "^" ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Datatypes" :| [ "^" ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Datatypes" :| [ "field" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
+                            )
+                            ( Elim'
+                                ( ElimX
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats = []
+                        , rawClauseBody = Prim' PExp ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :| [ "ty_" ]
+        , SpecialDef
+            ( "Prelude" :| [ "ty_" ] ) TypeS
+        )
+    ,
+        ( "Prelude" :|
+            [ "Circuit"
+            , "div"
+            ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :|
+                        [ "Circuit"
+                        , "div"
+                        ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Prelude" :| [ "ty" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "x" :| [] )
+                                ) ()
+                            )
+                            ( Pi' Omega
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( "" :| [] )
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "x" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats =
+                            [ PatternX
+                                ( "_" :| [] )
+                            ]
+                        , rawClauseBody = Prim' PDiv ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :| [ "->" ]
+        , SpecialDef
+            ( "Prelude" :| [ "->" ] )
+            ( ArrowS ( Just Omega ) )
+        )
+    ,
+        ( "Prelude" :|
+            [ "Circuit"
+            , "int"
+            ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :|
+                        [ "Circuit"
+                        , "int"
+                        ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Elim'
+                        ( ElimX
+                            ( "Prelude" :| [ "ty" ] )
+                        ) ()
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats = []
+                        , rawClauseBody = PrimTy' PInt ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :| [ "omega" ]
+        , SpecialDef
+            ( "Prelude" :| [ "omega" ] ) OmegaS
+        )
+    ,
+        ( "Prelude" :|
+            [ "Circuit"
+            , "add"
+            ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :|
+                        [ "Circuit"
+                        , "add"
+                        ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Prelude" :| [ "ty" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "x" :| [] )
+                                ) ()
+                            )
+                            ( Pi' Omega
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( "" :| [] )
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "x" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats =
+                            [ PatternX
+                                ( "_" :| [] )
+                            ]
+                        , rawClauseBody = Prim' PAdd ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :| [ "arr" ]
+        , SpecialDef
+            ( "Prelude" :| [ "arr" ] ) ( ArrowS Nothing )
+        )
+    ,
+        ( "Datatypes" :| [ "field" ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Datatypes" :| [ "field" ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Elim'
+                        ( ElimX
+                            ( "Prelude" :| [ "ty" ] )
+                        ) ()
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats = []
+                        , rawClauseBody = PrimTy' PField ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Datatypes" :| [ "*" ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Datatypes" :| [ "*" ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Datatypes" :| [ "field" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
+                            )
+                            ( Elim'
+                                ( ElimX
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats = []
+                        , rawClauseBody = Prim' PMul ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Datatypes" :| [ "main" ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Datatypes" :| [ "main" ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Elim'
+                        ( ElimX
+                            ( "Datatypes" :| [ "field" ] )
+                        ) ()
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats = []
+                        , rawClauseBody = Prim'
+                            ( PConst
+                                ( P
+                                    ( 3 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                                )
+                            ) ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Datatypes" :| [ "x" ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Datatypes" :| [ "x" ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Elim'
+                        ( ElimX
+                            ( "Datatypes" :| [ "field" ] )
+                        ) ()
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats = []
+                        , rawClauseBody = Prim'
+                            ( PConst
+                                ( P
+                                    ( 3 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                                )
+                            ) ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :|
+            [ "Circuit"
+            , "eq"
+            ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :|
+                        [ "Circuit"
+                        , "eq"
+                        ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Prelude" :| [ "ty" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "x" :| [] )
+                                ) ()
+                            )
+                            ( Pi' Omega
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( Elim'
+                                    ( ElimX
+                                        ( "Prelude" :|
+                                            [ "Circuit"
+                                            , "bool"
+                                            ]
+                                        )
+                                    ) ()
+                                )
+                                ( "" :| [] )
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "x" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats =
+                            [ PatternX
+                                ( "_" :| [] )
+                            ]
+                        , rawClauseBody = Prim' PEq ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :|
+            [ "Circuit"
+            , "mul"
+            ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :|
+                        [ "Circuit"
+                        , "mul"
+                        ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Prelude" :| [ "ty" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "x" :| [] )
+                                ) ()
+                            )
+                            ( Pi' Omega
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( "" :| [] )
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "x" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats =
+                            [ PatternX
+                                ( "_" :| [] )
+                            ]
+                        , rawClauseBody = Prim' PMul ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :|
+            [ "Circuit"
+            , "sub"
+            ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :|
+                        [ "Circuit"
+                        , "sub"
+                        ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Prelude" :| [ "ty" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "x" :| [] )
+                                ) ()
+                            )
+                            ( Pi' Omega
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( "" :| [] )
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "x" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats =
+                            [ PatternX
+                                ( "_" :| [] )
+                            ]
+                        , rawClauseBody = Prim' PSub ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Datatypes" :| [ "Q" ]
+        , CoreDef
+            ( RawGDataCon
+                ( RawDataCon
+                    { rawConName = "Datatypes" :| [ "Q" ]
+                    , rawConType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Datatypes" :| [ "field" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
+                            )
+                            ( Pi' Omega
+                                ( Elim'
+                                    ( ElimX
+                                        ( "Datatypes" :| [ "field" ] )
+                                    ) ()
+                                )
+                                ( Elim'
+                                    ( ElimX
+                                        ( "Datatypes" :| [ "Bar" ] )
+                                    ) ()
+                                )
+                                ( "" :| [] )
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "" :| [] )
+                    , rawConDef = Nothing
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :|
+            [ "Circuit"
+            , "or"
+            ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :|
+                        [ "Circuit"
+                        , "or"
+                        ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Prelude" :| [ "ty" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "x" :| [] )
+                                ) ()
+                            )
+                            ( Pi' Omega
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( Elim'
+                                    ( ElimX
+                                        ( "x" :| [] )
+                                    ) ()
+                                )
+                                ( "" :| [] )
+                            )
+                            ( "" :| [] )
+                        )
+                        ( "x" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats =
+                            [ PatternX
+                                ( "_" :| [] )
+                            ]
+                        , rawClauseBody = Prim' POr ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :| [ "const" ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :| [ "const" ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( ElimX
+                                ( "Prelude" :| [ "ty" ] )
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( ElimX
+                                    ( "Prelude" :| [ "ty" ] )
+                                ) ()
+                            )
+                            ( Pi' Omega
+                                ( Elim'
+                                    ( ElimX
+                                        ( "a" :| [] )
+                                    ) ()
+                                )
+                                ( Pi' Omega
+                                    ( Elim'
+                                        ( ElimX
+                                            ( "b" :| [] )
+                                        ) ()
+                                    )
+                                    ( Elim'
+                                        ( ElimX
+                                            ( "a" :| [] )
+                                        ) ()
+                                    )
+                                    ( "" :| [] )
+                                )
+                                ( "" :| [] )
+                            )
+                            ( "b" :| [] )
+                        )
+                        ( "a" :| [] )
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats =
+                            [ PatternX
+                                ( "_" :| [] )
+                            , PatternX
+                                ( "_" :| [] )
+                            , PatternX
+                                ( "x" :| [] )
+                            ]
+                        , rawClauseBody = Lam'
+                            ( Elim'
+                                ( ElimX
+                                    ( "x" :| [] )
+                                ) ()
+                            )
+                            ( "_" :| [] )
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "Prelude" :| [ "ty" ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "Prelude" :| [ "ty" ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Star' 1 ()
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats = []
+                        , rawClauseBody = Star' 0 ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ]

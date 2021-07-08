@@ -4,6 +4,7 @@ module Juvix.ToCore.FromFrontend.Transform.IR (transformTermIR) where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Core.Base as Core
+import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Translate (hrToIR)
 import Juvix.Library
@@ -12,24 +13,15 @@ import qualified Juvix.Sexp as Sexp
 import Juvix.ToCore.FromFrontend.Transform.HR
 import Juvix.ToCore.FromFrontend.Transform.Helpers
   ( ReduceEff,
-    getParamConstant,
-    getSpecialSig,
-    lookupSigWithSymbol,
-    parseVarArg,
-    parseVarPat,
-    toElim,
   )
 import Juvix.ToCore.Types
-  ( Error (..),
-    HasPatVars,
-    Special (..),
-    throwFF,
+  ( HasPatVars,
   )
 
 transformTermIR ::
   ( Show primTy,
     Show primVal,
-    ReduceEff primTy primVal m,
+    ReduceEff HR.T primTy primVal m,
     HasPatVars m
   ) =>
   NameSymbol.Mod ->

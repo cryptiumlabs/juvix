@@ -30,28 +30,29 @@
 \usetikzlibrary{fit}
 \begin{tikzpicture}[node distance={14mm}, thick, main/.style = {draw, rectangle}] 
 \node[main] (1) {Juvix source code}; 
-\node[main] (2) [below of=1] {ML AST}; 
-\node[main] (3) [below of=2] {S-expression AST}; 
-\node[main] (4) [below of=3] {S-expression Desugared}; 
-\node[main] (5) [below of=4] {Core HR}; 
-\node[main] (6) [below of=5] {Core IR}; 
+\node[main] (2) [below of=1] {Frontend (ML AST)}; 
+\node[main] (3) [below of=2] {S-expression}; 
+\node[main] (4) [below of=3] {Core HR}; 
+\node[main] (5) [below of=4] {Core IR}; 
 % TODO: From here, it's already type checked. Make it explicit
-\node[main] (7) [below of=6] {Core Erased};  
-\node[main] (8) [below of=7] {Backend}; 
-\draw[->] (1) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Frontend/src/Juvix/Frontend/Parser.hs}{Frontend: Juvix.Frontend.Parser.hs (parse)}} (2); 
-\draw[->] (2) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/Desugar.hs}{Translate: Juvix.FrontendDesugar.hs (op)}} (3); 
-\draw[->] (3) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/Contextify.hs}{Translate: Juvix.Contextify.hs (op)}} (4); 
-\draw[->] (4) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Translate/src/Juvix/ToCore/FromFrontend.hs}{Translate: Juvix.ToCore.FromFrontend.hs}} (5); 
-\draw[->] (5) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Translate.hs}{Core: Juvix.Core.Translate.hs (hrToIR)}} (6); 
-\draw[->] (6) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Core/src/Juvix/Core/Erasure/Algorithm.hs}{Core: Juvix.Core.Erased.Algorithm.hs (erase)}} (7);
-\draw[->] (7) -- node[midway, right] {\href{}{To Backend}} (8);
-\node[draw,dotted,fit=(3) (4), label={[xshift=0mm]left:{S-expressions}}] {};
-\node[draw,dotted,fit=(5) (6), label={[xshift=0mm]left:{Extend from Core.Base}}] {};
-\node[draw,dotted,fit=(7) , label={[xshift=0mm]left:{Typechecked}}] {};
+\node[main] (6) [below of=5] {Core Erased};  
+\node[main] (7) [below of=6] {Backend}; 
+\draw[->] (1) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Pipeline/src/Juvix/Pipeline.hs}{Juvix.Pipeline.hs (toML)}} (2); 
+\draw[->] (2) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Pipeline/src/Juvix/Pipeline.hs}{Juvix.Pipeline.hs (toSexp)}} (3); 
+\draw[->] (3) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Pipeline/src/Juvix/Pipeline.hs}{Juvix.Pipeline.hs (toHR)}} (4); 
+\draw[->] (4) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Pipeline/src/Juvix/Pipeline.hs}{Juvix.Pipeline.hs (toIR)}}  (5); 
+\draw[->] (5) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Pipeline/src/Juvix/Pipeline.hs}{Juvix.Pipeline.hs (toErased)}}  (6); 
+\draw[->] (6) -- node[midway, right] {\href{https://github.com/heliaxdev/juvix/blob/develop/library/Pipeline/src/Juvix/Pipeline.hs}{Juvix.Pipeline.hs (compile)}}  (7);
+% \draw[->] (7) -- node[midway, right] {\href{}{To Backend}} (8);
+\node[draw,dotted,fit=(1) (2) (3), label={[xshift=0mm]left:{Parse}}] {};
+\node[draw,dotted,fit=(3) (4) (5) (6), label={[xshift=0mm]left:{Typecheck}}] {};
+\node[draw,dotted,fit=(6) (7) , label={[xshift=0mm]left:{Compile}}] {};
 
 \end{tikzpicture} 
 
-\newpage
+\clearpage
+
+
 
 \section{S-Expressions}
 
