@@ -198,6 +198,19 @@ evalTerm ::
   Either (Error IR.T extT primTy primVal) (IR.Value primTy primVal)
 evalTerm g t = evalTermWith g rejectExts $ OnlyExts.onlyExtsT t
 
+-- | Translate a function termin into an elimination.
+-- The arguments to this function are basically the components of a function.
+--
+-- @
+-- foo : int -> int
+-- foo x = add x x
+-- @
+--
+-- becomes:
+--
+-- @
+-- (ω | \x -> add x x : int -> int)
+-- @
 toLambda' ::
   forall ext' ext primTy primVal.
   ( EvalPatSubst ext' primTy primVal,
