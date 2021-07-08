@@ -1,61 +1,84 @@
-ArithCircuit
-    [ MulGate
-        { mulL = Var
-            ( InputWire 0 )
-        , mulR = Var
-            ( InputWire 0 )
-        , mulO = IntermediateWire 2
-        }
-    , MulGate
-        { mulL = Var
-            ( IntermediateWire 2 )
-        , mulR = Var
-            ( InputWire 0 )
-        , mulO = IntermediateWire 3
-        }
-    , MulGate
-        { mulL = ConstGate
-            ( P
-                ( 1 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
-            )
-        , mulR = Add
-            ( Var
-                ( IntermediateWire 3 )
-            )
-            ( ScalarMul
-                ( P
-                    ( 52435875175126190479447740508185965837690552500527637822603658699938581184512 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+Ann
+    { usage = Omega
+    , type' = Pi Omega ( PrimTy PField )
+        ( Pi Omega ( PrimTy PField ) ( PrimTy PBool ) )
+    , term = LamM
+        { capture = []
+        , arguments =
+            [ "0" :| []
+            , "1" :| []
+            ]
+        , body = Ann
+            { usage = Omega
+            , type' = PrimTy PBool
+            , term = AppM
+                ( Ann
+                    { usage = Omega
+                    , type' = Pi Omega ( PrimTy PField )
+                        ( Pi Omega ( PrimTy PField ) ( PrimTy PBool ) )
+                    , term = Prim
+                        ( Return
+                            { retType = PrimType
+                                { getPrimType = PField :|
+                                    [ PField
+                                    , PBool
+                                    ]
+                                }
+                            , retTerm = PEq
+                            }
+                        )
+                    }
                 )
-                ( Var
-                    ( InputWire 1 )
-                )
-            )
-        , mulO = IntermediateWire 4
+                [ Ann
+                    { usage = Omega
+                    , type' = PrimTy PField
+                    , term = AppM
+                        ( Ann
+                            { usage = Omega
+                            , type' = Pi Omega ( PrimTy PField )
+                                ( Pi Omega ( PrimTy PField ) ( PrimTy PField ) )
+                            , term = Prim
+                                ( Return
+                                    { retType = PrimType
+                                        { getPrimType = PField :|
+                                            [ PField
+                                            , PField
+                                            ]
+                                        }
+                                    , retTerm = PExp
+                                    }
+                                )
+                            }
+                        )
+                        [ Ann
+                            { usage = Omega
+                            , type' = PrimTy PField
+                            , term = Var
+                                ( "0" :| [] )
+                            }
+                        , Ann
+                            { usage = Omega
+                            , type' = PrimTy PField
+                            , term = Prim
+                                ( Return
+                                    { retType = PrimType
+                                        { getPrimType = PField :| [] }
+                                    , retTerm = PConst
+                                        ( P
+                                            ( 3 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
+                                        )
+                                    }
+                                )
+                            }
+                        ]
+                    }
+                , Ann
+                    { usage = Omega
+                    , type' = PrimTy PField
+                    , term = Var
+                        ( "1" :| [] )
+                    }
+                ]
+            }
         }
-    , EqualGate
-        { eqI = IntermediateWire 4
-        , eqM = IntermediateWire 5
-        , eqO = IntermediateWire 6
-        }
-    , MulGate
-        { mulL = ConstGate
-            ( P
-                ( 1 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
-            )
-        , mulR = Add
-            ( ConstGate
-                ( P
-                    ( 1 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
-                )
-            )
-            ( ScalarMul
-                ( P
-                    ( 52435875175126190479447740508185965837690552500527637822603658699938581184512 `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513 )
-                )
-                ( Var
-                    ( IntermediateWire 6 )
-                )
-            )
-        , mulO = OutputWire 7
-        }
-    ]
+    }
