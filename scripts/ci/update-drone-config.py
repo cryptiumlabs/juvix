@@ -13,7 +13,7 @@ import boto3
 
 DRONE_FILE: str = ".drone"
 DRONE_FILE_SUFFIX: str = ".yml"
-REPOSITORY: str = "heliaxdev/juvix"
+REPOSITORY: str = "anomanetwork/juvix"
 
 STEP_NAME = 'script-integrity-check'
 
@@ -91,7 +91,7 @@ def sign_drone_config():
     try:
         os.system(' '.join(["cd {} &&".format(project_root), "DRONE_TOKEN={}".format(token), "DRONE_SERVER={}".format('https://ci.heliax.dev'), "drone", "sign", "--save", REPOSITORY]))
     except Exception as e:
-        print(e)
+        print("Failed signing drone configuration: {}".format(e))
         exit(1)
 
 
