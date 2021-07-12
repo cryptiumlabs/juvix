@@ -3,11 +3,8 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 module Juvix.Library.Usage
-  ( Usage,
-    NatAndw (..),
-    T,
+  ( T (..),
     numToNat,
-    allowsUsageOf,
     allows,
     pred,
     minus,
@@ -17,69 +14,65 @@ where
 import Juvix.Library hiding (pred, show)
 import qualified Juvix.Library.PrettyPrint as PP
 
--- | Usage is an alias for the semiring representation
-type T = NatAndw
-
-type Usage = NatAndw
-
--- | NatAndw is the choice of the semiring for ({ℕ, ω}, (+), 0, (*), 1)
-data NatAndw
-  = -- | semiring of (Nat,w) for usage annotation
-    -- 0, 1, or n usage
+-- | Each binder and local context element in Juvix is annotated with a
+-- /usage/, which tracks how many times it is needed in a runtime-relevant way.
+-- In our case, a usage is either a natural number specifying an exact usage
+-- (i.e., not an upper bound), or 𝛚, meaning that usage is not tracked for that
+-- variable and any number of usages is allowed.
+data T
+  = -- | Definite usage.
     SNat Natural
-  | -- | unspecified usage
+  | -- | Any number of usages allowed.
     Omega
   deriving (Eq, Show, Read, Generic, Data, NFData)
 
--- Addition is the semi-Ring/Monoid instance
-instance Semigroup NatAndw where
-  SNat x <> SNat y = SNat (x + y)
+-- | Addition
+instance Semigroup T where
+  SNat π <> SNat ρ = SNat (π + ρ)
   Omega <> _ = Omega
   _ <> Omega = Omega
 
-instance Monoid NatAndw where
+instance Monoid T where
   mempty = SNat 0
 
--- Semiring instance is thus multiplication
-instance Semiring NatAndw where
+-- | Multiplication
+instance Semiring T where
   one = SNat 1
 
-  SNat x <.> SNat y = SNat (x * y)
+  SNat 0 <.> _ = SNat 0
+  _ <.> SNat 0 = SNat 0
+  SNat π <.> SNat ρ = SNat (π * ρ)
   Omega <.> _ = Omega
   _ <.> Omega = Omega
 
-type instance PP.Ann NatAndw = ()
+type instance PP.Ann T = ()
 
-instance PP.PrettySyntax NatAndw where
+instance PP.PrettySyntax T where
   pretty' (SNat π) = pure $ PP.show π
   pretty' Omega = pure "ω"
 
-pred :: NatAndw -> NatAndw
-pred (SNat x) = SNat (x - 1)
-pred Omega = Omega
+pred :: T -> Maybe T
+pred π = π `minus` SNat 1
 
-minus :: Usage -> Usage -> Maybe Usage
+minus :: T -> T -> Maybe T
 minus Omega _ = Just Omega
-minus (SNat i) (SNat j) | i >= j = Just $ SNat $ i - j
+minus (SNat π) (SNat ρ) | π >= ρ = Just $ SNat $ π - ρ
 minus _ _ = Nothing
 
 infixl 6 `minus` -- same as -
 
--- | numToNat is a helper function that converts an integer to NatAndW
-numToNat :: Integer -> NatAndw
+-- | Converts an integer to a usage.
+numToNat :: Integer -> T
 numToNat = SNat . fromInteger
 
 -- variables annotated with n can be used n times.
 -- variables annotated with Omega can be used any times.
 
--- | allowsUsageOf is the function that checks usage compatibility
-allowsUsageOf :: Usage -> Usage -> Bool
-allowsUsageOf (SNat x) (SNat y) = x == y
-allowsUsageOf Omega (SNat _) = True
-allowsUsageOf Omega Omega = True
-allowsUsageOf (SNat _) Omega = False
+-- | allows is the function that checks usage compatibility
+allows :: T -> T -> Bool
+allows (SNat x) (SNat y) = x == y
+allows Omega (SNat _) = True
+allows Omega Omega = True
+allows (SNat _) Omega = False
 
-allows :: Usage -> Usage -> Bool
-allows = allowsUsageOf
-
-infix 4 `allowsUsageOf`, `allows` -- same as <=
+infix 4 `allows` -- same as <=

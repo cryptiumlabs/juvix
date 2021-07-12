@@ -30,7 +30,7 @@ import qualified Juvix.Core.Translate as Translate
 import Juvix.Library hiding (Datatype, Type, empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.PrettyPrint as PP
-import Juvix.Library.Usage (Usage)
+import qualified Juvix.Library.Usage as Usage
 
 type MapPrim p1 p2 ty val =
   [NameSymbol.T] -> p1 -> Either (Error ty val) p2
@@ -182,7 +182,7 @@ data Datatype primTy primVal = Datatype
 
 data DataArg primTy = DataArg
   { argName :: GlobalName,
-    argUsage :: Usage,
+    argUsage :: Usage.T,
     argType :: Type primTy
   }
 

@@ -7,7 +7,7 @@ import Data.Kind (Constraint)
 import Extensible (extensible)
 import Juvix.Library hiding (Pos)
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import Juvix.Library.Usage (Usage)
+import qualified Juvix.Library.Usage as Usage
 
 type Universe = Natural
 
@@ -45,17 +45,17 @@ extensible
         Prim primVal
       | -- | formation rule of the dependent function type PI.
         -- the Usage(π) tracks how many times x is used.
-        Pi Usage (Term primTy primVal) (Term primTy primVal)
+        Pi Usage.T (Term primTy primVal) (Term primTy primVal)
       | -- | LAM Introduction rule of PI.
         -- The abstracted variables usage is tracked with the Usage(π).
         Lam (Term primTy primVal)
       | -- | Dependent pair (Σ) type, with each half having its own usage
-        Sig Usage (Term primTy primVal) (Term primTy primVal)
+        Sig Usage.T (Term primTy primVal) (Term primTy primVal)
       | -- | Pair value
         Pair (Term primTy primVal) (Term primTy primVal)
       | -- | Let binder.
         -- the local definition is bound to de Bruijn index 0.
-        Let Usage (Elim primTy primVal) (Term primTy primVal)
+        Let Usage.T (Elim primTy primVal) (Term primTy primVal)
       | -- | Unit type.
         UnitTy
       | -- | Unit Value
@@ -74,16 +74,16 @@ extensible
       | -- | elimination rule of PI (APP).
         App (Elim primTy primVal) (Term primTy primVal)
       | -- | Annotation with usage.
-        Ann Usage (Term primTy primVal) (Term primTy primVal) Universe
+        Ann Usage.T (Term primTy primVal) (Term primTy primVal) Universe
       deriving (Eq, Show, Generic, Data, NFData)
 
     -- Values/types
     data Value primTy primVal
       = VStar Universe
       | VPrimTy primTy
-      | VPi Usage (Value primTy primVal) (Value primTy primVal)
+      | VPi Usage.T (Value primTy primVal) (Value primTy primVal)
       | VLam (Value primTy primVal)
-      | VSig Usage (Value primTy primVal) (Value primTy primVal)
+      | VSig Usage.T (Value primTy primVal) (Value primTy primVal)
       | VPair (Value primTy primVal) (Value primTy primVal)
       | VUnitTy
       | VUnit

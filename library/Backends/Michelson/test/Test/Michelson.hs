@@ -10,7 +10,7 @@ import Juvix.Backends.Michelson.Optimisation
 import qualified Juvix.Core.Erased.Ann as J
 import Juvix.Library hiding (Type, show)
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import Juvix.Library.Usage
+import qualified Juvix.Library.Usage as Usage
 import Michelson.Untyped as M hiding (Type)
 import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
@@ -448,7 +448,7 @@ intPair x y =
 
 intPairs1 :: RawTerm
 intPairs1 =
-  Ann (SNat 2) (primTy (Untyped.pair pairInt pairInt)) $
+  Ann (Usage.SNat 2) (primTy (Untyped.pair pairInt pairInt)) $
     J.AppM
       ( Ann one t $
           J.Prim $
@@ -504,14 +504,14 @@ addPairs name =
           [car int int xLook, cdr int int xLook]
   where
     t = primTy int
-    t' = J.Pi (SNat 2) (primTy pairInt) t
+    t' = J.Pi (Usage.SNat 2) (primTy pairInt) t
     xLook = Ann one (primTy pairInt) (J.Var name)
 
 addDoublePairs :: RawTerm
 addDoublePairs =
   Ann one t $
     J.AppM
-      ( Ann one (J.Pi (SNat 2) (primTy (Untyped.pair pairInt pairInt)) t) $
+      ( Ann one (J.Pi (Usage.SNat 2) (primTy (Untyped.pair pairInt pairInt)) t) $
           J.LamM [] ["y"] $
             Ann one t $
               J.AppM
@@ -542,7 +542,7 @@ xtwice =
       ( Ann
           one
           ( J.Pi mempty (primTy int) $
-              J.Pi (SNat 2) (primTy int) $
+              J.Pi (Usage.SNat 2) (primTy int) $
                 J.Pi mempty (primTy int) $
                   primTy int
           )
@@ -562,7 +562,7 @@ xtwice =
                   Ann one (primTy int) (J.Var "x")
                 ]
       )
-      [push1Int 2, pushInt (SNat 2) 3, push1Int 4]
+      [push1Int 2, pushInt (Usage.SNat 2) 3, push1Int 4]
 
 oddApp :: RawTerm
 oddApp =
@@ -571,7 +571,7 @@ oddApp =
       ( Ann
           one
           ( J.Pi mempty (primTy int) $
-              J.Pi (SNat 2) (primTy int) $
+              J.Pi (Usage.SNat 2) (primTy int) $
                 J.Pi mempty (primTy int) $
                   primTy int
           )
@@ -1073,13 +1073,13 @@ annIntOne :: Integer -> RawTerm
 annIntOne i =
   Ann one (primTy Untyped.int) (J.Prim (Constant (M.ValueInt i)))
 
-pushInt :: Usage -> Integer -> AnnTerm PrimTy RawPrimVal
+pushInt :: Usage.T -> Integer -> AnnTerm PrimTy RawPrimVal
 pushInt usage i = pushUsage usage (M.ValueInt i) Untyped.int
 
 push1Int :: Integer -> AnnTerm PrimTy RawPrimVal
 push1Int i = push1 (M.ValueInt i) Untyped.int
 
-pushUsage :: Usage -> M.Value' Op -> M.Ty -> AnnTerm PrimTy RawPrimVal
+pushUsage :: Usage.T -> M.Value' Op -> M.Ty -> AnnTerm PrimTy RawPrimVal
 pushUsage usage const ty =
   Ann
     usage
