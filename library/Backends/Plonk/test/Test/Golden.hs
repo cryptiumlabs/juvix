@@ -3,23 +3,24 @@
 
 module Test.Golden where
 
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.ByteString as ByteString (readFile)
 import Data.Curve.Weierstrass.BLS12381 (Fr)
+import qualified Data.HashMap.Strict as HM
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Backends.Plonk as Plonk
 import qualified Juvix.Core.Erased.Ann as ErasedAnn
-import qualified Data.HashMap.Strict as HM
+import qualified Juvix.Core.HR as HR
+import qualified Juvix.Core.IR as IR
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import Juvix.Library.Test.Golden
 import Juvix.Pipeline (Pipeline)
 import qualified Juvix.Pipeline as Pipeline
+import Juvix.ToCore.Types (CoreDef, CoreDefs)
 import Test.Orphan
 import Test.Tasty
 import Text.Pretty.Simple (pPrint)
-import  Juvix.ToCore.Types (CoreDef, CoreDefs)
-import qualified Juvix.Core.HR as HR
-import qualified Juvix.Core.IR as IR
+
 --------------------------------------------------------------------------------
 -- Parse contracts (Golden tests)
 --------------------------------------------------------------------------------
@@ -83,18 +84,18 @@ hrTests =
     hrTestsPos = plonkGoldenTestsNoQuotes ".hr" (expectSuccess . toNoQuotes pipelineToHR)
     hrTestsNeg = plonkGoldenTestsNoQuotes ".hr" (expectFailure . toNoQuotes pipelineToHR)
 
-pipelineToHR file = do
-  liftIO (readFile file)
-  >>= Pipeline.toML' (withJuvixRootPath <$> libs) (Plonk.BPlonk @Fr)
-  >>= Pipeline.toSexp (Plonk.BPlonk @Fr) 
-  >>= Pipeline.toHR (Plonk.param @Fr)
-  -- Reduce the Prelude related functions for readability
-  >>= pure .HM.filterWithKey isNotPrelude 
+pipelineToHR file =
+  do
+    liftIO (readFile file)
+    >>= Pipeline.toML' (withJuvixRootPath <$> libs) (Plonk.BPlonk @Fr)
+    >>= Pipeline.toSexp (Plonk.BPlonk @Fr)
+    >>= Pipeline.toHR (Plonk.param @Fr)
+    -- Reduce the Prelude related functions for readability
+    >>= pure . HM.filterWithKey isNotPrelude
   where
     isNotPrelude (p NonEmpty.:| _) _ = p /= "Prelude"
 
-
-pipelineToIR file = pipelineToHR file >>= Pipeline.toIR 
+pipelineToIR file = pipelineToHR file >>= Pipeline.toIR
 
 irTests :: IO TestTree
 irTests =
@@ -104,7 +105,7 @@ irTests =
         hrTestsNeg "test/examples/negative/circuit"
       ]
   where
-    hrTestsPos = plonkGoldenTestsNoQuotes ".ir" (expectSuccess . toNoQuotes pipelineToIR )
+    hrTestsPos = plonkGoldenTestsNoQuotes ".ir" (expectSuccess . toNoQuotes pipelineToIR)
     hrTestsNeg = plonkGoldenTestsNoQuotes ".ir" (expectFailure . toNoQuotes pipelineToIR)
 
 erasedTests :: IO TestTree
@@ -117,22 +118,24 @@ erasedTests =
   where
     hrTestsPos = plonkGoldenTestsNoQuotes ".erased" (expectSuccess . toNoQuotes toErased)
     hrTestsNeg = plonkGoldenTestsNoQuotes ".erased" (expectFailure . toNoQuotes toErased)
-    toErased file = do
-      liftIO (readFile file)
-      >>= Pipeline.toML' (withJuvixRootPath <$> libs) (Plonk.BPlonk @Fr)
-      >>= Pipeline.toSexp (Plonk.BPlonk @Fr) 
-      >>= Pipeline.toHR (Plonk.param @Fr) 
-      >>= Pipeline.toIR
-      >>= Pipeline.toErased (Plonk.param @Fr) Plonk.PField 
+    toErased file =
+      do
+        liftIO (readFile file)
+        >>= Pipeline.toML' (withJuvixRootPath <$> libs) (Plonk.BPlonk @Fr)
+        >>= Pipeline.toSexp (Plonk.BPlonk @Fr)
+        >>= Pipeline.toHR (Plonk.param @Fr)
+        >>= Pipeline.toIR
+        >>= Pipeline.toErased (Plonk.param @Fr) Plonk.PField
 
     isNotPrelude (p NonEmpty.:| _) _ = p /= "Prelude"
-
-
 
 plonkGoldenTestsNoQuotes :: [Char] -> (FilePath -> IO NoQuotes) -> FilePath -> IO TestTree
 plonkGoldenTestsNoQuotes = discoverGoldenTestsNoQuotes withJuvixRootPath
 
-plonkGoldenTests :: (Show a, Eq a, Read a) =>
-  [Char]
-  -> (FilePath -> IO a) -> FilePath -> IO TestTree
+plonkGoldenTests ::
+  (Show a, Eq a, Read a) =>
+  [Char] ->
+  (FilePath -> IO a) ->
+  FilePath ->
+  IO TestTree
 plonkGoldenTests ext f (withJuvixRootPath -> p) = discoverGoldenTests [".ju"] ext getGolden f p

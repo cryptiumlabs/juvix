@@ -326,6 +326,9 @@ Surface language
   + [[Library/Test/Golden]]
   + [[Juvix/Pipeline]]
   + [[Juvix/Pipeline]]
+  + [[ToCore/Types]]
+  + [[Core/HR]]
+  + [[Core/IR]]
 ***** Orphan
 - _Relies on_
   + [[Library]]
