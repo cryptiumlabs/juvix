@@ -114,10 +114,10 @@ class HasBackend b where
 
   toHR ::
     (Show (Ty b), Show (Val b)) =>
-    Context.T Sexp.T Sexp.T Sexp.T ->
     Param.Parameterisation (Ty b) (Val b) ->
+    Context.T Sexp.T Sexp.T Sexp.T ->
     Pipeline (FF.CoreDefs HR.T (Ty b) (Val b))
-  toHR sexp param = pure $ FF.coreDefs (Core.contextToHR sexp param)
+  toHR param sexp = pure $ FF.coreDefs (Core.contextToHR sexp param)
 
   toIR ::
     FF.CoreDefs HR.T (Ty b) (Val b) ->
@@ -126,11 +126,11 @@ class HasBackend b where
 
   toErased ::
     Constraints b =>
-    (Core.PatternMap Core.GlobalName, FF.CoreDefs IR.T (Ty b) (Val b)) ->
     Param.Parameterisation (Ty b) (Val b) ->
     Ty b ->
+    (Core.PatternMap Core.GlobalName, FF.CoreDefs IR.T (Ty b) (Val b)) ->
     Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
-  toErased (patToSym, defs) param ty = do
+  toErased param ty (patToSym, defs) = do
     (usage, term, ty) <- getMain >>= toLambda
     let inlinedTerm = IR.inlineAllGlobals term lookupGlobal patToSym
     let erasedAnn = ErasedAnn.irToErasedAnn @(Err b) inlinedTerm usage ty
@@ -191,7 +191,7 @@ class HasBackend b where
         defs = FF.coreDefs ir
         patVars = FF.patVars ir
         patToSym = HM.toList patVars |> map swap |> PM.fromList
-     in toErased (patToSym, defs) param ty
+     in toErased param ty (patToSym, defs)
 
   compile ::
     FilePath ->

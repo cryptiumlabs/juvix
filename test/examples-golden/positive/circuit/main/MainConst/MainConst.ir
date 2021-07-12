@@ -1,4 +1,5 @@
-fromList
+( fromList []
+, fromList
     [
         ( "MainConst" :| [ "main" ]
         , CoreDef
@@ -7,12 +8,14 @@ fromList
                     { rawFunName = "MainConst" :| [ "main" ]
                     , rawFunUsage = GOmega
                     , rawFunType = Elim'
-                        ( ElimX
-                            ( "Prelude" :|
-                                [ "Circuit"
-                                , "field"
-                                ]
-                            )
+                        ( Free'
+                            ( Global
+                                ( "Prelude" :|
+                                    [ "Circuit"
+                                    , "field"
+                                    ]
+                                )
+                            ) ()
                         ) ()
                     , rawFunClauses = RawFunClause
                         { rawClauseTel = []
@@ -30,3 +33,4 @@ fromList
             )
         )
     ]
+)

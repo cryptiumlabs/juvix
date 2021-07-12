@@ -1,0 +1,132 @@
+( fromList []
+, fromList
+    [
+        ( "MainMultArgs" :| [ "+" ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "MainMultArgs" :| [ "+" ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( Free'
+                                ( Global
+                                    ( "Prelude" :|
+                                        [ "Circuit"
+                                        , "field"
+                                        ]
+                                    )
+                                ) ()
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( Free'
+                                    ( Global
+                                        ( "Prelude" :|
+                                            [ "Circuit"
+                                            , "field"
+                                            ]
+                                        )
+                                    ) ()
+                                ) ()
+                            )
+                            ( Elim'
+                                ( Free'
+                                    ( Global
+                                        ( "Prelude" :|
+                                            [ "Circuit"
+                                            , "field"
+                                            ]
+                                        )
+                                    ) ()
+                                ) ()
+                            ) ()
+                        ) ()
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats = []
+                        , rawClauseBody = Prim' PAdd ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ,
+        ( "MainMultArgs" :| [ "main" ]
+        , CoreDef
+            ( RawGFunction
+                ( RawFunction
+                    { rawFunName = "MainMultArgs" :| [ "main" ]
+                    , rawFunUsage = GOmega
+                    , rawFunType = Pi' Omega
+                        ( Elim'
+                            ( Free'
+                                ( Global
+                                    ( "Prelude" :|
+                                        [ "Circuit"
+                                        , "field"
+                                        ]
+                                    )
+                                ) ()
+                            ) ()
+                        )
+                        ( Pi' Omega
+                            ( Elim'
+                                ( Free'
+                                    ( Global
+                                        ( "Prelude" :|
+                                            [ "Circuit"
+                                            , "field"
+                                            ]
+                                        )
+                                    ) ()
+                                ) ()
+                            )
+                            ( Elim'
+                                ( Free'
+                                    ( Global
+                                        ( "Prelude" :|
+                                            [ "Circuit"
+                                            , "field"
+                                            ]
+                                        )
+                                    ) ()
+                                ) ()
+                            ) ()
+                        ) ()
+                    , rawFunClauses = RawFunClause
+                        { rawClauseTel = []
+                        , rawClausePats =
+                            [ PVar' 0 ()
+                            , PVar' 1 ()
+                            ]
+                        , rawClauseBody = Elim'
+                            ( App'
+                                ( App'
+                                    ( Free'
+                                        ( Global
+                                            ( "MainMultArgs" :| [ "+" ] )
+                                        ) ()
+                                    )
+                                    ( Elim'
+                                        ( Free'
+                                            ( Pattern 0 ) ()
+                                        ) ()
+                                    ) ()
+                                )
+                                ( Elim'
+                                    ( Free'
+                                        ( Pattern 1 ) ()
+                                    ) ()
+                                ) ()
+                            ) ()
+                        , rawClauseCatchall = False
+                        } :| []
+                    }
+                )
+            )
+        )
+    ]
+)

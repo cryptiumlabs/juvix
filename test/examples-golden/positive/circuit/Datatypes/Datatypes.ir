@@ -1,4 +1,5 @@
-fromList
+( fromList []
+, fromList
     [
         ( "Datatypes" :| [ "norm" ]
         , CoreDef
@@ -8,42 +9,49 @@ fromList
                     , rawFunUsage = GOmega
                     , rawFunType = Pi' Omega
                         ( Elim'
-                            ( ElimX
-                                ( "Datatypes" :| [ "Bar" ] )
+                            ( Free'
+                                ( Global
+                                    ( "Datatypes" :| [ "Bar" ] )
+                                ) ()
                             ) ()
                         )
                         ( Elim'
-                            ( ElimX
-                                ( "Datatypes" :| [ "field" ] )
+                            ( Free'
+                                ( Global
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
                             ) ()
-                        )
-                        ( "" :| [] )
+                        ) ()
                     , rawFunClauses = RawFunClause
                         { rawClauseTel = []
                         , rawClausePats =
                             [ PCon'
                                 ( "P" :| [] )
-                                [ PatternX
-                                    ( "x" :| [] )
-                                , PatternX
-                                    ( "y" :| [] )
+                                [ PVar' 0 ()
+                                , PVar' 1 ()
                                 ] ()
                             ]
                         , rawClauseBody = Elim'
                             ( App'
                                 ( App'
-                                    ( ElimX
-                                        ( "Datatypes" :| [ "+" ] )
+                                    ( Free'
+                                        ( Global
+                                            ( "Datatypes" :| [ "+" ] )
+                                        ) ()
                                     )
                                     ( Elim'
                                         ( App'
                                             ( App'
-                                                ( ElimX
-                                                    ( "Datatypes" :| [ "^" ] )
+                                                ( Free'
+                                                    ( Global
+                                                        ( "Datatypes" :| [ "^" ] )
+                                                    ) ()
                                                 )
                                                 ( Elim'
-                                                    ( ElimX
-                                                        ( "Datatypes" :| [ "x" ] )
+                                                    ( Free'
+                                                        ( Global
+                                                            ( "Datatypes" :| [ "x" ] )
+                                                        ) ()
                                                     ) ()
                                                 ) ()
                                             )
@@ -60,12 +68,14 @@ fromList
                                 ( Elim'
                                     ( App'
                                         ( App'
-                                            ( ElimX
-                                                ( "Datatypes" :| [ "^" ] )
+                                            ( Free'
+                                                ( Global
+                                                    ( "Datatypes" :| [ "^" ] )
+                                                ) ()
                                             )
                                             ( Elim'
-                                                ( ElimX
-                                                    ( "y" :| [] )
+                                                ( Free'
+                                                    ( Pattern 1 ) ()
                                                 ) ()
                                             ) ()
                                         )
@@ -86,29 +96,32 @@ fromList
                             , rawClausePats =
                                 [ PCon'
                                     ( "Q" :| [] )
-                                    [ PatternX
-                                        ( "x" :| [] )
-                                    , PatternX
-                                        ( "y" :| [] )
-                                    , PatternX
-                                        ( "z" :| [] )
+                                    [ PVar' 2 ()
+                                    , PVar' 3 ()
+                                    , PVar' 4 ()
                                     ] ()
                                 ]
                             , rawClauseBody = Elim'
                                 ( App'
                                     ( App'
-                                        ( ElimX
-                                            ( "Datatypes" :| [ "+" ] )
+                                        ( Free'
+                                            ( Global
+                                                ( "Datatypes" :| [ "+" ] )
+                                            ) ()
                                         )
                                         ( Elim'
                                             ( App'
                                                 ( App'
-                                                    ( ElimX
-                                                        ( "Datatypes" :| [ "^" ] )
+                                                    ( Free'
+                                                        ( Global
+                                                            ( "Datatypes" :| [ "^" ] )
+                                                        ) ()
                                                     )
                                                     ( Elim'
-                                                        ( ElimX
-                                                            ( "Datatypes" :| [ "x" ] )
+                                                        ( Free'
+                                                            ( Global
+                                                                ( "Datatypes" :| [ "x" ] )
+                                                            ) ()
                                                         ) ()
                                                     ) ()
                                                 )
@@ -125,18 +138,22 @@ fromList
                                     ( Elim'
                                         ( App'
                                             ( App'
-                                                ( ElimX
-                                                    ( "Datatypes" :| [ "+" ] )
+                                                ( Free'
+                                                    ( Global
+                                                        ( "Datatypes" :| [ "+" ] )
+                                                    ) ()
                                                 )
                                                 ( Elim'
                                                     ( App'
                                                         ( App'
-                                                            ( ElimX
-                                                                ( "Datatypes" :| [ "^" ] )
+                                                            ( Free'
+                                                                ( Global
+                                                                    ( "Datatypes" :| [ "^" ] )
+                                                                ) ()
                                                             )
                                                             ( Elim'
-                                                                ( ElimX
-                                                                    ( "y" :| [] )
+                                                                ( Free'
+                                                                    ( Pattern 3 ) ()
                                                                 ) ()
                                                             ) ()
                                                         )
@@ -153,12 +170,14 @@ fromList
                                             ( Elim'
                                                 ( App'
                                                     ( App'
-                                                        ( ElimX
-                                                            ( "Datatypes" :| [ "^" ] )
+                                                        ( Free'
+                                                            ( Global
+                                                                ( "Datatypes" :| [ "^" ] )
+                                                            ) ()
                                                         )
                                                         ( Elim'
-                                                            ( ElimX
-                                                                ( "z" :| [] )
+                                                            ( Free'
+                                                                ( Pattern 4 ) ()
                                                             ) ()
                                                         ) ()
                                                     )
@@ -190,31 +209,36 @@ fromList
                     , rawFunUsage = GOmega
                     , rawFunType = Pi' Omega
                         ( Elim'
-                            ( ElimX
-                                ( "Datatypes" :| [ "field" ] )
+                            ( Free'
+                                ( Global
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
                             ) ()
                         )
                         ( Elim'
-                            ( ElimX
-                                ( "Datatypes" :| [ "field" ] )
+                            ( Free'
+                                ( Global
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
                             ) ()
-                        )
-                        ( "" :| [] )
+                        ) ()
                     , rawFunClauses = RawFunClause
                         { rawClauseTel = []
                         , rawClausePats =
-                            [ PatternX
-                                ( "x" :| [] )
-                            ]
+                            [ PVar' 0 () ]
                         , rawClauseBody = Elim'
                             ( App'
                                 ( App'
-                                    ( ElimX
-                                        ( "Datatypes" :| [ "+" ] )
+                                    ( Free'
+                                        ( Global
+                                            ( "Datatypes" :| [ "+" ] )
+                                        ) ()
                                     )
                                     ( Elim'
-                                        ( ElimX
-                                            ( "Datatypes" :| [ "x" ] )
+                                        ( Free'
+                                            ( Global
+                                                ( "Datatypes" :| [ "x" ] )
+                                            ) ()
                                         ) ()
                                     ) ()
                                 )
@@ -241,24 +265,28 @@ fromList
                     , rawFunUsage = GOmega
                     , rawFunType = Pi' Omega
                         ( Elim'
-                            ( ElimX
-                                ( "Datatypes" :| [ "field" ] )
+                            ( Free'
+                                ( Global
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
                             ) ()
                         )
                         ( Pi' Omega
                             ( Elim'
-                                ( ElimX
-                                    ( "Datatypes" :| [ "field" ] )
+                                ( Free'
+                                    ( Global
+                                        ( "Datatypes" :| [ "field" ] )
+                                    ) ()
                                 ) ()
                             )
                             ( Elim'
-                                ( ElimX
-                                    ( "Datatypes" :| [ "field" ] )
+                                ( Free'
+                                    ( Global
+                                        ( "Datatypes" :| [ "field" ] )
+                                    ) ()
                                 ) ()
-                            )
-                            ( "" :| [] )
-                        )
-                        ( "" :| [] )
+                            ) ()
+                        ) ()
                     , rawFunClauses = RawFunClause
                         { rawClauseTel = []
                         , rawClausePats = []
@@ -277,24 +305,28 @@ fromList
                     { rawConName = "Datatypes" :| [ "P" ]
                     , rawConType = Pi' Omega
                         ( Elim'
-                            ( ElimX
-                                ( "Datatypes" :| [ "field" ] )
+                            ( Free'
+                                ( Global
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
                             ) ()
                         )
                         ( Pi' Omega
                             ( Elim'
-                                ( ElimX
-                                    ( "Datatypes" :| [ "field" ] )
+                                ( Free'
+                                    ( Global
+                                        ( "Datatypes" :| [ "field" ] )
+                                    ) ()
                                 ) ()
                             )
                             ( Elim'
-                                ( ElimX
-                                    ( "Datatypes" :| [ "Bar" ] )
+                                ( Free'
+                                    ( Global
+                                        ( "Datatypes" :| [ "Bar" ] )
+                                    ) ()
                                 ) ()
-                            )
-                            ( "" :| [] )
-                        )
-                        ( "" :| [] )
+                            ) ()
+                        ) ()
                     , rawConDef = Nothing
                     }
                 )
@@ -309,28 +341,32 @@ fromList
                     , rawFunUsage = GOmega
                     , rawFunType = Pi' Omega
                         ( Elim'
-                            ( ElimX
-                                ( "Datatypes" :| [ "field" ] )
+                            ( Free'
+                                ( Global
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
                             ) ()
                         )
                         ( Pi' Omega
                             ( Elim'
-                                ( ElimX
-                                    ( "Datatypes" :| [ "field" ] )
+                                ( Free'
+                                    ( Global
+                                        ( "Datatypes" :| [ "field" ] )
+                                    ) ()
                                 ) ()
                             )
                             ( Elim'
-                                ( ElimX
-                                    ( "Prelude" :|
-                                        [ "Circuit"
-                                        , "bool"
-                                        ]
-                                    )
+                                ( Free'
+                                    ( Global
+                                        ( "Prelude" :|
+                                            [ "Circuit"
+                                            , "bool"
+                                            ]
+                                        )
+                                    ) ()
                                 ) ()
-                            )
-                            ( "" :| [] )
-                        )
-                        ( "" :| [] )
+                            ) ()
+                        ) ()
                     , rawFunClauses = RawFunClause
                         { rawClauseTel = []
                         , rawClausePats = []
@@ -355,56 +391,65 @@ fromList
                             { rawConName = "Datatypes" :| [ "P" ]
                             , rawConType = Pi' Omega
                                 ( Elim'
-                                    ( ElimX
-                                        ( "Datatypes" :| [ "field" ] )
+                                    ( Free'
+                                        ( Global
+                                            ( "Datatypes" :| [ "field" ] )
+                                        ) ()
                                     ) ()
                                 )
                                 ( Pi' Omega
                                     ( Elim'
-                                        ( ElimX
-                                            ( "Datatypes" :| [ "field" ] )
+                                        ( Free'
+                                            ( Global
+                                                ( "Datatypes" :| [ "field" ] )
+                                            ) ()
                                         ) ()
                                     )
                                     ( Elim'
-                                        ( ElimX
-                                            ( "Datatypes" :| [ "Bar" ] )
+                                        ( Free'
+                                            ( Global
+                                                ( "Datatypes" :| [ "Bar" ] )
+                                            ) ()
                                         ) ()
-                                    )
-                                    ( "" :| [] )
-                                )
-                                ( "" :| [] )
+                                    ) ()
+                                ) ()
                             , rawConDef = Nothing
                             }
                         , RawDataCon
                             { rawConName = "Datatypes" :| [ "Q" ]
                             , rawConType = Pi' Omega
                                 ( Elim'
-                                    ( ElimX
-                                        ( "Datatypes" :| [ "field" ] )
+                                    ( Free'
+                                        ( Global
+                                            ( "Datatypes" :| [ "field" ] )
+                                        ) ()
                                     ) ()
                                 )
                                 ( Pi' Omega
                                     ( Elim'
-                                        ( ElimX
-                                            ( "Datatypes" :| [ "field" ] )
+                                        ( Free'
+                                            ( Global
+                                                ( "Datatypes" :| [ "field" ] )
+                                            ) ()
                                         ) ()
                                     )
                                     ( Pi' Omega
                                         ( Elim'
-                                            ( ElimX
-                                                ( "Datatypes" :| [ "field" ] )
+                                            ( Free'
+                                                ( Global
+                                                    ( "Datatypes" :| [ "field" ] )
+                                                ) ()
                                             ) ()
                                         )
                                         ( Elim'
-                                            ( ElimX
-                                                ( "Datatypes" :| [ "Bar" ] )
+                                            ( Free'
+                                                ( Global
+                                                    ( "Datatypes" :| [ "Bar" ] )
+                                                ) ()
                                             ) ()
-                                        )
-                                        ( "" :| [] )
-                                    )
-                                    ( "" :| [] )
-                                )
-                                ( "" :| [] )
+                                        ) ()
+                                    ) ()
+                                ) ()
                             , rawConDef = Nothing
                             }
                         ]
@@ -421,24 +466,28 @@ fromList
                     , rawFunUsage = GOmega
                     , rawFunType = Pi' Omega
                         ( Elim'
-                            ( ElimX
-                                ( "Datatypes" :| [ "field" ] )
+                            ( Free'
+                                ( Global
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
                             ) ()
                         )
                         ( Pi' Omega
                             ( Elim'
-                                ( ElimX
-                                    ( "Datatypes" :| [ "field" ] )
+                                ( Free'
+                                    ( Global
+                                        ( "Datatypes" :| [ "field" ] )
+                                    ) ()
                                 ) ()
                             )
                             ( Elim'
-                                ( ElimX
-                                    ( "Datatypes" :| [ "field" ] )
+                                ( Free'
+                                    ( Global
+                                        ( "Datatypes" :| [ "field" ] )
+                                    ) ()
                                 ) ()
-                            )
-                            ( "" :| [] )
-                        )
-                        ( "" :| [] )
+                            ) ()
+                        ) ()
                     , rawFunClauses = RawFunClause
                         { rawClauseTel = []
                         , rawClausePats = []
@@ -457,8 +506,10 @@ fromList
                     { rawFunName = "Datatypes" :| [ "field" ]
                     , rawFunUsage = GOmega
                     , rawFunType = Elim'
-                        ( ElimX
-                            ( "Prelude" :| [ "ty" ] )
+                        ( Free'
+                            ( Global
+                                ( "Prelude" :| [ "ty" ] )
+                            ) ()
                         ) ()
                     , rawFunClauses = RawFunClause
                         { rawClauseTel = []
@@ -479,24 +530,28 @@ fromList
                     , rawFunUsage = GOmega
                     , rawFunType = Pi' Omega
                         ( Elim'
-                            ( ElimX
-                                ( "Datatypes" :| [ "field" ] )
+                            ( Free'
+                                ( Global
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
                             ) ()
                         )
                         ( Pi' Omega
                             ( Elim'
-                                ( ElimX
-                                    ( "Datatypes" :| [ "field" ] )
+                                ( Free'
+                                    ( Global
+                                        ( "Datatypes" :| [ "field" ] )
+                                    ) ()
                                 ) ()
                             )
                             ( Elim'
-                                ( ElimX
-                                    ( "Datatypes" :| [ "field" ] )
+                                ( Free'
+                                    ( Global
+                                        ( "Datatypes" :| [ "field" ] )
+                                    ) ()
                                 ) ()
-                            )
-                            ( "" :| [] )
-                        )
-                        ( "" :| [] )
+                            ) ()
+                        ) ()
                     , rawFunClauses = RawFunClause
                         { rawClauseTel = []
                         , rawClausePats = []
@@ -515,8 +570,10 @@ fromList
                     { rawFunName = "Datatypes" :| [ "main" ]
                     , rawFunUsage = GOmega
                     , rawFunType = Elim'
-                        ( ElimX
-                            ( "Datatypes" :| [ "field" ] )
+                        ( Free'
+                            ( Global
+                                ( "Datatypes" :| [ "field" ] )
+                            ) ()
                         ) ()
                     , rawFunClauses = RawFunClause
                         { rawClauseTel = []
@@ -541,8 +598,10 @@ fromList
                     { rawFunName = "Datatypes" :| [ "x" ]
                     , rawFunUsage = GOmega
                     , rawFunType = Elim'
-                        ( ElimX
-                            ( "Datatypes" :| [ "field" ] )
+                        ( Free'
+                            ( Global
+                                ( "Datatypes" :| [ "field" ] )
+                            ) ()
                         ) ()
                     , rawFunClauses = RawFunClause
                         { rawClauseTel = []
@@ -567,35 +626,41 @@ fromList
                     { rawConName = "Datatypes" :| [ "Q" ]
                     , rawConType = Pi' Omega
                         ( Elim'
-                            ( ElimX
-                                ( "Datatypes" :| [ "field" ] )
+                            ( Free'
+                                ( Global
+                                    ( "Datatypes" :| [ "field" ] )
+                                ) ()
                             ) ()
                         )
                         ( Pi' Omega
                             ( Elim'
-                                ( ElimX
-                                    ( "Datatypes" :| [ "field" ] )
+                                ( Free'
+                                    ( Global
+                                        ( "Datatypes" :| [ "field" ] )
+                                    ) ()
                                 ) ()
                             )
                             ( Pi' Omega
                                 ( Elim'
-                                    ( ElimX
-                                        ( "Datatypes" :| [ "field" ] )
+                                    ( Free'
+                                        ( Global
+                                            ( "Datatypes" :| [ "field" ] )
+                                        ) ()
                                     ) ()
                                 )
                                 ( Elim'
-                                    ( ElimX
-                                        ( "Datatypes" :| [ "Bar" ] )
+                                    ( Free'
+                                        ( Global
+                                            ( "Datatypes" :| [ "Bar" ] )
+                                        ) ()
                                     ) ()
-                                )
-                                ( "" :| [] )
-                            )
-                            ( "" :| [] )
-                        )
-                        ( "" :| [] )
+                                ) ()
+                            ) ()
+                        ) ()
                     , rawConDef = Nothing
                     }
                 )
             )
         )
     ]
+)
