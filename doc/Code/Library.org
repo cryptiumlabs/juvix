@@ -217,7 +217,7 @@ Module that implements the backend parameters for the Michelson backend.
   + [[Circuit]]
   + [[Assignment]]
   + [[Plonk/Compiler]]
-  + [[Plonk/Dot]]
+  + [[Dot]]
   + [[Plonk/IR]]
   + [[Lang]]
   + [[Plonk/Parameterization]]
@@ -237,7 +237,7 @@ Module that implements the backend parameters for the Michelson backend.
   + [[Ann/Types]]
   + [[Library]]
   + [[NameSymbol]]
-******* Dot <<Plonk/Dot>>
+******* Dot
 Visualise circuits using Graphviz
 - _Relies on_
   + [[Circuit]]
@@ -271,7 +271,7 @@ Surface language
   + [[Builder]]
   + [[Circuit]]
   + [[Plonk/Compiler]]
-  + [[Plonk/Dot]]
+  + [[Dot]]
   + [[Plonk/Parameterization]]
   + [[Plonk/Types]]
   + [[OnlyExts]]
@@ -949,7 +949,7 @@ with any stage of the compiler while modifying the source code.
   + [[IR/Types]]
   + [[Library]]
   + [[ToCore/Types]]
-*** Spec <<EasyPipeline/test/Spec>>
+*** Spec
 - _Relies on_
   + [[Library]]
 * Frontend
@@ -1023,315 +1023,10 @@ with any stage of the compiler while modifying the source code.
   + [[Frontend/Types]]
   + [[Library]]
   + [[Juvix/Sexp]]
-* InteractionNet
-** Setup <<InteractionNet/Setup>>
-** src
-*** Juvix
-**** INetIR
-- _Relies on_
-  + [[JSON]]
-  + [[INetIR/Types]]
-***** JSON
-- _Relies on_
-  + [[Library]]
-***** Types <<INetIR/Types>>
-- _Relies on_
-  + [[Library]]
-**** Interpreter
-- Although slower than [[Backends]], the interpreter serves as a
-  reference point to play, modify, and debug features that will go
-  in the various compiler backends
-***** InteractionNet
-- _Relies on_
-  + [[Erased/Types]]
-  + [[InteractionNet/Default]]
-  + [[InteractionNet/Parser]]
-  + [[Translation]]
-  + [[Type]]
-****** Default <<InteractionNet/Default>>
-Gives the default execution environment for netToAst
-Can be added to via core translation
-- _Relies on_
-  + [[Shared]]
-  + [[Type]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
-****** NodeInterface
-- Serves as a generic lens layer for various Node types in interaction nets
-  1. Primary port details
-     - Open or Bound?
-  2. Auxiliary port details
-     - Open or Bound?
-  3. Type Classes aliases for having just a Primary port, or an
-     Auxiliary port and a Primary, or two Auxiliary ports and a
-     primary, and so forth.
-- _Relies on_
-  + [[Library]]
-****** Parser <<InteractionNet/Parser>>
-- Parses the syntax according to the formal =BNF=
-- _Relies on_
-  + [[InteractionNet/Default]]
-  + [[Shared]]
-  + [[Type]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
-****** Shared
-- _Relies on_
-  + [[Library]]
-****** Translation
-- Translates the default abstract syntax into Interaction nets
-  + Also translates the net into the an ast
-- _Relies on_
-  + [[Core/Types]]
-  + [[Interface]]
-  + [[InteractionNet/Nets/Default]]
-  + [[NodeInterface]]
-  + [[Shared]]
-  + [[Type]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
-****** Type
-- Serves as the AST for all operations on [[Nets/Default]]
-- Resembles the =BOHM= syntax/operation set, however it alters the
-  operation set quite a bit
-  + _Added_
-    1. Notion of some kind of primitive value
-    2. Curry 1-3
-       - This allows custom functions to be manifested on primitive
-         values
-  + _Removed_
-    1. =Letrec=
-       - While here, it isn't fully implemented
-    2. Hard coded math operations
-       - This has been moved to primitive value operations
-- _Relies on_
-  + [[Shared]]
-  + [[Library]]
-  + [[NameSymbol]]
-****** Backends
-******* Env <<Backends/Env>>
-- Env serves as the environment for running the back-ends
-  + This includes the diagnostic information about how the code is ran
-  + Also includes the effect handler types and the runner functions
-    for them
-- Also gives functions needed to increment diagnostic information
-  + see =incGraphStepSize= and =sequentalStep=
-  + File will also be imported in [[Nets]] due to these two functions
-- _Relies on_
-  + [[Interface]]
-  + [[Library]]
-******* Graph <<Backends/Graph>>
-- This is an implementation of said interfacing using =FGL=
-- This code will imported in Tests as a possible back-end for testing.
-  + This back-end is more useful than [[Maps]] as it can produce
-    graphical outputs, see [[Visualize]]
-- _Relies on_
-  + [[Backends/Env]]
-  + [[Interface]]
-  + [[NodeInterface]]
-  + [[Library]]
-******* Interface
-- Interface serves as a file that has common types between the various
-  back ends along with two interfaces each back-end must support
-  + This also includes functions derived from the interface functions!
-- This file will be the file [[Nets]] will import as it provides the
-  interface along with derived functions
-- _Relies on_
-  + [[NodeInterface]]
-  + [[Library]]
-******* Maps
-- this is an implementation of said interface using the =EnumMap= data structure
-- This code will be imported in Tests as a possible back-end for testing
-- _Relies on_
-  + [[Backends/Env]]
-  + [[Interface]]
-  + [[NodeInterface]]
-  + [[Library]]
-****** Nets
-******* Combinators <<InteractionNet/Nets/Combinators>>
-- An evaluation for a simple combination calculus language, only has
-  three ports
-  1. Con
-  2. Dup
-  3. Era
-- _Relies on_
-  + [[Backends/Env]]
-  + [[Interface]]
-  + [[NodeInterface]]
-  + [[Library]]
-******* Default <<InteractionNet/Nets/Default>>
-- An evaluator for the Default Language
-- Serves as a reference way of creating interaction nets
-- _Relies on_
-  + [[Backends/Env]]
-  + [[Interface]]
-  + [[NodeInterface]]
-  + [[Shared]]
-  + [[Library]]
-  + [[NameSymbol]]
-**** Visualize
-***** Dot <<Visualize/Dot>>
-- Generates a dot file in order to produce a simple image of a
-  interaction net
-- Also provides a way of generating gifs (and the images used to
-  generate said gif), displaying every reduction step until the term
-  is normalized
-- _Relies on_
-  + [[Backends/Env]]
-  + [[Backends/Graph]]
-  + [[InteractionNet/Nets/Default]]
-  + [[Library]]
-  + [[Visualize/Graph]]
-***** Graph <<Visualize/Graph>>
-- A simple function for showing the graph as a proper net
-- Really should be improved upon or removed
-- _Relies on_
-  + [[Library]]
-** test
-*** INet
-- _Relies on_
-  + [[Core/EAC]]
-  + [[Unit]]
-  + [[InteractionNet]]
-  + [[Backends/Env]]
-  + [[Backends/Graph]]
-  + [[Interface]]
-  + [[Maps]]
-  + [[InteractionNet/Nets/Default]]
-  + [[Type]]
-  + [[Library]]
-  + [[Visualize/Dot]]
-  + [[Visualize/Graph]]
-*** Spec <<InteractionNet/test/Spec>>
-*** Nets
-**** Combinators <<test/Nets/Combinators>>
-- _Relies on_
-  + [[Backends/Env]]
-  + [[Backends/Graph]]
-  + [[Interface]]
-  + [[InteractionNet/Nets/Combinators]]
-  + [[Library]]
-**** Default <<test/Nets/Default>>
-- _Relies on_
-  + [[Backends/Env]]
-  + [[Backends/Graph]]
-  + [[Interface]]
-  + [[InteractionNet/Nets/Default]]
-  + [[Library]]
-* InteractionNetIR
-** Setup <<InteractionNetIR/Setup>>
-** src
-*** Juvix
-**** Core
-***** EAC <<Core/EAC>>
-- This directory contains the implementation of =Eal= and the inferred
-  bracket checker on =Eal=
-- _Relies on_
-  + [[Check]]
-  + [[ConstraintGen]]
-  + [[EAC/Erasure]]
-  + [[EAC/Parser]]
-  + [[Solve]]
-  + [[EAC/Types]]
-****** Check
-- A constraint checker for EAC.
-- _Relies on_
-  + [[ConstraintGen]]
-  + [[Solve]]
-  + [[EAC/Types]]
-  + [[Core/Types]]
-  + [[Library]]
-****** ConstraintGen
-- _Relies on_
-  + [[EAC/Types]]
-  + [[Erased/Types]]
-  + [[Core/Types]]
-  + [[Library]]
-  + [[HashMap]]
-****** Erasure <<EAC/Erasure>>
-- _Relies on_
-  + [[EAC/Types]]
-  + [[Erased/Types]]
-****** Parser <<EAC/Parser>>
-- _Relies on_
-  + [[EAC/Types]]
-  + [[EAC/Types]]
-  + [[Unit]]
-  + [[Library]]
-  + [[NameSymbol]]
-****** Solve
-- A Z3 solver for the generated =Eal= Constraints
-- Can generate multiple constraints that will be used along side the
-  Bracket checker to confirm that the solved constraints Z3 gives us
-  is correct
-- _Relies on_
-  + [[EAC/Types]]
-  + [[Library]]
-****** Types <<EAC/Types>>
-- _Relies on_
-  + [[Erased/Types]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
-** test
-*** EAC <<test/EAC>>
-- _Relies on_
-  + [[Core/EAC]]
-  + [[Unit]]
-  + [[Library]]
-*** EAC2
-- _Relies on_
-  + [[Core/EAC]]
-  + [[Check]]
-  + [[Erased/Types]]
-  + [[Erased/Types]]
-  + [[Core/Types]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[Library/Usage]]
-*** Main <<InteractionNetIR/test/Main>>
-- _Relies on_
-  + [[Library]]
 * Pipeline
 ** Setup <<Pipeline/Setup>>
 ** src
 *** Juvix
-**** Encoding
-***** Encoding <<Encoding/Encoding>>
-- This provides generic functions used by the various encodings in
-  this directory
-- _Relies on_
-  + [[Encoding/Types]]
-  + [[Library]]
-  + [[HashMap]]
-***** Mendler
-- Gives a =Mendler= encoding from an =ADT=.
-- This file is not done as Ι have yet to find a way to convert any
-  general recursive function into a proper =Mendler= form.
-- This however will do the boilerplate of changing an =ADT= to
-  =Mendler= and the structure of a case expression into proper
-  =Mendler= form
-- _Relies on_
-  + [[Encoding/Encoding]]
-  + [[Encoding/Types]]
-  + [[Library]]
-  + [[HashMap]]
-***** Scott
-- Gives a =Scott= encoding from an =ADT= and works properly for case
-  expressions
-- Overall this encoding just works™
-- _Relies on_
-  + [[Encoding/Encoding]]
-  + [[Encoding/Types]]
-  + [[Library]]
-  + [[HashMap]]
-***** Types <<Encoding/Types>>
-- _Relies on_
-  + [[Library]]
-  + [[HashMap]]
 **** Pipeline <<Juvix/Pipeline>>
 - _Relies on_
   + [[Juvix/Context]]
@@ -1411,13 +1106,6 @@ Can be added to via core translation
 - _Relies on_
   + [[Library]]
 *** Test
-**** Encoding <<Test/Encoding>>
-- _Relies on_
-  + [[Encoding/Encoding]]
-  + [[Mendler]]
-  + [[Scott]]
-  + [[Encoding/Types]]
-  + [[Library]]
 **** RecGroups
 - _Relies on_
   + [[Juvix/Context]]
