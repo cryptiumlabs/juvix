@@ -3,7 +3,7 @@
 -- |
 -- - This provides generic functions used by the various encodings in
 --   this directory
-module Juvix.Encoding.Encoding
+module Encoding.Encoding
   ( caseGen,
     adtConstructor,
     idL,

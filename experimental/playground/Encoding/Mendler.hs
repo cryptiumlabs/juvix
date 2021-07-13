@@ -8,7 +8,7 @@
 -- - This however will do the boilerplate of changing an =ADT= to
 --   =Mendler= and the structure of a case expression into proper
 --   =Mendler= form
-module Juvix.Encoding.Mendler
+module Encoding.Mendler
   ( adtToMendler,
     mendlerCase,
     inl,

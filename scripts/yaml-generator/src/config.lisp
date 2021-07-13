@@ -320,26 +320,6 @@ common ones to include"
                      *standard-library-extra-deps*
                      *eac-solver*)))
 
-(defparameter *interaction-net*
-  (make-stack-yaml
-   :name       "InteractionNet"
-   :resolver   17.9
-   :packages   (list *standard-library* *core*)
-   :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
-                     *standard-library-extra-deps*
-                     *interaction-net-extra-deps*
-                     *graph-visualizer*
-                     *eac-solver*)
-   :extra "allow-newer: true"))
-
-(defparameter *interaction-net-IR*
-  (make-stack-yaml
-   :name       "InteractionNetIR"
-   :resolver   17.9
-   :packages   (list *standard-library* *core*)
-   :extra-deps (list (make-general-dependencies *capability* *extensible* *prettiest*)
-                     *eac-solver*)))
-
 ;; Define these before pipeline due to mutual recursion
 (defparameter *Pipeline*
   (make-stack-yaml

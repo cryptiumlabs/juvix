@@ -20,6 +20,4 @@
   (generate-yaml-file *plonk*              "library/Backends/Plonk/stack.yaml")
   (generate-yaml-file *easy-pipeline*      "library/EasyPipeline/stack.yaml")
   (generate-yaml-file *Pipeline*           "library/Pipeline/stack.yaml")
-  (generate-yaml-file *interaction-net*    "library/InteractionNet/stack.yaml")
-  (generate-yaml-file *interaction-net-IR* "library/InteractionNetIR/stack.yaml")
   (generate-yaml-file *juvix*              "stack.yaml"))

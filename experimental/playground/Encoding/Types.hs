@@ -1,4 +1,4 @@
-module Juvix.Encoding.Types
+module Encoding.Types
   ( Product (..),
     Sum (..),
     Name (..),

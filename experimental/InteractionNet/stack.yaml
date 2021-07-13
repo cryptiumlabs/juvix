@@ -2,8 +2,8 @@ resolver: lts-17.9
 
 packages:
 - .
-- ../StandardLibrary
-- ../Core
+- ../../StandardLibrary
+- ../../Core
 
 extra-deps:
 

@@ -4,7 +4,7 @@
 -- - Gives a =Scott= encoding from an =ADT= and works properly for case
 --   expressions
 -- - Overall this encoding just works™
-module Juvix.Encoding.Scott
+module Encoding.Scott
   ( adtToScott,
     scottCase,
   )
