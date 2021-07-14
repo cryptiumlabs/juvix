@@ -1,4 +1,4 @@
-module Juvix.ToCore.Types.Env where
+module Juvix.Pipeline.ToHR.Env where
 
 import Data.HashMap.Strict (HashMap)
 import qualified Juvix.Context as Ctx
@@ -7,8 +7,9 @@ import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Sexp as Sexp
-import Juvix.ToCore.Types.Defs
-import Juvix.ToCore.Types.Error
+import Juvix.Core.Pipeline.ToHR.Def
+import Juvix.Core.Pipeline.ToHR.Sig
+import Juvix.Core.Pipeline.ToHR.Error
 
 data FFState ext primTy primVal = FFState
   { frontend :: Ctx.T Sexp.T Sexp.T Sexp.T,
@@ -129,3 +130,14 @@ runEnv ctx param (Env env) =
           nextPatVar = 0,
           ffOrder = []
         }
+
+hrToIRState :: FFState HR.T ty val -> FFState IR.T ty val
+hrToIRState FFState {coreSigs, coreDefs, ..} =
+  FFState
+    { coreSigs = hrToIRSigs coreSigs,
+      coreDefs = snd $ hrToIRDefs coreDefs,
+      ..
+    }
+
+throwFF :: HasThrowFF ext primTy primVal m => Error ext primTy primVal -> m a
+throwFF = throw @"fromFrontendError"

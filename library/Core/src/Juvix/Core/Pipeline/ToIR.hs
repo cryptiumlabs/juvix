@@ -1,17 +1,5 @@
-{-# LANGUAGE LiberalTypeSynonyms #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE UndecidableInstances #-}
+module Juvix.Core.Pipeline.ToIR where
 
-module Juvix.ToCore.Types
-  ( module Juvix.ToCore.Types,
-    module Juvix.ToCore.Types.Defs,
-    module Juvix.ToCore.Types.Env,
-    module Juvix.ToCore.Types.Error,
-  )
-where
-
--- import Juvix.Core.Base.Types as Core
 
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Core.Base.Types as Core
@@ -22,9 +10,9 @@ import qualified Juvix.Core.Translate as Translate
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Sexp as Sexp
-import Juvix.ToCore.Types.Defs
-import Juvix.ToCore.Types.Env
-import Juvix.ToCore.Types.Error
+-- import Juvix.ToCore.Types.Defs
+-- import Juvix.ToCore.Types.Env
+-- import Juvix.ToCore.Types.Error
 
 type ReduceEff ext primTy primVal m =
   ( HasThrowFF ext primTy primVal m,
@@ -37,8 +25,6 @@ deriving instance Data LineNum.T
 deriving instance Data Sexp.Atom
 
 deriving instance Data Sexp.T
-
--- TODO: Move this to Translate module
 
 hrToIRSig :: CoreSig HR.T ty val -> CoreSig IR.T ty val
 hrToIRSig d@DataSig {dataType} = d {dataType = hrToIR dataType}
@@ -61,8 +47,6 @@ hrToIRDefs = HM.foldlWithKey' f (mempty, mempty)
     f (m, defs) globalName def =
       let (m', def') = hrToIRDef def m
        in (m', HM.insert globalName def' defs)
-
---hrToIRDef <$> defs
 
 hrToIRRawGlobal :: Core.RawGlobal' HR.T primTy primVal -> Translate.M (Core.RawGlobal' IR.T primTy primVal)
 hrToIRRawGlobal (Core.RawGDatatype d) = Core.RawGDatatype <$> hrToIRRawDatatype d

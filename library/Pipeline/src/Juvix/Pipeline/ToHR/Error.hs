@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.ToCore.Types.Error where
+module Juvix.Pipeline.ToHR.Error where
 
 import qualified Juvix.Context as Ctx
 import qualified Juvix.Core.Base.Types as Core

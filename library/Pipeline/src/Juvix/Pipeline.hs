@@ -131,9 +131,9 @@ class HasBackend b where
     Ty b ->
     Pipeline (ErasedAnn.AnnTermT (Ty b) (Val b))
   toErased (patToSym, defs) param ty = do
-    (usage, term, ty) <- getMain >>= toLambda
+    (usage, term, mainTy) <- getMain >>= toLambda
     let inlinedTerm = IR.inlineAllGlobals term lookupGlobal patToSym
-    let erasedAnn = ErasedAnn.irToErasedAnn @(Err b) inlinedTerm usage ty
+    let erasedAnn = ErasedAnn.irToErasedAnn @(Err b) inlinedTerm usage mainTy
     res <- liftIO $ fst <$> exec erasedAnn param evaluatedGlobals
     case res of
       Right r -> do

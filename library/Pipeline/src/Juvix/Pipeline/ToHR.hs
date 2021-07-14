@@ -1,10 +1,10 @@
 {-# LANGUAGE ViewPatterns #-}
 
 module Juvix.Pipeline.Core
-  ( contextToIR,
-    contextToDefsIR,
+  ( -- contextToIR,
+    -- contextToDefsIR,
     contextToHR,
-    contextToDefsHR,
+    -- contextToDefsHR,
     -- we export these functions to be able to call them stepwise from
     -- a testing place
     addSig,
@@ -36,9 +36,10 @@ contextToHR ::
   ) =>
   Context.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
-  FF.FFState HR.T primTy primVal
+  ToCore.CoreDefs HR.T primTy primVal
+  -- FF.FFState HR.T primTy primVal
 contextToHR ctx param =
-  FF.evalEnv ctx param do
+  FF.coreDefs $ FF.evalEnv ctx param do
     newCtx <- Context.mapSumWithName ctx attachConstructor
 
     let ordered = Context.recGroups newCtx
@@ -85,26 +86,26 @@ contextToHR ctx param =
         f n acc = Sexp.list [arrow, n, acc]
         arrow = Sexp.atom "TopLevel.Prelude.->"
 
-contextToDefsHR ::
-  (Show primTy, Show primVal) =>
-  Context.T Sexp.T Sexp.T Sexp.T ->
-  P.Parameterisation primTy primVal ->
-  ToCore.CoreDefs HR.T primTy primVal
-contextToDefsHR ctx param = FF.coreDefs $ contextToHR ctx param
+-- contextToDefsHR ::
+--   (Show primTy, Show primVal) =>
+--   Context.T Sexp.T Sexp.T Sexp.T ->
+--   P.Parameterisation primTy primVal ->
+--   ToCore.CoreDefs HR.T primTy primVal
+-- contextToDefsHR ctx param = FF.coreDefs $ contextToHR ctx param
 
-contextToIR ::
-  (Show primTy, Show primVal) =>
-  Context.T Sexp.T Sexp.T Sexp.T ->
-  P.Parameterisation primTy primVal ->
-  FF.FFState IR.T primTy primVal
-contextToIR ctx param = ToCore.hrToIRState $ contextToHR ctx param
+-- contextToIR ::
+--   (Show primTy, Show primVal) =>
+--   Context.T Sexp.T Sexp.T Sexp.T ->
+--   P.Parameterisation primTy primVal ->
+--   FF.FFState IR.T primTy primVal
+-- contextToIR ctx param = ToCore.hrToIRState $ contextToHR ctx param
 
-contextToDefsIR ::
-  (Show primTy, Show primVal) =>
-  Context.T Sexp.T Sexp.T Sexp.T ->
-  P.Parameterisation primTy primVal ->
-  ToCore.CoreDefs IR.T primTy primVal
-contextToDefsIR ctx param = FF.coreDefs $ contextToIR ctx param
+-- contextToDefsIR ::
+--   (Show primTy, Show primVal) =>
+--   Context.T Sexp.T Sexp.T Sexp.T ->
+--   P.Parameterisation primTy primVal ->
+--   ToCore.CoreDefs IR.T primTy primVal
+-- contextToDefsIR ctx param = FF.coreDefs $ contextToIR ctx param
 
 addSig ::
   ( Show primTy,
