@@ -333,3 +333,32 @@ and a rhs that may contain a guard, so no = is assumed for the rhs"
   (generate-haskell "RecordNoPunned" '("notPunnedGroup") ":record-no-pun"
                   :list-star t
                   :un-grouped t))
+
+(defun core-named-representation ()
+  (generate-haskell "Star" '("integer") ":star")
+
+  (generate-haskell "PrimTy" '("sexp") ":prim-ty")
+
+  (generate-haskell "Prim" '("sexp") ":prim")
+
+  (generate-haskell "Pi" '("binder" "sexp") ":pi")
+
+  (generate-haskell "Binder" '("nameSymbol" "sexp" "sexp") nil)
+
+  (generate-haskell "Lam" '("nameSymbol" "sexp") ":named-lambda")
+
+  (generate-haskell "Sigma" '("binder" "sexp") ":sigma")
+
+  (generate-haskell "Pair" (repeat 2 "sexp") ":pair")
+
+  (generate-haskell "Let" '("binder" "sexp") ":named-let")
+
+  (generate-haskell "Var" '("nameSymbol") nil)
+  ;; do we need to generate this?
+  (generate-haskell "App" (repeat 2 "sexp") nil)
+
+  (generate-haskell "Ann" '("sexp" "meta" "sexp") ":")
+
+  (generate-haskell "Meta" '("sexp" "integer") nil)
+
+  (generate-haskell "RawFunClause" (repeat 4 "sexp") nil))

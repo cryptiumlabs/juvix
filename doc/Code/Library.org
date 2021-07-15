@@ -321,14 +321,14 @@ Surface language
 - _Relies on_
   + [[Plonk]]
   + [[Ann]]
+  + [[Core/HR]]
+  + [[Core/IR]]
   + [[Library]]
   + [[Feedback]]
   + [[Library/Test/Golden]]
   + [[Juvix/Pipeline]]
   + [[Juvix/Pipeline]]
   + [[ToCore/Types]]
-  + [[Core/HR]]
-  + [[Core/IR]]
 ***** Orphan
 - _Relies on_
   + [[Library]]
@@ -1144,6 +1144,39 @@ sexp type and all the various helper functionality one can need
   + [[LineNum]]
   + [[NameSymbol]]
 ***** Structure
+****** CoreNamed
+Hardeing S-expressions into a more readable form. Here we use a
+mixture of record structures and aliases. Each cover a form that we
+wish to talk about rather than just match away at
+- _The form for transformation follows this structure_
+#+begin_src haskell
+  -- the data type
+  data Form = ... deriving (Show)
+  is<Form>   :: Sexp.T -> Bool
+  to<Form>   :: Sexp.T -> Maybe <Form>
+  from<Form> :: <Form> -> Sexp.T
+#+end_src
++ With the following properties of the forms
+  #+begin_src haskell
+    ∀ s : Sexp.T. is<Form> s = True ⟷ is-just (to<Form> s)
+    to<Form> 。 from<Form> = Just
+  #+end_src
+_TODO_
+ 1. Figure out if we can even express a spec system in
+    Haskell... =to<Form>= and =From<From>= have the exact same signature
+ 2. replace the repeat code with the =to<Form>= with an abstraction
+ 3. put the meta data with the form so we don't have to do it by
+    hand in the code that uses this
+    1. Use =Juvix.Library.LineNum=
+    2. append the =Form= With this
+    3. have to<Form> fill this
+    4. Have extra smart consturctors that are =<form>=, so that we
+       can automatically fill in this meta data
+- _Relies on_
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Juvix/Sexp]]
+  + [[Structure/Helpers]]
 ****** Frontend <<Structure/Frontend>>
 Hardeing S-expressions into a more readable form. Here we use a
 mixture of record structures and aliases. Each cover a form that we
@@ -1180,9 +1213,11 @@ _TODO_
 ****** Helpers <<Structure/Helpers>>
 - _Relies on_
   + [[Library]]
+  + [[NameSymbol]]
   + [[Juvix/Sexp]]
 ****** Lens
 - _Relies on_
+  + [[CoreNamed]]
   + [[Structure/Frontend]]
   + [[Transition]]
 ****** Transition
