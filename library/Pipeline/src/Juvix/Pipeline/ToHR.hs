@@ -1,7 +1,7 @@
 {-# LANGUAGE ViewPatterns #-}
 
-module Juvix.Pipeline.Core
-  ( -- contextToIR,
+module Juvix.Pipeline.ToHR
+  ( --contextToIR,
     -- contextToDefsIR,
     contextToHR,
     -- contextToDefsHR,
@@ -27,8 +27,8 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Parser (ParserError)
 import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Sexp as Sexp
-import qualified Juvix.ToCore.FromFrontend as FF
-import qualified Juvix.ToCore.Types as ToCore
+import qualified Juvix.Pipeline.ToHR.Def as Def
+import qualified Juvix.Pipeline.ToHR.Env as Env
 
 contextToHR ::
   ( Show primTy,
@@ -36,10 +36,10 @@ contextToHR ::
   ) =>
   Context.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
-  ToCore.CoreDefs HR.T primTy primVal
+  Def.CoreDefs HR.T primTy primVal
   -- FF.FFState HR.T primTy primVal
 contextToHR ctx param =
-  FF.coreDefs $ FF.evalEnv ctx param do
+  Def.coreDefs $ Env.evalEnv ctx param do
     newCtx <- Context.mapSumWithName ctx attachConstructor
 
     let ordered = Context.recGroups newCtx

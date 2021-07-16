@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Juvix.Core.Pipeline.ToIR where
 
 
@@ -10,15 +11,13 @@ import qualified Juvix.Core.Translate as Translate
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Sexp as Sexp
--- import Juvix.ToCore.Types.Defs
--- import Juvix.ToCore.Types.Env
--- import Juvix.ToCore.Types.Error
 
-type ReduceEff ext primTy primVal m =
-  ( HasThrowFF ext primTy primVal m,
-    HasParam primTy primVal m,
-    HasCoreSigs ext primTy primVal m
-  )
+
+-- type ReduceEff ext primTy primVal m =
+--   ( HasThrowFF ext primTy primVal m,
+--     HasParam primTy primVal m,
+--     HasCoreSigs ext primTy primVal m
+--   )
 
 deriving instance Data LineNum.T
 
@@ -26,36 +25,36 @@ deriving instance Data Sexp.Atom
 
 deriving instance Data Sexp.T
 
-hrToIRSig :: CoreSig HR.T ty val -> CoreSig IR.T ty val
-hrToIRSig d@DataSig {dataType} = d {dataType = hrToIR dataType}
-hrToIRSig c@ConSig {conType} = c {conType = hrToIR <$> conType}
-hrToIRSig v@ValSig {valType} = v {valType = hrToIR valType}
-hrToIRSig (SpecialSig s) = SpecialSig s
+hrToIRSig :: Core.Sig HR.T ty val -> Core.Sig IR.T ty val
+hrToIRSig d@Core.DataSig {sigDataType} = d {Core.sigDataType = hrToIR sigDataType}
+hrToIRSig c@Core.ConSig {sigConType} = c {Core.sigConType = hrToIR <$> sigConType}
+hrToIRSig v@Core.ValSig {sigValType} = v {Core.sigValType = hrToIR sigValType}
+-- hrToIRSig (SpecialSig s) = SpecialSig s
 
-hrToIRSigs :: CoreSigs HR.T ty val -> CoreSigs IR.T ty val
+hrToIRSigs :: Core.Sigs HR.T ty val -> Core.Sigs IR.T ty val
 hrToIRSigs sigs = hrToIRSig <$> sigs
 
-hrToIRDef :: CoreDef HR.T ty val -> Core.PatternMap Core.GlobalName -> (Core.PatternMap Core.GlobalName, CoreDef IR.T ty val)
-hrToIRDef (SpecialDef sym s) pats = (pats, SpecialDef sym s)
-hrToIRDef (CoreDef global) pats =
+hrToIRDef :: Core.RawGlobal HR.T ty val -> Core.PatternMap Core.GlobalName -> (Core.PatternMap Core.GlobalName, Core.RawGlobal IR.T ty val)
+hrToIRDef global pats =
   let (def, env) = Translate.exec pats mempty (hrToIRRawGlobal global)
-   in (Translate.patToSym env, CoreDef def)
+   in (Translate.patToSym env, def)
 
-hrToIRDefs :: CoreDefs HR.T ty val -> (Core.PatternMap Core.GlobalName, CoreDefs IR.T ty val)
+
+hrToIRDefs :: HM.HashMap Core.GlobalName (Core.RawGlobal HR.T ty val) -> (Core.PatternMap Core.GlobalName,  HM.HashMap Core.GlobalName (Core.RawGlobal IR.T ty val))
 hrToIRDefs = HM.foldlWithKey' f (mempty, mempty)
   where
     f (m, defs) globalName def =
       let (m', def') = hrToIRDef def m
        in (m', HM.insert globalName def' defs)
 
-hrToIRRawGlobal :: Core.RawGlobal' HR.T primTy primVal -> Translate.M (Core.RawGlobal' IR.T primTy primVal)
+hrToIRRawGlobal :: Core.RawGlobal HR.T primTy primVal -> Translate.M (Core.RawGlobal IR.T primTy primVal)
 hrToIRRawGlobal (Core.RawGDatatype d) = Core.RawGDatatype <$> hrToIRRawDatatype d
 hrToIRRawGlobal (Core.RawGDataCon d) = Core.RawGDataCon <$> hrToIRRawDataCon d
 hrToIRRawGlobal (Core.RawGFunction f) = Core.RawGFunction <$> hrToIRRawFun f
 hrToIRRawGlobal (Core.RawGAbstract Core.RawAbstract {rawAbsType, ..}) =
   pure $ Core.RawGAbstract Core.RawAbstract {rawAbsType = hrToIR rawAbsType, ..}
 
-hrToIRRawDatatype :: Core.RawDatatype' HR.T primTy primVal -> Translate.M (Core.RawDatatype' IR.T primTy primVal)
+hrToIRRawDatatype :: Core.RawDatatype HR.T primTy primVal -> Translate.M (Core.RawDatatype IR.T primTy primVal)
 hrToIRRawDatatype Core.RawDatatype {rawDataArgs, rawDataCons, ..} = do
   cons <- traverse hrToIRRawDataCon rawDataCons
   pure
@@ -65,10 +64,10 @@ hrToIRRawDatatype Core.RawDatatype {rawDataArgs, rawDataCons, ..} = do
         ..
       }
 
-hrToIRRawArg :: Core.RawDataArg' HR.T primTy primVal -> Core.RawDataArg' IR.T primTy primVal
+hrToIRRawArg :: Core.RawDataArg HR.T primTy primVal -> Core.RawDataArg IR.T primTy primVal
 hrToIRRawArg Core.RawDataArg {rawArgType, ..} = Core.RawDataArg {rawArgType = hrToIR rawArgType, ..}
 
-hrToIRRawDataCon :: Core.RawDataCon' HR.T primTy primVal -> Translate.M (Core.RawDataCon' IR.T primTy primVal)
+hrToIRRawDataCon :: Core.RawDataCon HR.T primTy primVal -> Translate.M (Core.RawDataCon IR.T primTy primVal)
 hrToIRRawDataCon Core.RawDataCon {rawConType, rawConDef, ..} = do
   mDef <- traverse hrToIRRawFun rawConDef
   pure $
@@ -78,7 +77,7 @@ hrToIRRawDataCon Core.RawDataCon {rawConType, rawConDef, ..} = do
         ..
       }
 
-hrToIRRawFun :: Core.RawFunction' HR.T primTy primVal -> Translate.M (Core.RawFunction' IR.T primTy primVal)
+hrToIRRawFun :: Core.RawFunction HR.T primTy primVal -> Translate.M (Core.RawFunction IR.T primTy primVal)
 hrToIRRawFun Core.RawFunction {rawFunType, rawFunClauses, ..} = do
   fclauses <- traverse hrToIRRawFunClause rawFunClauses
   pure $
@@ -88,7 +87,7 @@ hrToIRRawFun Core.RawFunction {rawFunType, rawFunClauses, ..} = do
         ..
       }
 
-hrToIRRawFunClause :: Core.RawFunClause' HR.T primTy primVal -> Translate.M (Core.RawFunClause' IR.T primTy primVal)
+hrToIRRawFunClause :: Core.RawFunClause HR.T primTy primVal -> Translate.M (Core.RawFunClause IR.T primTy primVal)
 hrToIRRawFunClause Core.RawFunClause {rawClauseTel, rawClausePats, rawClauseBody, ..} =
   do
     pats <- traverse Translate.hrPatternToIR' rawClausePats
@@ -109,13 +108,3 @@ hrToIRRawTeleEle Core.RawTeleEle {rawTy, rawExtension, ..} =
       ..
     }
 
-hrToIRState :: FFState HR.T ty val -> FFState IR.T ty val
-hrToIRState FFState {coreSigs, coreDefs, ..} =
-  FFState
-    { coreSigs = hrToIRSigs coreSigs,
-      coreDefs = snd $ hrToIRDefs coreDefs,
-      ..
-    }
-
-throwFF :: HasThrowFF ext primTy primVal m => Error ext primTy primVal -> m a
-throwFF = throw @"fromFrontendError"

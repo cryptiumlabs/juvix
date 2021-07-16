@@ -1,16 +1,106 @@
 {-# LANGUAGE UndecidableInstances #-}
-
-module Juvix.Pipeline.ToHR.Error where
+module Juvix.Pipeline.ToHR.Types where
 
 import qualified Juvix.Context as Ctx
-import qualified Juvix.Core.Base.Types as Core
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.HR as HR
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Sexp as Sexp
-import Juvix.ToCore.Types.Defs
 import Text.Show (Show (..))
+import qualified Data.HashMap.Strict as HM
+
+-----------------
+-- Definitions --
+-----------------
+data CoreDef ext primTy primVal
+  = CoreDef !(Core.RawGlobal ext primTy primVal)
+  | SpecialDef !NameSymbol.T !Special
+  deriving (Generic)
+
+deriving instance
+  ( Show primTy,
+    Show primVal,
+    Core.TermAll Show ext primTy primVal,
+    Core.ElimAll Show ext primTy primVal,
+    Core.PatternAll Show ext primTy primVal
+  ) =>
+  Show (CoreDef ext primTy primVal)
+
+deriving instance
+  ( Eq primTy,
+    Eq primVal,
+    Core.TermAll Eq ext primTy primVal,
+    Core.ElimAll Eq ext primTy primVal,
+    Core.PatternAll Eq ext primTy primVal
+  ) =>
+  Eq (CoreDef ext primTy primVal)
+
+deriving instance
+  ( Data primTy,
+    Data primVal,
+    Data ext,
+    Core.TermAll Data ext primTy primVal,
+    Core.ElimAll Data ext primTy primVal,
+    Core.PatternAll Data ext primTy primVal
+  ) =>
+  Data (CoreDef ext primTy primVal)
+
+type CoreDefs ext primTy primVal = HM.HashMap Core.GlobalName (CoreDef ext primTy primVal)
+
+
+----------------
+-- Signatures --
+----------------
+data CoreSig ext primTy primVal
+  = CoreSig (Core.Sig ext primTy primVal)
+  | SpecialSig !Special
+  deriving (Generic)
+
+-- | Bindings that can't be given types, but can be given new names by the user.
+data Special
+  = -- | pi type, possibly with usage already supplied
+    ArrowS (Maybe Usage.T)
+  | -- | sigma type
+    PairS (Maybe Usage.T)
+  | -- | type annotation
+    ColonS
+  | -- | type of types
+    TypeS
+  | -- | omega usage
+    OmegaS
+  deriving (Eq, Show, Data, Generic)
+
+deriving instance
+  ( Eq primTy,
+    Eq primVal,
+    Core.TermAll Eq ext primTy primVal,
+    Core.ElimAll Eq ext primTy primVal
+  ) =>
+  Eq (CoreSig ext primTy primVal)
+
+deriving instance
+  ( Show primTy,
+    Show primVal,
+    Core.TermAll Show ext primTy primVal,
+    Core.ElimAll Show ext primTy primVal
+  ) =>
+  Show (CoreSig ext primTy primVal)
+
+deriving instance
+  ( Data ext,
+    Data primTy,
+    Data primVal,
+    Core.TermAll Data ext primTy primVal,
+    Core.ElimAll Data ext primTy primVal
+  ) =>
+  Data (CoreSig ext primTy primVal)
+
+type CoreSigs ext primTy primVal =
+  HM.HashMap Core.GlobalName (CoreSig ext primTy primVal)
+
+
 
 data Error ext primTy primVal
   = -- features not yet implemented
@@ -190,3 +280,5 @@ instance
     UnexpectedOmega ->
       "%Builtin.Omega cannot be used as an arbitrary term, only as\n"
         <> "the first argument of %Builtin.Arrow or %Builtin.Pair"
+
+

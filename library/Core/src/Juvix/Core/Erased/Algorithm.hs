@@ -36,7 +36,7 @@ erase mt mv t π
 
 eraseGlobal ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
-  IR.Global primTy1 primVal1 ->
+  Core.Global IR.T IR.T primTy1 primVal1 ->
   m (Erasure.Global primTy2 primVal2)
 eraseGlobal g =
   case g of
@@ -49,14 +49,14 @@ eraseGlobal g =
 
 eraseAbstract ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
-  IR.Abstract primTy1 primVal1 ->
+  Core.Abstract IR.T primTy1 primVal1 ->
   m (Erasure.Abstract primTy2)
 eraseAbstract (Core.Abstract name usage ty) =
   Erasure.Abstract name usage <$> eraseType ty
 
 eraseDatatype ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
-  IR.Datatype primTy1 primVal1 ->
+  Core.Datatype IR.T IR.T primTy1 primVal1 ->
   m (Erasure.Datatype primTy2 primVal2)
 eraseDatatype (Core.Datatype name _pos args level cons) = do
   args <- mapM eraseDataArg args
@@ -65,7 +65,7 @@ eraseDatatype (Core.Datatype name _pos args level cons) = do
 
 eraseDataArg ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
-  IR.DataArg primTy1 primVal1 ->
+  Core.DataArg IR.T primTy1 primVal1 ->
   m (Erasure.DataArg primTy2)
 eraseDataArg (Core.DataArg name usage ty) = do
   ty <- eraseType ty
@@ -73,7 +73,7 @@ eraseDataArg (Core.DataArg name usage ty) = do
 
 eraseDataCon ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
-  IR.DataCon primTy1 primVal1 ->
+  Core.DataCon IR.T IR.T primTy1 primVal1 ->
   m (Erasure.DataCon primTy2 primVal2)
 eraseDataCon (Core.DataCon name ty def) = do
   ty <- eraseType ty
@@ -82,7 +82,7 @@ eraseDataCon (Core.DataCon name ty def) = do
 
 eraseFunction ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
-  IR.Function primTy1 primVal1 ->
+  Core.Function IR.T IR.T primTy1 primVal1 ->
   m (Erasure.Function primTy2 primVal2)
 eraseFunction (Core.Function name usage ty clauses) = do
   let (tys, ret) = piTypeToList (Core.quote ty)

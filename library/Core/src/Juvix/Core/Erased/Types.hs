@@ -20,14 +20,14 @@ type TermT primTy primVal = Term (TC.TypedPrim primTy primVal)
 
 extendType "Type" [] [t|T|] (\_ -> defaultExtType)
 
-type Datatype = Core.Datatype' T T
+-- type Datatype = Core.Datatype T T
 
-type DataArg = Core.DataArg' T
+-- type DataArg = Core.DataArg T
 
-type DataCon = Core.DataCon' T T
+-- type DataCon = Core.DataCon T T
 
-type Function = Core.Function' T
+-- type Function = Core.Function T
 
-type FunClause primTy primVal = Core.FunClause' T primTy primVal
+-- type FunClause primTy primVal = Core.FunClause T primTy primVal
 
 type TypeAssignment primTy = TypeAssignment' T primTy

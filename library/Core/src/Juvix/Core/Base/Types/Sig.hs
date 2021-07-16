@@ -2,17 +2,16 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.Pipeline.Base.Types.Sig 
+module Juvix.Core.Base.Types.Sig 
 ( Sig(..),
   Sigs
 )
 where
 
 import Data.HashMap.Strict (HashMap)
-import qualified Juvix.Core.Base.Types as Core
+import qualified Juvix.Core.Base.Types.Base as Core
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Usage as Usage
 
 ---------------------
 -- Core Signatures --
@@ -23,15 +22,15 @@ type Sigs ext primTy primVal =
 
 data Sig ext primTy primVal
   = DataSig
-      { dataType :: !(Core.Term' ext primTy primVal),
-        dataCons :: [NameSymbol.T]
+      { sigDataType :: !(Core.Term' ext primTy primVal),
+        sigDataCons :: [NameSymbol.T]
       }
   | ConSig
-      { conType :: !(Maybe (Core.Term' ext primTy primVal))
+      { sigConType :: !(Maybe (Core.Term' ext primTy primVal))
       }
   | ValSig
-      { valUsage :: !Core.GlobalUsage,
-        valType :: !(Core.Term' ext primTy primVal)
+      { sigValUsage :: !Core.GlobalUsage,
+        sigValType :: !(Core.Term' ext primTy primVal)
       }
   deriving (Generic)
 

@@ -47,11 +47,11 @@ typeCheckDeclaration ::
   -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
   -- | A list of datatype declarations to be checked
-  [Core.RawDatatype' extT primTy primVal] ->
+  [Core.RawDatatype extT primTy primVal] ->
   -- | A list of function declarations to be checked
-  [Core.RawFunction' extT primTy primVal] ->
+  [Core.RawFunction extT primTy primVal] ->
   -- | A list of Globals to be added to the global state
-  Env.TypeCheck IR.T primTy primVal m [Core.RawGlobal' extT primTy primVal]
+  Env.TypeCheck IR.T primTy primVal m [Core.RawGlobal extT primTy primVal]
 typeCheckDeclaration _tel _rtel _param [] [] =
   return []
 -- type checking datatype declarations

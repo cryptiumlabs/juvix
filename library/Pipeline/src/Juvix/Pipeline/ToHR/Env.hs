@@ -1,23 +1,22 @@
 module Juvix.Pipeline.ToHR.Env where
 
-import Data.HashMap.Strict (HashMap)
+import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Context as Ctx
 import qualified Juvix.Core.Base.Types as Core
+import qualified Juvix.Core.HR as HR
+import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Sexp as Sexp
-import Juvix.Core.Pipeline.ToHR.Def
-import Juvix.Core.Pipeline.ToHR.Sig
-import Juvix.Core.Pipeline.ToHR.Error
+import Juvix.Pipeline.ToHR.Types
 
 data FFState ext primTy primVal = FFState
   { frontend :: Ctx.T Sexp.T Sexp.T Sexp.T,
     param :: P.Parameterisation primTy primVal,
-    -- TODO: Do signatures need to be
     coreSigs :: CoreSigs ext primTy primVal,
     coreDefs :: CoreDefs ext primTy primVal,
-    patVars :: HashMap Core.GlobalName Core.PatternVar,
+    patVars :: HashMap.T Core.GlobalName Core.PatternVar,
     nextPatVar :: Core.PatternVar,
     ffOrder :: [NonEmpty NameSymbol.T]
   }
@@ -54,9 +53,9 @@ newtype Env ext primTy primVal a = Env {unEnv :: EnvAlias ext primTy primVal a}
     )
     via StateField "coreDefs" (EnvAlias ext primTy primVal)
   deriving
-    ( HasSource "patVars" (HashMap Core.GlobalName Core.PatternVar),
-      HasSink "patVars" (HashMap Core.GlobalName Core.PatternVar),
-      HasState "patVars" (HashMap Core.GlobalName Core.PatternVar)
+    ( HasSource "patVars" (HashMap.T Core.GlobalName Core.PatternVar),
+      HasSink "patVars" (HashMap.T Core.GlobalName Core.PatternVar),
+      HasState "patVars" (HashMap.T Core.GlobalName Core.PatternVar)
     )
     via StateField "patVars" (EnvAlias ext primTy primVal)
   deriving
@@ -88,7 +87,7 @@ type HasCore ext primTy primVal =
   HasState "core" (CoreDefs ext primTy primVal)
 
 type HasPatVars =
-  HasState "patVars" (HashMap Core.GlobalName Core.PatternVar)
+  HasState "patVars" (HashMap.T Core.GlobalName Core.PatternVar)
 
 type HasNextPatVar =
   HasState "nextPatVar" Core.PatternVar
@@ -96,6 +95,11 @@ type HasNextPatVar =
 type HasOrder =
   HasState "ffOrder" [NonEmpty NameSymbol.T]
 
+type ReduceEff ext primTy primVal m =
+  ( HasThrowFF ext primTy primVal m,
+    HasParam primTy primVal m,
+    HasCoreSigs ext primTy primVal m
+  )
 execEnv ::
   Ctx.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
@@ -130,14 +134,6 @@ runEnv ctx param (Env env) =
           nextPatVar = 0,
           ffOrder = []
         }
-
-hrToIRState :: FFState HR.T ty val -> FFState IR.T ty val
-hrToIRState FFState {coreSigs, coreDefs, ..} =
-  FFState
-    { coreSigs = hrToIRSigs coreSigs,
-      coreDefs = snd $ hrToIRDefs coreDefs,
-      ..
-    }
 
 throwFF :: HasThrowFF ext primTy primVal m => Error ext primTy primVal -> m a
 throwFF = throw @"fromFrontendError"

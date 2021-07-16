@@ -1,6 +1,6 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
-module Juvix.Pipeline.Frontend
+module Juvix.Pipeline.ToSexp
   ( frontendToSexp,
     Error (..),
   )

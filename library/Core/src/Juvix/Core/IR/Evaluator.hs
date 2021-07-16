@@ -288,7 +288,7 @@ toLambda ::
   ( EvalPatSubst ext' primTy primVal,
     NoExtensions ext primTy primVal
   ) =>
-  Core.Global' IR.T ext primTy primVal ->
+  Core.Global IR.T ext primTy primVal ->
   Maybe (Core.Elim' (OnlyExts.T ext') primTy primVal)
 toLambda (Core.GFunction (Core.Function {funUsage = π, funType = ty, funClauses}))
   | Core.FunClause _ pats rhs _ _ _ :| [] <- funClauses =
@@ -302,7 +302,7 @@ toLambdaR ::
   ( EvalPatSubst ext' primTy primVal,
     NoExtensions ext primTy primVal
   ) =>
-  Core.RawGlobal' ext primTy primVal ->
+  Core.RawGlobal ext primTy primVal ->
   Maybe (Core.Elim' (OnlyExts.T ext') primTy primVal)
 toLambdaR (Core.RawGFunction f)
   | Core.RawFunction {rawFunUsage = π, rawFunType = ty, rawFunClauses} <- f,
@@ -317,7 +317,7 @@ lookupFun ::
   ( EvalPatSubst ext' primTy primVal,
     NoExtensions ext primTy primVal
   ) =>
-  Core.Globals' IR.T ext primTy primVal ->
+  Core.Globals IR.T ext primTy primVal ->
   LookupFun (OnlyExts.T ext') primTy primVal
 lookupFun globals x =
   HashMap.lookup x globals >>= toLambda
@@ -328,7 +328,7 @@ rawLookupFun ::
   ( EvalPatSubst ext' primTy primVal,
     NoExtensions ext primTy primVal
   ) =>
-  Core.RawGlobals' ext primTy primVal ->
+  Core.RawGlobals ext primTy primVal ->
   LookupFun (OnlyExts.T ext') primTy primVal
 rawLookupFun globals x =
   HashMap.lookup x globals >>= toLambdaR
@@ -336,13 +336,13 @@ rawLookupFun globals x =
 -- | Variant of `lookupFun` that creates a extension free elimination.
 lookupFun' ::
   EvalPatSubst IR.T primTy primVal =>
-  IR.Globals primTy primVal ->
+  Core.Globals IR.T IR.T primTy primVal ->
   LookupFun IR.T primTy primVal
 lookupFun' globals x = lookupFun @IR.T globals x >>| extForgetE
 
 -- | Variant of `lookupFun'` that works on `RawGlobals`.
 rawLookupFun' ::
   EvalPatSubst IR.T primTy primVal =>
-  IR.RawGlobals primTy primVal ->
+  Core.RawGlobals IR.T primTy primVal ->
   LookupFun IR.T primTy primVal
 rawLookupFun' globals x = rawLookupFun @IR.T globals x >>| extForgetE

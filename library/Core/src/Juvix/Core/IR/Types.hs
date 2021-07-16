@@ -22,37 +22,37 @@ extendNeutral "Neutral" [] [t|T|] $ \_ _ -> defaultExtNeutral
 
 extendPattern "Pattern" [] [t|T|] $ \_ _ -> defaultExtPattern
 
-type Datatype = Datatype' T T
+-- type Datatype = Datatype' T T
 
-type RawDatatype = RawDatatype' T
+-- type RawDatatype = RawDatatype' T
 
-type DataArg = DataArg' T
+-- type DataArg = DataArg' T
 
-type RawDataArg = RawDataArg' T
+-- type RawDataArg = RawDataArg' T
 
-type DataCon = DataCon' T T
+-- type DataCon = DataCon' T T
 
-type RawDataCon = RawDataCon' T
+-- type RawDataCon = RawDataCon' T
 
-type Function = Function' T T
+-- type Function = Function' T T
 
-type RawFunction = RawFunction' T
+-- type RawFunction = RawFunction' T
 
-type FunClause = FunClause' T T
+-- type FunClause = FunClause' T T
 
-type RawFunClause = RawFunClause' T
+-- type RawFunClause = RawFunClause' T
 
-type Abstract = Abstract' T
+-- type Abstract = Abstract' T
 
-type RawAbstract = RawAbstract' T
+-- type RawAbstract = RawAbstract' T
 
-type Global = Global' T T
+-- type Global = Global' T T
 
-type RawGlobal = RawGlobal' T
+-- type RawGlobal = RawGlobal' T
 
-type Globals primTy primVal = Globals' T T primTy primVal
+-- type Globals primTy primVal = Globals' T T primTy primVal
 
-type RawGlobals primTy primVal = RawGlobals' T primTy primVal
+-- type RawGlobals primTy primVal = RawGlobals' T primTy primVal
 
 usageToGlobal :: Usage.T -> Maybe GlobalUsage
 usageToGlobal Usage.Omega = Just GOmega
@@ -63,8 +63,8 @@ globalToUsage :: GlobalUsage -> Usage.T
 globalToUsage GOmega = Usage.Omega
 globalToUsage GZero = Usage.SNat 0
 
-globalName :: Global' extT extV primTy primVal -> NameSymbol.T
+globalName :: Global extT extV primTy primVal -> NameSymbol.T
 globalName (GDatatype (Datatype {dataName})) = dataName
-globalName (GDataCon (DataCon {conName})) = conName
+globalName (GDataCon (DataCon {dataConName})) = dataConName
 globalName (GFunction (Function {funName})) = funName
 globalName (GAbstract (Abstract {absName})) = absName

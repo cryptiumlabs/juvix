@@ -39,8 +39,8 @@ typeCheckAllCons ::
   -- | a hashmap of global names and their info
   GlobalsT' T extT primTy primVal ->
   -- | The constructors to be checked
-  [RawDataCon' extT primTy primVal] ->
-  TypeCheck T primTy primVal m [Core.RawGlobal' extT primTy primVal]
+  [RawDataCon extT primTy primVal] ->
+  TypeCheck T primTy primVal m [Core.RawGlobal extT primTy primVal]
 typeCheckAllCons param tel pos rtel globals =
   mapM (typeCheckConstructor param tel pos rtel globals)
 
@@ -70,8 +70,8 @@ typeCheckConstructor ::
   -- | a hashmap of global names and their info
   GlobalsT' T extT primTy primVal ->
   -- | The constructor to be checked
-  RawDataCon' extT primTy primVal ->
-  TypeCheck T primTy primVal m (Core.RawGlobal' extT primTy primVal)
+  RawDataCon extT primTy primVal ->
+  TypeCheck T primTy primVal m (Core.RawGlobal extT primTy primVal)
 typeCheckConstructor param tel _lpos rtel globals con = do
   let cname = Core.rawConName con
       conTy = Core.rawConType con
@@ -144,7 +144,7 @@ checkDataType ::
   GlobalName ->
   Param.Parameterisation primTy primVal ->
   -- | the list of args to be checked.
-  [Core.RawDataArg' extT primTy primVal] ->
+  [Core.RawDataArg extT primTy primVal] ->
   m ()
 checkDataType tel dtName param =
   mapM_ (checkDataTypeArg tel dtName param . Core.rawArgType)

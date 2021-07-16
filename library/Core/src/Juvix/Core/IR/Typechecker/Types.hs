@@ -94,32 +94,32 @@ type Term primTy primVal = Term' primTy (P.TypedPrim primTy primVal)
 type Elim primTy primVal = Elim' primTy (P.TypedPrim primTy primVal)
 
 type GlobalT' extV extT primTy primVal =
-  Core.Global' extV extT primTy (P.TypedPrim primTy primVal)
+  Core.Global extV extT primTy (P.TypedPrim primTy primVal)
 
 type GlobalT primTy primVal = GlobalT' IR.T IR.T primTy primVal
 
 type DatatypeT' ext primTy primVal =
-  Core.Datatype' ext primTy (P.TypedPrim primTy primVal)
+  Core.Datatype ext primTy (P.TypedPrim primTy primVal)
 
 type DatatypeT primTy primVal = DatatypeT' IR.T primTy primVal
 
 type DataArgT' ext primTy primVal =
-  Core.DataArg' ext primTy (P.TypedPrim primTy primVal)
+  Core.DataArg ext primTy (P.TypedPrim primTy primVal)
 
 type DataArgT primTy primVal = DataArgT' IR.T primTy primVal
 
 type DataConT' ext primTy primVal =
-  Core.DataCon' ext primTy (P.TypedPrim primTy primVal)
+  Core.DataCon ext primTy (P.TypedPrim primTy primVal)
 
 type DataConT primTy primVal = DataConT' IR.T primTy primVal
 
 type FunctionT' extV extT primTy primVal =
-  Core.Function' extV extT primTy (P.TypedPrim primTy primVal)
+  Core.Function extV extT primTy (P.TypedPrim primTy primVal)
 
 type FunctionT primTy primVal = FunctionT' IR.T IR.T primTy primVal
 
 type FunClauseT' extT primTy primVal =
-  Core.FunClause' extT primTy (P.TypedPrim primTy primVal)
+  Core.FunClause extT primTy (P.TypedPrim primTy primVal)
 
 type FunClauseT primTy primVal = FunClauseT' IR.T primTy primVal
 
@@ -129,12 +129,12 @@ type PatternT' ext primTy primVal =
 type PatternT primTy primVal = PatternT' IR.T primTy primVal
 
 type AbstractT' extV primTy primVal =
-  Core.Abstract' extV primTy (P.TypedPrim primTy primVal)
+  Core.Abstract extV primTy (P.TypedPrim primTy primVal)
 
 type AbstractT primTy primVal = AbstractT' IR.T primTy primVal
 
 type GlobalsT' extV extT primTy primVal =
-  Core.Globals' extV extT primTy (P.TypedPrim primTy primVal)
+  Core.Globals extV extT primTy (P.TypedPrim primTy primVal)
 
 type GlobalsT primTy primVal = GlobalsT' IR.T IR.T primTy primVal
 

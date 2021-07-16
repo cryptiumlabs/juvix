@@ -17,10 +17,9 @@ import qualified Juvix.Core.Erased.Algorithm.Types as E
 import qualified Juvix.Core.Erased.Ann.Prim as ErasedAnn
 import Juvix.Core.Erased.Ann.Types
 import qualified Juvix.Core.Erased.Ann.Types as ErasedAnn
-import qualified Juvix.Core.HR as HR
+import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker as TC
-import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.Core.Types as Types
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -30,7 +29,7 @@ type CompConstraints' primTy primVal compErr m =
   ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
     HasReader "parameterisation" (Types.Parameterisation primTy primVal) m,
     HasThrow "error" (Types.PipelineError primTy primVal compErr) m,
-    HasReader "globals" (IR.Globals primTy (Types.TypedPrim primTy primVal)) m
+    HasReader "globals" (Core.Globals IR.T IR.T primTy (Types.TypedPrim primTy primVal)) m
   )
 
 type CompConstraints primTy primVal compErr m =
@@ -84,7 +83,7 @@ irToErasedAnn term usage ty = do
 -- For standard evaluation, no elementary affine check, no MonadIO required.
 typecheckEval ::
   CompConstraints primTy primVal compErr m =>
-  HR.Term primTy primVal ->
+  Core.Term' IR.T primTy primVal ->
   Usage.T ->
   IR.Value primTy (Types.TypedPrim primTy primVal) ->
   m (IR.Value primTy (Types.TypedPrim primTy primVal))
@@ -93,10 +92,11 @@ typecheckEval term usage ty = do
   param <- ask @"parameterisation"
   globals <- ask @"globals"
   -- First convert HR to IR.
-  let irTerm = Translate.hrToIR term
-  tell @"log" [Types.LogHRtoIR term irTerm]
+  -- let irTerm = Translate.hrToIR term
+  -- TODO: Do this in a separate function
+  -- tell @"log" [Types.LogHRtoIR term irTerm]
   -- Typecheck & return accordingly.
-  case IR.typeTerm param irTerm (IR.Annotation usage ty)
+  case IR.typeTerm param term (IR.Annotation usage ty)
     >>= IR.evalTC
     |> IR.execTC globals
     |> fst of
@@ -114,7 +114,7 @@ typecheckErase' ::
       IR.Value primTy (Types.TypedPrim primTy primVal)
     )
 typecheckErase' term usage ty = do
-  ty <- typecheckEval (Translate.irToHR ty) (Usage.SNat 0) (IR.VStar 0)
+  ty <- typecheckEval ty (Usage.SNat 0) (IR.VStar 0)
   term <- typecheckErase term usage ty
   pure (term, ty)
 

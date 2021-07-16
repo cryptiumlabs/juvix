@@ -1,4 +1,4 @@
-module Juvix.ToCore.FromFrontend.Transform.TypeSig where
+module Juvix.Pipeline.ToHR.TypeSig where
 
 import qualified Juvix.Core.Base as Core
 import qualified Juvix.Core.HR as HR
@@ -6,20 +6,10 @@ import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Sexp as Sexp
-import Juvix.ToCore.FromFrontend.Transform.HR
-import Juvix.ToCore.FromFrontend.Transform.Helpers
-  ( ReduceEff,
-    eleToSymbol,
-  )
-import Juvix.ToCore.Types
-  ( CoreSig (..),
-    Error (..),
-    HasCoreSigs,
-    HasParam,
-    HasPatVars,
-    HasThrowFF,
-    throwFF,
-  )
+import Juvix.Pipeline.ToHR.Term
+import Juvix.Pipeline.ToHR.Types
+import Juvix.Pipeline.ToHR.Env
+
 import Prelude (error)
 
 transformTypeSig ::
@@ -38,7 +28,7 @@ transformTypeSig q _name (typeCon Sexp.:> args Sexp.:> typeForm)
     (baseTy, hd) <- transformIndices typeArgs typeCon
     let dataType = foldr makeTPi baseTy typeArgs
     (dataCons, conSigs) <- unzip <$> transformConSigs q hd typeCon typeForm
-    let dataSig = DataSig {dataType, dataCons}
+    let dataSig = CoreSig (Core.DataSig {sigDataType, sigDataCons})
     pure $ dataSig : conSigs
   where
     -- ff k (x Sexp.:> xs)
@@ -112,7 +102,7 @@ transformProduct q hd typeCon (x, prod) =
   (NameSymbol.qualify1 q x,) . makeSig
     <$> transformConSig q (NameSymbol.fromSymbol x) hd typeCon prod
   where
-    makeSig ty = ConSig {conType = Just ty}
+    makeSig ty = CoreSig (Core.ConSig {sigConType = Just ty})
 
 transformConSig ::
   (ReduceEff HR.T primTy primVal m, HasPatVars m, Show primTy, Show primVal) =>
@@ -156,3 +146,9 @@ transformConSig q name mHd _ r@(t Sexp.:> ts)
     named = Sexp.isAtomNamed t
 transformConSig _ _ _ _ r = do
   error "malformed transformConSig"
+
+eleToSymbol :: Sexp.T -> Maybe Symbol
+eleToSymbol x
+  | Just Sexp.A {atomName} <- Sexp.atomFromT x =
+    Just (NameSymbol.toSymbol atomName)
+  | otherwise = Nothing

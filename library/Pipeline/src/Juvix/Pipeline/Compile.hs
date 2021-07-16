@@ -14,7 +14,7 @@ import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
-import Juvix.ToCore.Types (CoreDef (..))
+import qualified Juvix.Pipeline.ToHR.Def as Def
 import qualified Prelude as P
 
 type Debug primTy primVal =
@@ -28,7 +28,7 @@ type Debug primTy primVal =
 
 toCoreDef ::
   Alternative f =>
-  CoreDef ext primTy primVal ->
+  Def.CoreDef ext primTy primVal ->
   f (Core.RawGlobal' ext primTy primVal)
 toCoreDef (CoreDef g) = pure g
 toCoreDef _ = empty
